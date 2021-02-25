@@ -11,16 +11,8 @@ public class Sequencer : MonoBehaviour
 
 	void LateUpdate()
 	{
-		if (!m_Playing)
-			return;
-		
-		float startTime  = m_Time;
-		float finishTime = m_Time + Time.deltaTime;
-		
-		foreach (Track track in m_Tracks)
-			track.Sample(startTime, finishTime);
-		
-		m_Time = finishTime;
+		if (m_Playing)
+			Sample(m_Time + Time.deltaTime);
 	}
 
 	public void Play()
@@ -37,5 +29,16 @@ public class Sequencer : MonoBehaviour
 	{
 		m_Playing = false;
 		m_Time    = 0;
+	}
+
+	public void Sample(float _Time)
+	{
+		float startTime  = m_Time;
+		float finishTime = _Time;
+		
+		foreach (Track track in m_Tracks)
+			track.Sample(startTime, finishTime);
+		
+		m_Time = finishTime;
 	}
 }
