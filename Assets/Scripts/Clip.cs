@@ -35,4 +35,14 @@ public abstract class Clip
 	protected abstract void OnUpdate(float _Time);
 
 	protected abstract void OnExit(float _Time);
+
+	protected float GetNormalizedTime(float _Time)
+	{
+		return Mathf.InverseLerp(StartTime, FinishTime, _Time);
+	}
+
+	protected float GetLocalTime(float _Time)
+	{
+		return _Time - StartTime;
+	}
 }

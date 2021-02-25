@@ -1,12 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class Track : ScriptableObject, IEnumerable<Clip>
 {
+	protected Sequencer Sequencer => m_Sequencer;
+
 	Sequencer m_Sequencer;
 
-	public void Initialize(Sequencer _Sequencer)
+	public virtual void Initialize(Sequencer _Sequencer)
 	{
 		m_Sequencer = _Sequencer;
 	}
@@ -20,9 +23,21 @@ public abstract class Track : ScriptableObject, IEnumerable<Clip>
 		return GetEnumerator();
 	}
 
+	protected T AddReference<T>() where T : Component
+	{
+		if (Sequencer == null)
+			return null;
+		
+		T reference = Sequencer.gameObject.AddComponent<T>();
+		
+		reference.hideFlags = HideFlags.HideAndDontSave;
+		
+		return reference;
+	}
+
 	protected T GetReference<T>(string _Reference) where T : Component
 	{
-		if (m_Sequencer == null)
+		if (Sequencer == null)
 			return null;
 		
 		Transform transform = m_Sequencer.transform.Find(_Reference);
@@ -33,6 +48,8 @@ public abstract class Track : ScriptableObject, IEnumerable<Clip>
 
 public class Track<T> : Track where T : Clip
 {
+	protected List<T> Clips => m_Clips;
+
 	[SerializeField] List<T> m_Clips;
 
 	readonly List<T> m_Buffer = new List<T>();
