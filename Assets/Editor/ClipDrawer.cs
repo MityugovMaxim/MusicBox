@@ -47,13 +47,28 @@ public class ClipDrawer
 		Clip = _Clip;
 	}
 
-	public virtual void Draw(Rect _Rect)
+	public void Draw(Rect _Rect)
+	{
+		DrawBackground(_Rect);
+		DrawContent(_Rect);
+		DrawHandles(_Rect);
+	}
+
+	public virtual void DrawBackground(Rect _Rect)
 	{
 		EditorGUI.DrawRect(_Rect, Color.black);
-		
+	}
+
+	public virtual void DrawContent(Rect _Rect)
+	{
+		GUI.Label(_Rect, Clip.GetType().Name, EditorStyles.whiteLabel);
+	}
+
+	public virtual void DrawHandles(Rect _Rect)
+	{
 		EditorGUI.DrawRect(
 			new Rect(
-				_Rect.xMin - 2,
+				_Rect.xMin,
 				_Rect.y,
 				4,
 				_Rect.height
@@ -63,7 +78,7 @@ public class ClipDrawer
 		
 		EditorGUI.DrawRect(
 			new Rect(
-				_Rect.xMax - 2,
+				_Rect.xMax - 4,
 				_Rect.y,
 				4,
 				_Rect.height

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Music Track", menuName = "Tracks/Music Track")]
 public class MusicTrack : Track<MusicClip>
 {
 	[SerializeField, Reference(typeof(AudioSource))] string m_AudioSourceReference;

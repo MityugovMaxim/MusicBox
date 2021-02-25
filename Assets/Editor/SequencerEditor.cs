@@ -6,7 +6,7 @@ using UnityEngine;
 public class SequencerEditor : EditorWindow
 {
 	[MenuItem("Window/Sequencer")]
-	public void Open()
+	public static void Open()
 	{
 		SequencerEditor window = GetWindow<SequencerEditor>();
 		window.minSize = new Vector2(300, 300);
@@ -32,6 +32,8 @@ public class SequencerEditor : EditorWindow
 		foreach (Track track in m_Sequencer.Tracks)
 		foreach (Clip clip in track)
 			m_MaxTime = Mathf.Max(m_MaxTime, clip.FinishTime);
+		
+		Repaint();
 	}
 
 	void OnGUI()
@@ -51,6 +53,9 @@ public class SequencerEditor : EditorWindow
 		DrawTimeline(timelineRect);
 		DrawTracks(tracksRect);
 		DrawClips(clipsRect);
+		
+		MoveInput(clipsRect);
+		ZoomInput(clipsRect);
 	}
 
 	void DrawToolbar(Rect _Rect)
@@ -96,8 +101,8 @@ public class SequencerEditor : EditorWindow
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
 			Handles.DrawLine(
-				new Vector3(_Rect.x + position, _Rect.yMin),
-				new Vector3(_Rect.x + position, _Rect.yMax)
+				new Vector3(position, _Rect.yMax - _Rect.height * 0.5f),
+				new Vector3(position, _Rect.yMax)
 			);
 		}
 	}
@@ -117,8 +122,8 @@ public class SequencerEditor : EditorWindow
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
 			Handles.DrawLine(
-				new Vector3(_Rect.x + position, _Rect.yMin),
-				new Vector3(_Rect.x + position, _Rect.yMax)
+				new Vector3(position, _Rect.yMax - _Rect.height * 0.25f),
+				new Vector3(position, _Rect.yMax)
 			);
 		}
 	}
@@ -151,9 +156,11 @@ public class SequencerEditor : EditorWindow
 
 	void DrawClips(Rect _Rect)
 	{
+		GUI.BeginClip(_Rect);
+		
 		const float height = 60;
 		
-		Rect rect = new Rect(_Rect.x, _Rect.y, _Rect.width, height);
+		Rect rect = new Rect(0, 0, _Rect.width, height);
 		
 		foreach (Track track in m_Sequencer.Tracks)
 		{
@@ -162,6 +169,15 @@ public class SequencerEditor : EditorWindow
 			
 			rect.y += height;
 		}
+		
+		GUI.EndClip();
+	}
+
+	static float Remap(float a, float b, float value)
+	{
+		return (double)a != (double)b
+			? (float)(((double)value - (double)a) / ((double)b - (double)a))
+			: 0.0f;
 	}
 
 	void DrawClip(Rect _Rect, Clip _Clip)
@@ -169,13 +185,13 @@ public class SequencerEditor : EditorWindow
 		if (m_MinTime >= _Clip.FinishTime || m_MaxTime <= _Clip.StartTime)
 			return;
 		
-		float min = Mathf.InverseLerp(m_MinTime, m_MaxTime, _Clip.StartTime);
-		float max = Mathf.InverseLerp(m_MinTime, m_MaxTime, _Clip.FinishTime);
+		float min = Remap(m_MinTime, m_MaxTime, _Clip.StartTime);
+		float max = Remap(m_MinTime, m_MaxTime, _Clip.FinishTime);
 		
 		Rect rect = new Rect(
-			_Rect.x + min,
+			_Rect.x + _Rect.width * min,
 			_Rect.y,
-			max - min,
+			_Rect.width * (max - min),
 			_Rect.height
 		);
 		
@@ -184,7 +200,84 @@ public class SequencerEditor : EditorWindow
 		
 		ClipDrawer clipDrawer = m_ClipDrawers[_Clip];
 		
-		if (clipDrawer != null)
-			clipDrawer.Draw(rect);
+		clipDrawer?.Draw(rect);
+	}
+
+	void MoveInput(Rect _Rect)
+	{
+		if (Event.current.type == EventType.Repaint || Event.current.type != EventType.ScrollWheel || Event.current.modifiers != EventModifiers.None)
+			return;
+		
+		if (!_Rect.Contains(Event.current.mousePosition))
+			return;
+		
+		Vector2 scroll = Event.current.delta;
+		
+		if (Mathf.Abs(scroll.x) <= Mathf.Abs(scroll.y))
+			return;
+		
+		float scale = scroll.x / _Rect.width;
+		float value = scale * Mathf.Abs(m_MaxTime - m_MinTime) * 2;
+		
+		float minTime = m_MinTime + value;
+		float maxTime = m_MaxTime + value;
+		
+		ClampTimeRange(ref minTime, ref maxTime);
+		
+		if (!Mathf.Approximately(m_MinTime, minTime) || !Mathf.Approximately(m_MaxTime, maxTime))
+		{
+			m_MinTime = minTime;
+			m_MaxTime = maxTime;
+			
+			Repaint();
+		}
+		
+		Event.current.Use();
+	}
+
+	void ZoomInput(Rect _Rect)
+	{
+		if (Event.current.type == EventType.Repaint || Event.current.type != EventType.ScrollWheel || Event.current.modifiers != EventModifiers.Command)
+			return;
+		
+		if (!_Rect.Contains(Event.current.mousePosition))
+			return;
+		
+		Vector2 scroll = Event.current.delta;
+		
+		if (Mathf.Abs(scroll.y) <= Mathf.Abs(scroll.x))
+			return;
+		
+		Debug.LogError(scroll.y);
+		
+		float phase = Mathf.InverseLerp(_Rect.xMin, _Rect.xMax, Event.current.mousePosition.x);
+		float scale = scroll.y / _Rect.width;
+		float value = scale * Mathf.Abs(m_MaxTime - m_MinTime) * 2;
+		
+		float minTime = m_MinTime - value * phase;
+		float maxTime = m_MaxTime + value * (1 - phase);
+		
+		ClampTimeRange(ref minTime, ref maxTime);
+		
+		if (!Mathf.Approximately(m_MaxTime - m_MinTime, maxTime - minTime))
+		{
+			m_MinTime = minTime;
+			m_MaxTime = maxTime;
+			
+			Repaint();
+		}
+		
+		Event.current.Use();
+	}
+
+	static void ClampTimeRange(ref float _MinTime, ref float _MaxTime)
+	{
+		const float minDelta = 1;
+		const float maxDelta = 300;
+		
+		float delta = Mathf.Clamp(_MaxTime - _MinTime, minDelta, maxDelta);
+		
+		_MinTime = Mathf.Max(0, _MinTime);
+		_MaxTime = _MinTime + delta;
 	}
 }
