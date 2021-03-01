@@ -4,6 +4,8 @@ using UnityEngine;
 [Serializable]
 public class MusicClip : Clip
 {
+	public AudioClip AudioClip => m_AudioClip;
+
 	[SerializeField] AudioClip m_AudioClip;
 
 	AudioSource m_AudioSource;

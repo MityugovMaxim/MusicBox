@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,7 +25,9 @@ public class ClipDrawer
 		if (m_ClipDrawerTypes.ContainsKey(_ClipType) && m_ClipDrawerTypes[_ClipType] != null)
 			return m_ClipDrawerTypes[_ClipType];
 		
-		Type[] clipDrawerTypes = typeof(ClipDrawer).GetNestedTypes();
+		Assembly assembly = typeof(ClipDrawer).Assembly;
+		
+		IEnumerable<Type> clipDrawerTypes = assembly.GetTypes().Where(_Type => _Type.IsSubclassOf(typeof(ClipDrawer)));
 		
 		foreach (Type clipDrawerType in clipDrawerTypes)
 		{
@@ -47,24 +51,24 @@ public class ClipDrawer
 		Clip = _Clip;
 	}
 
-	public void Draw(Rect _Rect)
+	public void Draw(Rect _Rect, Rect _R)
 	{
-		DrawBackground(_Rect);
-		DrawContent(_Rect);
-		DrawHandles(_Rect);
+		DrawBackground(_Rect, _R);
+		DrawContent(_Rect, _R);
+		DrawHandles(_Rect, _R);
 	}
 
-	public virtual void DrawBackground(Rect _Rect)
+	protected virtual void DrawBackground(Rect _Rect, Rect _ViewRect)
 	{
 		EditorGUI.DrawRect(_Rect, Color.black);
 	}
 
-	public virtual void DrawContent(Rect _Rect)
+	protected virtual void DrawContent(Rect _Rect, Rect _R)
 	{
 		GUI.Label(_Rect, Clip.GetType().Name, EditorStyles.whiteLabel);
 	}
 
-	public virtual void DrawHandles(Rect _Rect)
+	protected virtual void DrawHandles(Rect _Rect, Rect _R)
 	{
 		EditorGUI.DrawRect(
 			new Rect(

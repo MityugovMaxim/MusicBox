@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class SequencerEditor : EditorWindow
@@ -12,7 +13,13 @@ public class SequencerEditor : EditorWindow
 		window.minSize = new Vector2(300, 300);
 	}
 
-	readonly Dictionary<Clip, ClipDrawer> m_ClipDrawers = new Dictionary<Clip, ClipDrawer>();
+	[DidReloadScripts]
+	static void OnRecompile()
+	{
+		m_ClipDrawers.Clear();
+	}
+
+	static readonly Dictionary<Clip, ClipDrawer> m_ClipDrawers = new Dictionary<Clip, ClipDrawer>();
 
 	[SerializeField] Sequencer m_Sequencer;
 	[SerializeField] float     m_MinTime;
@@ -24,6 +31,8 @@ public class SequencerEditor : EditorWindow
 		
 		if (sequencer == null)
 			return;
+		
+		m_ClipDrawers.Clear();
 		
 		m_Sequencer = sequencer;
 		m_MinTime   = 0;
@@ -80,52 +89,76 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTimeline(Rect _Rect)
 	{
-		DrawTimelineMinutes(_Rect);
+		DrawTimelineGuide(_Rect, 0.01f, 0.125f);
 		
-		DrawTimelineSeconds(_Rect);
+		DrawTimelineGuide(_Rect, 0.1f, 0.125f);
+		
+		DrawTimelineGuide(_Rect, 1, 0.25f);
+		
+		DrawTimelineGuide(_Rect, 5, 0.5f);
+		
+		DrawTimelineGuide(_Rect, 20, 0.5f);
+		
+		DrawTimelineGuide(_Rect, 60, 0.5f);
 		
 		DrawTimelineSeeker(_Rect);
 	}
 
-	void DrawTimelineMinutes(Rect _Rect)
+	void DrawTimelineGuide(Rect _Rect, float _Step, float _Scale)
 	{
-		const int step = 60;
+		int min = Mathf.CeilToInt(m_MinTime / _Step);
+		int max = Mathf.FloorToInt(m_MaxTime / _Step);
 		
-		int min = Mathf.CeilToInt(m_MinTime / step);
-		int max = Mathf.FloorToInt(m_MaxTime / step);
+		if (min > max)
+			return;
 		
-		for (int minute = min; minute <= max; minute++)
-		{
-			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, minute * step);
-			
-			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
-			
-			Handles.DrawLine(
-				new Vector3(position, _Rect.yMax - _Rect.height * 0.5f),
-				new Vector3(position, _Rect.yMax)
-			);
-		}
-	}
-
-	void DrawTimelineSeconds(Rect _Rect)
-	{
-		int min = Mathf.CeilToInt(m_MinTime);
-		int max = Mathf.FloorToInt(m_MaxTime);
+		float value = _Rect.width / (max - min + 1);
+		
+		if (value < 2)
+			return;
+		
+		Handles.color = new Color(1, 1, 1, Mathf.InverseLerp(2, 5, value));
 		
 		for (int second = min; second <= max; second++)
 		{
-			if (second % 60 == 0)
-				continue;
-			
-			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, second);
+			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, second * _Step);
 			
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
 			Handles.DrawLine(
-				new Vector3(position, _Rect.yMax - _Rect.height * 0.25f),
+				new Vector3(position, _Rect.yMax - _Rect.height * _Scale),
 				new Vector3(position, _Rect.yMax)
 			);
 		}
+		
+		Handles.color = Color.white;
+	}
+
+	void DrawTimelineMilliseconds(Rect _Rect)
+	{
+		float alpha = Mathf.Max(0, 1 - (m_MaxTime - m_MinTime) / 50);
+		
+		if (Mathf.Approximately(alpha, 0))
+			return;
+		
+		int min = Mathf.CeilToInt(m_MinTime * 10);
+		int max = Mathf.FloorToInt(m_MaxTime * 10);
+		
+		Handles.color = new Color(1, 1, 1, alpha);
+		
+		for (int millisecond = min; millisecond <= max; millisecond++)
+		{
+			float phase = Mathf.InverseLerp(m_MinTime * 10, m_MaxTime * 10, millisecond);
+			
+			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
+			
+			Handles.DrawLine(
+				new Vector3(position, _Rect.yMax - _Rect.height * 0.15f),
+				new Vector3(position, _Rect.yMax)
+			);
+		}
+		
+		Handles.color = Color.white;
 	}
 
 	void DrawTimelineSeeker(Rect _Rect)
@@ -135,7 +168,7 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTracks(Rect _Rect)
 	{
-		const float height = 60;
+		const float height = 120;
 		
 		Rect rect = new Rect(_Rect.x, _Rect.y, _Rect.width, height);
 		
@@ -158,7 +191,7 @@ public class SequencerEditor : EditorWindow
 	{
 		GUI.BeginClip(_Rect);
 		
-		const float height = 60;
+		const float height = 120;
 		
 		Rect rect = new Rect(0, 0, _Rect.width, height);
 		
@@ -173,22 +206,25 @@ public class SequencerEditor : EditorWindow
 		GUI.EndClip();
 	}
 
-	static float Remap(float a, float b, float value)
-	{
-		return (double)a != (double)b
-			? (float)(((double)value - (double)a) / ((double)b - (double)a))
-			: 0.0f;
-	}
-
 	void DrawClip(Rect _Rect, Clip _Clip)
 	{
 		if (m_MinTime >= _Clip.FinishTime || m_MaxTime <= _Clip.StartTime)
 			return;
 		
-		float min = Remap(m_MinTime, m_MaxTime, _Clip.StartTime);
-		float max = Remap(m_MinTime, m_MaxTime, _Clip.FinishTime);
+		float min = MathUtility.Remap01(_Clip.StartTime, m_MinTime, m_MaxTime);
+		float max = MathUtility.Remap01(_Clip.FinishTime, m_MinTime, m_MaxTime);
 		
 		Rect rect = new Rect(
+			_Rect.x + _Rect.width * min,
+			_Rect.y,
+			_Rect.width * (max - min),
+			_Rect.height
+		);
+		
+		min = Mathf.Max(0, min);
+		max = Mathf.Min(1, max);
+		
+		Rect r = new Rect(
 			_Rect.x + _Rect.width * min,
 			_Rect.y,
 			_Rect.width * (max - min),
@@ -200,7 +236,7 @@ public class SequencerEditor : EditorWindow
 		
 		ClipDrawer clipDrawer = m_ClipDrawers[_Clip];
 		
-		clipDrawer?.Draw(rect);
+		clipDrawer?.Draw(rect, r);
 	}
 
 	void MoveInput(Rect _Rect)
@@ -247,8 +283,6 @@ public class SequencerEditor : EditorWindow
 		
 		if (Mathf.Abs(scroll.y) <= Mathf.Abs(scroll.x))
 			return;
-		
-		Debug.LogError(scroll.y);
 		
 		float phase = Mathf.InverseLerp(_Rect.xMin, _Rect.xMax, Event.current.mousePosition.x);
 		float scale = scroll.y / _Rect.width;
