@@ -2,40 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 
 public class ClipDrawer
 {
-	static readonly Dictionary<Type, Type> m_ClipDrawerTypes = new Dictionary<Type, Type>();
+	static readonly Dictionary<string, Type> m_ClipDrawerTypes = new Dictionary<string, Type>();
 
-	public static ClipDrawer Create(Clip _Clip)
+	public static ClipDrawer Create(SerializedProperty _Property)
 	{
-		if (_Clip == null)
+		if (_Property == null)
 			return null;
 		
-		Type clipDrawerType = GetClipDrawerType(_Clip.GetType());
+		Type clipDrawerType = GetClipDrawerType(_Property);
 		
-		return Activator.CreateInstance(clipDrawerType, _Clip) as ClipDrawer;
+		return Activator.CreateInstance(clipDrawerType, _Property) as ClipDrawer;
 	}
 
-	static Type GetClipDrawerType(Type _ClipType)
+	static Type GetClipDrawerType(SerializedProperty _Property)
 	{
-		if (m_ClipDrawerTypes.ContainsKey(_ClipType) && m_ClipDrawerTypes[_ClipType] != null)
-			return m_ClipDrawerTypes[_ClipType];
+		if (m_ClipDrawerTypes.ContainsKey(_Property.type) && m_ClipDrawerTypes[_Property.type] != null)
+			return m_ClipDrawerTypes[_Property.type];
 		
 		Assembly assembly = typeof(ClipDrawer).Assembly;
 		
 		IEnumerable<Type> clipDrawerTypes = assembly.GetTypes().Where(_Type => _Type.IsSubclassOf(typeof(ClipDrawer)));
 		
+		Type clipType = typeof(Clip).Assembly.GetType(_Property.type, true, true);
+		
 		foreach (Type clipDrawerType in clipDrawerTypes)
 		{
 			ClipDrawerAttribute attribute = clipDrawerType.GetCustomAttribute<ClipDrawerAttribute>();
 			
-			if (attribute.ClipType == _ClipType)
+			if (attribute.ClipType == clipType)
 			{
-				m_ClipDrawerTypes[_ClipType] = clipDrawerType;
+				m_ClipDrawerTypes[_Property.type] = clipDrawerType;
 				
 				return clipDrawerType;
 			}
@@ -44,50 +45,267 @@ public class ClipDrawer
 		return typeof(ClipDrawer);
 	}
 
-	protected Clip Clip { get; }
+	protected SerializedProperty Property              { get; }
+	protected int                LeftHandleControlID   { get; }
+	protected int                CenterHandleControlID { get; }
+	protected int                RightHandleControlID  { get; }
 
-	public ClipDrawer(Clip _Clip)
+	protected virtual bool Visible => TrackMinTime < MaxTime && TrackMaxTime > MinTime;
+
+	protected float MinTime
 	{
-		Clip = _Clip;
+		get => MinTimeProperty.floatValue;
+		set => MinTimeProperty.floatValue = value;
 	}
 
-	public void Draw(Rect _Rect, Rect _R)
+	protected float MaxTime
 	{
-		DrawBackground(_Rect, _R);
-		DrawContent(_Rect, _R);
-		DrawHandles(_Rect, _R);
+		get => MaxTimeProperty.floatValue;
+		set => MaxTimeProperty.floatValue = value;
 	}
 
-	protected virtual void DrawBackground(Rect _Rect, Rect _ViewRect)
+	protected Rect TrackRect { get; private set; }
+	protected float TrackMinTime { get; private set; }
+	protected float TrackMaxTime { get; private set; }
+	protected Rect ClipRect  { get; private set; }
+	protected Rect ViewRect  { get; private set; }
+
+	SerializedProperty MinTimeProperty { get; }
+
+	SerializedProperty MaxTimeProperty { get; }
+
+	protected ClipDrawer(SerializedProperty _Property)
 	{
-		EditorGUI.DrawRect(_Rect, Color.black);
+		Property = _Property;
+		
+		int controlID = GetHashCode();
+		
+		MinTimeProperty  = Property.FindPropertyRelative("m_MinTime");
+		MaxTimeProperty = Property.FindPropertyRelative("m_MaxTime");
+		
+		LeftHandleControlID   = $"[{controlID}sequencer_left_handle_control]".GetHashCode();
+		CenterHandleControlID = $"[{controlID}sequencer_center_handle_control]".GetHashCode();
+		RightHandleControlID  = $"[{controlID}sequencer_right_handle_control]".GetHashCode(); 
 	}
 
-	protected virtual void DrawContent(Rect _Rect, Rect _R)
+	public void Draw(Rect _TrackRect, float _MinTime, float _MaxTime)
 	{
-		GUI.Label(_Rect, Clip.GetType().Name, EditorStyles.whiteLabel);
-	}
-
-	protected virtual void DrawHandles(Rect _Rect, Rect _R)
-	{
-		EditorGUI.DrawRect(
-			new Rect(
-				_Rect.xMin,
-				_Rect.y,
-				4,
-				_Rect.height
-			),
-			Color.white
+		TrackRect = _TrackRect;
+		TrackMinTime   = _MinTime;
+		TrackMaxTime   = _MaxTime;
+		
+		float clipMin = MathUtility.Remap01(MinTime, _MinTime, _MaxTime);
+		float clipMax = MathUtility.Remap01(MaxTime, _MinTime, _MaxTime);
+		
+		ClipRect = new Rect(
+			_TrackRect.x + _TrackRect.width * clipMin,
+			_TrackRect.y,
+			_TrackRect.width * (clipMax - clipMin),
+			_TrackRect.height
 		);
 		
-		EditorGUI.DrawRect(
-			new Rect(
-				_Rect.xMax - 4,
-				_Rect.y,
-				4,
-				_Rect.height
-			),
-			Color.white
+		float viewMin = MathUtility.Remap01Clamped(MinTime, _MinTime, _MaxTime);
+		float viewMax = MathUtility.Remap01Clamped(MaxTime, _MinTime, _MaxTime);
+		
+		ViewRect = new Rect(
+			_TrackRect.x + _TrackRect.width * viewMin,
+			_TrackRect.y,
+			_TrackRect.width * (viewMax - viewMin),
+			_TrackRect.height
 		);
+		
+		if (Visible)
+			Draw();
+	}
+
+	protected virtual void Draw()
+	{
+		DrawBackground();
+		DrawContent();
+		DrawHandles();
+	}
+
+	protected virtual void DrawBackground()
+	{
+		EditorGUI.DrawRect(ClipRect, Color.black);
+	}
+
+	protected virtual void DrawContent()
+	{
+		GUI.Label(ViewRect, Property.type, EditorStyles.whiteLabel);
+	}
+
+	protected virtual void DrawHandles()
+	{
+		const float minDuration = 0.01f;
+		
+		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
+		
+		Rect leftHandleRect = new Rect(
+			ClipRect.xMin - 2,
+			ClipRect.y + 1,
+			4,
+			ClipRect.height - 2
+		);
+		
+		Rect centerHandleRect = new Rect(
+			ClipRect.x + 4,
+			ClipRect.y,
+			ClipRect.width - 8,
+			ClipRect.height
+		);
+		
+		Rect rightHandleRect = new Rect(
+			ClipRect.xMax - 2,
+			ClipRect.y + 1,
+			4,
+			ClipRect.height - 2
+		);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				Handles.DrawSolidRectangleWithOutline(
+					leftHandleRect,
+					new Color(1, 1, 1, 0.5f),
+					Color.black
+				);
+				
+				Handles.DrawSolidRectangleWithOutline(
+					rightHandleRect,
+					new Color(1, 1, 1, 0.5f),
+					Color.black
+				);
+				
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == LeftHandleControlID
+						? handlePadding.Add(leftHandleRect)
+						: leftHandleRect,
+					MouseCursor.SplitResizeLeftRight,
+					LeftHandleControlID
+				);
+				
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == CenterHandleControlID
+						? handlePadding.Add(centerHandleRect)
+						: centerHandleRect,
+					MouseCursor.Pan,
+					CenterHandleControlID
+				);
+				
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == RightHandleControlID
+						? new RectOffset(100, 100, 0, 0).Add(rightHandleRect)
+						: rightHandleRect,
+					MouseCursor.SplitResizeLeftRight,
+					RightHandleControlID
+				);
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (leftHandleRect.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = LeftHandleControlID;
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				if (centerHandleRect.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = CenterHandleControlID;
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				if (rightHandleRect.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = RightHandleControlID;
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl == LeftHandleControlID)
+				{
+					float time = MathUtility.Remap(
+						ClipRect.xMin + Event.current.delta.x,
+						TrackRect.xMin,
+						TrackRect.xMax,
+						TrackMinTime,
+						TrackMaxTime
+					);
+					
+					time = Mathf.Clamp(time, 0, MaxTime - minDuration);
+					
+					Resize(time, MaxTime);
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				if (GUIUtility.hotControl == CenterHandleControlID)
+				{
+					float time = MathUtility.Remap(
+						ClipRect.xMin + Event.current.delta.x,
+						TrackRect.xMin,
+						TrackRect.xMax,
+						TrackMinTime,
+						TrackMaxTime
+					);
+					
+					time = Mathf.Max(0, time);
+					
+					Resize(time, time + MaxTime - MinTime);
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				if (GUIUtility.hotControl == RightHandleControlID)
+				{
+					float time = MathUtility.Remap(
+						ClipRect.xMax + Event.current.delta.x,
+						TrackRect.xMin,
+						TrackRect.xMax,
+						TrackMinTime,
+						TrackMaxTime
+					);
+					
+					time = Mathf.Max(MinTime + minDuration, time);
+					
+					Resize(MinTime, time);
+					
+					Event.current.Use();
+					
+					break;
+				}
+				
+				break;
+			}
+		}
+	}
+
+	protected virtual void Resize(float _MinTime, float _MaxTime)
+	{
+		MinTime  = _MinTime;
+		MaxTime = _MaxTime;
+		
+		Property.serializedObject.ApplyModifiedProperties();
 	}
 }

@@ -19,20 +19,50 @@ public class SequencerEditor : EditorWindow
 		m_ClipDrawers.Clear();
 	}
 
-	static readonly Dictionary<Clip, ClipDrawer> m_ClipDrawers = new Dictionary<Clip, ClipDrawer>();
+	static float TracksWidth
+	{
+		get => EditorPrefs.GetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", 120);
+		set => EditorPrefs.SetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", Mathf.Max(120, value));
+	}
+
+	static readonly Dictionary<string, ClipDrawer>      m_ClipDrawers  = new Dictionary<string, ClipDrawer>();
+	static readonly Dictionary<Track, SerializedObject> m_TrackObjects = new Dictionary<Track, SerializedObject>();
 
 	[SerializeField] Sequencer m_Sequencer;
 	[SerializeField] float     m_MinTime;
 	[SerializeField] float     m_MaxTime;
 
+	void OnEnable()
+	{
+		Undo.undoRedoPerformed += Repaint;
+		EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+	}
+
+	void OnPlayModeStateChanged(PlayModeStateChange _Obj)
+	{
+		Repaint();
+	}
+
+	void OnDisable()
+	{
+		Undo.undoRedoPerformed -= Repaint;
+		EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+	}
+
+	void OnInspectorUpdate()
+	{
+		Repaint();
+	}
+
 	void OnSelectionChange()
 	{
 		Sequencer sequencer = Selection.GetFiltered<Sequencer>(SelectionMode.Assets).FirstOrDefault();
 		
-		if (sequencer == null)
+		if (sequencer == null || sequencer == m_Sequencer)
 			return;
 		
 		m_ClipDrawers.Clear();
+		m_TrackObjects.Clear();
 		
 		m_Sequencer = sequencer;
 		m_MinTime   = 0;
@@ -40,7 +70,7 @@ public class SequencerEditor : EditorWindow
 		
 		foreach (Track track in m_Sequencer.Tracks)
 		foreach (Clip clip in track)
-			m_MaxTime = Mathf.Max(m_MaxTime, clip.FinishTime);
+			m_MaxTime = Mathf.Max(m_MaxTime, clip.MaxTime);
 		
 		Repaint();
 	}
@@ -50,21 +80,22 @@ public class SequencerEditor : EditorWindow
 		if (m_Sequencer == null)
 			return;
 		
-		Rect toolbarRect = new Rect(0, 0, 200, 40);
+		Rect toolbarRect = new Rect(0, 0, TracksWidth, 25);
 		
-		Rect timelineRect = new Rect(200, 0, position.width - 200, 40);
+		Rect timelineRect = new Rect(TracksWidth, 0, position.width - TracksWidth, 25);
 		
-		Rect tracksRect = new Rect(0, 40, 200, position.height - 40);
+		Rect tracksRect = new Rect(0, 25, TracksWidth, position.height - 25);
 		
-		Rect clipsRect = new Rect(200, 40, position.width - 200, position.height - 40);
+		Rect clipsRect = new Rect(TracksWidth, 25, position.width - TracksWidth, position.height - 25);
 		
-		DrawToolbar(toolbarRect);
-		DrawTimeline(timelineRect);
 		DrawTracks(tracksRect);
 		DrawClips(clipsRect);
+		DrawToolbar(toolbarRect);
+		DrawTimeline(timelineRect);
 		
 		MoveInput(clipsRect);
 		ZoomInput(clipsRect);
+		ResizeTracksInput(tracksRect);
 	}
 
 	void DrawToolbar(Rect _Rect)
@@ -87,24 +118,26 @@ public class SequencerEditor : EditorWindow
 		GUILayout.EndArea();
 	}
 
+	void Update()
+	{
+		if (m_Sequencer != null && m_Sequencer.Playing)
+			EditorApplication.QueuePlayerLoopUpdate();
+		
+		Repaint();
+	}
+
 	void DrawTimeline(Rect _Rect)
 	{
-		DrawTimelineGuide(_Rect, 0.01f, 0.125f);
-		
-		DrawTimelineGuide(_Rect, 0.1f, 0.125f);
-		
-		DrawTimelineGuide(_Rect, 1, 0.25f);
-		
-		DrawTimelineGuide(_Rect, 5, 0.5f);
-		
-		DrawTimelineGuide(_Rect, 20, 0.5f);
-		
-		DrawTimelineGuide(_Rect, 60, 0.5f);
-		
+		DrawTimelineGuide(_Rect, 0.01f);
+		DrawTimelineGuide(_Rect, 0.1f, true);
+		DrawTimelineGuide(_Rect, 1, true);
+		DrawTimelineGuide(_Rect, 5, true);
+		DrawTimelineGuide(_Rect, 20, true);
+		DrawTimelineGuide(_Rect, 60, true);
 		DrawTimelineSeeker(_Rect);
 	}
 
-	void DrawTimelineGuide(Rect _Rect, float _Step, float _Scale)
+	void DrawTimelineGuide(Rect _Rect, float _Step, bool _Time = false)
 	{
 		int min = Mathf.CeilToInt(m_MinTime / _Step);
 		int max = Mathf.FloorToInt(m_MaxTime / _Step);
@@ -114,129 +147,329 @@ public class SequencerEditor : EditorWindow
 		
 		float value = _Rect.width / (max - min + 1);
 		
-		if (value < 2)
+		if (value < 4)
 			return;
 		
-		Handles.color = new Color(1, 1, 1, Mathf.InverseLerp(2, 5, value));
+		float scale = MathUtility.Remap(value, 40, 60, 0.25f, 0.5f);
 		
-		for (int second = min; second <= max; second++)
+		scale = Mathf.Clamp(scale, 0.25f, 0.5f);
+		
+		float guideAlpha = Mathf.InverseLerp(4, 8, value);
+		
+		Handles.color = new Color(1, 1, 1, guideAlpha);
+		
+		for (int step = min; step <= max; step++)
 		{
-			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, second * _Step);
+			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, step * _Step);
 			
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
 			Handles.DrawLine(
-				new Vector3(position, _Rect.yMax - _Rect.height * _Scale),
+				new Vector3(position, _Rect.yMax - _Rect.height * scale),
 				new Vector3(position, _Rect.yMax)
 			);
 		}
 		
 		Handles.color = Color.white;
-	}
-
-	void DrawTimelineMilliseconds(Rect _Rect)
-	{
-		float alpha = Mathf.Max(0, 1 - (m_MaxTime - m_MinTime) / 50);
 		
-		if (Mathf.Approximately(alpha, 0))
+		if (!_Time || value < 40)
 			return;
 		
-		int min = Mathf.CeilToInt(m_MinTime * 10);
-		int max = Mathf.FloorToInt(m_MaxTime * 10);
+		float timeAlpha = Mathf.InverseLerp(40, 60, value);
 		
-		Handles.color = new Color(1, 1, 1, alpha);
+		if (Mathf.Approximately(0, timeAlpha))
+			return;
 		
-		for (int millisecond = min; millisecond <= max; millisecond++)
+		GUI.contentColor = new Color(1, 1, 1, timeAlpha);
+		
+		GUI.BeginClip(_Rect);
+		
+		for (int step = min - 1; step <= max; step++)
 		{
-			float phase = Mathf.InverseLerp(m_MinTime * 10, m_MaxTime * 10, millisecond);
+			float time = step * _Step;
 			
-			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
+			float position = MathUtility.Remap(time, m_MinTime, m_MaxTime, 0, _Rect.width);
 			
-			Handles.DrawLine(
-				new Vector3(position, _Rect.yMax - _Rect.height * 0.15f),
-				new Vector3(position, _Rect.yMax)
+			float milliseconds = time - (int)time;
+			
+			GUI.Label(
+				new Rect(
+					position,
+					_Rect.y + 5,
+					80,
+					_Rect.height * 0.5f
+				),
+				milliseconds > float.Epsilon
+					? $"{(int)time / 60:00}:{(int)time % 60:00}{milliseconds:.0}"
+					: $"{(int)time / 60:00}:{(int)time % 60:00}"
 			);
 		}
 		
-		Handles.color = Color.white;
+		GUI.EndClip();
+		
+		GUI.contentColor = Color.white;
 	}
 
 	void DrawTimelineSeeker(Rect _Rect)
 	{
+		const string controlName = "sequencer_timeline_seeker";
 		
+		int controlID = EditorGUIUtility.GetControlID(controlName.GetHashCode(), FocusType.Passive);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				float position = MathUtility.Remap(m_Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
+				
+				GUI.BeginClip(
+					new Rect(
+						_Rect.x,
+						_Rect.y,
+						base.position.width - _Rect.xMin,
+						base.position.height
+					)
+				);
+				
+				Handles.DrawAAConvexPolygon(
+					new Vector3(position - 5, _Rect.yMin),
+					new Vector3(position + 5, _Rect.yMin),
+					new Vector3(position + 5, _Rect.yMax - 5),
+					new Vector3(position, _Rect.yMax),
+					new Vector3(position - 5, _Rect.yMax - 5)
+				);
+				
+				Handles.DrawLine(
+					new Vector3(position, _Rect.yMax),
+					new Vector3(position, base.position.height)
+				);
+				
+				GUI.EndClip();
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (!_Rect.Contains(Event.current.mousePosition))
+					break;
+				
+				GUIUtility.hotControl = controlID;
+				
+				float time = MathUtility.Remap(
+					Event.current.mousePosition.x,
+					_Rect.xMin,
+					_Rect.xMax,
+					m_MinTime,
+					m_MaxTime
+				);
+				
+				time = Mathf.Max(time, 0);
+				
+				m_Sequencer.Stop();
+				m_Sequencer.Time = time;
+				if (m_Sequencer.Playing)
+					m_Sequencer.Play();
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != controlID)
+					break;
+				
+				Event.current.Use();
+				
+				float time = MathUtility.Remap(
+					Event.current.mousePosition.x,
+					_Rect.xMin,
+					_Rect.xMax,
+					m_MinTime,
+					m_MaxTime
+				);
+				
+				time = Mathf.Max(time, 0);
+				
+				m_Sequencer.Stop();
+				m_Sequencer.Time = time;
+				if (m_Sequencer.Playing)
+					m_Sequencer.Play();
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+		}
 	}
 
 	void DrawTracks(Rect _Rect)
 	{
-		const float height = 120;
-		
-		Rect rect = new Rect(_Rect.x, _Rect.y, _Rect.width, height);
+		float position = 0;
 		
 		foreach (Track track in m_Sequencer.Tracks)
 		{
-			DrawTrack(rect, track);
+			if (track == null)
+				continue;
 			
-			rect.y += height;
+			if (!m_TrackObjects.ContainsKey(track) || m_TrackObjects[track] == null)
+				m_TrackObjects[track] = new SerializedObject(track);
+			
+			SerializedObject trackObject = m_TrackObjects[track];
+			
+			SerializedProperty heightProperty = trackObject.FindProperty("m_Height");
+			
+			float height = Mathf.Clamp(heightProperty.floatValue, track.MinHeight, track.MaxHeight);
+			
+			DrawTrack(
+				new Rect(
+					_Rect.x,
+					_Rect.y + position,
+					_Rect.width,
+					height
+				),
+				trackObject,
+				track.MinHeight,
+				track.MaxHeight
+			);
+			
+			position += height;
 		}
 	}
 
-	void DrawTrack(Rect _Rect, Track _Track)
+	void DrawTrack(Rect _Rect, SerializedObject _TrackObject, float _MinHeight, float _MaxHeight)
 	{
-		EditorGUI.DrawRect(_Rect, Color.blue);
+		int controlID = $"{_TrackObject.GetHashCode()}sequencer_track_height_handle".GetHashCode();
 		
-		GUI.Label(_Rect, _Track.name);
+		RectOffset handlePadding = new RectOffset(0, 0, 100, 100);
+		
+		Rect handleRect = new Rect(_Rect.x, _Rect.yMax - 4, _Rect.width, 8);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				EditorGUI.DrawRect(
+					new RectOffset(0, 0, 1, 1).Remove(_Rect),
+					new Color(0.12f, 0.12f, 0.12f)
+				);
+				
+				GUI.Label(
+					_Rect,
+					_TrackObject.targetObject.name,
+					EditorStyles.whiteBoldLabel
+				);
+				
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == controlID
+						? handlePadding.Add(handleRect)
+						: handleRect,
+					MouseCursor.SplitResizeUpDown,
+					controlID
+				);
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (!handleRect.Contains(Event.current.mousePosition))
+					break;
+				
+				GUIUtility.hotControl = controlID;
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != controlID)
+					break;
+				
+				SerializedProperty heightProperty = _TrackObject.FindProperty("m_Height");
+				
+				heightProperty.floatValue = Mathf.Clamp(heightProperty.floatValue + Event.current.delta.y, _MinHeight, _MaxHeight);
+				
+				_TrackObject.ApplyModifiedProperties();
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+		}
 	}
 
 	void DrawClips(Rect _Rect)
 	{
 		GUI.BeginClip(_Rect);
 		
-		const float height = 120;
-		
-		Rect rect = new Rect(0, 0, _Rect.width, height);
+		float position = 0;
 		
 		foreach (Track track in m_Sequencer.Tracks)
 		{
-			foreach (Clip clip in track)
-				DrawClip(rect, clip);
+			if (track == null)
+				continue;
 			
-			rect.y += height;
+			if (!m_TrackObjects.ContainsKey(track) || m_TrackObjects[track] == null)
+				m_TrackObjects[track] = new SerializedObject(track);
+			
+			SerializedObject trackObject = m_TrackObjects[track];
+			
+			SerializedProperty heightProperty = trackObject.FindProperty("m_Height");
+			
+			float height = Mathf.Clamp(heightProperty.floatValue, track.MinHeight, track.MaxHeight);
+			
+			trackObject.UpdateIfRequiredOrScript();
+			
+			SerializedProperty clipsProperty = trackObject.FindProperty("m_Clips");
+			
+			if (clipsProperty == null)
+				continue;
+			
+			for (int i = 0; i < clipsProperty.arraySize; i++)
+			{
+				DrawClip(
+					new Rect(
+						0,
+						position,
+						_Rect.width,
+						height
+					),
+					clipsProperty.GetArrayElementAtIndex(i)
+				);
+			}
+			
+			position += height;
 		}
 		
 		GUI.EndClip();
 	}
 
-	void DrawClip(Rect _Rect, Clip _Clip)
+	void DrawClip(Rect _Rect, SerializedProperty _Property)
 	{
-		if (m_MinTime >= _Clip.FinishTime || m_MaxTime <= _Clip.StartTime)
+		if (_Property == null)
 			return;
 		
-		float min = MathUtility.Remap01(_Clip.StartTime, m_MinTime, m_MaxTime);
-		float max = MathUtility.Remap01(_Clip.FinishTime, m_MinTime, m_MaxTime);
+		string propertyID = $"[{_Property.serializedObject.targetObject.name}::{_Property.type}]{_Property.propertyPath}";
 		
-		Rect rect = new Rect(
-			_Rect.x + _Rect.width * min,
-			_Rect.y,
-			_Rect.width * (max - min),
-			_Rect.height
-		);
+		if (!m_ClipDrawers.ContainsKey(propertyID) || m_ClipDrawers[propertyID] == null)
+			m_ClipDrawers[propertyID] = ClipDrawer.Create(_Property);
 		
-		min = Mathf.Max(0, min);
-		max = Mathf.Min(1, max);
+		ClipDrawer clipDrawer = m_ClipDrawers[propertyID];
 		
-		Rect r = new Rect(
-			_Rect.x + _Rect.width * min,
-			_Rect.y,
-			_Rect.width * (max - min),
-			_Rect.height
-		);
-		
-		if (!m_ClipDrawers.ContainsKey(_Clip) || m_ClipDrawers[_Clip] == null)
-			m_ClipDrawers[_Clip] = ClipDrawer.Create(_Clip);
-		
-		ClipDrawer clipDrawer = m_ClipDrawers[_Clip];
-		
-		clipDrawer?.Draw(rect, r);
+		clipDrawer?.Draw(_Rect, m_MinTime, m_MaxTime);
 	}
 
 	void MoveInput(Rect _Rect)
@@ -304,9 +537,67 @@ public class SequencerEditor : EditorWindow
 		Event.current.Use();
 	}
 
+	void ResizeTracksInput(Rect _Rect)
+	{
+		int controlID = "sequence_editor_tracks_handle".GetHashCode();
+		
+		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
+		
+		Rect handleRect = new Rect(
+			_Rect.xMax - 4,
+			_Rect.y,
+			8,
+			_Rect.height
+		);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == controlID
+						? handlePadding.Add(handleRect)
+						: handleRect,
+					MouseCursor.SplitResizeLeftRight,
+					controlID
+				);
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (!handleRect.Contains(Event.current.mousePosition))
+					break;
+				
+				GUIUtility.hotControl = controlID;
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != controlID)
+					break;
+				
+				TracksWidth += Event.current.delta.x;
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+		}
+	}
+
 	static void ClampTimeRange(ref float _MinTime, ref float _MaxTime)
 	{
-		const float minDelta = 1;
+		const float minDelta = 0.25f;
 		const float maxDelta = 300;
 		
 		float delta = Mathf.Clamp(_MaxTime - _MinTime, minDelta, maxDelta);

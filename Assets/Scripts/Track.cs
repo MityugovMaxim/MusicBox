@@ -2,18 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Track : ScriptableObject, IEnumerable<Clip>
+#if UNITY_EDITOR
+public partial class Track
 {
-	protected Sequencer Sequencer => m_Sequencer;
+	public virtual float MinHeight => 60;
+	public virtual float MaxHeight => 200;
 
-	Sequencer m_Sequencer;
+	[SerializeField] float m_Height;
+}
+#endif
+
+public abstract partial class Track : ScriptableObject, IEnumerable<Clip>
+{
+	protected Sequencer Sequencer { get; private set; }
 
 	public virtual void Initialize(Sequencer _Sequencer)
 	{
-		m_Sequencer = _Sequencer;
+		Sequencer = _Sequencer;
 	}
 
-	public abstract void Sample(float _StartTime, float _FinishTime);
+	public abstract void Sample(float _MinTime, float _MaxTime);
+
+	public abstract void Stop(float _Time);
 
 	public abstract IEnumerator<Clip> GetEnumerator();
 
@@ -39,7 +49,7 @@ public abstract class Track : ScriptableObject, IEnumerable<Clip>
 		if (Sequencer == null)
 			return null;
 		
-		Transform transform = m_Sequencer.transform.Find(_Reference);
+		Transform transform = Sequencer.transform.Find(_Reference);
 		
 		return transform != null ? transform.GetComponent<T>() : null;
 	}
@@ -53,21 +63,31 @@ public class Track<T> : Track where T : Clip
 
 	readonly List<T> m_Buffer = new List<T>();
 
-	public override void Sample(float _StartTime, float _FinishTime)
+	public override void Sample(float _MinTime, float _MaxTime)
 	{
 		m_Buffer.Clear();
 		
-		FindClips(m_Buffer, _StartTime, _FinishTime);
+		FindClips(m_Buffer, _MinTime, _MaxTime);
 		
 		foreach (T clip in m_Buffer)
-			clip.Sample(_FinishTime);
+			clip.Sample(_MaxTime);
 	}
 
-	public void FindClips(List<T> _Clips, float _StartTime, float _FinishTime)
+	public override void Stop(float _Time)
+	{
+		m_Buffer.Clear();
+		
+		FindClips(m_Buffer, _Time, _Time);
+		
+		foreach (T clip in m_Buffer)
+			clip.Stop(_Time);
+	}
+
+	public void FindClips(List<T> _Clips, float _MinTime, float _MaxTime)
 	{
 		_Clips.Clear();
 		
-		int index = FindClip(_StartTime, _FinishTime);
+		int index = FindClip(_MinTime, _MaxTime);
 		
 		if (index < 0)
 			return;
@@ -77,7 +97,7 @@ public class Track<T> : Track where T : Clip
 		{
 			T clip = m_Clips[minIndex - 1];
 			
-			if (_StartTime > clip.FinishTime || _FinishTime < clip.StartTime)
+			if (_MinTime > clip.MaxTime || _MaxTime < clip.MinTime)
 				break;
 			
 			minIndex--;
@@ -88,7 +108,7 @@ public class Track<T> : Track where T : Clip
 		{
 			T clip = m_Clips[maxIndex + 1];
 			
-			if (_StartTime > clip.FinishTime || _FinishTime < clip.StartTime)
+			if (_MinTime > clip.MaxTime || _MaxTime < clip.MinTime)
 				break;
 			
 			maxIndex++;
@@ -103,7 +123,7 @@ public class Track<T> : Track where T : Clip
 		return m_Clips.GetEnumerator();
 	}
 
-	int FindClip(float _StartTime, float _FinishTime)
+	int FindClip(float _MinTime, float _MaxTime)
 	{
 		int i = 0;
 		int j = m_Clips.Count - 1;
@@ -113,9 +133,9 @@ public class Track<T> : Track where T : Clip
 			
 			T clip = m_Clips[k];
 			
-			if (_StartTime > clip.FinishTime)
+			if (_MinTime > clip.MaxTime)
 				i = k + 1;
-			else if (_FinishTime < clip.StartTime)
+			else if (_MaxTime < clip.MinTime)
 				j = k - 1;
 			else
 				return k;

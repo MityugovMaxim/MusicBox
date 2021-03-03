@@ -4,17 +4,17 @@ using UnityEngine;
 [Serializable]
 public abstract class Clip
 {
-	public float StartTime  => m_StartTime;
-	public float FinishTime => m_FinishTime;
+	public float MinTime  => m_MinTime;
+	public float MaxTime => m_MaxTime;
 
-	[SerializeField] float m_StartTime;
-	[SerializeField] float m_FinishTime;
+	[SerializeField] float m_MinTime;
+	[SerializeField] float m_MaxTime;
 
 	bool m_Playing;
 
 	public void Sample(float _Time)
 	{
-		if (_Time >= StartTime && !m_Playing)
+		if (_Time >= MinTime && !m_Playing)
 		{
 			m_Playing = true;
 			OnEnter(_Time);
@@ -23,11 +23,18 @@ public abstract class Clip
 		if (m_Playing)
 			OnUpdate(_Time);
 		
-		if (_Time >= FinishTime && m_Playing)
+		if (_Time >= MaxTime && m_Playing)
 		{
 			m_Playing = false;
 			OnExit(_Time);
 		}
+	}
+
+	public void Stop(float _Time)
+	{
+		m_Playing = false;
+		
+		OnStop(_Time);
 	}
 
 	protected abstract void OnEnter(float _Time);
@@ -36,13 +43,15 @@ public abstract class Clip
 
 	protected abstract void OnExit(float _Time);
 
+	protected abstract void OnStop(float _Time);
+
 	protected float GetNormalizedTime(float _Time)
 	{
-		return Mathf.InverseLerp(StartTime, FinishTime, _Time);
+		return Mathf.InverseLerp(MinTime, MaxTime, _Time);
 	}
 
 	protected float GetLocalTime(float _Time)
 	{
-		return _Time - StartTime;
+		return _Time - MinTime;
 	}
 }

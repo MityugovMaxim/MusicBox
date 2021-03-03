@@ -1,44 +1,61 @@
 using UnityEngine;
 
+[ExecuteAlways]
 public class Sequencer : MonoBehaviour
 {
+	public float Time
+	{
+		get => m_Time;
+		set => m_Time = value;
+	}
+
+	public bool Playing { get; private set; }
+
 	public Track[] Tracks => m_Tracks;
 
 	[SerializeField] Track[] m_Tracks;
 
-	float m_Time;
-	bool  m_Playing;
+	[SerializeField] float m_Time;
+
+	void Awake()
+	{
+		foreach (Track track in m_Tracks)
+			track.Initialize(this);
+	}
 
 	void LateUpdate()
 	{
-		if (m_Playing)
-			Sample(m_Time + Time.deltaTime);
+		if (Playing)
+			Sample(m_Time + UnityEngine.Time.deltaTime);
 	}
 
 	public void Play()
 	{
-		m_Playing = true;
+		Playing = true;
 	}
 
 	public void Pause()
 	{
-		m_Playing = false;
+		Playing = false;
 	}
 
 	public void Stop()
 	{
-		m_Playing = false;
-		m_Time    = 0;
+		foreach (Track track in m_Tracks)
+			track.Stop(m_Time);
+		
+		Playing = false;
+		Time    = 0;
 	}
 
 	public void Sample(float _Time)
 	{
-		float startTime  = m_Time;
-		float finishTime = _Time;
+		if (Mathf.Approximately(Time, _Time))
+			return;
 		
 		foreach (Track track in m_Tracks)
-			track.Sample(startTime, finishTime);
+			track.Sample(Time, _Time);
 		
-		m_Time = finishTime;
+		Time = _Time;
 	}
 }

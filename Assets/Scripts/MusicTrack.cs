@@ -1,7 +1,14 @@
 using UnityEngine;
 
+#if UNITY_EDITOR
+public partial class MusicTrack
+{
+	public override float MinHeight => 80;
+}
+#endif
+
 [CreateAssetMenu(fileName = "Music Track", menuName = "Tracks/Music Track")]
-public class MusicTrack : Track<MusicClip>
+public partial class MusicTrack : Track<MusicClip>
 {
 	[SerializeField, Reference(typeof(AudioSource))] string m_AudioSourceReference;
 
