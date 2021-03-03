@@ -128,16 +128,17 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTimeline(Rect _Rect)
 	{
-		DrawTimelineGuide(_Rect, 0.01f);
+		DrawTimelineGuide(_Rect, 0.01f, false);
 		DrawTimelineGuide(_Rect, 0.1f, true);
 		DrawTimelineGuide(_Rect, 1, true);
 		DrawTimelineGuide(_Rect, 5, true);
 		DrawTimelineGuide(_Rect, 20, true);
 		DrawTimelineGuide(_Rect, 60, true);
+		
 		DrawTimelineSeeker(_Rect);
 	}
 
-	void DrawTimelineGuide(Rect _Rect, float _Step, bool _Time = false)
+	void DrawTimelineGuide(Rect _Rect, float _Step, bool _Time)
 	{
 		int min = Mathf.CeilToInt(m_MinTime / _Step);
 		int max = Mathf.FloorToInt(m_MaxTime / _Step);
@@ -154,9 +155,9 @@ public class SequencerEditor : EditorWindow
 		
 		scale = Mathf.Clamp(scale, 0.25f, 0.5f);
 		
-		float guideAlpha = Mathf.InverseLerp(4, 8, value);
-		
-		Handles.color = new Color(1, 1, 1, guideAlpha);
+		Color color = Handles.color;
+		color.a = Mathf.InverseLerp(4, 8, value);
+		Handles.color = color;
 		
 		for (int step = min; step <= max; step++)
 		{
@@ -208,6 +209,41 @@ public class SequencerEditor : EditorWindow
 		GUI.EndClip();
 		
 		GUI.contentColor = Color.white;
+	}
+
+	void DrawTimelineGuide(Rect _Rect, float _Step)
+	{
+		int min = Mathf.CeilToInt(m_MinTime / _Step);
+		int max = Mathf.FloorToInt(m_MaxTime / _Step);
+		
+		if (min > max)
+			return;
+		
+		float value = _Rect.width / (max - min + 1);
+		
+		if (value < 4)
+			return;
+		
+		Color color = Handles.color;
+		float alpha = color.a;
+		color.a = Mathf.Lerp(0, 0.5f, Mathf.InverseLerp(4, 8, value));
+		
+		Handles.color = color;
+		
+		for (int step = min; step <= max; step++)
+		{
+			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, step * _Step);
+			
+			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
+			
+			Handles.DrawLine(
+				new Vector3(position, _Rect.yMin),
+				new Vector3(position, _Rect.yMax)
+			);
+		}
+		
+		color.a = alpha;
+		Handles.color = color;
 	}
 
 	void DrawTimelineSeeker(Rect _Rect)
@@ -264,6 +300,8 @@ public class SequencerEditor : EditorWindow
 					m_MaxTime
 				);
 				
+				if (!Event.current.alt)
+					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
 				m_Sequencer.Stop();
@@ -293,6 +331,8 @@ public class SequencerEditor : EditorWindow
 					m_MaxTime
 				);
 				
+				if (!Event.current.alt)
+					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
 				m_Sequencer.Stop();
@@ -413,6 +453,15 @@ public class SequencerEditor : EditorWindow
 
 	void DrawClips(Rect _Rect)
 	{
+		Handles.color = new Color(0.1f, 0.1f, 0.1f);
+		DrawTimelineGuide(_Rect, 0.01f);
+		DrawTimelineGuide(_Rect, 0.1f);
+		DrawTimelineGuide(_Rect, 1);
+		DrawTimelineGuide(_Rect, 5);
+		DrawTimelineGuide(_Rect, 20);
+		DrawTimelineGuide(_Rect, 60);
+		Handles.color = Color.white;
+		
 		GUI.BeginClip(_Rect);
 		
 		float position = 0;

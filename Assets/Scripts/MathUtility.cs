@@ -21,4 +21,33 @@ public static class MathUtility
 	{
 		return Mathf.Clamp01(Remap01(_Value, _Low, _High));
 	}
+
+	public static float Snap(float _Value, float _Step)
+	{
+		return Mathf.Round(_Value / _Step) * _Step;
+	}
+
+	public static float Snap(float _Value, float _Min, float _Max, params float[] _Steps)
+	{
+		if (_Steps.Length == 0)
+			return _Value;
+		
+		const float threshold = 200;
+		
+		float length = _Max - _Min;
+		
+		int index = -1;
+		
+		for (int i = _Steps.Length - 1; i >= 0; i--)
+		{
+			int count = (int)(length / _Steps[i]);
+			
+			if (count > threshold)
+				break;
+			
+			index = i;
+		}
+		
+		return index >= 0 && index < _Steps.Length ? Snap(_Value, _Steps[index]) : _Value;
+	}
 }

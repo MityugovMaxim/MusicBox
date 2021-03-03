@@ -65,7 +65,7 @@ public class EventClipDrawer : ClipDrawer
 	{
 		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
 		
-		Rect centerHandleRect = new Rect(
+		Rect handleRect = new Rect(
 			HandleRect.x - 4,
 			HandleRect.y,
 			HandleRect.width + 8,
@@ -78,8 +78,8 @@ public class EventClipDrawer : ClipDrawer
 			{
 				EditorGUIUtility.AddCursorRect(
 					GUIUtility.hotControl == CenterHandleControlID
-						? handlePadding.Add(centerHandleRect)
-						: centerHandleRect,
+						? handlePadding.Add(handleRect)
+						: handleRect,
 					MouseCursor.ResizeHorizontal,
 					CenterHandleControlID
 				);
@@ -89,8 +89,10 @@ public class EventClipDrawer : ClipDrawer
 			
 			case EventType.MouseDown:
 			{
-				if (centerHandleRect.Contains(Event.current.mousePosition))
+				if (handleRect.Contains(Event.current.mousePosition))
 				{
+					SetMousePosition(handleRect);
+					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
 					Event.current.Use();
@@ -104,13 +106,15 @@ public class EventClipDrawer : ClipDrawer
 				if (GUIUtility.hotControl == CenterHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						HandleRect.center.x + Event.current.delta.x,
+						GetMousePosition().x,
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
 						TrackMaxTime
 					);
 					
+					if (Event.current.command)
+						time = SnapTime(time);
 					time = Mathf.Max(0, time);
 					
 					Resize(time, time);

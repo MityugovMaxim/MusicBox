@@ -75,6 +75,8 @@ public class ClipDrawer
 
 	SerializedProperty MaxTimeProperty { get; }
 
+	Vector2 m_MouseOrigin;
+
 	protected ClipDrawer(SerializedProperty _Property)
 	{
 		Property = _Property;
@@ -138,7 +140,7 @@ public class ClipDrawer
 
 	protected virtual void DrawHandles()
 	{
-		const float minDuration = 0.01f;
+		const float minDuration = 0.1f;
 		
 		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
 		
@@ -210,6 +212,8 @@ public class ClipDrawer
 			{
 				if (leftHandleRect.Contains(Event.current.mousePosition))
 				{
+					SetMousePosition(leftHandleRect);
+					
 					GUIUtility.hotControl = LeftHandleControlID;
 					
 					Event.current.Use();
@@ -217,6 +221,8 @@ public class ClipDrawer
 				
 				if (rightHandleRect.Contains(Event.current.mousePosition))
 				{
+					SetMousePosition(rightHandleRect);
+					
 					GUIUtility.hotControl = RightHandleControlID;
 					
 					Event.current.Use();
@@ -224,6 +230,8 @@ public class ClipDrawer
 				
 				if (centerHandleRect.Contains(Event.current.mousePosition))
 				{
+					SetMousePosition(centerHandleRect);
+					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
 					Event.current.Use();
@@ -237,13 +245,15 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == LeftHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						ClipRect.xMin + Event.current.delta.x,
+						GetMousePosition().x,
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
 						TrackMaxTime
 					);
 					
+					if (Event.current.command)
+						time = SnapTime(time);
 					time = Mathf.Clamp(time, 0, MaxTime - minDuration);
 					
 					Resize(time, MaxTime);
@@ -254,13 +264,15 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == RightHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						ClipRect.xMax + Event.current.delta.x,
+						GetMousePosition().x,
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
 						TrackMaxTime
 					);
 					
+					if (Event.current.command)
+						time = SnapTime(time);
 					time = Mathf.Max(MinTime + minDuration, time);
 					
 					Resize(MinTime, time);
@@ -271,13 +283,15 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == CenterHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						ClipRect.xMin + Event.current.delta.x,
+						GetMousePosition().x,
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
 						TrackMaxTime
 					);
 					
+					if (Event.current.command)
+						time = SnapTime(time);
 					time = Mathf.Max(0, time);
 					
 					Resize(time, time + MaxTime - MinTime);
@@ -288,6 +302,21 @@ public class ClipDrawer
 				break;
 			}
 		}
+	}
+
+	protected void SetMousePosition(Rect _Rect)
+	{
+		m_MouseOrigin = _Rect.position - Event.current.mousePosition;
+	}
+
+	protected Vector2 GetMousePosition()
+	{
+		return m_MouseOrigin + Event.current.mousePosition;
+	}
+
+	protected float SnapTime(float _Time)
+	{
+		return MathUtility.Snap(_Time, TrackMinTime, TrackMaxTime, 0.01f, 0.1f, 1, 5);
 	}
 
 	protected virtual void Resize(float _MinTime, float _MaxTime)

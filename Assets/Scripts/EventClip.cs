@@ -19,6 +19,8 @@ public class EventClip : Clip
 
 	protected override void OnExit(float _Time)
 	{
+		Debug.LogError("---> TRIGGER EVENT: " + MinTime);
+		
 		if (m_Component != null)
 			m_Component.SendMessage(m_MethodName);
 	}
