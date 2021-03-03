@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -8,7 +9,7 @@ public partial class Track
 	public virtual float MinHeight => 60;
 	public virtual float MaxHeight => 200;
 
-	[SerializeField] float m_Height;
+	[SerializeField, HideInInspector, UsedImplicitly] float m_Height;
 }
 #endif
 

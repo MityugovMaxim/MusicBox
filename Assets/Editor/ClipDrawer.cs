@@ -45,10 +45,7 @@ public class ClipDrawer
 		return typeof(ClipDrawer);
 	}
 
-	protected SerializedProperty Property              { get; }
-	protected int                LeftHandleControlID   { get; }
-	protected int                CenterHandleControlID { get; }
-	protected int                RightHandleControlID  { get; }
+	protected SerializedProperty Property { get; }
 
 	protected virtual bool Visible => TrackMinTime < MaxTime && TrackMaxTime > MinTime;
 
@@ -70,6 +67,10 @@ public class ClipDrawer
 	protected Rect ClipRect  { get; private set; }
 	protected Rect ViewRect  { get; private set; }
 
+	protected int LeftHandleControlID   { get; }
+	protected int CenterHandleControlID { get; }
+	protected int RightHandleControlID  { get; }
+
 	SerializedProperty MinTimeProperty { get; }
 
 	SerializedProperty MaxTimeProperty { get; }
@@ -78,7 +79,7 @@ public class ClipDrawer
 	{
 		Property = _Property;
 		
-		int controlID = GetHashCode();
+		int controlID = base.GetHashCode();
 		
 		MinTimeProperty  = Property.FindPropertyRelative("m_MinTime");
 		MaxTimeProperty = Property.FindPropertyRelative("m_MaxTime");
@@ -212,17 +213,6 @@ public class ClipDrawer
 					GUIUtility.hotControl = LeftHandleControlID;
 					
 					Event.current.Use();
-					
-					break;
-				}
-				
-				if (centerHandleRect.Contains(Event.current.mousePosition))
-				{
-					GUIUtility.hotControl = CenterHandleControlID;
-					
-					Event.current.Use();
-					
-					break;
 				}
 				
 				if (rightHandleRect.Contains(Event.current.mousePosition))
@@ -230,8 +220,13 @@ public class ClipDrawer
 					GUIUtility.hotControl = RightHandleControlID;
 					
 					Event.current.Use();
+				}
+				
+				if (centerHandleRect.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = CenterHandleControlID;
 					
-					break;
+					Event.current.Use();
 				}
 				
 				break;
@@ -254,27 +249,6 @@ public class ClipDrawer
 					Resize(time, MaxTime);
 					
 					Event.current.Use();
-					
-					break;
-				}
-				
-				if (GUIUtility.hotControl == CenterHandleControlID)
-				{
-					float time = MathUtility.Remap(
-						ClipRect.xMin + Event.current.delta.x,
-						TrackRect.xMin,
-						TrackRect.xMax,
-						TrackMinTime,
-						TrackMaxTime
-					);
-					
-					time = Mathf.Max(0, time);
-					
-					Resize(time, time + MaxTime - MinTime);
-					
-					Event.current.Use();
-					
-					break;
 				}
 				
 				if (GUIUtility.hotControl == RightHandleControlID)
@@ -292,8 +266,23 @@ public class ClipDrawer
 					Resize(MinTime, time);
 					
 					Event.current.Use();
+				}
+				
+				if (GUIUtility.hotControl == CenterHandleControlID)
+				{
+					float time = MathUtility.Remap(
+						ClipRect.xMin + Event.current.delta.x,
+						TrackRect.xMin,
+						TrackRect.xMax,
+						TrackMinTime,
+						TrackMaxTime
+					);
 					
-					break;
+					time = Mathf.Max(0, time);
+					
+					Resize(time, time + MaxTime - MinTime);
+					
+					Event.current.Use();
 				}
 				
 				break;

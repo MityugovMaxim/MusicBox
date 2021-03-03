@@ -1,12 +1,14 @@
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 [Serializable]
 public class MusicClip : Clip
 {
 	[SerializeField] AudioClip m_AudioClip;
-	[SerializeField] float     m_MinOffset;
-	[SerializeField] float     m_MaxOffset;
+
+	[SerializeField, UsedImplicitly] float m_MinOffset;
+	[SerializeField, UsedImplicitly] float m_MaxOffset;
 
 	AudioSource m_AudioSource;
 

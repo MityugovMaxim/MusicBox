@@ -27,7 +27,7 @@ public static class AudioUtility
 			m_PlayClip = Delegate.CreateDelegate(typeof(Action<AudioClip, int, bool>), methodInfo) as Action<AudioClip, int, bool>;
 		}
 		
-		m_PlayClip.Invoke(_AudioClip, 0, false);
+		m_PlayClip?.Invoke(_AudioClip, 0, false);
 		#endif
 	}
 
@@ -46,7 +46,7 @@ public static class AudioUtility
 			m_SetClipSamplePosition = Delegate.CreateDelegate(typeof(Action<AudioClip, int>), methodInfo) as Action<AudioClip, int>;
 		}
 		
-		m_SetClipSamplePosition.Invoke(
+		m_SetClipSamplePosition?.Invoke(
 			_AudioClip,
 			(int)MathUtility.Remap(_Time, 0, _AudioClip.length, 0, _AudioClip.samples - 1)
 		);
@@ -68,7 +68,7 @@ public static class AudioUtility
 			m_StopClip = Delegate.CreateDelegate(typeof(Action<AudioClip>), methodInfo) as Action<AudioClip>;
 		}
 		
-		m_StopClip.Invoke(_AudioClip);
+		m_StopClip?.Invoke(_AudioClip);
 		#endif
 	}
 }
