@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[ClipDrawer(typeof(MusicClip))]
+[SequencerDrawer(typeof(MusicClip))]
 public class MusicClipDrawer : ClipDrawer
 {
 	static GUIStyle ContentStyle
@@ -42,11 +42,11 @@ public class MusicClipDrawer : ClipDrawer
 
 	float[] m_AudioData;
 
-	public MusicClipDrawer(SerializedProperty _Property) : base(_Property)
+	public MusicClipDrawer(Clip _Clip) : base(_Clip)
 	{
-		AudioClipProperty = Property.FindPropertyRelative("m_AudioClip");
-		MinOffsetProperty = Property.FindPropertyRelative("m_MinOffset");
-		MaxOffsetProperty = Property.FindPropertyRelative("m_MaxOffset");
+		AudioClipProperty = ClipObject.FindProperty("m_AudioClip");
+		MinOffsetProperty = ClipObject.FindProperty("m_MinOffset");
+		MaxOffsetProperty = ClipObject.FindProperty("m_MaxOffset");
 	}
 
 	protected override void DrawBackground()
@@ -65,7 +65,7 @@ public class MusicClipDrawer : ClipDrawer
 		if (AudioClip == null)
 			return;
 		
-		float duration   = AudioClip.length;
+		float duration = AudioClip.length;
 		
 		if (!Mathf.Approximately(_MinTime, MinTime) && Mathf.Approximately(_MaxTime, MaxTime))
 		{
@@ -77,7 +77,7 @@ public class MusicClipDrawer : ClipDrawer
 			MinOffset = Mathf.Max(0, MinOffset + delta);
 			MinTime   = _MaxTime - length;
 			
-			Property.serializedObject.ApplyModifiedProperties();
+			ClipObject.ApplyModifiedProperties();
 			
 			return;
 		}
@@ -89,10 +89,10 @@ public class MusicClipDrawer : ClipDrawer
 			float length = Mathf.Clamp(_MaxTime - _MinTime, 0, duration - MinOffset);
 			float delta = _MaxTime - MaxTime;
 			
-			MaxOffset  = Mathf.Max(0, MaxOffset - delta);
-			MaxTime = _MinTime + length;
+			MaxOffset = Mathf.Max(0, MaxOffset - delta);
+			MaxTime   = _MinTime + length;
 			
-			Property.serializedObject.ApplyModifiedProperties();
+			ClipObject.ApplyModifiedProperties();
 			
 			return;
 		}
@@ -125,9 +125,11 @@ public class MusicClipDrawer : ClipDrawer
 		float min = Mathf.InverseLerp(minLimit, maxLimit, _ViewRect.xMin);
 		float max = Mathf.InverseLerp(minLimit, maxLimit, _ViewRect.xMax);
 		
-		const int smooth = 10;
+		int resolution = _AudioClip.samples / (int)Mathf.Max(1, maxLimit - minLimit);
 		
-		int resolution = _AudioClip.samples / Mathf.FloorToInt(Mathf.Max(1, maxLimit - minLimit) * (smooth + 1));
+		float scale = Mathf.InverseLerp(0, 300, TrackMaxTime - TrackMinTime);
+		
+		int skip = (int)Mathf.Max(4, scale * 150);
 		
 		void Evaluate(float _Phase, out Color _Color, out float _MinValue, out float _MaxValue)
 		{
@@ -135,30 +137,36 @@ public class MusicClipDrawer : ClipDrawer
 			
 			float phase = MathUtility.Remap(_Phase, 0, 1, min, max);
 			
-			float time = Mathf.Clamp(
-				phase * (samples / resolution - smooth - 1),
-				smooth,
-				samples / resolution - smooth - 1
-			);
-			
-			int index = Mathf.FloorToInt(time);
+			int index = (int)(phase * (samples / resolution) * resolution);
 			
 			float value = 0;
-			for (int i = -smooth; i <= smooth; i++)
+			
+			for (int i = 0; i < resolution; i += skip)
 			{
-				float data = Mathf.Abs(m_AudioData[(index + i) * resolution * channels]);
+				int j = (index + i) * channels;
 				
-				value = Mathf.Max(value, data);
+				if (j >= m_AudioData.Length)
+					break;
+				
+				float data = m_AudioData[(index + i) * channels];
+				
+				value = Mathf.Max(value, Mathf.Abs(data));
 			}
 			
-			_MinValue = -value;
+			value *= 0.95f;
+			
 			_MaxValue = value;
+			_MinValue = -value;
 		}
 		
-		AudioCurveRendering.DrawCurveBackground(_ViewRect);
+		AudioCurveRendering.DrawCurveBackground(_ClipRect);
 		
-		AudioCurveRendering.DrawMinMaxFilledCurve(_ViewRect, Evaluate);
+		GUI.BeginClip(new RectOffset(1, 1, 0, 0).Remove(_ViewRect));
 		
-		AudioCurveRendering.DrawCurveFrame(_ViewRect);
+		AudioCurveRendering.DrawMinMaxFilledCurve(new Rect(Vector2.zero, _ViewRect.size), Evaluate);
+		
+		GUI.EndClip();
+		
+		AudioCurveRendering.DrawCurveFrame(_ClipRect);
 	}
 }

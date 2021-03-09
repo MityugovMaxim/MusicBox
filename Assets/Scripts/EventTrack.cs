@@ -3,8 +3,8 @@ using UnityEngine;
 #if UNITY_EDITOR
 public partial class EventTrack
 {
-	public override float MinHeight => 30;
-	public override float MaxHeight => 30;
+	protected override float MinHeight => 30;
+	protected override float MaxHeight => 30;
 }
 #endif
 

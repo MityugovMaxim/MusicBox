@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
+[Serializable]
 public class StateBehaviour : StateMachineBehaviour
 {
 	public static StateBehaviour GetBehaviour(Animator _Animator, string _ID)

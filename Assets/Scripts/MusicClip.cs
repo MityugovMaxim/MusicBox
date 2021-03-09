@@ -1,8 +1,6 @@
-using System;
 using JetBrains.Annotations;
 using UnityEngine;
 
-[Serializable]
 public class MusicClip : Clip
 {
 	[SerializeField] AudioClip m_AudioClip;

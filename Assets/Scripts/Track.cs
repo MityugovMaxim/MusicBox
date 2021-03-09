@@ -1,19 +1,39 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using JetBrains.Annotations;
+using System.Linq;
+using System.Text;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 public partial class Track
 {
-	public virtual float MinHeight => 60;
-	public virtual float MaxHeight => 200;
+	public float Height
+	{
+		get => Mathf.Clamp(m_Height, MinHeight, MaxHeight);
+		set => m_Height = Mathf.Clamp(value, MinHeight, MaxHeight);
+	}
 
-	[SerializeField, HideInInspector, UsedImplicitly] float m_Height;
+	protected virtual float MinHeight => 30;
+	protected virtual float MaxHeight => 200;
+
+	[SerializeField, HideInInspector] float m_Height;
+
+	public virtual void DragPerform(float _Time, Object[] _Objects)
+	{
+		StringBuilder debug = new StringBuilder();
+		
+		debug.Append($"[{(int)_Time / 60:00}:{(int)_Time % 60:00}{_Time - (int)_Time:.000}]");
+		debug.Append(" DragAndDrop: ");
+		debug.Append(string.Join(",", _Objects.Select(_Object => _Object.ToString())));
+		
+		Debug.Log(debug.ToString());
+	}
 }
 #endif
 
-public abstract partial class Track : ScriptableObject, IEnumerable<Clip>
+public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IReferenceResolver
 {
 	protected Sequencer Sequencer { get; private set; }
 
@@ -45,14 +65,29 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>
 		return reference;
 	}
 
-	protected T GetReference<T>(string _Reference) where T : Component
+	public Component GetContext()
 	{
-		if (Sequencer == null)
+		return Sequencer;
+	}
+
+	public T GetReference<T>(string _Reference) where T : Component
+	{
+		if (Sequencer == null || string.IsNullOrEmpty(_Reference))
 			return null;
 		
 		Transform transform = Sequencer.transform.Find(_Reference);
 		
 		return transform != null ? transform.GetComponent<T>() : null;
+	}
+
+	public Component GetReference(Type _Type, string _Reference)
+	{
+		if (Sequencer == null || string.IsNullOrEmpty(_Reference))
+			return null;
+		
+		Transform transform = Sequencer.transform.Find(_Reference);
+		
+		return transform != null ? transform.GetComponent(_Type) : null;
 	}
 }
 

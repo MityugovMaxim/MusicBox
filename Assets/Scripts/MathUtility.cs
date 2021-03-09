@@ -50,4 +50,14 @@ public static class MathUtility
 		
 		return index >= 0 && index < _Steps.Length ? Snap(_Value, _Steps[index]) : _Value;
 	}
+
+	public static Rect Round(Rect _Rect)
+	{
+		return new Rect(
+			Mathf.Round(_Rect.x),
+			Mathf.Round(_Rect.y),
+			Mathf.Round(_Rect.width),
+			Mathf.Round(_Rect.height)
+		);
+	}
 }

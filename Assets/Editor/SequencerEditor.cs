@@ -25,8 +25,8 @@ public class SequencerEditor : EditorWindow
 		set => EditorPrefs.SetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", Mathf.Max(120, value));
 	}
 
-	static readonly Dictionary<string, ClipDrawer>      m_ClipDrawers  = new Dictionary<string, ClipDrawer>();
-	static readonly Dictionary<Track, SerializedObject> m_TrackObjects = new Dictionary<Track, SerializedObject>();
+	static readonly Dictionary<int, TrackDrawer> m_TrackDrawers = new Dictionary<int, TrackDrawer>();
+	static readonly Dictionary<int, ClipDrawer>  m_ClipDrawers  = new Dictionary<int, ClipDrawer>();
 
 	[SerializeField] Sequencer m_Sequencer;
 	[SerializeField] float     m_MinTime;
@@ -35,21 +35,19 @@ public class SequencerEditor : EditorWindow
 	void OnEnable()
 	{
 		Undo.undoRedoPerformed += Repaint;
-		EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-	}
-
-	void OnPlayModeStateChanged(PlayModeStateChange _Obj)
-	{
-		Repaint();
 	}
 
 	void OnDisable()
 	{
 		Undo.undoRedoPerformed -= Repaint;
-		EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 	}
 
 	void OnInspectorUpdate()
+	{
+		Repaint();
+	}
+
+	void OnHierarchyChange()
 	{
 		Repaint();
 	}
@@ -61,12 +59,13 @@ public class SequencerEditor : EditorWindow
 		if (sequencer == null || sequencer == m_Sequencer)
 			return;
 		
+		m_TrackDrawers.Clear();
 		m_ClipDrawers.Clear();
-		m_TrackObjects.Clear();
 		
 		m_Sequencer = sequencer;
 		m_MinTime   = 0;
 		m_MaxTime   = 60;
+		m_Sequencer.Initialize();
 		
 		foreach (Track track in m_Sequencer.Tracks)
 		foreach (Clip clip in track)
@@ -95,6 +94,7 @@ public class SequencerEditor : EditorWindow
 		
 		MoveInput(clipsRect);
 		ZoomInput(clipsRect);
+		DragDropInput(clipsRect);
 		ResizeTracksInput(tracksRect);
 	}
 
@@ -304,9 +304,11 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
+				bool playing = m_Sequencer.Playing;
+				
 				m_Sequencer.Stop();
 				m_Sequencer.Time = time;
-				if (m_Sequencer.Playing)
+				if (playing)
 					m_Sequencer.Play();
 				
 				Event.current.Use();
@@ -335,9 +337,11 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
+				bool playing = m_Sequencer.Playing;
+				
 				m_Sequencer.Stop();
 				m_Sequencer.Time = time;
-				if (m_Sequencer.Playing)
+				if (playing)
 					m_Sequencer.Play();
 				
 				Event.current.Use();
@@ -353,102 +357,39 @@ public class SequencerEditor : EditorWindow
 	{
 		float position = 0;
 		
+		RectOffset trackPadding = new RectOffset(0, 0, 1, 1);
+		
 		foreach (Track track in m_Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
 			
-			if (!m_TrackObjects.ContainsKey(track) || m_TrackObjects[track] == null)
-				m_TrackObjects[track] = new SerializedObject(track);
-			
-			SerializedObject trackObject = m_TrackObjects[track];
-			
-			SerializedProperty heightProperty = trackObject.FindProperty("m_Height");
-			
-			float height = Mathf.Clamp(heightProperty.floatValue, track.MinHeight, track.MaxHeight);
-			
-			DrawTrack(
-				new Rect(
-					_Rect.x,
-					_Rect.y + position,
-					_Rect.width,
-					height
-				),
-				trackObject,
-				track.MinHeight,
-				track.MaxHeight
+			Rect rect = new Rect(
+				_Rect.x,
+				_Rect.y + position,
+				_Rect.width,
+				track.Height
 			);
 			
-			position += height;
+			DrawTrack(trackPadding.Remove(rect), track);
+			
+			position += track.Height;
 		}
 	}
 
-	void DrawTrack(Rect _Rect, SerializedObject _TrackObject, float _MinHeight, float _MaxHeight)
+	void DrawTrack(Rect _Rect, Track _Track)
 	{
-		int controlID = $"{_TrackObject.GetHashCode()}sequencer_track_height_handle".GetHashCode();
+		if (_Track == null || Event.current.type == EventType.Used)
+			return;
 		
-		RectOffset handlePadding = new RectOffset(0, 0, 100, 100);
+		int trackID = _Track.GetInstanceID();
 		
-		Rect handleRect = new Rect(_Rect.x, _Rect.yMax - 4, _Rect.width, 8);
+		if (!m_TrackDrawers.ContainsKey(trackID) || m_TrackDrawers[trackID] == null)
+			m_TrackDrawers[trackID] = TrackDrawer.Create(_Track);
 		
-		switch (Event.current.type)
-		{
-			case EventType.Repaint:
-			{
-				EditorGUI.DrawRect(
-					new RectOffset(0, 0, 1, 1).Remove(_Rect),
-					new Color(0.12f, 0.12f, 0.12f)
-				);
-				
-				GUI.Label(
-					_Rect,
-					_TrackObject.targetObject.name,
-					EditorStyles.whiteBoldLabel
-				);
-				
-				EditorGUIUtility.AddCursorRect(
-					GUIUtility.hotControl == controlID
-						? handlePadding.Add(handleRect)
-						: handleRect,
-					MouseCursor.SplitResizeUpDown,
-					controlID
-				);
-				
-				break;
-			}
-			
-			case EventType.MouseDown:
-			{
-				if (!handleRect.Contains(Event.current.mousePosition))
-					break;
-				
-				GUIUtility.hotControl = controlID;
-				
-				Event.current.Use();
-				
-				Repaint();
-				
-				break;
-			}
-			
-			case EventType.MouseDrag:
-			{
-				if (GUIUtility.hotControl != controlID)
-					break;
-				
-				SerializedProperty heightProperty = _TrackObject.FindProperty("m_Height");
-				
-				heightProperty.floatValue = Mathf.Clamp(heightProperty.floatValue + Event.current.delta.y, _MinHeight, _MaxHeight);
-				
-				_TrackObject.ApplyModifiedProperties();
-				
-				Event.current.Use();
-				
-				Repaint();
-				
-				break;
-			}
-		}
+		TrackDrawer trackDrawer = m_TrackDrawers[trackID];
+		
+		trackDrawer?.Draw(_Rect, m_Sequencer.Time);
 	}
 
 	void DrawClips(Rect _Rect)
@@ -466,57 +407,57 @@ public class SequencerEditor : EditorWindow
 		
 		float position = 0;
 		
+		RectOffset trackPadding = new RectOffset(0, 0, 2, 2);
+		RectOffset clipPadding  = new RectOffset(0, 0, 4, 4);
+		
 		foreach (Track track in m_Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
 			
-			if (!m_TrackObjects.ContainsKey(track) || m_TrackObjects[track] == null)
-				m_TrackObjects[track] = new SerializedObject(track);
+			Rect rect = new Rect(
+				0,
+				position,
+				_Rect.width,
+				track.Height
+			);
 			
-			SerializedObject trackObject = m_TrackObjects[track];
-			
-			SerializedProperty heightProperty = trackObject.FindProperty("m_Height");
-			
-			float height = Mathf.Clamp(heightProperty.floatValue, track.MinHeight, track.MaxHeight);
-			
-			trackObject.UpdateIfRequiredOrScript();
-			
-			SerializedProperty clipsProperty = trackObject.FindProperty("m_Clips");
-			
-			if (clipsProperty == null)
-				continue;
-			
-			for (int i = 0; i < clipsProperty.arraySize; i++)
+			switch (Event.current.type)
 			{
-				DrawClip(
-					new Rect(
-						0,
-						position,
-						_Rect.width,
-						height
-					),
-					clipsProperty.GetArrayElementAtIndex(i)
-				);
+				case EventType.Repaint:
+				{
+					Handles.DrawSolidRectangleWithOutline(
+						trackPadding.Remove(rect),
+						new Color(0.7f, 0.7f, 0.7f, 0.05f),
+						new Color(0.4f, 0.4f, 0.4f, 0.8f)
+					);
+					
+					break;
+				}
 			}
 			
-			position += height;
+			foreach (Clip clip in track)
+			{
+				DrawClip(clipPadding.Remove(rect), clip);
+			}
+			
+			position += track.Height;
 		}
 		
 		GUI.EndClip();
 	}
 
-	void DrawClip(Rect _Rect, SerializedProperty _Property)
+	void DrawClip(Rect _Rect, Clip _Clip)
 	{
-		if (_Property == null)
+		if (_Clip == null || Event.current.type == EventType.Used)
 			return;
 		
-		string propertyID = $"[{_Property.serializedObject.targetObject.name}::{_Property.type}]{_Property.propertyPath}";
+		int clipID = _Clip.GetInstanceID();
 		
-		if (!m_ClipDrawers.ContainsKey(propertyID) || m_ClipDrawers[propertyID] == null)
-			m_ClipDrawers[propertyID] = ClipDrawer.Create(_Property);
+		if (!m_ClipDrawers.ContainsKey(clipID) || m_ClipDrawers[clipID] == null)
+			m_ClipDrawers[clipID] = ClipDrawer.Create(_Clip);
 		
-		ClipDrawer clipDrawer = m_ClipDrawers[propertyID];
+		ClipDrawer clipDrawer = m_ClipDrawers[clipID];
 		
 		clipDrawer?.Draw(_Rect, m_MinTime, m_MaxTime);
 	}
@@ -586,9 +527,66 @@ public class SequencerEditor : EditorWindow
 		Event.current.Use();
 	}
 
+	void DragDropInput(Rect _Rect)
+	{
+		float position = 0;
+		
+		foreach (Track track in m_Sequencer.Tracks)
+		{
+			if (track == null)
+				continue;
+			
+			Rect rect = new Rect(
+				_Rect.x,
+				_Rect.y + position,
+				_Rect.width,
+				track.Height
+			);
+			
+			switch (Event.current.type)
+			{
+				case EventType.DragUpdated:
+				{
+					if (!rect.Contains(Event.current.mousePosition))
+						break;
+					
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+					
+					break;
+				}
+				
+				case EventType.DragPerform:
+				{
+					if (!rect.Contains(Event.current.mousePosition))
+						break;
+					
+					float time = MathUtility.Remap(
+						Event.current.mousePosition.x,
+						rect.xMin,
+						rect.xMax,
+						m_MinTime,
+						m_MaxTime
+					);
+					
+					track.DragPerform(time, DragAndDrop.objectReferences);
+					
+					DragAndDrop.AcceptDrag();
+					
+					Event.current.Use();
+					
+					Repaint();
+					
+					break;
+				}
+			}
+			
+			position += track.Height;
+		}
+	}
+
 	void ResizeTracksInput(Rect _Rect)
 	{
-		int controlID = "sequence_editor_tracks_handle".GetHashCode();
+		int controlID = EditorGUIUtility.GetControlID("sequence_editor_tracks_handle".GetHashCode(), FocusType.Passive);
 		
 		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
 		

@@ -1,8 +1,6 @@
-using System;
 using UnityEngine;
 
-[Serializable]
-public abstract class Clip
+public abstract class Clip : ScriptableObject
 {
 	public float MinTime  => m_MinTime;
 	public float MaxTime => m_MaxTime;

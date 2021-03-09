@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [ExecuteAlways]
-public class Sequencer : MonoBehaviour
+public class Sequencer : MonoBehaviour, IExposedPropertyTable
 {
 	public float Time
 	{
@@ -19,14 +19,19 @@ public class Sequencer : MonoBehaviour
 
 	void Awake()
 	{
-		foreach (Track track in m_Tracks)
-			track.Initialize(this);
+		Initialize();
 	}
 
 	void LateUpdate()
 	{
 		if (Playing)
 			Sample(m_Time + UnityEngine.Time.deltaTime);
+	}
+
+	public void Initialize()
+	{
+		foreach (Track track in m_Tracks)
+			track.Initialize(this);
 	}
 
 	public void Play()
@@ -57,5 +62,22 @@ public class Sequencer : MonoBehaviour
 			track.Sample(Time, _Time);
 		
 		Time = _Time;
+	}
+
+	public void SetReferenceValue(PropertyName _ID, Object _Value)
+	{
+		Debug.LogError("---> SET " + _ID);
+	}
+
+	public Object GetReferenceValue(PropertyName _ID, out bool _IDValid)
+	{
+		_IDValid = true;
+		Debug.LogError("---> GET " + _ID);
+		return null;
+	}
+
+	public void ClearReferenceValue(PropertyName _ID)
+	{
+		Debug.LogError("---> CLEAR " + _ID);
 	}
 }

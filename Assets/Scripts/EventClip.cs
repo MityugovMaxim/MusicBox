@@ -1,7 +1,5 @@
-using System;
 using UnityEngine;
 
-[Serializable]
 public class EventClip : Clip
 {
 	Component m_Component;

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[ClipDrawer(typeof(EventClip))]
+[SequencerDrawer(typeof(EventClip))]
 public class EventClipDrawer : ClipDrawer
 {
 	const float HANDLE_WIDTH = 5;
@@ -32,7 +32,7 @@ public class EventClipDrawer : ClipDrawer
 
 	Rect HandleRect { get; set; }
 
-	public EventClipDrawer(SerializedProperty _Property) : base(_Property) { }
+	public EventClipDrawer(Clip _Clip) : base(_Clip) { }
 
 	protected override void Draw()
 	{
@@ -43,12 +43,14 @@ public class EventClipDrawer : ClipDrawer
 			ClipRect.height
 		);
 		
-		DrawBackground();
-		DrawHandles();
+		base.Draw();
 	}
 
 	protected override void DrawBackground()
 	{
+		if (Event.current.type != EventType.Repaint)
+			return;
+		
 		Rect rect = new RectOffset(0, 0, 2, 2).Remove(HandleRect);
 		
 		Handles.DrawAAConvexPolygon(
@@ -59,6 +61,48 @@ public class EventClipDrawer : ClipDrawer
 			new Vector3(rect.xMax, rect.yMax - rect.width * 0.5f),
 			new Vector3(rect.xMax, rect.yMin + rect.width * 0.5f)
 		);
+	}
+
+	protected override void DrawSelection()
+	{
+		Rect handleRect = new Rect(
+			HandleRect.x - 4,
+			HandleRect.y,
+			HandleRect.width + 8,
+			HandleRect.height
+		);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				if (Selection.Contains(Clip))
+				{
+					Rect rect = new RectOffset(0, 0, 2, 2).Remove(HandleRect);
+					
+					Handles.color = new Color(0.25f, 0.6f, 0.85f);
+					Handles.DrawAAConvexPolygon(
+						new Vector3(rect.center.x, rect.yMin),
+						new Vector3(rect.xMin, rect.yMin + rect.width * 0.5f),
+						new Vector3(rect.xMin, rect.yMax - rect.width * 0.5f),
+						new Vector3(rect.center.x, rect.yMax),
+						new Vector3(rect.xMax, rect.yMax - rect.width * 0.5f),
+						new Vector3(rect.xMax, rect.yMin + rect.width * 0.5f)
+					);
+					Handles.color = Color.white;
+				}
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (handleRect.Contains(Event.current.mousePosition))
+					Selection.activeObject = Clip;
+				
+				break;
+			}
+		}
 	}
 
 	protected override void DrawHandles()
@@ -91,7 +135,7 @@ public class EventClipDrawer : ClipDrawer
 			{
 				if (handleRect.Contains(Event.current.mousePosition))
 				{
-					SetMousePosition(handleRect);
+					SetMousePosition(ClipRect);
 					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
