@@ -135,7 +135,7 @@ public class EventClipDrawer : ClipDrawer
 			{
 				if (handleRect.Contains(Event.current.mousePosition))
 				{
-					SetMousePosition(ClipRect);
+					Event.current.SetPosition(ClipRect);
 					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
@@ -150,7 +150,7 @@ public class EventClipDrawer : ClipDrawer
 				if (GUIUtility.hotControl == CenterHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						GetMousePosition().x,
+						Event.current.GetPosition().x,
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,

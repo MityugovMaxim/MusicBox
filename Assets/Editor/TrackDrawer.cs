@@ -5,59 +5,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-[SequencerDrawer(typeof(MusicTrack))]
-public class MusicTrackDrawer : TrackDrawer
-{
-	SerializedProperty AudioSourceProperty { get; }
-
-	public MusicTrackDrawer(Track _Track) : base(_Track)
-	{
-		AudioSourceProperty = TrackObject.FindProperty("m_AudioSource");
-	}
-
-	protected override void DrawContent()
-	{
-		DrawName();
-		
-		EditorGUILayout.PropertyField(AudioSourceProperty, GUIContent.none);
-	}
-}
-
-[SequencerDrawer(typeof(EventTrack))]
-public class EventTrackDrawer : TrackDrawer
-{
-	public EventTrackDrawer(Track _Track) : base(_Track) { }
-
-	protected override void DrawContent()
-	{
-		EditorGUILayout.BeginHorizontal();
-		
-		DrawName();
-		
-		if (GUILayout.Button("+", GUILayout.Width(20)))
-		{
-			EventClip clip = ScriptableObject.CreateInstance<EventClip>();
-			
-			clip.name = "EventClip";
-			
-			using (SerializedObject clipObject = new SerializedObject(clip))
-			{
-				SerializedProperty minTimeProperty = clipObject.FindProperty("m_MinTime");
-				SerializedProperty maxTimeProperty = clipObject.FindProperty("m_MaxTime");
-				
-				minTimeProperty.floatValue = Time;
-				maxTimeProperty.floatValue = Time;
-				
-				clipObject.ApplyModifiedProperties();
-			}
-			
-			AddClip(clip);
-		}
-		
-		EditorGUILayout.EndHorizontal();
-	}
-}
-
 public class TrackDrawer
 {
 	static readonly Dictionary<Type, Type> m_TrackDrawerTypes = new Dictionary<Type, Type>();
@@ -101,8 +48,9 @@ public class TrackDrawer
 		return typeof(TrackDrawer);
 	}
 
-	protected Track            Track       { get; }
-	protected SerializedObject TrackObject { get; }
+	protected Track            Track           { get; }
+	protected SerializedObject TrackObject     { get; }
+	protected int              HandleControlID { get; }
 
 	protected Rect  TrackRect   { get; private set; }
 	protected Rect  ContentRect { get; private set; }
@@ -112,6 +60,10 @@ public class TrackDrawer
 	{
 		Track       = _Track;
 		TrackObject = new SerializedObject(_Track);
+		
+		int controlID = _Track.GetInstanceID();
+		
+		HandleControlID = GUIUtility.GetControlID($"[{controlID}]track_handle_control".GetHashCode(), FocusType.Passive);
 	}
 
 	public void Draw(Rect _TrackRect, float _Time)
@@ -128,6 +80,8 @@ public class TrackDrawer
 		DrawContent();
 		
 		GUILayout.EndArea();
+		
+		DrawHandles();
 	}
 
 	protected void DrawName()
@@ -170,7 +124,58 @@ public class TrackDrawer
 
 	protected virtual void DrawHandles()
 	{
+		RectOffset handlePadding = new RectOffset(0, 0, 100, 100);
 		
+		Rect handleRect = new Rect(
+			TrackRect.x,
+			TrackRect.yMax - 4,
+			TrackRect.width,
+			8
+		);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == HandleControlID
+						? handlePadding.Add(handleRect)
+						: handleRect,
+					MouseCursor.ResizeVertical,
+					HandleControlID
+				);
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (!handleRect.Contains(Event.current.mousePosition))
+					break;
+				
+				GUIUtility.hotControl = HandleControlID;
+				
+				Event.current.SetPosition(TrackRect.yMax);
+				
+				Event.current.Use();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != HandleControlID)
+					break;
+				
+				float padding = Track.Height - TrackRect.height;
+				
+				Track.Height = Event.current.GetVerticalPosition() - TrackRect.yMin + padding;
+				
+				Event.current.Use();
+				
+				break;
+			}
+		}
 	}
 
 	protected void AddClip<T>(T _Clip) where T : Clip

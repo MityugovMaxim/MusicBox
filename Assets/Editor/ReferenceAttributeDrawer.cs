@@ -1,6 +1,7 @@
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 [CustomPropertyDrawer(typeof(ReferenceAttribute))]
 public class ReferenceAttributeDrawer : PropertyDrawer
@@ -32,7 +33,7 @@ public class ReferenceAttributeDrawer : PropertyDrawer
 		
 		EditorGUI.BeginChangeCheck();
 		
-		Component component = EditorGUI.ObjectField(
+		Object data = EditorGUI.ObjectField(
 			new Rect(
 				_Rect.x,
 				_Rect.y + (_Rect.height - EditorGUIUtility.singleLineHeight) * 0.5f,
@@ -43,30 +44,41 @@ public class ReferenceAttributeDrawer : PropertyDrawer
 			resolver.GetReference(reference.Type, _Property.stringValue),
 			reference.Type,
 			true
-		) as Component;
+		);
 		
 		if (EditorGUI.EndChangeCheck())
-			_Property.stringValue = CreateReference(context, component);
+			_Property.stringValue = CreateReference(context, data);
 	}
 
-	static string CreateReference(Component _Context, Component _Component)
+	static string CreateReference(Component _Context, Object _Data)
 	{
-		if (_Context == null || _Component == null)
+		if (_Context == null || _Data == null)
 			return null;
+		
+		Transform transform;
+		switch (_Data)
+		{
+			case GameObject gameObject:
+				transform = gameObject.transform;
+				break;
+			case Component component:
+				transform = component.transform;
+				break;
+			default:
+				return null;
+		}
 		
 		StringBuilder reference = new StringBuilder();
 		
-		Transform transform = _Component.transform;
 		while (transform != null)
 		{
 			reference.Insert(0, transform.name);
-			
-			transform = transform.parent;
+			reference.Insert(0, '/');
 			
 			if (transform == _Context.transform)
 				break;
 			
-			reference.Insert(0, '/');
+			transform = transform.parent;
 		}
 		
 		return reference.ToString();

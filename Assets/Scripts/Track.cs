@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -20,16 +18,7 @@ public partial class Track
 
 	[SerializeField, HideInInspector] float m_Height;
 
-	public virtual void DragPerform(float _Time, Object[] _Objects)
-	{
-		StringBuilder debug = new StringBuilder();
-		
-		debug.Append($"[{(int)_Time / 60:00}:{(int)_Time % 60:00}{_Time - (int)_Time:.000}]");
-		debug.Append(" DragAndDrop: ");
-		debug.Append(string.Join(",", _Objects.Select(_Object => _Object.ToString())));
-		
-		Debug.Log(debug.ToString());
-	}
+	public virtual void DragPerform(float _Time, Object[] _Objects) { }
 }
 #endif
 
@@ -80,14 +69,30 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		return transform != null ? transform.GetComponent<T>() : null;
 	}
 
-	public Component GetReference(Type _Type, string _Reference)
+	public GameObject GetReference(string _Reference)
 	{
 		if (Sequencer == null || string.IsNullOrEmpty(_Reference))
 			return null;
 		
 		Transform transform = Sequencer.transform.Find(_Reference);
 		
-		return transform != null ? transform.GetComponent(_Type) : null;
+		return transform != null ? transform.gameObject : null;
+	}
+
+	public Object GetReference(Type _Type, string _Reference)
+	{
+		if (Sequencer == null || string.IsNullOrEmpty(_Reference))
+			return null;
+		
+		Transform transform = Sequencer.transform.Find(_Reference);
+		
+		if (transform == null)
+			return null;
+		
+		if (_Type == typeof(GameObject))
+			return transform.gameObject;
+		
+		return transform.GetComponent(_Type);
 	}
 }
 

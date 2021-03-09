@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class EventClip : Clip
 {
-	Component m_Component;
-	string    m_MethodName;
+	[SerializeField] string m_MethodName;
 
-	public void Initialize(Component _Component, string _MethodName)
+	GameObject m_GameObject;
+
+	public void Initialize(GameObject _GameObject)
 	{
-		m_Component  = _Component;
-		m_MethodName = _MethodName;
+		m_GameObject = _GameObject;
 	}
 
 	protected override void OnEnter(float _Time) { }
@@ -17,8 +17,8 @@ public class EventClip : Clip
 
 	protected override void OnExit(float _Time)
 	{
-		if (m_Component != null)
-			m_Component.SendMessage(m_MethodName);
+		if (m_GameObject != null)
+			m_GameObject.SendMessage(m_MethodName);
 	}
 
 	protected override void OnStop(float _Time) { }

@@ -9,16 +9,6 @@ public class ClipDrawer
 {
 	static readonly Dictionary<Type, Type> m_ClipDrawerTypes = new Dictionary<Type, Type>();
 
-	public void Setup(params Vector2Int[] _Value)
-	{
-		Clear();
-	}
-
-	public void Clear()
-	{
-		
-	}
-
 	public static ClipDrawer Create(Clip _Clip)
 	{
 		if (_Clip == null)
@@ -88,8 +78,6 @@ public class ClipDrawer
 
 	SerializedProperty MaxTimeProperty { get; }
 
-	Vector2 m_MouseOrigin;
-
 	protected ClipDrawer(Clip _Clip)
 	{
 		Clip       = _Clip;
@@ -100,9 +88,9 @@ public class ClipDrawer
 		MinTimeProperty = ClipObject.FindProperty("m_MinTime");
 		MaxTimeProperty = ClipObject.FindProperty("m_MaxTime");
 		
-		LeftHandleControlID   = EditorGUIUtility.GetControlID($"[{controlID}sequencer_left_handle_control]".GetHashCode(), FocusType.Passive);
-		CenterHandleControlID = EditorGUIUtility.GetControlID($"[{controlID}sequencer_center_handle_control]".GetHashCode(), FocusType.Passive);
-		RightHandleControlID  = EditorGUIUtility.GetControlID($"[{controlID}sequencer_right_handle_control]".GetHashCode(), FocusType.Passive);
+		LeftHandleControlID   = EditorGUIUtility.GetControlID($"[{controlID}]clip_left_handle_control".GetHashCode(), FocusType.Passive);
+		CenterHandleControlID = EditorGUIUtility.GetControlID($"[{controlID}]clip_center_handle_control".GetHashCode(), FocusType.Passive);
+		RightHandleControlID  = EditorGUIUtility.GetControlID($"[{controlID}]clip_right_handle_control".GetHashCode(), FocusType.Passive);
 	}
 
 	public void Draw(Rect _TrackRect, float _TrackMinTime, float _TrackMaxTime)
@@ -245,7 +233,7 @@ public class ClipDrawer
 			{
 				if (leftHandleRect.Contains(Event.current.mousePosition))
 				{
-					SetMousePosition(ClipRect);
+					Event.current.SetPosition(ClipRect.xMin);
 					
 					GUIUtility.hotControl = LeftHandleControlID;
 					
@@ -254,7 +242,7 @@ public class ClipDrawer
 				
 				if (rightHandleRect.Contains(Event.current.mousePosition))
 				{
-					SetMousePosition(ClipRect);
+					Event.current.SetPosition(ClipRect.xMax);
 					
 					GUIUtility.hotControl = RightHandleControlID;
 					
@@ -263,7 +251,7 @@ public class ClipDrawer
 				
 				if (centerHandleRect.Contains(Event.current.mousePosition))
 				{
-					SetMousePosition(ClipRect);
+					Event.current.SetPosition(ClipRect.xMin);
 					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
@@ -278,7 +266,7 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == LeftHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						GetMousePosition().x,
+						Event.current.GetHorizontalPosition(),
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
@@ -297,7 +285,7 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == RightHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						GetMousePosition().x,
+						Event.current.GetHorizontalPosition(),
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
@@ -316,7 +304,7 @@ public class ClipDrawer
 				if (GUIUtility.hotControl == CenterHandleControlID)
 				{
 					float time = MathUtility.Remap(
-						GetMousePosition().x,
+						Event.current.GetHorizontalPosition(),
 						TrackRect.xMin,
 						TrackRect.xMax,
 						TrackMinTime,
@@ -335,16 +323,6 @@ public class ClipDrawer
 				break;
 			}
 		}
-	}
-
-	protected void SetMousePosition(Rect _Rect)
-	{
-		m_MouseOrigin = _Rect.position - Event.current.mousePosition;
-	}
-
-	protected Vector2 GetMousePosition()
-	{
-		return m_MouseOrigin + Event.current.mousePosition;
 	}
 
 	protected float SnapTime(float _Time)

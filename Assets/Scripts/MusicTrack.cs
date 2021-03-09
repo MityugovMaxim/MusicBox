@@ -6,6 +6,8 @@ using UnityEditor;
 
 public partial class MusicTrack
 {
+	protected override float MinHeight => 50;
+
 	public override void DragPerform(float _Time, Object[] _Objects)
 	{
 		base.DragPerform(_Time, _Objects);
