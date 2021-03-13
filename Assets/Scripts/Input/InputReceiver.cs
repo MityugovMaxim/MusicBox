@@ -40,17 +40,29 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 		{
 			float direction = Mathf.Sign(_EventData.delta.x);
 			if (direction >= 0)
+			{
+				Debug.LogError("---> SWIPE RIGHT");
 				m_OnSwipeRight?.Invoke();
+			}
 			else
+			{
+				Debug.LogError("---> SWIPE LEFT");
 				m_OnSwipeLeft?.Invoke();
+			}
 		}
 		else
 		{
 			float direction = Mathf.Sign(_EventData.delta.y);
 			if (direction >= 0)
+			{
+				Debug.LogError("---> SWIPE UP");
 				m_OnSwipeUp?.Invoke();
+			}
 			else
+			{
+				Debug.LogError("---> SWIPE DOWN");
 				m_OnSwipeDown?.Invoke();
+			}
 		}
 	}
 }
