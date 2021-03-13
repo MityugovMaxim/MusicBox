@@ -22,9 +22,10 @@ public class MusicClip : Clip
 		if (Application.isPlaying)
 		{
 			m_AudioSource.clip = m_AudioClip;
-			m_AudioSource.time = time + m_MinOffset;
 			
 			m_AudioSource.Play();
+			
+			m_AudioSource.time = time + m_MinOffset;
 		}
 		else
 		{

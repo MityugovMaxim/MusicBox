@@ -2,15 +2,15 @@ using System.Linq;
 using UnityEngine;
 
 #if UNITY_EDITOR
-public partial class EventTrack
+public partial class RoutineTrack
 {
 	protected override float MinHeight => 50;
 	protected override float MaxHeight => 50;
 }
 #endif
 
-[CreateAssetMenu(fileName = "Event Track", menuName = "Tracks/Event Track")]
-public partial class EventTrack : Track<EventClip>
+[CreateAssetMenu(fileName = "Routine Track", menuName = "Tracks/Routine Track")]
+public partial class RoutineTrack : Track<RoutineClip>
 {
 	[SerializeField, Reference(typeof(GameObject))] string m_Target;
 
@@ -22,18 +22,18 @@ public partial class EventTrack : Track<EventClip>
 		
 		if (target == null)
 		{
-			Debug.LogError($"[EventTrack] Track '{name}' target is not assigned.");
+			Debug.LogError($"[RoutineTrack] Track '{name}' target is not assigned.", this);
 			return;
 		}
 		
-		IEventClipReceiver[] receivers = target.GetComponents<MonoBehaviour>()
-			.OfType<IEventClipReceiver>()
+		IRoutineClipReceiver[] receivers = target.GetComponents<MonoBehaviour>()
+			.OfType<IRoutineClipReceiver>()
 			.ToArray();
 		
 		if (receivers.Length == 0)
-			Debug.LogWarning($"[EventTrack] There are no receivers for track '{this}'", this);
+			Debug.LogWarning($"[RoutineTrack] There are no receivers for track '{name}'", this);
 		
-		foreach (EventClip clip in Clips)
+		foreach (RoutineClip clip in Clips)
 			clip.Initialize(receivers);
 	}
 }

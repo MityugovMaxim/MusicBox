@@ -78,7 +78,7 @@ public class ClipDrawer
 
 	SerializedProperty MaxTimeProperty { get; }
 
-	protected ClipDrawer(Clip _Clip)
+	public ClipDrawer(Clip _Clip)
 	{
 		Clip       = _Clip;
 		ClipObject = new SerializedObject(Clip);

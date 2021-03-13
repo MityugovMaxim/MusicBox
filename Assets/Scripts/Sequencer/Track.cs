@@ -105,6 +105,7 @@ public class Track<T> : Track where T : Clip
 {
 	protected List<T> Clips => m_Clips;
 
+	[SerializeField] float   m_Offset;
 	[SerializeField] List<T> m_Clips;
 
 	readonly List<T> m_Buffer = new List<T>();
@@ -116,6 +117,9 @@ public class Track<T> : Track where T : Clip
 
 	public override void Sample(float _MinTime, float _MaxTime)
 	{
+		_MinTime += m_Offset;
+		_MaxTime += m_Offset;
+		
 		m_Buffer.Clear();
 		
 		FindClips(m_Buffer, _MinTime, _MaxTime);

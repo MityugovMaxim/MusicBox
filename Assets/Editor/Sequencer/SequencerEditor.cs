@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -78,8 +79,12 @@ public class SequencerEditor : EditorWindow
 		
 		m_Sequencer   = sequencer;
 		m_SequencerID = m_Sequencer.GetInstanceID();
-		m_MinTime     = 0;
-		m_MaxTime     = 60;
+		
+		if (Mathf.Approximately(m_MinTime, m_MaxTime))
+		{
+			m_MinTime = 0;
+			m_MaxTime = 60;
+		}
 		
 		if (!Application.isPlaying)
 			Sequencer.Initialize();
@@ -109,6 +114,8 @@ public class SequencerEditor : EditorWindow
 		DrawToolbar(toolbarRect);
 		DrawTimeline(timelineRect);
 		
+		CopyInput();
+		PasteInput();
 		MoveInput(clipsRect);
 		ZoomInput(clipsRect);
 		DragDropInput(clipsRect);
@@ -545,6 +552,109 @@ public class SequencerEditor : EditorWindow
 		}
 		
 		Event.current.Use();
+	}
+
+	void CopyInput()
+	{
+		switch (Event.current.type)
+		{
+			case EventType.ValidateCommand:
+				if (Event.current.commandName == "Copy")
+					Event.current.Use();
+				break;
+			
+			case EventType.ExecuteCommand:
+			{
+				if (Event.current.commandName != "Copy")
+					break;
+				
+				const string header = "sequencer_clips";
+				
+				Clip[] clips = Selection.GetFiltered<Clip>(SelectionMode.Unfiltered);
+				
+				StringBuilder data = new StringBuilder();
+				
+				data.AppendLine(header);
+				
+				foreach (Clip clip in clips)
+				{
+					string path = AssetDatabase.GetAssetPath(clip);
+					string guid = AssetDatabase.AssetPathToGUID(path);
+					string type = clip.GetType().Name;
+					string json = JsonUtility.ToJson(clip);
+					
+					data.Append(guid)
+						.Append(';')
+						.Append(type)
+						.Append(';')
+						.Append(json)
+						.AppendLine();
+				}
+				
+				GUIUtility.systemCopyBuffer = data.ToString();
+				
+				Event.current.Use();
+				
+				break;
+			}
+		}
+	}
+
+	void PasteInput()
+	{
+		switch (Event.current.type)
+		{
+			case EventType.ValidateCommand:
+				if (Event.current.commandName == "Paste" && Selection.GetFiltered<Clip>(SelectionMode.Assets).Length > 0)
+					Event.current.Use();
+				break;
+			
+			case EventType.ExecuteCommand:
+			{
+				if (Event.current.commandName != "Paste")
+					break;
+				
+				const string header = "sequencer_clips";
+				
+				if (!GUIUtility.systemCopyBuffer.StartsWith(header))
+					break;
+				
+				string[] clipsData = GUIUtility.systemCopyBuffer.Split('\n');
+				
+				for (int i = 1; i < clipsData.Length; i++)
+				{
+					string clipData = clipsData[i];
+					
+					string[] clipParameters = clipData.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+					
+					string guidParameter = clipParameters[0];
+					string typeParameter = clipParameters[1];
+					string jsonParameter = clipParameters[2];
+					
+					string path  = AssetDatabase.GUIDToAssetPath(guidParameter);
+					Track  track = AssetDatabase.LoadMainAssetAtPath(path) as Track;
+					
+					if (track == null || !Sequencer.Tracks.Contains(track))
+						continue;
+					
+					Type type = Type.GetType(typeParameter);
+					Clip clip = JsonUtility.FromJson(jsonParameter, type) as Clip;
+					
+					if (clip == null)
+						continue;
+					
+					Debug.LogError(clip.name);
+					
+					TrackUtility.AddClip(track, clip, Sequencer.Time);
+				}
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+		}
 	}
 
 	void DragDropInput(Rect _Rect)

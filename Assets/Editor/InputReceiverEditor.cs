@@ -8,6 +8,7 @@ public class InputReceiverEditor : Editor
 	{
 		"m_Material",
 		"m_Color",
+		"m_RaycastTarget",
 	};
 
 	public override void OnInspectorGUI()

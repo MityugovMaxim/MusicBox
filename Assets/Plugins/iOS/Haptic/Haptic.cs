@@ -17,7 +17,11 @@ public class Haptic
 		if (m_Instance != null)
 			return;
 		
+		#if UNITY_IOS
 		m_Instance = new iOSHaptic();
+		#else
+		m_Instance = new Haptic();
+		#endif
 		
 		m_Instance.InitializeInternal();
 	}

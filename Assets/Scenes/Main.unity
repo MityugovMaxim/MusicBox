@@ -494,6 +494,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_SwipeThreshold: 60
   m_OnTap:
     m_PersistentCalls:
       m_Calls:
@@ -605,7 +606,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 88d4d28dfaff24eaab5562bf6b4cd485, type: 2}
   - {fileID: 11400000, guid: 0e75fd31ab123482ebb509453353f57a, type: 2}
   - {fileID: 11400000, guid: 4dad457945db64668aa412d58db31a58, type: 2}
-  m_Time: 24.56
+  - {fileID: 11400000, guid: b3b933b31c6584e04a4595cc912eb4f2, type: 2}
+  m_Time: 0.51
 --- !u!4 &1093235551
 Transform:
   m_ObjectHideFlags: 0
@@ -713,6 +715,56 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1375610637
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1375610638}
+  - component: {fileID: 1375610639}
+  m_Layer: 5
+  m_Name: SwipeLeftReader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1375610638
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1375610637}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1955155151}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -50, y: 0}
+  m_SizeDelta: {x: -50, y: 200}
+  m_Pivot: {x: 1, y: 0.5}
+--- !u!114 &1375610639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1375610637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3512a3393ab4e60aec262a4a5a8276c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SuccessTime: 0.5
+  m_PerfectTime: 0.9
 --- !u!1 &1530727137
 GameObject:
   m_ObjectHideFlags: 0
@@ -811,6 +863,7 @@ RectTransform:
   m_Children:
   - {fileID: 250837575}
   - {fileID: 499245131}
+  - {fileID: 1375610638}
   m_Father: {fileID: 1093235551}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

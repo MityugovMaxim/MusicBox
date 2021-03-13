@@ -7,6 +7,9 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 {
 	public override Material material { get; set; }
 
+	public override bool raycastTarget => true;
+
+	[SerializeField] float      m_SwipeThreshold;
 	[SerializeField] UnityEvent m_OnTap;
 	[SerializeField] UnityEvent m_OnSwipeLeft;
 	[SerializeField] UnityEvent m_OnSwipeRight;
@@ -29,13 +32,7 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 		float dx = Mathf.Abs(delta.x);
 		float dy = Mathf.Abs(delta.y);
 		
-		float threshold = EventSystem.current.pixelDragThreshold * 4;
-		
-		#if UNITY_EDITOR
-		threshold = 0;
-		#endif
-		
-		if (dx <= threshold && dy <= threshold)
+		if (dx <= m_SwipeThreshold && dy <= m_SwipeThreshold)
 		{
 			Debug.Log($"[{GetType().Name}] Tap.");
 			m_OnTap?.Invoke();
@@ -70,18 +67,6 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 				m_OnSwipeDown?.Invoke();
 			}
 		}
-	}
-
-	Vector2 GetLocalPosition(PointerEventData _EventData)
-	{
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(
-			rectTransform,
-			_EventData.position,
-			_EventData.pressEventCamera,
-			out Vector2 position
-		);
-		
-		return position;
 	}
 
 	Vector2 GetLocalDelta(PointerEventData _EventData)

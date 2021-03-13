@@ -32,11 +32,7 @@ public class HapticClipDrawer : ClipDrawer
 
 	SerializedProperty HapticTypeProperty { get; }
 
-	Haptic.Type HapticType
-	{
-		get => (Haptic.Type)HapticTypeProperty.intValue;
-		set => HapticTypeProperty.intValue = (int)value;
-	}
+	Haptic.Type HapticType => (Haptic.Type)HapticTypeProperty.intValue;
 
 	Rect HandleRect { get; set; }
 
@@ -80,10 +76,10 @@ public class HapticClipDrawer : ClipDrawer
 				color = new Color(0.85f, 0.35f, 0.35f);
 				break;
 			case Haptic.Type.ImpactLight:
-				color = new Color(0, 0.8f, 0.7f, 0.35f);
+				color = new Color(0, 0.8f, 0.7f) * 0.33f;
 				break;
 			case Haptic.Type.ImpactMedium:
-				color = new Color(0, 0.8f, 0.7f, 0.65f);
+				color = new Color(0, 0.8f, 0.7f) * 0.66f;
 				break;
 			case Haptic.Type.ImpactHeavy:
 				color = new Color(0, 0.8f, 0.7f);

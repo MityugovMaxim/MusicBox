@@ -137,7 +137,7 @@ public class MusicClipDrawer : ClipDrawer
 			
 			float phase = MathUtility.Remap(_Phase, 0, 1, min, max);
 			
-			int index = (int)(phase * (samples / resolution) * resolution);
+			int index = (int)(phase * ((float)samples / resolution) * resolution);
 			
 			float value = 0;
 			
