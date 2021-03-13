@@ -21,14 +21,14 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 
 	public void OnPointerDown(PointerEventData _EventData)
 	{
-		Debug.LogError("---> TAP");
+		Debug.Log($"[{GetType().Name}] Tap");
 		
 		m_OnTap?.Invoke();
 	}
 
 	public void OnPointerUp(PointerEventData _EventData)
 	{
-		Debug.LogError("---> POINTER UP DELTA: " + _EventData.delta);
+		Debug.Log($"[{GetType().Name}] Pointer Up. Delta: {_EventData.delta}");
 		
 		float dx = Mathf.Abs(_EventData.delta.x);
 		float dy = Mathf.Abs(_EventData.delta.y);
@@ -41,12 +41,12 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 			float direction = Mathf.Sign(_EventData.delta.x);
 			if (direction >= 0)
 			{
-				Debug.LogError("---> SWIPE RIGHT");
+				Debug.Log($"[{GetType().Name}] Swipe Right");
 				m_OnSwipeRight?.Invoke();
 			}
 			else
 			{
-				Debug.LogError("---> SWIPE LEFT");
+				Debug.Log($"[{GetType().Name}] Swipe Left");
 				m_OnSwipeLeft?.Invoke();
 			}
 		}
@@ -55,12 +55,12 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 			float direction = Mathf.Sign(_EventData.delta.y);
 			if (direction >= 0)
 			{
-				Debug.LogError("---> SWIPE UP");
+				Debug.Log($"[{GetType().Name}] Swipe Up");
 				m_OnSwipeUp?.Invoke();
 			}
 			else
 			{
-				Debug.LogError("---> SWIPE DOWN");
+				Debug.Log($"[{GetType().Name}] Swipe Down");
 				m_OnSwipeDown?.Invoke();
 			}
 		}
