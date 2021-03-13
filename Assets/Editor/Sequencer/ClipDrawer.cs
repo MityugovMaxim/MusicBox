@@ -120,7 +120,11 @@ public class ClipDrawer
 		);
 		
 		if (Visible)
+		{
+			ClipObject.UpdateIfRequiredOrScript();
+			
 			Draw();
+		}
 	}
 
 	protected virtual void Draw()

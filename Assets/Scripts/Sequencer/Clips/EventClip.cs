@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public interface IEventClipReceiver
 {
 	void Invoke();

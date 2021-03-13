@@ -14,12 +14,18 @@ public class Sequencer : MonoBehaviour
 	public Track[] Tracks => m_Tracks;
 
 	[SerializeField] Track[] m_Tracks;
-
 	[SerializeField] float m_Time;
 
 	void Awake()
 	{
 		Initialize();
+		
+		Play();
+	}
+
+	void OnDestroy()
+	{
+		Stop();
 	}
 
 	void LateUpdate()
@@ -36,6 +42,7 @@ public class Sequencer : MonoBehaviour
 
 	public void Play()
 	{
+		Time    = 0;
 		Playing = true;
 	}
 

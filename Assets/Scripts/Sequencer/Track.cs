@@ -97,6 +97,8 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		
 		return transform.GetComponent(_Type);
 	}
+
+	public abstract void Sort();
 }
 
 public class Track<T> : Track where T : Clip
@@ -106,6 +108,11 @@ public class Track<T> : Track where T : Clip
 	[SerializeField] List<T> m_Clips;
 
 	readonly List<T> m_Buffer = new List<T>();
+
+	public override void Sort()
+	{
+		Clips.Sort((_A, _B) => _A.MinTime.CompareTo(_B.MinTime));
+	}
 
 	public override void Sample(float _MinTime, float _MaxTime)
 	{

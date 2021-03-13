@@ -7,7 +7,6 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 {
 	public override Material material { get; set; }
 
-	[SerializeField] float      m_SwipeThreshold;
 	[SerializeField] UnityEvent m_OnTap;
 	[SerializeField] UnityEvent m_OnSwipeLeft;
 	[SerializeField] UnityEvent m_OnSwipeRight;
@@ -19,26 +18,33 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 		_VertexHelper.Clear();
 	}
 
-	public void OnPointerDown(PointerEventData _EventData)
-	{
-		Debug.Log($"[{GetType().Name}] Tap");
-		
-		m_OnTap?.Invoke();
-	}
+	public void OnPointerDown(PointerEventData _EventData) { }
 
 	public void OnPointerUp(PointerEventData _EventData)
 	{
-		Debug.Log($"[{GetType().Name}] Pointer Up. Delta: {_EventData.delta}");
+		Vector2 delta = GetLocalDelta(_EventData);
 		
-		float dx = Mathf.Abs(_EventData.delta.x);
-		float dy = Mathf.Abs(_EventData.delta.y);
+		Debug.Log($"[{GetType().Name}] Pointer Up. Delta: {delta}");
 		
-		if (dx < m_SwipeThreshold && dy < m_SwipeThreshold)
+		float dx = Mathf.Abs(delta.x);
+		float dy = Mathf.Abs(delta.y);
+		
+		float threshold = EventSystem.current.pixelDragThreshold * 4;
+		
+		#if UNITY_EDITOR
+		threshold = 0;
+		#endif
+		
+		if (dx <= threshold && dy <= threshold)
+		{
+			Debug.Log($"[{GetType().Name}] Tap.");
+			m_OnTap?.Invoke();
 			return;
+		}
 		
 		if (dx >= dy)
 		{
-			float direction = Mathf.Sign(_EventData.delta.x);
+			float direction = Mathf.Sign(delta.x);
 			if (direction >= 0)
 			{
 				Debug.Log($"[{GetType().Name}] Swipe Right");
@@ -52,7 +58,7 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 		}
 		else
 		{
-			float direction = Mathf.Sign(_EventData.delta.y);
+			float direction = Mathf.Sign(delta.y);
 			if (direction >= 0)
 			{
 				Debug.Log($"[{GetType().Name}] Swipe Up");
@@ -64,5 +70,29 @@ public class InputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler
 				m_OnSwipeDown?.Invoke();
 			}
 		}
+	}
+
+	Vector2 GetLocalPosition(PointerEventData _EventData)
+	{
+		RectTransformUtility.ScreenPointToLocalPointInRectangle(
+			rectTransform,
+			_EventData.position,
+			_EventData.pressEventCamera,
+			out Vector2 position
+		);
+		
+		return position;
+	}
+
+	Vector2 GetLocalDelta(PointerEventData _EventData)
+	{
+		RectTransformUtility.ScreenPointToWorldPointInRectangle(
+			rectTransform,
+			_EventData.delta,
+			_EventData.pressEventCamera,
+			out Vector3 delta
+		);
+		
+		return delta;
 	}
 }

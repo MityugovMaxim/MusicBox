@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
 
+[Serializable]
 public class SequencerEditor : EditorWindow
 {
 	[MenuItem("Window/Sequencer")]
@@ -25,12 +27,24 @@ public class SequencerEditor : EditorWindow
 		set => EditorPrefs.SetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", Mathf.Max(120, value));
 	}
 
+	Sequencer Sequencer
+	{
+		get
+		{
+			if (m_Sequencer == null)
+				m_Sequencer = EditorUtility.InstanceIDToObject(m_SequencerID) as Sequencer;
+			return m_Sequencer;
+		}
+	}
+
 	static readonly Dictionary<int, TrackDrawer> m_TrackDrawers = new Dictionary<int, TrackDrawer>();
 	static readonly Dictionary<int, ClipDrawer>  m_ClipDrawers  = new Dictionary<int, ClipDrawer>();
 
-	[SerializeField] Sequencer m_Sequencer;
-	[SerializeField] float     m_MinTime;
-	[SerializeField] float     m_MaxTime;
+	[SerializeField] int   m_SequencerID;
+	[SerializeField] float m_MinTime;
+	[SerializeField] float m_MaxTime;
+
+	Sequencer m_Sequencer;
 
 	void OnEnable()
 	{
@@ -56,18 +70,21 @@ public class SequencerEditor : EditorWindow
 	{
 		Sequencer sequencer = Selection.GetFiltered<Sequencer>(SelectionMode.Assets).FirstOrDefault();
 		
-		if (sequencer == null || sequencer == m_Sequencer)
+		if (sequencer == null)
 			return;
 		
 		m_TrackDrawers.Clear();
 		m_ClipDrawers.Clear();
 		
-		m_Sequencer = sequencer;
-		m_MinTime   = 0;
-		m_MaxTime   = 60;
-		m_Sequencer.Initialize();
+		m_Sequencer   = sequencer;
+		m_SequencerID = m_Sequencer.GetInstanceID();
+		m_MinTime     = 0;
+		m_MaxTime     = 60;
 		
-		foreach (Track track in m_Sequencer.Tracks)
+		if (!Application.isPlaying)
+			Sequencer.Initialize();
+		
+		foreach (Track track in Sequencer.Tracks)
 		foreach (Clip clip in track)
 			m_MaxTime = Mathf.Max(m_MaxTime, clip.MaxTime);
 		
@@ -76,7 +93,7 @@ public class SequencerEditor : EditorWindow
 
 	void OnGUI()
 	{
-		if (m_Sequencer == null)
+		if (Sequencer == null)
 			return;
 		
 		Rect toolbarRect = new Rect(0, 0, TracksWidth, 25);
@@ -106,15 +123,15 @@ public class SequencerEditor : EditorWindow
 		
 		if (GUILayout.Button(">"))
 		{
-			m_Sequencer.Initialize();
-			m_Sequencer.Play();
+			Sequencer.Initialize();
+			Sequencer.Play();
 		}
 		
 		if (GUILayout.Button("||"))
-			m_Sequencer.Pause();
+			Sequencer.Pause();
 		
 		if (GUILayout.Button("[]"))
-			m_Sequencer.Stop();
+			Sequencer.Stop();
 		
 		GUILayout.EndHorizontal();
 		
@@ -123,7 +140,7 @@ public class SequencerEditor : EditorWindow
 
 	void Update()
 	{
-		if (m_Sequencer != null && m_Sequencer.Playing)
+		if (Sequencer != null && Sequencer.Playing)
 			EditorApplication.QueuePlayerLoopUpdate();
 		
 		Repaint();
@@ -259,7 +276,7 @@ public class SequencerEditor : EditorWindow
 		{
 			case EventType.Repaint:
 			{
-				float position = MathUtility.Remap(m_Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
+				float position = MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
 				
 				GUI.BeginClip(
 					new Rect(
@@ -307,12 +324,12 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
-				bool playing = m_Sequencer.Playing;
+				bool playing = Sequencer.Playing;
 				
-				m_Sequencer.Stop();
-				m_Sequencer.Time = time;
+				Sequencer.Stop();
+				Sequencer.Time = time;
 				if (playing)
-					m_Sequencer.Play();
+					Sequencer.Play();
 				
 				Event.current.Use();
 				
@@ -340,12 +357,12 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
-				bool playing = m_Sequencer.Playing;
+				bool playing = Sequencer.Playing;
 				
-				m_Sequencer.Stop();
-				m_Sequencer.Time = time;
+				Sequencer.Stop();
+				Sequencer.Time = time;
 				if (playing)
-					m_Sequencer.Play();
+					Sequencer.Play();
 				
 				Event.current.Use();
 				
@@ -362,7 +379,7 @@ public class SequencerEditor : EditorWindow
 		
 		RectOffset trackPadding = new RectOffset(0, 0, 1, 1);
 		
-		foreach (Track track in m_Sequencer.Tracks)
+		foreach (Track track in Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
@@ -392,7 +409,7 @@ public class SequencerEditor : EditorWindow
 		
 		TrackDrawer trackDrawer = m_TrackDrawers[trackID];
 		
-		trackDrawer?.Draw(_Rect, m_Sequencer.Time);
+		trackDrawer?.Draw(_Rect, Sequencer.Time);
 	}
 
 	void DrawClips(Rect _Rect)
@@ -413,7 +430,7 @@ public class SequencerEditor : EditorWindow
 		RectOffset trackPadding = new RectOffset(0, 0, 2, 2);
 		RectOffset clipPadding  = new RectOffset(0, 0, 4, 4);
 		
-		foreach (Track track in m_Sequencer.Tracks)
+		foreach (Track track in Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
@@ -534,7 +551,7 @@ public class SequencerEditor : EditorWindow
 	{
 		float position = 0;
 		
-		foreach (Track track in m_Sequencer.Tracks)
+		foreach (Track track in Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
