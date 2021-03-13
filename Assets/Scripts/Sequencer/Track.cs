@@ -47,7 +47,10 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		if (Sequencer == null)
 			return null;
 		
-		T reference = Sequencer.gameObject.AddComponent<T>();
+		T reference = Sequencer.GetComponent<T>();
+		
+		if (reference == null)
+			reference = Sequencer.gameObject.AddComponent<T>();
 		
 		reference.hideFlags = HideFlags.HideAndDontSave;
 		
