@@ -1,5 +1,3 @@
-using UnityEditor;
-
 public class Haptic
 {
 	public enum Type

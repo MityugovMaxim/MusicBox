@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class ClipDrawer
@@ -137,7 +138,7 @@ public class ClipDrawer
 			_TrackRect.height
 		);
 		
-		if (Visible)
+		if (Visible || Selection.Contains(Clip))
 		{
 			ClipObject.UpdateIfRequiredOrScript();
 			
@@ -173,7 +174,7 @@ public class ClipDrawer
 		{
 			case EventType.Repaint:
 			{
-				if (Selection.Contains(Clip))
+				if (Selection.Contains(Clip) && Visible)
 				{
 					Handles.DrawSolidRectangleWithOutline(
 						new RectOffset(1, 1, 1, 1).Remove(ViewRect),

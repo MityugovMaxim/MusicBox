@@ -1,36 +1,77 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class InputReader : MonoBehaviour, IRoutineClipReceiver
 {
-	protected float Time { get; private set; }
-	protected Range SuccessRange => m_SuccessRange;
-	protected Range PerfectRange => m_PerfectRange;
+	[SerializeField] float m_Complete;
+	[SerializeField] float m_Expand;
+	[SerializeField] float m_MinRange;
+	[SerializeField] float m_MaxRange;
 
-	[SerializeField] Range m_SuccessRange = new Range(0.5f, 1);
-	[SerializeField] Range m_PerfectRange = new Range(0.8f, 0.9f);
+	float m_Time;
+	bool  m_Reading;
+	bool  m_Processed;
 
-	bool m_Reading;
+	// Enter(Time)
+	// Process(Time, State) State : FAIL, BAD, GOOD, PERFECT
+	// Exit(Time)
 
-	public virtual void StartRoutine(float _Time)
+	public void StartRoutine(RoutineClipData _Data)
 	{
-		m_Reading = true;
-		
-		Time = _Time;
+		StartCoroutine(ProcessRoutine(_Data.Time, _Data.Duration + _Data.Duration * m_Expand));
 	}
 
-	public virtual void UpdateRoutine(float _Time)
-	{
-		Time = _Time;
-	}
+	public void UpdateRoutine(RoutineClipData _Data) { }
 
-	public virtual void FinishRoutine(float _Time)
+	public void FinishRoutine(RoutineClipData _Data) { }
+
+	IEnumerator ProcessRoutine(float _Time, float _Duration)
 	{
-		if (m_Reading)
-			Fail();
+		Begin();
 		
-		Time = _Time;
+		m_Processed = false;
+		
+		bool process = false;
+		
+		float time = _Time;
+		while (time < _Duration && !m_Processed)
+		{
+			float phase = time / _Duration;
+			
+			if (phase >= m_MinRange && !process)
+			{
+				process   = true;
+				m_Reading = true;
+			}
+			
+			if (process && !m_Reading)
+				break;
+			
+			Process(phase);
+			
+			yield return null;
+			
+			time += Time.deltaTime;
+		}
 		
 		m_Reading = false;
+		
+		if (!m_Processed)
+			Fail();
+		
+		time = 0;
+		while (time < m_Complete)
+		{
+			Complete(time / m_Complete);
+			
+			yield return null;
+			
+			time += Time.deltaTime;
+		}
+		
+		Complete(1);
+		
+		Finish();
 	}
 
 	public void ProcessInput()
@@ -41,9 +82,13 @@ public abstract class InputReader : MonoBehaviour, IRoutineClipReceiver
 			Fail();
 		
 		m_Reading = false;
+		m_Processed = true;
 	}
 
+	protected abstract void Begin();
+	protected abstract void Process(float _Time);
+	protected abstract void Complete(float _Time);
+	protected abstract void Finish();
 	protected abstract void Success();
-
 	protected abstract void Fail();
 }

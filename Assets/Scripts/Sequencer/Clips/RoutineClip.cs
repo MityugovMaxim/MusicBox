@@ -2,9 +2,21 @@ using UnityEngine;
 
 public interface IRoutineClipReceiver
 {
-	void StartRoutine(float  _Time);
-	void UpdateRoutine(float _Time);
-	void FinishRoutine(float _Time);
+	void StartRoutine(RoutineClipData _Data);
+	void UpdateRoutine(RoutineClipData _Data);
+	void FinishRoutine(RoutineClipData _Data);
+}
+
+public struct RoutineClipData
+{
+	public float Time     { get; }
+	public float Duration { get; }
+
+	public RoutineClipData(float _Time, float _Duration)
+	{
+		Time     = _Time;
+		Duration = _Duration;
+	}
 }
 
 public class RoutineClip : Clip
@@ -18,9 +30,13 @@ public class RoutineClip : Clip
 
 	protected override void OnEnter(float _Time)
 	{
-		float time = GetNormalizedTime(_Time);
+		RoutineClipData data = new RoutineClipData(
+			GetLocalTime(_Time),
+			MaxTime - MinTime
+		);
+		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.StartRoutine(time);
+			receiver.StartRoutine(data);
 	}
 
 	protected override void OnUpdate(float _Time)
@@ -28,9 +44,13 @@ public class RoutineClip : Clip
 		if (!Application.isPlaying)
 			return;
 		
-		float time = GetNormalizedTime(_Time);
+		RoutineClipData data = new RoutineClipData(
+			GetLocalTime(_Time),
+			MaxTime - MinTime
+		);
+		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.UpdateRoutine(time);
+			receiver.UpdateRoutine(data);
 	}
 
 	protected override void OnExit(float _Time)
@@ -38,9 +58,13 @@ public class RoutineClip : Clip
 		if (!Application.isPlaying)
 			return;
 		
-		float time = GetNormalizedTime(_Time);
+		RoutineClipData data = new RoutineClipData(
+			GetLocalTime(_Time),
+			MaxTime - MinTime
+		);
+		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.FinishRoutine(time);
+			receiver.FinishRoutine(data);
 	}
 
 	protected override void OnStop(float _Time)
@@ -48,8 +72,12 @@ public class RoutineClip : Clip
 		if (!Application.isPlaying)
 			return;
 		
-		float time = GetNormalizedTime(_Time);
+		RoutineClipData data = new RoutineClipData(
+			GetLocalTime(_Time),
+			MaxTime - MinTime
+		);
+		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.FinishRoutine(time);
+			receiver.FinishRoutine(data);
 	}
 }

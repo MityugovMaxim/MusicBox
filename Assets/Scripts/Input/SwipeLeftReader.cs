@@ -18,62 +18,13 @@ public class SwipeLeftReader : InputReader
 
 	RectTransform m_RectTransform;
 
-	// void OnDrawGizmos()
-	// {
-	// 	Matrix4x4 modelMatrix = RectTransform.localToWorldMatrix;
-	// 	
-	// 	Handles.matrix = modelMatrix;
-	// 	Gizmos.matrix  = modelMatrix;
-	// 	
-	// 	Rect rect = RectTransform.rect;
-	// 	
-	// 	Rect failRect = new Rect(
-	// 		rect.x,
-	// 		rect.y,
-	// 		rect.width * SuccessRange.Min,
-	// 		rect.height
-	// 	);
-	// 	
-	// 	Rect bRect = new Rect(
-	// 		rect.x + rect.width * SuccessRange,
-	// 		rect.y,
-	// 		rect.width * (PerfectRange - SuccessRange),
-	// 		rect.height
-	// 	);
-	// 	
-	// 	Rect cRect = new Rect(
-	// 		rect.x + rect.width * PerfectRange,
-	// 		rect.y,
-	// 		rect.width * (1 - PerfectRange),
-	// 		rect.height
-	// 	);
-	// 	
-	// 	Handles.DrawSolidRectangleWithOutline(
-	// 		failRect,
-	// 		new Color(0.86f, 0.31f, 0.33f, 0.2f),
-	// 		Color.clear
-	// 	);
-	// 	
-	// 	Handles.DrawSolidRectangleWithOutline(
-	// 		bRect,
-	// 		new Color(1f, 0.71f, 0f, 0.2f),
-	// 		Color.clear
-	// 	);
-	// 	
-	// 	Handles.DrawSolidRectangleWithOutline(
-	// 		cRect,
-	// 		new Color(0, 0.8f, 0.7f, 0.2f),
-	// 		Color.clear
-	// 	);
-	// 	
-	// 	Handles.matrix = Matrix4x4.identity;
-	// 	Gizmos.matrix  = Matrix4x4.identity;
-	// }
-
-	public override void UpdateRoutine(float _Time)
+	protected override void Begin()
 	{
-		base.UpdateRoutine(_Time);
-		
+		m_Indicator.color = new Color(1, 1, 1, 0);
+	}
+
+	protected override void Process(float _Time)
+	{
 		RectTransform rectTransform = m_Indicator.rectTransform;
 		
 		Vector2 minAnchor = rectTransform.anchorMin;
@@ -90,10 +41,15 @@ public class SwipeLeftReader : InputReader
 		m_Indicator.color = color;
 	}
 
-	public override void FinishRoutine(float _Time)
+	protected override void Complete(float _Time)
 	{
-		base.FinishRoutine(_Time);
-		
+		Color color = m_Indicator.color;
+		color.a           = 1 - _Time;
+		m_Indicator.color = color;
+	}
+
+	protected override void Finish()
+	{
 		Color color = m_Indicator.color;
 		color.a = 0;
 		m_Indicator.color = color;
@@ -101,9 +57,11 @@ public class SwipeLeftReader : InputReader
 
 	protected override void Success()
 	{
+		m_Indicator.color = new Color(0, 0.8f, 0.69f, m_Indicator.color.a);
 	}
 
 	protected override void Fail()
 	{
+		m_Indicator.color = new Color(1, 0.42f, 0, m_Indicator.color.a);
 	}
 }
