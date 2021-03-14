@@ -4,22 +4,6 @@ using UnityEngine;
 [SequencerDrawer(typeof(MusicClip))]
 public class MusicClipDrawer : ClipDrawer
 {
-	static GUIStyle ContentStyle
-	{
-		get
-		{
-			if (m_ContentStyle == null)
-			{
-				m_ContentStyle                  = new GUIStyle(GUI.skin.label);
-				m_ContentStyle.alignment        = TextAnchor.UpperCenter;
-				m_ContentStyle.contentOffset    = new Vector2(0, 5);
-				m_ContentStyle.fontStyle        = FontStyle.Bold;
-				m_ContentStyle.normal.textColor = Color.white;
-			}
-			return m_ContentStyle;
-		}
-	}
-
 	AudioClip AudioClip => AudioClipProperty.objectReferenceValue as AudioClip;
 
 	float MinOffset
@@ -38,7 +22,6 @@ public class MusicClipDrawer : ClipDrawer
 	SerializedProperty MinOffsetProperty { get; }
 	SerializedProperty MaxOffsetProperty { get; }
 
-	static GUIStyle m_ContentStyle;
 
 	float[] m_AudioData;
 
@@ -159,7 +142,7 @@ public class MusicClipDrawer : ClipDrawer
 			_MinValue = -value;
 		}
 		
-		AudioCurveRendering.DrawCurveBackground(_ClipRect);
+		EditorGUI.DrawRect(_ClipRect, new Color(0.12f, 0.12f, 0.12f, 0.5f));
 		
 		GUI.BeginClip(new RectOffset(1, 1, 0, 0).Remove(_ViewRect));
 		

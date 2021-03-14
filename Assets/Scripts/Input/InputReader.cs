@@ -3,11 +3,11 @@ using UnityEngine;
 public abstract class InputReader : MonoBehaviour, IRoutineClipReceiver
 {
 	protected float Time { get; private set; }
-	protected float SuccessTime => m_SuccessTime;
-	protected float PerfectTime => m_PerfectTime;
+	protected Range SuccessRange => m_SuccessRange;
+	protected Range PerfectRange => m_PerfectRange;
 
-	[SerializeField] float m_SuccessTime;
-	[SerializeField] float m_PerfectTime;
+	[SerializeField] Range m_SuccessRange = new Range(0.5f, 1);
+	[SerializeField] Range m_PerfectRange = new Range(0.8f, 0.9f);
 
 	bool m_Reading;
 

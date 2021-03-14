@@ -13,7 +13,9 @@ public class SequencerEditor : EditorWindow
 	public static void Open()
 	{
 		SequencerEditor window = GetWindow<SequencerEditor>();
-		window.minSize = new Vector2(300, 300);
+		window.wantsMouseMove             = true;
+		window.wantsMouseEnterLeaveWindow = true;
+		window.minSize                    = new Vector2(300, 300);
 	}
 
 	[DidReloadScripts]
@@ -580,8 +582,8 @@ public class SequencerEditor : EditorWindow
 				{
 					string path = AssetDatabase.GetAssetPath(clip);
 					string guid = AssetDatabase.AssetPathToGUID(path);
-					string type = clip.GetType().Name;
-					string json = JsonUtility.ToJson(clip);
+					string type = clip.GetType().ToString();
+					string json = EditorJsonUtility.ToJson(clip);
 					
 					data.Append(guid)
 						.Append(';')
@@ -605,7 +607,7 @@ public class SequencerEditor : EditorWindow
 		switch (Event.current.type)
 		{
 			case EventType.ValidateCommand:
-				if (Event.current.commandName == "Paste" && Selection.GetFiltered<Clip>(SelectionMode.Assets).Length > 0)
+				if (Event.current.commandName == "Paste")
 					Event.current.Use();
 				break;
 			
@@ -619,7 +621,7 @@ public class SequencerEditor : EditorWindow
 				if (!GUIUtility.systemCopyBuffer.StartsWith(header))
 					break;
 				
-				string[] clipsData = GUIUtility.systemCopyBuffer.Split('\n');
+				string[] clipsData = GUIUtility.systemCopyBuffer.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				
 				for (int i = 1; i < clipsData.Length; i++)
 				{
@@ -632,18 +634,19 @@ public class SequencerEditor : EditorWindow
 					string jsonParameter = clipParameters[2];
 					
 					string path  = AssetDatabase.GUIDToAssetPath(guidParameter);
-					Track  track = AssetDatabase.LoadMainAssetAtPath(path) as Track;
+					Track  track = AssetDatabase.LoadAssetAtPath<Track>(path);
 					
 					if (track == null || !Sequencer.Tracks.Contains(track))
 						continue;
 					
-					Type type = Type.GetType(typeParameter);
-					Clip clip = JsonUtility.FromJson(jsonParameter, type) as Clip;
+					Type type = typeof(Clip).Assembly.GetType(typeParameter);
+					
+					Clip clip = ScriptableObject.CreateInstance(type) as Clip;
 					
 					if (clip == null)
 						continue;
 					
-					Debug.LogError(clip.name);
+					EditorJsonUtility.FromJsonOverwrite(jsonParameter, clip);
 					
 					TrackUtility.AddClip(track, clip, Sequencer.Time);
 				}

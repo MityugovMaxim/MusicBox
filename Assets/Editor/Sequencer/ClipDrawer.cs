@@ -47,6 +47,22 @@ public class ClipDrawer
 		return typeof(ClipDrawer);
 	}
 
+	protected static GUIStyle ContentStyle
+	{
+		get
+		{
+			if (m_ContentStyle == null)
+			{
+				m_ContentStyle                  = new GUIStyle(GUI.skin.label);
+				m_ContentStyle.alignment        = TextAnchor.UpperCenter;
+				m_ContentStyle.contentOffset    = new Vector2(0, 5);
+				m_ContentStyle.fontStyle        = FontStyle.Bold;
+				m_ContentStyle.normal.textColor = Color.white;
+			}
+			return m_ContentStyle;
+		}
+	}
+
 	protected Clip             Clip       { get; }
 	protected SerializedObject ClipObject { get; }
 
@@ -77,6 +93,8 @@ public class ClipDrawer
 	SerializedProperty MinTimeProperty { get; }
 
 	SerializedProperty MaxTimeProperty { get; }
+
+	static GUIStyle m_ContentStyle;
 
 	public ClipDrawer(Clip _Clip)
 	{
@@ -139,12 +157,14 @@ public class ClipDrawer
 
 	protected virtual void DrawBackground()
 	{
-		EditorGUI.DrawRect(ClipRect, Color.black);
+		EditorGUI.DrawRect(ClipRect, new Color(0.12f, 0.12f, 0.12f, 0.5f));
+		
+		AudioCurveRendering.DrawCurveFrame(ClipRect);
 	}
 
 	protected virtual void DrawContent()
 	{
-		GUI.Label(ViewRect, Clip.name, EditorStyles.whiteLabel);
+		EditorGUI.DropShadowLabel(ViewRect, Clip.name, ContentStyle);
 	}
 
 	protected virtual void DrawSelection()
@@ -361,30 +381,7 @@ public class ClipDrawer
 				string path  = AssetDatabase.GetAssetPath(Clip);
 				Track  track = AssetDatabase.LoadMainAssetAtPath(path) as Track;
 				
-				using (SerializedObject trackObject = new SerializedObject(track))
-				{
-					SerializedProperty clipsProperty = trackObject.FindProperty("m_Clips");
-					
-					for (int i = 0; i < clipsProperty.arraySize; i++)
-					{
-						SerializedProperty clipProperty = clipsProperty.GetArrayElementAtIndex(i);
-						
-						Clip clip = clipProperty.objectReferenceValue as Clip;
-						
-						if (Clip != clip)
-							continue;
-						
-						clipProperty.objectReferenceValue = null;
-						
-						clipsProperty.DeleteArrayElementAtIndex(i);
-					}
-					
-					trackObject.ApplyModifiedProperties();
-				}
-				
-				AssetDatabase.RemoveObjectFromAsset(Clip);
-				AssetDatabase.SaveAssets();
-				AssetDatabase.Refresh();
+				TrackUtility.RemoveClip(track, Clip);
 				
 				Event.current.Use();
 				

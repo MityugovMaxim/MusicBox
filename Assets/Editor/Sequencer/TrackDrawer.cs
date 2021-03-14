@@ -177,28 +177,4 @@ public class TrackDrawer
 			}
 		}
 	}
-
-	protected void AddClip<T>(T _Clip) where T : Clip
-	{
-		TrackObject.UpdateIfRequiredOrScript();
-		
-		AssetDatabase.AddObjectToAsset(_Clip, Track);
-		AssetDatabase.SaveAssets();
-		AssetDatabase.Refresh();
-		
-		SerializedProperty clipsProperty = TrackObject.FindProperty("m_Clips");
-		
-		int index = clipsProperty.arraySize;
-		
-		clipsProperty.InsertArrayElementAtIndex(index);
-		
-		TrackObject.ApplyModifiedProperties();
-		TrackObject.UpdateIfRequiredOrScript();
-		
-		SerializedProperty clipProperty = clipsProperty.GetArrayElementAtIndex(index);
-		
-		clipProperty.objectReferenceValue = _Clip;
-		
-		TrackObject.ApplyModifiedProperties();
-	}
 }

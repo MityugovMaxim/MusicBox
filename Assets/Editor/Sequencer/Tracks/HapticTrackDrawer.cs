@@ -18,18 +18,7 @@ public class HapticTrackDrawer : TrackDrawer
 			
 			clip.name = "Haptic Clip";
 			
-			using (SerializedObject clipObject = new SerializedObject(clip))
-			{
-				SerializedProperty minTimeProperty = clipObject.FindProperty("m_MinTime");
-				SerializedProperty maxTimeProperty = clipObject.FindProperty("m_MaxTime");
-				
-				minTimeProperty.floatValue = Time;
-				maxTimeProperty.floatValue = Time;
-				
-				clipObject.ApplyModifiedProperties();
-			}
-			
-			AddClip(clip);
+			TrackUtility.AddClip(Track, clip, Time);
 		}
 		
 		EditorGUILayout.EndHorizontal();

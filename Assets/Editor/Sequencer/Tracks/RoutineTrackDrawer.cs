@@ -23,18 +23,7 @@ public class RoutineTrackDrawer : TrackDrawer
 			
 			clip.name = "Routine Clip";
 			
-			using (SerializedObject clipObject = new SerializedObject(clip))
-			{
-				SerializedProperty minTimeProperty = clipObject.FindProperty("m_MinTime");
-				SerializedProperty maxTimeProperty = clipObject.FindProperty("m_MaxTime");
-				
-				minTimeProperty.floatValue = Time;
-				maxTimeProperty.floatValue = Time + 0.2f;
-				
-				clipObject.ApplyModifiedProperties();
-			}
-			
-			AddClip(clip);
+			TrackUtility.AddClip(Track, clip, Time, 0.2f);
 		}
 		
 		EditorGUILayout.EndHorizontal();

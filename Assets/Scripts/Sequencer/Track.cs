@@ -19,6 +19,8 @@ public partial class Track
 	[SerializeField, HideInInspector] float m_Height;
 
 	public virtual void DragPerform(float _Time, Object[] _Objects) { }
+
+	public abstract void Sort();
 }
 #endif
 
@@ -97,11 +99,19 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		
 		return transform.GetComponent(_Type);
 	}
-
-	public abstract void Sort();
 }
 
-public class Track<T> : Track where T : Clip
+#if UNITY_EDITOR
+public partial class Track<T>
+{
+	public override void Sort()
+	{
+		Clips.Sort((_A, _B) => _A.MinTime.CompareTo(_B.MinTime));
+	}
+}
+#endif
+
+public partial class Track<T> : Track where T : Clip
 {
 	protected List<T> Clips => m_Clips;
 
@@ -109,11 +119,6 @@ public class Track<T> : Track where T : Clip
 	[SerializeField] List<T> m_Clips;
 
 	readonly List<T> m_Buffer = new List<T>();
-
-	public override void Sort()
-	{
-		Clips.Sort((_A, _B) => _A.MinTime.CompareTo(_B.MinTime));
-	}
 
 	public override void Sample(float _MinTime, float _MaxTime)
 	{
