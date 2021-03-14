@@ -1,3 +1,6 @@
+using UnityEditor;
+using UnityEngine;
+
 public class Haptic
 {
 	public enum Type
@@ -17,7 +20,7 @@ public class Haptic
 		if (m_Instance != null)
 			return;
 		
-		#if UNITY_IOS
+		#if !UNITY_EDITOR && UNITY_IOS
 		m_Instance = new iOSHaptic();
 		#else
 		m_Instance = new Haptic();
@@ -35,5 +38,22 @@ public class Haptic
 
 	protected virtual void InitializeInternal() { }
 
-	protected virtual void ProcessInternal(Type _Type) { }
+	protected virtual void ProcessInternal(Type _Type)
+	{
+		if (!Application.isPlaying)
+			return;
+		
+		//AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Tracks/Metronome/Click.wav");
+		
+		//Play(audioClip);
+	}
+
+	static void Play(AudioClip _AudioClip)
+	{
+		GameObject go = new GameObject("Audio");
+		AudioSource a = go.AddComponent<AudioSource>();
+		a.clip = _AudioClip;
+		a.PlayOneShot(_AudioClip);
+		GameObject.Destroy(go, _AudioClip.length);
+	}
 }

@@ -20,7 +20,8 @@ public class Sequencer : MonoBehaviour
 	{
 		Initialize();
 		
-		Play();
+		if (Application.isPlaying)
+			Play();
 	}
 
 	void OnDestroy()
