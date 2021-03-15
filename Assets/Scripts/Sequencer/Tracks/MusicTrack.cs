@@ -1,6 +1,6 @@
 using System.Linq;
 using UnityEngine;
-
+using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
 
