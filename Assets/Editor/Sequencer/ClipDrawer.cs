@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 
 public class ClipDrawer
@@ -107,7 +106,7 @@ public class ClipDrawer
 		MinTimeProperty = ClipObject.FindProperty("m_MinTime");
 		MaxTimeProperty = ClipObject.FindProperty("m_MaxTime");
 		
-		LeftHandleControlID   = EditorGUIUtility.GetControlID($"[{controlID}]clip_left_handle_control".GetHashCode(), FocusType.Passive);
+		LeftHandleControlID   = EditorGUIUtility.GetControlID($"[{controlID}]clip_left_handle_contr`ol".GetHashCode(), FocusType.Passive);
 		CenterHandleControlID = EditorGUIUtility.GetControlID($"[{controlID}]clip_center_handle_control".GetHashCode(), FocusType.Passive);
 		RightHandleControlID  = EditorGUIUtility.GetControlID($"[{controlID}]clip_right_handle_control".GetHashCode(), FocusType.Passive);
 	}
