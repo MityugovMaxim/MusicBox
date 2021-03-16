@@ -99,7 +99,6 @@ public class TrackDrawer
 		Track.name = trackName;
 		
 		AssetDatabase.RenameAsset(path, trackName);
-		AssetDatabase.ImportAsset(path);
 	}
 
 	protected virtual void DrawBackground()

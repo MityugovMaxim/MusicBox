@@ -2,8 +2,17 @@ using UnityEngine;
 
 public abstract class Clip : ScriptableObject
 {
-	public float MinTime  => m_MinTime;
-	public float MaxTime => m_MaxTime;
+	public float MinTime
+	{
+		get => m_MinTime;
+		protected set => m_MinTime = value;
+	}
+
+	public float MaxTime
+	{
+		get => m_MaxTime;
+		protected set => m_MaxTime = value;
+	}
 
 	[SerializeField] float m_MinTime;
 	[SerializeField] float m_MaxTime;
