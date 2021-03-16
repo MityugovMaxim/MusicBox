@@ -91,6 +91,15 @@ public class InputReader : MonoBehaviour
 		RemoveInputIndicator(_ID);
 	}
 
+	public void RestoreProcessing(int _ID, float _Time)
+	{
+		InputIndicatorView inputIndicator = GetInputView(_ID);
+		
+		inputIndicator.Process(_Time);
+		
+		RemoveInputIndicator(_ID);
+	}
+
 	public void StartInput(int _ID)
 	{
 		m_InputIDs.Enqueue(_ID);

@@ -1,5 +1,3 @@
-using UnityEngine;
-
 #if UNITY_EDITOR
 public partial class InputClip
 {
@@ -45,9 +43,6 @@ public partial class InputClip : Clip
 
 	protected override void OnEnter(float _Time)
 	{
-		if (!Application.isPlaying)
-			return;
-		
 		float time = GetNormalizedTime(_Time);
 		
 		m_InputReader.StartProcessing(m_ID, time);
@@ -55,9 +50,6 @@ public partial class InputClip : Clip
 
 	protected override void OnUpdate(float _Time)
 	{
-		if (!Application.isPlaying)
-			return;
-		
 		float time = GetNormalizedTime(_Time);
 		
 		m_InputReader.UpdateProcessing(m_ID, time);
@@ -77,9 +69,6 @@ public partial class InputClip : Clip
 
 	protected override void OnExit(float _Time)
 	{
-		if (!Application.isPlaying)
-			return;
-		
 		float time = GetNormalizedTime(_Time);
 		
 		if (m_Reading)
@@ -87,18 +76,6 @@ public partial class InputClip : Clip
 			m_Reading = false;
 			m_InputReader.FinishInput(m_ID);
 		}
-		
-		m_InputReader.FinishProcessing(m_ID, time);
-	}
-
-	protected override void OnStop(float _Time)
-	{
-		if (!Application.isPlaying)
-			return;
-		
-		float time = GetNormalizedTime(_Time);
-		
-		m_Reading = false;
 		
 		m_InputReader.FinishProcessing(m_ID, time);
 	}

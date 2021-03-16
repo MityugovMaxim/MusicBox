@@ -1128,11 +1128,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Tracks:
   - {fileID: 11400000, guid: 88d4d28dfaff24eaab5562bf6b4cd485, type: 2}
-  - {fileID: 11400000, guid: 0e75fd31ab123482ebb509453353f57a, type: 2}
   - {fileID: 11400000, guid: 4dad457945db64668aa412d58db31a58, type: 2}
-  - {fileID: 11400000, guid: b3b933b31c6584e04a4595cc912eb4f2, type: 2}
   - {fileID: 11400000, guid: f082774e2b2c2485b84618d7b5bb3b2e, type: 2}
-  m_Time: 1
+  m_Time: 17.5
 --- !u!4 &1093235551
 Transform:
   m_ObjectHideFlags: 0
@@ -1506,8 +1504,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1375610638}
+  - component: {fileID: 1375610639}
   m_Layer: 5
-  m_Name: SwipeLeftReader
+  m_Name: TapReader
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1535,6 +1534,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 1, y: 0.5}
+--- !u!114 &1375610639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1375610637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21b293d30e504959a0daade4acf5a45a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_InputType: 0
+  m_InputZone: {fileID: 0}
+  m_InputIndicator: {fileID: 0}
 --- !u!1 &1424567373
 GameObject:
   m_ObjectHideFlags: 0

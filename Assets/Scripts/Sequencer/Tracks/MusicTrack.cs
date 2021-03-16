@@ -61,6 +61,6 @@ public partial class MusicTrack : Track<MusicClip>
 			audioSource = AddReference<AudioSource>();
 		
 		foreach (MusicClip clip in Clips)
-			clip.Initialize(audioSource);
+			clip.Initialize(Sequencer, audioSource);
 	}
 }

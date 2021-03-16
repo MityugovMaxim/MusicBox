@@ -35,8 +35,6 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 
 	public abstract void Sample(float _MinTime, float _MaxTime);
 
-	public abstract void Stop(float _Time);
-
 	public abstract IEnumerator<Clip> GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator()
@@ -125,22 +123,21 @@ public partial class Track<T> : Track where T : Clip
 		_MinTime += m_Offset;
 		_MaxTime += m_Offset;
 		
+		float time = _MaxTime;
+		
+		if (_MinTime > _MaxTime)
+		{
+			float buffer = _MinTime;
+			_MinTime = _MaxTime;
+			_MaxTime = buffer;
+		}
+		
 		m_Buffer.Clear();
 		
 		FindClips(m_Buffer, _MinTime, _MaxTime);
 		
 		foreach (T clip in m_Buffer)
-			clip.Sample(_MaxTime);
-	}
-
-	public override void Stop(float _Time)
-	{
-		m_Buffer.Clear();
-		
-		FindClips(m_Buffer, _Time, _Time);
-		
-		foreach (T clip in m_Buffer)
-			clip.Stop(_Time);
+			clip.Sample(time);
 	}
 
 	public void FindClips(List<T> _Clips, float _MinTime, float _MaxTime)

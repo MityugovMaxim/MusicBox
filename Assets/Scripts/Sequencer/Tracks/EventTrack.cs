@@ -34,6 +34,6 @@ public partial class EventTrack : Track<EventClip>
 			Debug.LogWarning($"[EventTrack] There are no receivers for track '{this}'", this);
 		
 		foreach (EventClip clip in Clips)
-			clip.Initialize(receivers);
+			clip.Initialize(Sequencer, receivers);
 	}
 }

@@ -12,6 +12,4 @@ public class HapticClip : Clip
 	{
 		Haptic.Process(m_HapticType);
 	}
-
-	protected override void OnStop(float _Time) { }
 }

@@ -34,6 +34,6 @@ public partial class RoutineTrack : Track<RoutineClip>
 			Debug.LogWarning($"[RoutineTrack] There are no receivers for track '{name}'", this);
 		
 		foreach (RoutineClip clip in Clips)
-			clip.Initialize(receivers);
+			clip.Initialize(Sequencer, receivers);
 	}
 }

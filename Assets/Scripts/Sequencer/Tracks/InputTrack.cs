@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -7,7 +6,7 @@ public partial class InputTrack
 	protected override float MinHeight => 110;
 	protected override float MaxHeight => 110;
 
-	[SerializeField, UsedImplicitly] float m_Duration = 0.5f;
+	[SerializeField] float m_Duration = 0.5f;
 }
 #endif
 

@@ -7,8 +7,10 @@ public class EventClip : Clip
 {
 	IEventClipReceiver[] m_Receivers;
 
-	public void Initialize(IEventClipReceiver[] _Receivers)
+	public void Initialize(Sequencer _Sequencer, IEventClipReceiver[] _Receivers)
 	{
+		base.Initialize(_Sequencer);
+		
 		m_Receivers = _Receivers;
 	}
 
@@ -24,6 +26,4 @@ public class EventClip : Clip
 				receiver.Invoke();
 		}
 	}
-
-	protected override void OnStop(float _Time) { }
 }

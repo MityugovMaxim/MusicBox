@@ -20,8 +20,11 @@ public class Sequencer : MonoBehaviour
 	{
 		Initialize();
 		
-		if (Application.isPlaying)
-			Play();
+		if (!Application.isPlaying)
+			return;
+		
+		Stop();
+		Play();
 	}
 
 	void OnDestroy()
@@ -43,32 +46,26 @@ public class Sequencer : MonoBehaviour
 
 	public void Play()
 	{
-		Time    = 0;
 		Playing = true;
 	}
 
 	public void Pause()
 	{
 		Playing = false;
+		
+		Sample(Time);
 	}
 
 	public void Stop()
 	{
-		foreach (Track track in m_Tracks)
-			track.Stop(m_Time);
-		
-		if (!Application.isPlaying)
-			AudioUtility.StopAllClips();
-		
-		Playing = false;
 		Time    = 0;
+		Playing = false;
+		
+		Sample(Time);
 	}
 
 	public void Sample(float _Time)
 	{
-		if (Mathf.Approximately(Time, _Time))
-			return;
-		
 		foreach (Track track in m_Tracks)
 			track.Sample(Time, _Time);
 		

@@ -12,6 +12,7 @@ public static class AudioUtility
 	static Action<AudioClip>            m_StopClip;
 	static Action                       m_StopAllClips;
 	static Action<AudioClip, int>       m_SetClipSamplePosition;
+	static Func<AudioClip, bool>        m_IsClipPlaying;
 
 	public static void PlayClip(AudioClip _AudioClip)
 	{
@@ -29,28 +30,6 @@ public static class AudioUtility
 		}
 		
 		m_PlayClip?.Invoke(_AudioClip, 0, false);
-		#endif
-	}
-
-	public static void SetClipSamplePosition(AudioClip _AudioClip, float _Time)
-	{
-		#if UNITY_EDITOR
-		if (m_SetClipSamplePosition == null)
-		{
-			Type type = typeof(Editor).Assembly.GetType("UnityEditor.AudioUtil");
-			
-			MethodInfo methodInfo = type.GetMethod(
-				"SetClipSamplePosition",
-				BindingFlags.Public | BindingFlags.Static
-			);
-			
-			m_SetClipSamplePosition = Delegate.CreateDelegate(typeof(Action<AudioClip, int>), methodInfo) as Action<AudioClip, int>;
-		}
-		
-		m_SetClipSamplePosition?.Invoke(
-			_AudioClip,
-			(int)MathUtility.Remap(_Time, 0, _AudioClip.length, 0, _AudioClip.samples - 1)
-		);
 		#endif
 	}
 
@@ -89,6 +68,47 @@ public static class AudioUtility
 		}
 		
 		m_StopAllClips?.Invoke();
+		#endif
+	}
+
+	public static void SetClipSamplePosition(AudioClip _AudioClip, float _Time)
+	{
+		#if UNITY_EDITOR
+		if (m_SetClipSamplePosition == null)
+		{
+			Type type = typeof(Editor).Assembly.GetType("UnityEditor.AudioUtil");
+			
+			MethodInfo methodInfo = type.GetMethod(
+				"SetClipSamplePosition",
+				BindingFlags.Public | BindingFlags.Static
+			);
+			
+			m_SetClipSamplePosition = Delegate.CreateDelegate(typeof(Action<AudioClip, int>), methodInfo) as Action<AudioClip, int>;
+		}
+		
+		m_SetClipSamplePosition?.Invoke(
+			_AudioClip,
+			(int)MathUtility.Remap(_Time, 0, _AudioClip.length, 0, _AudioClip.samples - 1)
+		);
+		#endif
+	}
+
+	public static bool IsClipPlaying(AudioClip _AudioClip)
+	{
+		#if UNITY_EDITOR
+		if (m_IsClipPlaying == null)
+		{
+			Type type = typeof(Editor).Assembly.GetType("UnityEditor.AudioUtil");
+			
+			MethodInfo methodInfo = type.GetMethod(
+				"IsClipPlaying",
+				BindingFlags.Public | BindingFlags.Static
+			);
+			
+			m_IsClipPlaying = Delegate.CreateDelegate(typeof(Func<AudioClip, bool>), methodInfo) as Func<AudioClip, bool>;
+		}
+		
+		return m_IsClipPlaying.Invoke(_AudioClip);
 		#endif
 	}
 }

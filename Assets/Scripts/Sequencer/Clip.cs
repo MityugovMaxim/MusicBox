@@ -2,6 +2,8 @@ using UnityEngine;
 
 public abstract class Clip : ScriptableObject
 {
+	public Sequencer Sequencer { get; private set; }
+
 	public float MinTime
 	{
 		get => m_MinTime;
@@ -14,34 +16,32 @@ public abstract class Clip : ScriptableObject
 		protected set => m_MaxTime = value;
 	}
 
+	public bool Playing { get; private set; }
+
 	[SerializeField] float m_MinTime;
 	[SerializeField] float m_MaxTime;
 
-	bool m_Playing;
+	public virtual void Initialize(Sequencer _Sequencer)
+	{
+		Sequencer = _Sequencer;
+	}
 
 	public void Sample(float _Time)
 	{
-		if (_Time >= MinTime && !m_Playing)
+		if ((_Time >= MinTime || _Time <= MaxTime) && !Playing)
 		{
-			m_Playing = true;
+			Playing = true;
 			OnEnter(_Time);
 		}
 		
-		if (m_Playing)
+		if (Playing)
 			OnUpdate(_Time);
 		
-		if (_Time >= MaxTime && m_Playing)
+		if ((_Time <= MinTime || _Time >= MaxTime) && Playing)
 		{
-			m_Playing = false;
+			Playing = false;
 			OnExit(_Time);
 		}
-	}
-
-	public void Stop(float _Time)
-	{
-		m_Playing = false;
-		
-		OnStop(_Time);
 	}
 
 	protected abstract void OnEnter(float _Time);
@@ -49,8 +49,6 @@ public abstract class Clip : ScriptableObject
 	protected abstract void OnUpdate(float _Time);
 
 	protected abstract void OnExit(float _Time);
-
-	protected abstract void OnStop(float _Time);
 
 	protected float GetNormalizedTime(float _Time)
 	{

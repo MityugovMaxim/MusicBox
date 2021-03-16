@@ -333,12 +333,7 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
-				bool playing = Sequencer.Playing;
-				
-				Sequencer.Stop();
-				Sequencer.Time = time;
-				if (playing)
-					Sequencer.Play();
+				Sequencer.Sample(time);
 				
 				Event.current.Use();
 				
@@ -366,12 +361,7 @@ public class SequencerEditor : EditorWindow
 					time = MathUtility.Snap(time, 0.01f);
 				time = Mathf.Max(time, 0);
 				
-				bool playing = Sequencer.Playing;
-				
-				Sequencer.Stop();
-				Sequencer.Time = time;
-				if (playing)
-					Sequencer.Play();
+				Sequencer.Sample(time);
 				
 				Event.current.Use();
 				
