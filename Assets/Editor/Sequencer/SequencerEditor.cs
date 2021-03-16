@@ -22,12 +22,7 @@ public class SequencerEditor : EditorWindow
 	static void OnRecompile()
 	{
 		m_ClipDrawers.Clear();
-	}
-
-	static float TracksWidth
-	{
-		get => EditorPrefs.GetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", 120);
-		set => EditorPrefs.SetFloat("SEQUENCER_EDITOR_TRACKS_WIDTH", Mathf.Max(120, value));
+		m_TrackDrawers.Clear();
 	}
 
 	Sequencer Sequencer
@@ -40,12 +35,28 @@ public class SequencerEditor : EditorWindow
 		}
 	}
 
+	float MinTime
+	{
+		get => Sequencer.MinTime;
+		set => Sequencer.MinTime = value;
+	}
+
+	float MaxTime
+	{
+		get => Sequencer.MaxTime;
+		set => Sequencer.MaxTime = value;
+	}
+
+	float TracksWidth
+	{
+		get => Sequencer.TracksWidth;
+		set => Sequencer.TracksWidth = value;
+	}
+
 	static readonly Dictionary<int, TrackDrawer> m_TrackDrawers = new Dictionary<int, TrackDrawer>();
 	static readonly Dictionary<int, ClipDrawer>  m_ClipDrawers  = new Dictionary<int, ClipDrawer>();
 
-	[SerializeField] int   m_SequencerID;
-	[SerializeField] float m_MinTime;
-	[SerializeField] float m_MaxTime;
+	[SerializeField] int m_SequencerID;
 
 	Sequencer m_Sequencer;
 
@@ -82,17 +93,17 @@ public class SequencerEditor : EditorWindow
 		m_Sequencer   = sequencer;
 		m_SequencerID = m_Sequencer.GetInstanceID();
 		
-		if (Mathf.Approximately(m_MinTime, m_MaxTime))
+		if (Mathf.Approximately(MinTime, MaxTime))
 		{
-			m_MinTime = 0;
-			m_MaxTime = 60;
+			MinTime = 0;
+			MaxTime = 60;
 		}
 		
 		Sequencer.Initialize();
 		
 		foreach (Track track in Sequencer.Tracks)
 		foreach (Clip clip in track)
-			m_MaxTime = Mathf.Max(m_MaxTime, clip.MaxTime);
+			MaxTime = Mathf.Max(MaxTime, clip.MaxTime);
 		
 		Repaint();
 	}
@@ -169,8 +180,8 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTimelineGuide(Rect _Rect, float _Step, bool _Time)
 	{
-		int min = Mathf.CeilToInt(m_MinTime / _Step);
-		int max = Mathf.FloorToInt(m_MaxTime / _Step);
+		int min = Mathf.CeilToInt(MinTime / _Step);
+		int max = Mathf.FloorToInt(MaxTime / _Step);
 		
 		if (min > max)
 			return;
@@ -190,7 +201,7 @@ public class SequencerEditor : EditorWindow
 		
 		for (int step = min; step <= max; step++)
 		{
-			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, step * _Step);
+			float phase = Mathf.InverseLerp(MinTime, MaxTime, step * _Step);
 			
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
@@ -218,7 +229,7 @@ public class SequencerEditor : EditorWindow
 		{
 			float time = step * _Step;
 			
-			float position = MathUtility.Remap(time, m_MinTime, m_MaxTime, 0, _Rect.width);
+			float position = MathUtility.Remap(time, MinTime, MaxTime, 0, _Rect.width);
 			
 			float milliseconds = time - (int)time;
 			
@@ -242,8 +253,8 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTimelineGuide(Rect _Rect, float _Step)
 	{
-		int min = Mathf.CeilToInt(m_MinTime / _Step);
-		int max = Mathf.FloorToInt(m_MaxTime / _Step);
+		int min = Mathf.CeilToInt(MinTime / _Step);
+		int max = Mathf.FloorToInt(MaxTime / _Step);
 		
 		if (min > max)
 			return;
@@ -261,7 +272,7 @@ public class SequencerEditor : EditorWindow
 		
 		for (int step = min; step <= max; step++)
 		{
-			float phase = Mathf.InverseLerp(m_MinTime, m_MaxTime, step * _Step);
+			float phase = Mathf.InverseLerp(MinTime, MaxTime, step * _Step);
 			
 			float position = Mathf.Lerp(_Rect.xMin, _Rect.xMax, phase);
 			
@@ -287,7 +298,7 @@ public class SequencerEditor : EditorWindow
 		{
 			case EventType.Repaint:
 			{
-				float position = MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
+				float position = MathUtility.Remap(Sequencer.Time, MinTime, MaxTime, 0, _Rect.width);
 				
 				GUI.BeginClip(
 					new Rect(
@@ -327,12 +338,12 @@ public class SequencerEditor : EditorWindow
 					Event.current.mousePosition.x,
 					_Rect.xMin,
 					_Rect.xMax,
-					m_MinTime,
-					m_MaxTime
+					MinTime,
+					MaxTime
 				);
 				
 				if (Event.current.command)
-					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
+					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Pause();
@@ -356,12 +367,12 @@ public class SequencerEditor : EditorWindow
 					Event.current.mousePosition.x,
 					_Rect.xMin,
 					_Rect.xMax,
-					m_MinTime,
-					m_MaxTime
+					MinTime,
+					MaxTime
 				);
 				
 				if (Event.current.command)
-					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
+					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Sample(time);
@@ -384,12 +395,12 @@ public class SequencerEditor : EditorWindow
 					Event.current.mousePosition.x,
 					_Rect.xMin,
 					_Rect.xMax,
-					m_MinTime,
-					m_MaxTime
+					MinTime,
+					MaxTime
 				);
 				
 				if (Event.current.command)
-					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
+					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
 				
 				if (GUIUtility.hotControl == playControlID)
@@ -514,7 +525,7 @@ public class SequencerEditor : EditorWindow
 		
 		ClipDrawer clipDrawer = m_ClipDrawers[clipID];
 		
-		clipDrawer?.Draw(_Rect, m_MinTime, m_MaxTime);
+		clipDrawer?.Draw(_Rect, MinTime, MaxTime);
 	}
 
 	void MoveInput(Rect _Rect)
@@ -531,17 +542,17 @@ public class SequencerEditor : EditorWindow
 			return;
 		
 		float scale = scroll.x / _Rect.width;
-		float value = scale * Mathf.Abs(m_MaxTime - m_MinTime) * 2;
+		float value = scale * Mathf.Abs(MaxTime - MinTime) * 2;
 		
-		float minTime = m_MinTime + value;
-		float maxTime = m_MaxTime + value;
+		float minTime = MinTime + value;
+		float maxTime = MaxTime + value;
 		
 		ClampTimeRange(ref minTime, ref maxTime);
 		
-		if (!Mathf.Approximately(m_MinTime, minTime) || !Mathf.Approximately(m_MaxTime, maxTime))
+		if (!Mathf.Approximately(MinTime, minTime) || !Mathf.Approximately(MaxTime, maxTime))
 		{
-			m_MinTime = minTime;
-			m_MaxTime = maxTime;
+			MinTime = minTime;
+			MaxTime = maxTime;
 			
 			Repaint();
 		}
@@ -564,17 +575,17 @@ public class SequencerEditor : EditorWindow
 		
 		float phase = Mathf.InverseLerp(_Rect.xMin, _Rect.xMax, Event.current.mousePosition.x);
 		float scale = scroll.y / _Rect.width;
-		float value = scale * Mathf.Abs(m_MaxTime - m_MinTime) * 2;
+		float value = scale * Mathf.Abs(MaxTime - MinTime) * 2;
 		
-		float minTime = m_MinTime - value * phase;
-		float maxTime = m_MaxTime + value * (1 - phase);
+		float minTime = MinTime - value * phase;
+		float maxTime = MaxTime + value * (1 - phase);
 		
 		ClampTimeRange(ref minTime, ref maxTime);
 		
-		if (!Mathf.Approximately(m_MaxTime - m_MinTime, maxTime - minTime))
+		if (!Mathf.Approximately(MaxTime - MinTime, maxTime - minTime))
 		{
-			m_MinTime = minTime;
-			m_MaxTime = maxTime;
+			MinTime = minTime;
+			MaxTime = maxTime;
 			
 			Repaint();
 		}
@@ -723,8 +734,8 @@ public class SequencerEditor : EditorWindow
 						Event.current.mousePosition.x,
 						rect.xMin,
 						rect.xMax,
-						m_MinTime,
-						m_MaxTime
+						MinTime,
+						MaxTime
 					);
 					
 					track.DragPerform(time, DragAndDrop.objectReferences);

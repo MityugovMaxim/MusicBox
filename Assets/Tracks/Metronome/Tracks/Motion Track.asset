@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-461443865209501895
+--- !u!114 &-216685031383032994
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9,14 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 361319651fc64f5fbdb23dc2595cf75a, type: 3}
-  m_Name: Music Clip
+  m_Script: {fileID: 11500000, guid: ca7e038d831144d89bb3e871b8d32af6, type: 3}
+  m_Name: Motion Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 3.1177661
-  m_MaxTime: 33.141743
-  m_AudioClip: {fileID: 8300000, guid: 22157340bec374d6da217b3b2f8f870e, type: 3}
-  m_MinOffset: 0
-  m_MaxOffset: 0
+  m_MinTime: 2.6325357
+  m_MaxTime: 28.26471
+  m_AnimationClip: {fileID: 7400000, guid: cfb6f44d0a5594804964d0e7b9dca62a, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26,11 +24,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 116598962ee14a9aac028260660f29da, type: 3}
-  m_Name: Metronome
+  m_Script: {fileID: 11500000, guid: 665d25d5ff32416aac09ad76917ef0a4, type: 3}
+  m_Name: Motion Track
   m_EditorClassIdentifier: 
-  m_Height: 50
+  m_Height: 0
   m_Offset: 0
   m_Clips:
-  - {fileID: -461443865209501895}
-  m_AudioSource: /Sequencer/GameObject
+  - {fileID: -216685031383032994}
+  m_Animator: /TEST/Cube

@@ -1,7 +1,32 @@
 using UnityEngine;
 
+public partial class Sequencer
+{
+	public float MinTime
+	{
+		get => m_MinTime;
+		set => m_MinTime = value;
+	}
+
+	public float MaxTime
+	{
+		get => m_MaxTime;
+		set => m_MaxTime = value;
+	} 
+
+	public float TracksWidth
+	{
+		get => m_TracksWidth;
+		set => m_TracksWidth = value;
+	}
+
+	[SerializeField] float m_MinTime     = 0;
+	[SerializeField] float m_MaxTime     = 60;
+	[SerializeField] float m_TracksWidth = 120;
+}
+
 [ExecuteInEditMode]
-public class Sequencer : MonoBehaviour
+public partial class Sequencer : MonoBehaviour
 {
 	public float Time
 	{
