@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public interface IRoutineClipReceiver
 {
 	void StartRoutine(float _Time);
@@ -20,8 +18,6 @@ public class RoutineClip : Clip
 
 	protected override void OnEnter(float _Time)
 	{
-		Debug.LogError("ON ENTER: " + _Time);
-		
 		float time = GetNormalizedTime(_Time);
 		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)
@@ -38,8 +34,6 @@ public class RoutineClip : Clip
 
 	protected override void OnExit(float _Time)
 	{
-		Debug.LogError("ON EXIT: " + _Time);
-		
 		float time = GetNormalizedTime(_Time);
 		
 		foreach (IRoutineClipReceiver receiver in m_Receivers)

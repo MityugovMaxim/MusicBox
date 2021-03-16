@@ -277,15 +277,19 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTimelineSeeker(Rect _Rect)
 	{
-		const string controlName = "sequencer_timeline_seeker";
+		string controlNameStop = "sequencer_timeline_seeker_stop";
+		string controlNamePlay = "sequencer_timeline_seeker_play";
 		
-		int controlID = EditorGUIUtility.GetControlID(controlName.GetHashCode(), FocusType.Passive);
+		int stopControlID = EditorGUIUtility.GetControlID(controlNameStop.GetHashCode(), FocusType.Passive);
+		int playControlID = EditorGUIUtility.GetControlID(controlNamePlay.GetHashCode(), FocusType.Passive);
 		
 		switch (Event.current.type)
 		{
 			case EventType.Repaint:
 			{
-				float position = MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
+				float position = GUIUtility.hotControl == stopControlID || GUIUtility.hotControl == playControlID
+					? MathUtility.Remap(Event.current.mousePosition.x, _Rect.xMin, _Rect.xMax, 0, _Rect.width)
+					: MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
 				
 				GUI.BeginClip(
 					new Rect(
@@ -319,7 +323,36 @@ public class SequencerEditor : EditorWindow
 				if (!_Rect.Contains(Event.current.mousePosition))
 					break;
 				
-				GUIUtility.hotControl = controlID;
+				GUIUtility.hotControl = Sequencer.Playing ? playControlID : stopControlID;
+				
+				float time = MathUtility.Remap(
+					Event.current.mousePosition.x,
+					_Rect.xMin,
+					_Rect.xMax,
+					m_MinTime,
+					m_MaxTime
+				);
+				
+				if (!Event.current.alt)
+					time = MathUtility.Snap(time, 0.01f);
+				time = Mathf.Max(time, 0);
+				
+				Sequencer.Pause();
+				Sequencer.Sample(time);
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != stopControlID && GUIUtility.hotControl != playControlID)
+					break;
+				
+				Event.current.Use();
 				
 				float time = MathUtility.Remap(
 					Event.current.mousePosition.x,
@@ -342,9 +375,9 @@ public class SequencerEditor : EditorWindow
 				break;
 			}
 			
-			case EventType.MouseDrag:
+			case EventType.MouseUp:
 			{
-				if (GUIUtility.hotControl != controlID)
+				if (GUIUtility.hotControl != stopControlID && GUIUtility.hotControl != playControlID)
 					break;
 				
 				Event.current.Use();
@@ -362,6 +395,11 @@ public class SequencerEditor : EditorWindow
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Sample(time);
+				
+				if (GUIUtility.hotControl == playControlID)
+					Sequencer.Play();
+				
+				GUIUtility.hotControl = -1;
 				
 				Event.current.Use();
 				

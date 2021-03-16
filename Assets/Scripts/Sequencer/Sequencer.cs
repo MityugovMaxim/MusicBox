@@ -58,10 +58,9 @@ public class Sequencer : MonoBehaviour
 
 	public void Stop()
 	{
-		Time    = 0;
 		Playing = false;
 		
-		Sample(Time);
+		Sample(0);
 	}
 
 	public void Sample(float _Time)

@@ -49,15 +49,11 @@ public class MusicClip : Clip
 		{
 			if (!Sequencer.Playing && Playing)
 			{
-				Debug.LogError("PAUSE");
-				
 				AudioUtility.StopClip(m_AudioClip);
 				AudioUtility.SetClipSamplePosition(m_AudioClip, time + m_MinOffset);
 			}
 			else if (Sequencer.Playing && Playing && !AudioUtility.IsClipPlaying(m_AudioClip))
 			{
-				Debug.LogError("UN PAUSE");
-				
 				AudioUtility.PlayClip(m_AudioClip);
 				AudioUtility.SetClipSamplePosition(m_AudioClip, time + m_MinOffset);
 			}
@@ -67,15 +63,15 @@ public class MusicClip : Clip
 		
 		m_AudioSource.clip = m_AudioClip;
 		
-		if (Sequencer.Playing && !Playing)
+		if (!Sequencer.Playing && Playing)
 		{
-			m_AudioSource.Play();
+			m_AudioSource.Pause();
 			
 			m_AudioSource.time = time + m_MinOffset;
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying)
 		{
-			m_AudioSource.Pause();
+			m_AudioSource.Play();
 			
 			m_AudioSource.time = time + m_MinOffset;
 		}
@@ -84,13 +80,13 @@ public class MusicClip : Clip
 	protected override void OnExit(float _Time)
 	{
 		#if UNITY_EDITOR
-		if (Application.isPlaying)
+		if (!Application.isPlaying)
 		{
-			m_AudioSource.Stop();
+			AudioUtility.StopClip(m_AudioClip);
 			return;
 		}
 		#endif
 		
-		AudioUtility.StopClip(m_AudioClip);
+		m_AudioSource.Stop();
 	}
 }
