@@ -15,6 +15,9 @@ public partial class HapticTrack : Track<HapticClip>
 	{
 		base.Initialize(_Sequencer);
 		
+		foreach (HapticClip clip in Clips)
+			clip.Initialize(Sequencer);
+		
 		Haptic.Initialize();
 	}
 

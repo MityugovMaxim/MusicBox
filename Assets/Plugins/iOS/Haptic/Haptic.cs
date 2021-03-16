@@ -30,7 +30,7 @@ public class Haptic
 
 	public static void Process(Type _Type)
 	{
-		m_Instance.ProcessInternal(_Type);
+		m_Instance?.ProcessInternal(_Type);
 	}
 
 	protected virtual void InitializeInternal() { }

@@ -18,25 +18,31 @@ public class RoutineClip : Clip
 
 	protected override void OnEnter(float _Time)
 	{
-		float time = GetNormalizedTime(_Time);
-		
-		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.StartRoutine(time);
+		if (m_Receivers != null)
+		{
+			float time = GetNormalizedTime(_Time);
+			foreach (IRoutineClipReceiver receiver in m_Receivers)
+				receiver.StartRoutine(time);
+		}
 	}
 
 	protected override void OnUpdate(float _Time)
 	{
-		float time = GetNormalizedTime(_Time);
-		
-		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.UpdateRoutine(time);
+		if (m_Receivers != null)
+		{
+			float time = GetNormalizedTime(_Time);
+			foreach (IRoutineClipReceiver receiver in m_Receivers)
+				receiver.UpdateRoutine(time);
+		}
 	}
 
 	protected override void OnExit(float _Time)
 	{
-		float time = GetNormalizedTime(_Time);
-		
-		foreach (IRoutineClipReceiver receiver in m_Receivers)
-			receiver.FinishRoutine(time);
+		if (m_Receivers != null)
+		{
+			float time = GetNormalizedTime(_Time);
+			foreach (IRoutineClipReceiver receiver in m_Receivers)
+				receiver.FinishRoutine(time);
+		}
 	}
 }

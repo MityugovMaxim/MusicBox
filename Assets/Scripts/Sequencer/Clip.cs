@@ -28,7 +28,7 @@ public abstract class Clip : ScriptableObject
 
 	public void Sample(float _Time)
 	{
-		if ((_Time >= MinTime || _Time <= MaxTime) && !Playing)
+		if ((_Time >= MinTime || _Time < MaxTime) && !Playing)
 		{
 			Playing = true;
 			OnEnter(_Time);
@@ -37,7 +37,7 @@ public abstract class Clip : ScriptableObject
 		if (Playing)
 			OnUpdate(_Time);
 		
-		if ((_Time <= MinTime || _Time >= MaxTime) && Playing)
+		if ((_Time < MinTime || _Time >= MaxTime) && Playing)
 		{
 			Playing = false;
 			OnExit(_Time);

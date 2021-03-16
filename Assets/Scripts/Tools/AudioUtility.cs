@@ -86,10 +86,13 @@ public static class AudioUtility
 			m_SetClipSamplePosition = Delegate.CreateDelegate(typeof(Action<AudioClip, int>), methodInfo) as Action<AudioClip, int>;
 		}
 		
-		m_SetClipSamplePosition?.Invoke(
-			_AudioClip,
-			(int)MathUtility.Remap(_Time, 0, _AudioClip.length, 0, _AudioClip.samples - 1)
-		);
+		if (_Time > float.Epsilon)
+		{
+			m_SetClipSamplePosition?.Invoke(
+				_AudioClip,
+				(int)(_Time * _AudioClip.frequency)
+			);
+		}
 		#endif
 	}
 

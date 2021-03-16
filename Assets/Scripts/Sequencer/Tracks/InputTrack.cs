@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -6,7 +7,7 @@ public partial class InputTrack
 	protected override float MinHeight => 110;
 	protected override float MaxHeight => 110;
 
-	[SerializeField] float m_Duration = 0.5f;
+	[SerializeField, UsedImplicitly] float m_Duration = 0.5f;
 }
 #endif
 
@@ -30,6 +31,6 @@ public partial class InputTrack : Track<InputClip>
 		int id = 0;
 		
 		foreach (InputClip clip in Clips)
-			clip.Initialize(id++, inputReader, m_Time, m_MinZone, m_MaxZone);
+			clip.Initialize(Sequencer, id++, inputReader, m_Time, m_MinZone, m_MaxZone);
 	}
 }

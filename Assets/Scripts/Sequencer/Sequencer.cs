@@ -1,12 +1,12 @@
 using UnityEngine;
 
-[ExecuteAlways]
+[ExecuteInEditMode]
 public class Sequencer : MonoBehaviour
 {
 	public float Time
 	{
 		get => m_Time;
-		set => m_Time = value;
+		private set => m_Time = value;
 	}
 
 	public bool Playing { get; private set; }
@@ -14,28 +14,38 @@ public class Sequencer : MonoBehaviour
 	public Track[] Tracks => m_Tracks;
 
 	[SerializeField] Track[] m_Tracks;
-	[SerializeField] float m_Time;
+	[SerializeField] float   m_Time;
+	[SerializeField] bool    m_AutoPlay;
 
-	void Awake()
+	int m_Frame;
+	int m_SampleFrame;
+
+	void OnEnable()
 	{
 		Initialize();
 		
-		if (!Application.isPlaying)
+		if (!Application.isPlaying || !m_AutoPlay)
 			return;
 		
 		Stop();
 		Play();
 	}
 
-	void OnDestroy()
+	void OnDisable()
 	{
 		Stop();
 	}
 
 	void LateUpdate()
 	{
-		if (Playing)
+		if (Playing && m_SampleFrame != m_Frame)
+		{
+			m_SampleFrame = m_Frame;
+			
 			Sample(m_Time + UnityEngine.Time.deltaTime);
+		}
+		
+		m_Frame++;
 	}
 
 	public void Initialize()
@@ -47,11 +57,19 @@ public class Sequencer : MonoBehaviour
 	public void Play()
 	{
 		Playing = true;
+		
+		m_Frame       = 0;
+		m_SampleFrame = 0;
+		
+		Sample(Time);
 	}
 
 	public void Pause()
 	{
 		Playing = false;
+		
+		m_Frame       = 0;
+		m_SampleFrame = 0;
 		
 		Sample(Time);
 	}
@@ -59,6 +77,9 @@ public class Sequencer : MonoBehaviour
 	public void Stop()
 	{
 		Playing = false;
+		
+		m_Frame       = 0;
+		m_SampleFrame = 0;
 		
 		Sample(0);
 	}

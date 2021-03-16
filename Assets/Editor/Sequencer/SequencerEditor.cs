@@ -88,8 +88,7 @@ public class SequencerEditor : EditorWindow
 			m_MaxTime = 60;
 		}
 		
-		if (!Application.isPlaying)
-			Sequencer.Initialize();
+		Sequencer.Initialize();
 		
 		foreach (Track track in Sequencer.Tracks)
 		foreach (Clip clip in track)
@@ -130,14 +129,15 @@ public class SequencerEditor : EditorWindow
 		
 		GUILayout.BeginHorizontal();
 		
-		if (GUILayout.Button(">"))
+		if (!Sequencer.Playing && GUILayout.Button(">"))
 		{
 			Sequencer.Initialize();
 			Sequencer.Play();
 		}
-		
-		if (GUILayout.Button("||"))
+		else if (Sequencer.Playing && GUILayout.Button("||"))
+		{
 			Sequencer.Pause();
+		}
 		
 		if (GUILayout.Button("[]"))
 			Sequencer.Stop();
@@ -149,10 +149,10 @@ public class SequencerEditor : EditorWindow
 
 	void Update()
 	{
+		Repaint();
+		
 		if (Sequencer != null && Sequencer.Playing)
 			EditorApplication.QueuePlayerLoopUpdate();
-		
-		Repaint();
 	}
 
 	void DrawTimeline(Rect _Rect)
@@ -287,9 +287,7 @@ public class SequencerEditor : EditorWindow
 		{
 			case EventType.Repaint:
 			{
-				float position = GUIUtility.hotControl == stopControlID || GUIUtility.hotControl == playControlID
-					? MathUtility.Remap(Event.current.mousePosition.x, _Rect.xMin, _Rect.xMax, 0, _Rect.width)
-					: MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
+				float position = MathUtility.Remap(Sequencer.Time, m_MinTime, m_MaxTime, 0, _Rect.width);
 				
 				GUI.BeginClip(
 					new Rect(
@@ -333,8 +331,8 @@ public class SequencerEditor : EditorWindow
 					m_MaxTime
 				);
 				
-				if (!Event.current.alt)
-					time = MathUtility.Snap(time, 0.01f);
+				if (Event.current.command)
+					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Pause();
@@ -362,8 +360,8 @@ public class SequencerEditor : EditorWindow
 					m_MaxTime
 				);
 				
-				if (!Event.current.alt)
-					time = MathUtility.Snap(time, 0.01f);
+				if (Event.current.command)
+					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Sample(time);
@@ -390,16 +388,16 @@ public class SequencerEditor : EditorWindow
 					m_MaxTime
 				);
 				
-				if (!Event.current.alt)
-					time = MathUtility.Snap(time, 0.01f);
+				if (Event.current.command)
+					time = MathUtility.Snap(time, m_MinTime, m_MaxTime, 0.01f, 0.1f, 1, 5);
 				time = Mathf.Max(time, 0);
-				
-				Sequencer.Sample(time);
 				
 				if (GUIUtility.hotControl == playControlID)
 					Sequencer.Play();
 				
-				GUIUtility.hotControl = -1;
+				Sequencer.Sample(time);
+				
+				GUIUtility.hotControl = 0;
 				
 				Event.current.Use();
 				

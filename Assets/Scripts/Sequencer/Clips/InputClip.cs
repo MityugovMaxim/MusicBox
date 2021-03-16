@@ -32,8 +32,10 @@ public partial class InputClip : Clip
 	float       m_MaxZone;
 	bool        m_Reading;
 
-	public void Initialize(int _ID, InputReader _InputReader, float _Time, float _MinZone, float _MaxZone)
+	public void Initialize(Sequencer _Sequencer, int _ID, InputReader _InputReader, float _Time, float _MinZone, float _MaxZone)
 	{
+		base.Initialize(_Sequencer);
+		
 		m_ID          = _ID;
 		m_InputReader = _InputReader;
 		m_ZoneTime    = _Time;
