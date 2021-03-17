@@ -48,7 +48,7 @@ public class InputClipDrawer : ClipDrawer
 			{
 				if (ClipRect.Contains(Event.current.mousePosition))
 				{
-					Event.current.SetPosition(ClipRect.x + ClipRect.width * InputClip.ZoneTime);
+					Event.current.SetPosition(ClipRect.x + ClipRect.width * InputClip.Zone);
 					
 					GUIUtility.hotControl = CenterHandleControlID;
 					
@@ -77,8 +77,8 @@ public class InputClipDrawer : ClipDrawer
 					float duration = MaxTime - MinTime;
 					
 					Resize(
-						time - duration * InputClip.ZoneTime,
-						time + duration * (1 - InputClip.ZoneTime)
+						time - duration * InputClip.Zone,
+						time + duration * (1 - InputClip.Zone)
 					);
 					
 					Event.current.Use();
@@ -91,9 +91,9 @@ public class InputClipDrawer : ClipDrawer
 
 	void DrawZone()
 	{
-		float zoneTimePosition = MathUtility.RemapClamped(InputClip.ZoneTime, 0, 1, ClipRect.xMin, ClipRect.xMax);
-		float minZonePosition  = MathUtility.RemapClamped(InputClip.MinZone, 0, 1, ClipRect.xMin, ClipRect.xMax);
-		float maxZonePosition  = MathUtility.RemapClamped(InputClip.MaxZone, 0, 1, ClipRect.xMin, ClipRect.xMax);
+		float zoneTimePosition = MathUtility.RemapClamped(InputClip.Zone, 0, 1, ClipRect.xMin, ClipRect.xMax);
+		float minZonePosition  = MathUtility.RemapClamped(InputClip.ZoneMin, 0, 1, ClipRect.xMin, ClipRect.xMax);
+		float maxZonePosition  = MathUtility.RemapClamped(InputClip.ZoneMax, 0, 1, ClipRect.xMin, ClipRect.xMax);
 		
 		Rect timeRect = new Rect(
 			zoneTimePosition - 1,
@@ -109,7 +109,7 @@ public class InputClipDrawer : ClipDrawer
 			ClipRect.height
 		);
 		
-		Color color = InputClip.MinZone <= InputClip.ZoneTime && InputClip.MaxZone >= InputClip.ZoneTime
+		Color color = InputClip.ZoneMin <= InputClip.Zone && InputClip.ZoneMax >= InputClip.Zone
 			? m_ValidColor
 			: m_InvalidColor;
 		

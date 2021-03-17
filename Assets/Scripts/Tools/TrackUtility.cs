@@ -60,6 +60,12 @@ public static class TrackUtility
 
 	public static void RemoveClip(Track _Track, Clip _Clip)
 	{
+		if (_Track == null)
+		{
+			Debug.LogError("---> WTF");
+			return;
+		}
+		
 		using (SerializedObject trackObject = new SerializedObject(_Track))
 		{
 			SerializedProperty clipsProperty = trackObject.FindProperty("m_Clips");
@@ -70,7 +76,7 @@ public static class TrackUtility
 				
 				Clip clip = clipProperty.objectReferenceValue as Clip;
 				
-				if (_Clip != clip)
+				if (clip != null && clip != _Clip)
 					continue;
 				
 				clipProperty.objectReferenceValue = null;

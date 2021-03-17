@@ -72,30 +72,24 @@ public class InputReader : MonoBehaviour
 		
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
-		inputIndicator.Process(_Time);
+		if (inputIndicator != null)
+			inputIndicator.Process(_Time);
 	}
 
 	public void UpdateProcessing(int _ID, float _Time)
 	{
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
-		inputIndicator.Process(_Time);
+		if (inputIndicator != null)
+			inputIndicator.Process(_Time);
 	}
 
 	public void FinishProcessing(int _ID, float _Time)
 	{
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
-		inputIndicator.Process(_Time);
-		
-		RemoveInputIndicator(_ID);
-	}
-
-	public void RestoreProcessing(int _ID, float _Time)
-	{
-		InputIndicatorView inputIndicator = GetInputView(_ID);
-		
-		inputIndicator.Process(_Time);
+		if (inputIndicator != null)
+			inputIndicator.Process(_Time);
 		
 		RemoveInputIndicator(_ID);
 	}
@@ -114,9 +108,10 @@ public class InputReader : MonoBehaviour
 		
 		m_InputIDs.Dequeue();
 		
-		InputIndicatorView inputIndicatorView = GetInputView(_ID);
+		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
-		inputIndicatorView.Fail();
+		if (inputIndicator != null)
+			inputIndicator.Fail();
 	}
 
 	public void ProcessInput(InputType _InputType)

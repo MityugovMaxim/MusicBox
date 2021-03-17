@@ -379,7 +379,7 @@ public class ClipDrawer
 					break;
 				
 				string path  = AssetDatabase.GetAssetPath(Clip);
-				Track  track = AssetDatabase.LoadMainAssetAtPath(path) as Track;
+				Track  track = AssetDatabase.LoadAssetAtPath<Track>(path);
 				
 				TrackUtility.RemoveClip(track, Clip);
 				
