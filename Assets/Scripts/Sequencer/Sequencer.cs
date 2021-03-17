@@ -20,9 +20,16 @@ public partial class Sequencer
 		set => m_TracksWidth = value;
 	}
 
-	[SerializeField] float m_MinTime     = 0;
-	[SerializeField] float m_MaxTime     = 60;
-	[SerializeField] float m_TracksWidth = 120;
+	public float ScrollPosition
+	{
+		get => m_ScrollPosition;
+		set => m_ScrollPosition = value;
+	}
+
+	[SerializeField] float m_MinTime        = 0;
+	[SerializeField] float m_MaxTime        = 60;
+	[SerializeField] float m_TracksWidth    = 120;
+	[SerializeField] float m_ScrollPosition = 0;
 }
 
 [ExecuteInEditMode]

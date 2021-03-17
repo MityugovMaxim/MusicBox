@@ -212,6 +212,20 @@ public class HapticClipDrawer : ClipDrawer
 				
 				break;
 			}
+			
+			case EventType.MouseUp:
+			{
+				if (GUIUtility.hotControl != CenterHandleControlID)
+					break;
+				
+				Reposition();
+				
+				GUIUtility.hotControl = 0;
+				
+				Event.current.Use();
+				
+				break;
+			}
 		}
 	}
 }

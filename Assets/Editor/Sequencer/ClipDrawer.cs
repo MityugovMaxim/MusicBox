@@ -346,6 +346,23 @@ public class ClipDrawer
 				
 				break;
 			}
+			
+			case EventType.MouseUp:
+			{
+				if (GUIUtility.hotControl != LeftHandleControlID && GUIUtility.hotControl != RightHandleControlID && GUIUtility.hotControl != CenterHandleControlID)
+					break;
+				
+				GUIUtility.hotControl = 0;
+				
+				string path  = AssetDatabase.GetAssetPath(Clip);
+				Track  track = AssetDatabase.LoadAssetAtPath<Track>(path);
+				
+				track.Sort();
+				
+				Event.current.Use();
+				
+				break;
+			}
 		}
 	}
 
@@ -360,6 +377,14 @@ public class ClipDrawer
 		MaxTime = _MaxTime;
 		
 		ClipObject.ApplyModifiedProperties();
+	}
+
+	protected void Reposition()
+	{
+		string path  = AssetDatabase.GetAssetPath(Clip);
+		Track  track = AssetDatabase.LoadAssetAtPath<Track>(path);
+		
+		track.Sort();
 	}
 
 	void DeleteInput()

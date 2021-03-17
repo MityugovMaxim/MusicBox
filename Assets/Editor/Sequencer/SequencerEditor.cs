@@ -53,6 +53,12 @@ public class SequencerEditor : EditorWindow
 		set => Sequencer.TracksWidth = value;
 	}
 
+	float ScrollPosition
+	{
+		get => Sequencer.ScrollPosition;
+		set => Sequencer.ScrollPosition = value;
+	}
+
 	static readonly Dictionary<int, TrackDrawer> m_TrackDrawers = new Dictionary<int, TrackDrawer>();
 	static readonly Dictionary<int, ClipDrawer>  m_ClipDrawers  = new Dictionary<int, ClipDrawer>();
 
@@ -128,6 +134,7 @@ public class SequencerEditor : EditorWindow
 		
 		CopyInput();
 		PasteInput();
+		MoveInput(tracksRect);
 		MoveInput(clipsRect);
 		ZoomInput(clipsRect);
 		DragDropInput(clipsRect);
@@ -421,7 +428,7 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTracks(Rect _Rect)
 	{
-		float position = 0;
+		float position = ScrollPosition;
 		
 		RectOffset trackPadding = new RectOffset(0, 0, 1, 1);
 		
@@ -471,7 +478,7 @@ public class SequencerEditor : EditorWindow
 		
 		GUI.BeginClip(_Rect);
 		
-		float position = 0;
+		float position = ScrollPosition;
 		
 		RectOffset trackPadding = new RectOffset(0, 0, 2, 2);
 		RectOffset clipPadding  = new RectOffset(0, 0, 4, 4);
@@ -503,9 +510,7 @@ public class SequencerEditor : EditorWindow
 			}
 			
 			foreach (Clip clip in track)
-			{
 				DrawClip(clipPadding.Remove(rect), clip);
-			}
 			
 			position += track.Height;
 		}
@@ -538,8 +543,9 @@ public class SequencerEditor : EditorWindow
 		
 		Vector2 scroll = Event.current.delta;
 		
-		if (Mathf.Abs(scroll.x) <= Mathf.Abs(scroll.y))
-			return;
+		float height = Mathf.Max(0, Sequencer.Tracks.Sum(_Track => _Track.Height) - _Rect.height);
+		
+		ScrollPosition = Mathf.Clamp(ScrollPosition - scroll.y, -height, 0);
 		
 		float scale = scroll.x / _Rect.width;
 		float value = scale * Mathf.Abs(MaxTime - MinTime) * 2;
@@ -553,11 +559,32 @@ public class SequencerEditor : EditorWindow
 		{
 			MinTime = minTime;
 			MaxTime = maxTime;
-			
-			Repaint();
 		}
 		
 		Event.current.Use();
+		
+		Repaint();
+	}
+
+	void ScrollInput(Rect _Rect)
+	{
+		if (Event.current.type == EventType.Repaint || Event.current.type != EventType.ScrollWheel)
+			return;
+		
+		if (!_Rect.Contains(Event.current.mousePosition))
+			return;
+		
+		
+		Vector2 scroll = Event.current.delta * 2;
+		
+		if (Mathf.Abs(scroll.y) <= Mathf.Abs(scroll.x))
+			return;
+		
+		
+		
+		Event.current.Use();
+		
+		Repaint();
 	}
 
 	void ZoomInput(Rect _Rect)
@@ -586,11 +613,11 @@ public class SequencerEditor : EditorWindow
 		{
 			MinTime = minTime;
 			MaxTime = maxTime;
-			
-			Repaint();
 		}
 		
 		Event.current.Use();
+		
+		Repaint();
 	}
 
 	void CopyInput()
@@ -686,6 +713,8 @@ public class SequencerEditor : EditorWindow
 					EditorJsonUtility.FromJsonOverwrite(jsonParameter, clip);
 					
 					TrackUtility.AddClip(track, clip, Sequencer.Time);
+					
+					track.Initialize(Sequencer);
 				}
 				
 				Event.current.Use();
@@ -699,7 +728,7 @@ public class SequencerEditor : EditorWindow
 
 	void DragDropInput(Rect _Rect)
 	{
-		float position = 0;
+		float position = ScrollPosition;
 		
 		foreach (Track track in Sequencer.Tracks)
 		{
