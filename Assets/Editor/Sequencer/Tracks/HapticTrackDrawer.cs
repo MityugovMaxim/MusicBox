@@ -19,6 +19,8 @@ public class HapticTrackDrawer : TrackDrawer
 			clip.name = "Haptic Clip";
 			
 			TrackUtility.AddClip(Track, clip, Time);
+			
+			clip.Initialize(Track.Sequencer);
 		}
 		
 		EditorGUILayout.EndHorizontal();

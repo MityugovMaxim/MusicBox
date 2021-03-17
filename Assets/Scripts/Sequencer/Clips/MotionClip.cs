@@ -3,20 +3,16 @@ using UnityEngine;
 
 public class MotionClip : Clip
 {
-	[SerializeField] AnimationClip m_AnimationClip;
+	[SerializeField] int m_StateHash;
 
 	Animator      m_Animator;
-	int           m_LayerIndex;
 	AnimatorState m_State;
 
-	public void Initialize(Sequencer _Sequencer, Animator _Animator, int _LayerIndex)
+	public void Initialize(Sequencer _Sequencer, Animator _Animator)
 	{
 		base.Initialize(_Sequencer);
 		
-		m_Animator   = _Animator;
-		m_LayerIndex = _LayerIndex;
-		
-		m_Animator.WriteDefaultValues();
+		m_Animator = _Animator;
 	}
 
 	protected override void OnEnter(float _Time)
@@ -27,7 +23,7 @@ public class MotionClip : Clip
 	protected override void OnUpdate(float _Time)
 	{
 		m_Animator.speed = 0;
-		m_Animator.Play(m_AnimationClip.name, 0, GetNormalizedTime(_Time));
+		m_Animator.Play(m_StateHash, 0, GetNormalizedTime(_Time));
 		m_Animator.Update(0);
 	}
 

@@ -13,20 +13,7 @@ public class MotionTrackDrawer : TrackDrawer
 
 	protected override void DrawContent()
 	{
-		EditorGUILayout.BeginHorizontal();
-		
 		DrawName();
-		
-		if (GUILayout.Button("+", GUILayout.Width(20)))
-		{
-			MotionClip clip = ScriptableObject.CreateInstance<MotionClip>();
-			
-			clip.name = "Motion Clip";
-			
-			TrackUtility.AddClip(Track, clip, Time, 0.2f);
-		}
-		
-		EditorGUILayout.EndHorizontal();
 		
 		EditorGUILayout.PropertyField(AnimatorProperty, GUIContent.none);
 	}

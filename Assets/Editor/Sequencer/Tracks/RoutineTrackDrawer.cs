@@ -24,6 +24,10 @@ public class RoutineTrackDrawer : TrackDrawer
 			clip.name = "Routine Clip";
 			
 			TrackUtility.AddClip(Track, clip, Time, 0.2f);
+			
+			IRoutineClipReceiver[] receivers = Track.GetReferences<IRoutineClipReceiver>(TargetProperty.stringValue);
+			
+			clip.Initialize(Track.Sequencer, receivers);
 		}
 		
 		EditorGUILayout.EndHorizontal();

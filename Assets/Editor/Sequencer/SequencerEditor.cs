@@ -738,7 +738,7 @@ public class SequencerEditor : EditorWindow
 						MaxTime
 					);
 					
-					track.DragPerform(time, DragAndDrop.objectReferences);
+					track.DropPerform(time, DragAndDrop.objectReferences);
 					
 					DragAndDrop.AcceptDrag();
 					

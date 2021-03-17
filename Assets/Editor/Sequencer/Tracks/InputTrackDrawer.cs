@@ -39,6 +39,8 @@ public class InputTrackDrawer : TrackDrawer
 			
 			TrackUtility.AddClip(Track, clip, Time);
 			
+			Track.Initialize(Track.Sequencer);
+			
 			clip.Setup(duration, time, minZone, maxZone);
 		}
 		

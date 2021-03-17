@@ -26,11 +26,9 @@ public partial class RoutineTrack : Track<RoutineClip>
 			return;
 		}
 		
-		IRoutineClipReceiver[] receivers = target.GetComponents<MonoBehaviour>()
-			.OfType<IRoutineClipReceiver>()
-			.ToArray();
+		IRoutineClipReceiver[] receivers = GetReferences<IRoutineClipReceiver>(m_Target);
 		
-		if (receivers.Length == 0)
+		if (receivers == null || receivers.Length == 0)
 			Debug.LogWarning($"[RoutineTrack] There are no receivers for track '{name}'", this);
 		
 		foreach (RoutineClip clip in Clips)

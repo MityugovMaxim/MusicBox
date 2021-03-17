@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -18,7 +19,7 @@ public partial class Track
 
 	[SerializeField, HideInInspector] float m_Height;
 
-	public virtual void DragPerform(float _Time, Object[] _Objects) { }
+	public virtual void DropPerform(float _Time, Object[] _Objects) { }
 
 	public abstract void Sort();
 }
@@ -26,7 +27,7 @@ public partial class Track
 
 public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IReferenceResolver
 {
-	protected Sequencer Sequencer { get; private set; }
+	public Sequencer Sequencer { get; private set; }
 
 	public virtual void Initialize(Sequencer _Sequencer)
 	{
@@ -70,6 +71,16 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		Transform transform = Sequencer.transform.Find(_Reference);
 		
 		return transform != null ? transform.GetComponent<T>() : null;
+	}
+
+	public T[] GetReferences<T>(string _Reference)
+	{
+		if (Sequencer == null || string.IsNullOrEmpty(_Reference))
+			return null;
+		
+		Transform transform = Sequencer.transform.Find(_Reference);
+		
+		return transform.GetComponents<Component>().OfType<T>().ToArray();
 	}
 
 	public GameObject GetReference(string _Reference)

@@ -8,9 +8,14 @@ public partial class MusicTrack
 {
 	protected override float MinHeight => 50;
 
-	public override void DragPerform(float _Time, Object[] _Objects)
+	public override void DropPerform(float _Time, Object[] _Objects)
 	{
-		base.DragPerform(_Time, _Objects);
+		base.DropPerform(_Time, _Objects);
+		
+		AudioSource audioSource = GetReference<AudioSource>(m_AudioSource);
+		
+		if (audioSource == null)
+			audioSource = AddReference<AudioSource>();
 		
 		AudioClip[] audioClips = _Objects.OfType<AudioClip>().ToArray();
 		
@@ -23,25 +28,18 @@ public partial class MusicTrack
 			using (SerializedObject musicClipObject = new SerializedObject(musicClip))
 			{
 				SerializedProperty audioClipProperty = musicClipObject.FindProperty("m_AudioClip");
-				SerializedProperty minTimeProperty   = musicClipObject.FindProperty("m_MinTime");
-				SerializedProperty maxTimeProperty   = musicClipObject.FindProperty("m_MaxTime");
 				
 				audioClipProperty.objectReferenceValue = audioClip;
-				minTimeProperty.floatValue = _Time;
-				maxTimeProperty.floatValue = _Time + audioClip.length;
-				
-				_Time += audioClip.length;
 				
 				musicClipObject.ApplyModifiedProperties();
 			}
 			
-			Clips.Add(musicClip);
+			TrackUtility.AddClip(this, musicClip, _Time, audioClip.length);
 			
-			AssetDatabase.AddObjectToAsset(musicClip, this);
+			_Time += audioClip.length;
+			
+			musicClip.Initialize(Sequencer, audioSource);
 		}
-		
-		AssetDatabase.SaveAssets();
-		AssetDatabase.Refresh();
 	}
 }
 #endif

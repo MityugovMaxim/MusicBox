@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -87,3 +88,4 @@ public static class TrackUtility
 		_Track.Sort();
 	}
 }
+#endif
