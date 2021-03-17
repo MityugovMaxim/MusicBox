@@ -61,10 +61,7 @@ public static class TrackUtility
 	public static void RemoveClip(Track _Track, Clip _Clip)
 	{
 		if (_Track == null)
-		{
-			Debug.LogError("---> WTF");
 			return;
-		}
 		
 		using (SerializedObject trackObject = new SerializedObject(_Track))
 		{
@@ -81,10 +78,16 @@ public static class TrackUtility
 				
 				clipProperty.objectReferenceValue = null;
 				
+				trackObject.ApplyModifiedProperties();
+				trackObject.UpdateIfRequiredOrScript();
+				
 				clipsProperty.DeleteArrayElementAtIndex(i);
+				
+				trackObject.ApplyModifiedProperties();
+				trackObject.UpdateIfRequiredOrScript();
+				
+				break;
 			}
-			
-			trackObject.ApplyModifiedProperties();
 		}
 		
 		AssetDatabase.RemoveObjectFromAsset(_Clip);

@@ -385,6 +385,8 @@ public class ClipDrawer
 				
 				Event.current.Use();
 				
+				EditorGUIUtility.ExitGUI();
+				
 				break;
 			}
 		}

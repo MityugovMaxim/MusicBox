@@ -26,6 +26,9 @@ public partial class InputTrack : Track<InputClip>
 		if (inputReader == null)
 			Debug.LogError($"[{GetType().Name}] There is no input reader assigned to '{name}'", this);
 		
+		if (inputReader != null)
+			inputReader.SetupZone(m_Zone, m_ZoneMin, m_ZoneMax);
+		
 		int inputID = 0;
 		
 		foreach (InputClip clip in Clips)

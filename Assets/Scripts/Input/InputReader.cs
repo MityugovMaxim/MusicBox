@@ -12,6 +12,7 @@ public enum InputType
 	SwipeDown  = 5,
 }
 
+[RequireComponent(typeof(CanvasGroup))]
 public abstract class InputIndicatorView : UIBehaviour
 {
 	protected RectTransform RectTransform
@@ -24,7 +25,18 @@ public abstract class InputIndicatorView : UIBehaviour
 		}
 	}
 
+	protected CanvasGroup CanvasGroup
+	{
+		get
+		{
+			if (m_CanvasGroup == null)
+				m_CanvasGroup = GetComponent<CanvasGroup>();
+			return m_CanvasGroup;
+		}
+	}
+
 	RectTransform m_RectTransform;
+	CanvasGroup   m_CanvasGroup;
 
 	public abstract void Process(float _Time);
 
@@ -47,7 +59,7 @@ public abstract class InputZoneView : UIBehaviour
 
 	RectTransform m_RectTransform;
 
-	public abstract void Setup(float _Time, float _MinOffset, float _MaxOffset);
+	public abstract void Setup(float _Zone, float _ZoneMin, float _ZoneMax);
 }
 
 public class InputReader : MonoBehaviour
@@ -60,10 +72,10 @@ public class InputReader : MonoBehaviour
 	readonly Queue<int>                          m_InputIDs        = new Queue<int>();
 	int                                          m_InputID;
 
-	public void SetupZone(float _Time, float _MinOffset, float _MaxOffset)
+	public void SetupZone(float _Zone, float _ZoneMin, float _ZoneMax)
 	{
 		if (m_InputZone != null)
-			m_InputZone.Setup(_Time, _MinOffset, _MaxOffset);
+			m_InputZone.Setup(_Zone, _ZoneMin, _ZoneMax);
 	}
 
 	public void StartProcessing(int _ID, float _Time)
@@ -73,7 +85,10 @@ public class InputReader : MonoBehaviour
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
 		if (inputIndicator != null)
+		{
+			inputIndicator.gameObject.SetActive(true);
 			inputIndicator.Process(_Time);
+		}
 	}
 
 	public void UpdateProcessing(int _ID, float _Time)
@@ -89,7 +104,10 @@ public class InputReader : MonoBehaviour
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
 		if (inputIndicator != null)
+		{
+			inputIndicator.gameObject.SetActive(false);
 			inputIndicator.Process(_Time);
+		}
 		
 		RemoveInputIndicator(_ID);
 	}
@@ -149,7 +167,9 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		m_InputIndicators[_ID] = Instantiate(m_InputIndicator, transform);
+		InputIndicatorView indicatorView = Instantiate(m_InputIndicator, transform);
+		
+		m_InputIndicators[_ID] = indicatorView;
 	}
 
 	void RemoveInputIndicator(int _ID)
@@ -170,7 +190,7 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		Destroy(inputIndicator.gameObject);
+		DestroyImmediate(inputIndicator.gameObject);
 	}
 
 	InputIndicatorView GetInputView(int _ID)

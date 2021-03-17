@@ -68,6 +68,8 @@ public class TrackDrawer
 
 	public void Draw(Rect _TrackRect, float _Time)
 	{
+		TrackObject.UpdateIfRequiredOrScript();
+		
 		TrackRect = _TrackRect;
 		Time      = _Time;
 		
@@ -82,6 +84,8 @@ public class TrackDrawer
 		GUILayout.EndArea();
 		
 		DrawHandles();
+		
+		TrackObject.ApplyModifiedProperties();
 	}
 
 	protected void DrawName()
