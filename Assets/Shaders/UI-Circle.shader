@@ -53,7 +53,7 @@
 
             float ring(half2 _Position, float _OutRadius, float _InRadius, float _Smooth)
             {
-                float value     = length(_Position);
+                float value     = sqrt(_Position.x*_Position.x+_Position.y*_Position.y);
                 float outCircle = smoothstep(_OutRadius, _OutRadius - _Smooth, value);
                 float inCircle  = smoothstep(_InRadius, _InRadius + _Smooth, value);
                 return outCircle * inCircle;
@@ -104,13 +104,17 @@
                 half2 pattern = IN.uv * size;
                 half2 position = ceil(pattern) - size * 0.5 - 0.5;
                 
-                float r = ring(position, radius * size, (radius - thickness) * size, smooth * size);
+                float value = ring(position, radius * size, (radius - thickness) * size, smooth * size);
                 
                 fixed4 color = tex2D(_MainTex, pattern);
                 
-                color.a *= lerp(0.01, 1, r) * lerp(0, 1, noise(position));
+                color.a *= lerp(0.02, 1, value) * lerp(0, 1, noise(position));
                 
-                color += (color + color + color) * max(0, remap(noise(position) * color.a, 0.97, 1, 0, 1));
+                float grayscale = 0.21 * color.r + 0.71 * color.g + 0.07 * color.b;
+                
+                color = lerp(fixed4(grayscale, grayscale, grayscale, color.a), color, value);
+                
+                color += color * 10 * max(0, remap(noise(position) * value, 0.95, 1, 0, 1));
                 
                 return color * IN.color;
             }

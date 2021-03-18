@@ -1,12 +1,10 @@
-using UnityEditor.Animations;
 using UnityEngine;
 
 public class MotionClip : Clip
 {
 	[SerializeField] int m_StateHash;
 
-	Animator      m_Animator;
-	AnimatorState m_State;
+	Animator m_Animator;
 
 	public void Initialize(Sequencer _Sequencer, Animator _Animator)
 	{

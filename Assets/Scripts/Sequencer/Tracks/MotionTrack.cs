@@ -1,9 +1,9 @@
 using System.Linq;
-using UnityEditor;
-using UnityEditor.Animations;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.Animations;
 public partial class MotionTrack
 {
 	protected override float MinHeight => 50;
