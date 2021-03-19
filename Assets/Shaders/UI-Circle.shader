@@ -4,23 +4,48 @@
     {
         _MainTex ("Main Texture", 2D) = "white" {}
         _Color ("Color", Color) = (1, 1, 1, 1)
+
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
+
+        _ColorMask ("Color Mask", Float) = 15
     }
     SubShader
     {
         Tags
         {
+            "Queue" = "Transparent"
+            "IgnoreProjector" = "True"
             "RenderType" = "Transparent"
             "PreviewType" = "Plane"
+            "CanUseSpriteAtlas" = "True"
         }
 
-        Blend SrcAlpha One
+        Stencil
+        {
+            Ref [_Stencil]
+            Comp [_StencilComp]
+            Pass [_StencilOp]
+            ReadMask [_StencilReadMask]
+            WriteMask [_StencilWriteMask]
+        }
+
+        Cull Off
+        Lighting Off
         ZWrite Off
+        ZTest [unity_GUIZTestMode]
+        Blend SrcAlpha One
+        ColorMask [_ColorMask]
 
         Pass
         {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma target 2.0
 
             #include "UnityCG.cginc"
 
@@ -53,16 +78,27 @@
 
             float ring(half2 _Position, float _OutRadius, float _InRadius, float _Smooth)
             {
-                float value     = sqrt(_Position.x*_Position.x+_Position.y*_Position.y);
+                float value     = length(_Position);
                 float outCircle = smoothstep(_OutRadius, _OutRadius - _Smooth, value);
                 float inCircle  = smoothstep(_InRadius, _InRadius + _Smooth, value);
                 return outCircle * inCircle;
             }
 
-            float noise(half2 _Position)
+            float rand(float2 n)
+            { 
+                return frac(sin(dot(n, float2(12.9898, 4.1414))) * 43758.5453 + _Time.x);
+            }
+
+            float noise(float2 p)
             {
-                float random = 2920 * sin(_Position.x * 21942 + _Position.y * 171324 + 8912) + _Time.y;
-                return sin(random) * 0.5 + 0.5;
+                float2 ip = floor(p);
+                float2 u = frac(p);
+                u = u * u * (3.0 - 2.0 * u);
+                
+                float res = lerp(
+                    lerp(rand(ip), rand(ip + float2(1.0,0.0)), u.x),
+                    lerp(rand(ip + float2(0.0,1.0)), rand(ip + float2(1.0,1.0)), u.x), u.y);
+                return res * res;
             }
 
             float remap(float value, float l1, float h1, float l2, float h2)
@@ -114,7 +150,7 @@
                 
                 color = lerp(fixed4(grayscale, grayscale, grayscale, color.a), color, value);
                 
-                color += color * 10 * max(0, remap(noise(position) * value, 0.95, 1, 0, 1));
+                color += color * max(0, remap(noise(position) * value, 0.5, 1, 0, 1));
                 
                 return color * IN.color;
             }
