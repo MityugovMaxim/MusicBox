@@ -1,17 +1,18 @@
-﻿Shader "UI/Circle"
+﻿Shader "UI/Indicator"
 {
     Properties
     {
         _MainTex ("Main Texture", 2D) = "white" {}
         _Color ("Color", Color) = (1, 1, 1, 1)
+        _Grayscale ("Grayscale", Range(0, 1)) = 0
+        [Toggle(FLARE)] _Flare("Flare", Int) = 0
 
-        _StencilComp ("Stencil Comparison", Float) = 8
-        _Stencil ("Stencil ID", Float) = 0
-        _StencilOp ("Stencil Operation", Float) = 0
-        _StencilWriteMask ("Stencil Write Mask", Float) = 255
-        _StencilReadMask ("Stencil Read Mask", Float) = 255
-
-        _ColorMask ("Color Mask", Float) = 15
+        [HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
+        [HideInInspector] _Stencil ("Stencil ID", Float) = 0
+        [HideInInspector] _StencilOp ("Stencil Operation", Float) = 0
+        [HideInInspector] _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        [HideInInspector] _StencilReadMask ("Stencil Read Mask", Float) = 255
+        [HideInInspector] _ColorMask ("Color Mask", Float) = 15
     }
     SubShader
     {
@@ -46,8 +47,10 @@
             #pragma vertex vert
             #pragma fragment frag
             #pragma target 2.0
+            #pragma shader_feature FLARE
 
             #include "UnityCG.cginc"
+            #include "Math.cginc"
 
             struct vertData
             {
@@ -68,53 +71,18 @@
             };
 
             sampler2D _MainTex;
-            fixed4 _Color;
-
-            float circle(half2 _Position, float _Radius, float _Smooth)
-            {
-                float value = length(_Position);
-                return smoothstep(_Radius, _Radius - _Smooth, value);
-            }
-
-            float ring(half2 _Position, float _OutRadius, float _InRadius, float _Smooth)
-            {
-                float value     = length(_Position);
-                float outCircle = smoothstep(_OutRadius, _OutRadius - _Smooth, value);
-                float inCircle  = smoothstep(_InRadius, _InRadius + _Smooth, value);
-                return outCircle * inCircle;
-            }
-
-            float rand(float2 n)
-            { 
-                return frac(sin(dot(n, float2(12.9898, 4.1414))) * 43758.5453 + _Time.x);
-            }
-
-            float noise(float2 p)
-            {
-                float2 ip = floor(p);
-                float2 u = frac(p);
-                u = u * u * (3.0 - 2.0 * u);
-                
-                float res = lerp(
-                    lerp(rand(ip), rand(ip + float2(1.0,0.0)), u.x),
-                    lerp(rand(ip + float2(0.0,1.0)), rand(ip + float2(1.0,1.0)), u.x), u.y);
-                return res * res;
-            }
-
-            float remap(float value, float l1, float h1, float l2, float h2)
-            {
-                return l2 + (value - l1) * (h2 - l2) / (h1 - l1);
-            }
+            fixed4    _Color;
+            float     _Grayscale;
 
             fragData vert (vertData IN)
             {
                 fragData OUT;
                 
                 const half2 offset = half2(0.5, 0.5);
-                const float rad = 0.70710678118;
+                const float angle = 0.70710678118; // 45 degrees
                 const float2x2 rotation = float2x2(
-                    rad, -rad,
-                    rad, rad
+                    angle, -angle,
+                    angle, angle
                 );
                 
                 half2 uv = IN.uv;
@@ -144,13 +112,16 @@
                 
                 fixed4 color = tex2D(_MainTex, pattern);
                 
-                color.a *= lerp(0.02, 1, value) * lerp(0, 1, noise(position));
+                #ifdef FLARE
+                color.a *= lerp(0.2, 1, noise(position)) * value;
+                color += color * 5 * smoothstep(0.95, 1, noise(position) * value);
+                #else
+                color.a *= lerp(0.5, 0.7, noise(position)) * value;
+                #endif
                 
-                float grayscale = 0.21 * color.r + 0.71 * color.g + 0.07 * color.b;
+                float grayscale = color.r * 0.21 + color.g * 0.72 + color.b * 0.07;
                 
-                color = lerp(fixed4(grayscale, grayscale, grayscale, color.a), color, value);
-                
-                color += color * max(0, remap(noise(position) * value, 0.5, 1, 0, 1));
+                color.rgb = lerp(color.rgb, float3(grayscale, grayscale, grayscale), _Grayscale);
                 
                 return color * IN.color;
             }
