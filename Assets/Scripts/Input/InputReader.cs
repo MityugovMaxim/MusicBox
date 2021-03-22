@@ -119,6 +119,9 @@ public class InputReader : MonoBehaviour
 
 	public void FinishInput(int _ID)
 	{
+		if (m_InputIDs.Count == 0)
+			return;
+		
 		int inputID = m_InputIDs.Peek();
 		
 		if (inputID != _ID)
@@ -139,7 +142,7 @@ public class InputReader : MonoBehaviour
 		
 		int inputID = m_InputIDs.Peek();
 		
-		if (_InputType == InputType.TouchDown)
+		if (_InputType != InputType.TouchUp)
 			m_InputID = inputID;
 		
 		if (m_InputID != inputID)
@@ -151,12 +154,18 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		InputIndicatorView inputIndicatorView = GetInputView(m_InputID);
+		InputIndicatorView inputIndicator = GetInputView(m_InputID);
 		
 		if (m_InputType == _InputType)
-			inputIndicatorView.Success();
+		{
+			inputIndicator.Success();
+			m_InputIDs.Dequeue();
+		}
 		else if (_InputType != InputType.TouchDown)
-			inputIndicatorView.Fail();
+		{
+			inputIndicator.Fail();
+			m_InputIDs.Dequeue();
+		}
 	}
 
 	void CreateInputIndicator(int _ID)

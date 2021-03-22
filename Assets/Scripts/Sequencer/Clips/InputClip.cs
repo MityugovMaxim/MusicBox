@@ -66,13 +66,13 @@ public class InputClip : Clip
 		
 		m_InputReader.UpdateProcessing(m_InputID, time);
 		
-		if (time >= ZoneMin && !m_Reading)
+		if (time >= ZoneMin && time <= ZoneMax && !m_Reading)
 		{
 			m_Reading = true;
 			m_InputReader.StartInput(m_InputID);
 		}
 		
-		if (time >= ZoneMax && m_Reading)
+		if ((time < ZoneMin || time > ZoneMax) && m_Reading)
 		{
 			m_Reading = false;
 			m_InputReader.FinishInput(m_InputID);

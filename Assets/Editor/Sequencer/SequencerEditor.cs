@@ -432,22 +432,29 @@ public class SequencerEditor : EditorWindow
 		
 		RectOffset trackPadding = new RectOffset(0, 0, 1, 1);
 		
+		GUI.BeginClip(_Rect);
+		
 		foreach (Track track in Sequencer.Tracks)
 		{
 			if (track == null)
 				continue;
 			
 			Rect rect = new Rect(
-				_Rect.x,
-				_Rect.y + position,
+				0,
+				position,
 				_Rect.width,
 				track.Height
 			);
 			
-			DrawTrack(trackPadding.Remove(rect), track);
-			
 			position += track.Height;
+			
+			if (rect.yMax < 0 || rect.yMin > _Rect.height)
+				continue;
+			
+			DrawTrack(trackPadding.Remove(rect), track);
 		}
+		
+		GUI.EndClip();
 	}
 
 	void DrawTrack(Rect _Rect, Track _Track)
@@ -495,6 +502,11 @@ public class SequencerEditor : EditorWindow
 				track.Height
 			);
 			
+			position += track.Height;
+			
+			if (rect.yMax < 0 || rect.yMin > _Rect.height)
+				continue;
+			
 			switch (Event.current.type)
 			{
 				case EventType.Repaint:
@@ -511,8 +523,6 @@ public class SequencerEditor : EditorWindow
 			
 			foreach (Clip clip in track)
 				DrawClip(clipPadding.Remove(rect), clip);
-			
-			position += track.Height;
 		}
 		
 		GUI.EndClip();
@@ -541,14 +551,14 @@ public class SequencerEditor : EditorWindow
 		if (!_Rect.Contains(Event.current.mousePosition))
 			return;
 		
-		Vector2 scroll = Event.current.delta;
+		Vector2 scroll = Event.current.delta * 2;
 		
 		float height = Mathf.Max(0, Sequencer.Tracks.Sum(_Track => _Track.Height) - _Rect.height);
 		
 		ScrollPosition = Mathf.Clamp(ScrollPosition - scroll.y, -height, 0);
 		
 		float scale = scroll.x / _Rect.width;
-		float value = scale * Mathf.Abs(MaxTime - MinTime) * 2;
+		float value = scale * Mathf.Abs(MaxTime - MinTime);
 		
 		float minTime = MinTime + value;
 		float maxTime = MaxTime + value;

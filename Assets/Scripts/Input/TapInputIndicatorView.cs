@@ -16,9 +16,11 @@ public class TapInputIndicatorView : InputIndicatorView
 
 	public override void Success()
 	{
+		Debug.LogError("---> SUCCESS");
 	}
 
 	public override void Fail()
 	{
+		Debug.LogError("---> FAIL");
 	}
 }
