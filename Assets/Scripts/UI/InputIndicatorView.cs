@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -29,7 +30,9 @@ public abstract class InputIndicatorView : UIBehaviour
 
 	public abstract void Process(float _Time);
 
-	public abstract void Success();
+	public abstract void Complete(Action _Callback = null);
 
-	public abstract void Fail();
+	public abstract void Success(Action _Callback = null);
+
+	public abstract void Fail(Action _Callback = null);
 }

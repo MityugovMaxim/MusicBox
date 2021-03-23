@@ -78,20 +78,8 @@
             {
                 fragData OUT;
                 
-                const half2 offset = half2(0.5, 0.5);
-                const float angle = 0.70710678118; // 45 degrees
-                const float2x2 rotation = float2x2(
-                    angle, -angle,
-                    angle, angle
-                );
-                
-                half2 uv = IN.uv;
-                uv -= offset;
-                uv = mul(uv, rotation);
-                uv += offset;
-                
                 OUT.vertex = UnityObjectToClipPos(IN.vertex);
-                OUT.uv = uv;
+                OUT.uv = rotate(IN.uv, half2(0.5, 0.5), 45);
                 OUT.data0 = IN.data0;
                 OUT.data1 = IN.data1;
                 OUT.color = _Color * IN.color;
@@ -109,6 +97,8 @@
                 half2 position = ceil(pattern) - size * 0.5 - 0.5;
                 
                 float value = ring(position, radius * size, (radius - thickness) * size, smooth * size);
+                
+                clip(value);
                 
                 fixed4 color = tex2D(_MainTex, pattern);
                 

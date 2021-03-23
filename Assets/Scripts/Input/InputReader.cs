@@ -74,9 +74,8 @@ public class InputReader : MonoBehaviour
 		{
 			inputIndicator.gameObject.SetActive(false);
 			inputIndicator.Process(_Time);
+			inputIndicator.Complete(() => RemoveInputIndicator(_ID));
 		}
-		
-		RemoveInputIndicator(_ID);
 	}
 
 	public void StartInput(int _ID)
@@ -125,12 +124,12 @@ public class InputReader : MonoBehaviour
 		
 		if (m_InputType == _InputType)
 		{
-			inputIndicator.Success();
+			inputIndicator.Success(() => RemoveInputIndicator(m_InputID));
 			m_InputIDs.Dequeue();
 		}
 		else if (_InputType != InputType.TouchDown)
 		{
-			inputIndicator.Fail();
+			inputIndicator.Fail(() => RemoveInputIndicator(m_InputID));
 			m_InputIDs.Dequeue();
 		}
 	}

@@ -37,3 +37,27 @@ float ring(half2 _Position, float _OutRadius, float _InRadius, float _Smooth)
     float inCircle  = smoothstep(_InRadius, _InRadius + _Smooth, value);
     return outCircle * inCircle;
 }
+
+float getRadians(float _Angle)
+{
+    return _Angle * 0.017453292;
+}
+
+float getAngle(float _Radians)
+{
+    return _Radians * 57.295779513;
+}
+
+half2 rotate(half2 _Vector, half2 _Pivot, float _Angle)
+{
+    float angle = getRadians(_Angle);
+    
+    _Vector -= _Pivot;
+    _Vector = half2(
+        _Vector.x * angle + _Vector.y * -angle,
+        _Vector.x * angle + _Vector.y * angle
+    );
+    _Vector += _Pivot;
+    
+    return _Vector;
+}

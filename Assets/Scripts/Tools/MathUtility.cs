@@ -60,4 +60,48 @@ public static class MathUtility
 			Mathf.Round(_Rect.height)
 		);
 	}
+
+	public static Rect Fit(Rect _Rect, float _Aspect)
+	{
+		return Fit(_Rect, _Aspect, new Vector2(0.5f, 0.5f));
+	}
+
+	public static Rect Fit(Rect _Rect, float _Aspect, Vector2 _Pivot)
+	{
+		Vector2 h = new Vector2(_Rect.width, _Rect.width / _Aspect);
+		Vector2 v = new Vector2(_Rect.height * _Aspect, _Rect.height);
+		
+		Vector2 size     = h.x * h.y <= v.x * v.y ? h : v;
+		Vector2 position = _Rect.position + Vector2.Scale(_Rect.size - size, _Pivot);
+		
+		return new Rect(position, size);
+	}
+
+	public static Rect Fill(Rect _Rect, float _Aspect)
+	{
+		return Fill(_Rect, _Aspect, new Vector2(0.5f, 0.5f));
+	}
+
+	public static Rect Fill(Rect _Rect, float _Aspect, Vector2 _Pivot)
+	{
+		Vector2 h = new Vector2(_Rect.width, _Rect.width / _Aspect);
+		Vector2 v = new Vector2(_Rect.height * _Aspect, _Rect.height);
+		
+		Vector2 size     = h.x * h.y >= v.x * v.y ? h : v;
+		Vector2 position = _Rect.position + Vector2.Scale(_Rect.size - size, _Pivot);
+		
+		return new Rect(position, size);
+	}
+
+	public static Rect Uniform(Rect _Source, Rect _Target)
+	{
+		Rect rect = new Rect(
+			Remap01(_Source.x, _Target.xMin, _Target.xMax),
+			Remap01(_Source.y, _Target.yMin, _Target.yMax),
+			_Source.width / _Target.width,
+			_Source.height / _Target.height
+		);
+		
+		return Fit(rect, _Target.width / _Target.height);
+	}
 }
