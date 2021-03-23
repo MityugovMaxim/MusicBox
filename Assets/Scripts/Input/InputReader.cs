@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public enum InputType
 {
@@ -12,28 +11,13 @@ public enum InputType
 	SwipeDown  = 5,
 }
 
-public abstract class InputZoneView : UIBehaviour
-{
-	protected RectTransform RectTransform
-	{
-		get
-		{
-			if (m_RectTransform == null)
-				m_RectTransform = GetComponent<RectTransform>();
-			return m_RectTransform;
-		}
-	}
-
-	RectTransform m_RectTransform;
-
-	public abstract void Setup(float _Zone, float _ZoneMin, float _ZoneMax);
-}
-
 public class InputReader : MonoBehaviour
 {
 	[SerializeField] InputType          m_InputType;
 	[SerializeField] InputZoneView      m_InputZone;
 	[SerializeField] InputIndicatorView m_InputIndicator;
+
+	readonly Pool<InputIndicatorView> m_Pool = new Pool<InputIndicatorView>();
 
 	readonly Dictionary<int, InputIndicatorView> m_InputIndicators = new Dictionary<int, InputIndicatorView>();
 	readonly Queue<int>                          m_InputIDs        = new Queue<int>();
@@ -54,6 +38,7 @@ public class InputReader : MonoBehaviour
 		if (inputIndicator != null)
 		{
 			inputIndicator.gameObject.SetActive(true);
+			inputIndicator.Begin();
 			inputIndicator.Process(_Time);
 		}
 	}
@@ -97,7 +82,7 @@ public class InputReader : MonoBehaviour
 		
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
-		if (inputIndicator != null)
+		if (inputIndicator != null && Application.isPlaying)
 			inputIndicator.Fail();
 	}
 
@@ -142,7 +127,7 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		InputIndicatorView indicatorView = Instantiate(m_InputIndicator, transform);
+		InputIndicatorView indicatorView = m_Pool.Instantiate(m_InputIndicator, transform);
 		
 		m_InputIndicators[_ID] = indicatorView;
 	}
@@ -165,7 +150,7 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		DestroyImmediate(inputIndicator.gameObject);
+		m_Pool.Remove(inputIndicator);
 	}
 
 	InputIndicatorView GetInputView(int _ID)

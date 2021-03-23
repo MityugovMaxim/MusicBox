@@ -26,6 +26,20 @@ public class Indicator : MaskableGraphic
 		}
 	}
 
+	public float Thickness
+	{
+		get => m_Thickness;
+		set
+		{
+			if (Mathf.Approximately(m_Thickness, value))
+				return;
+			
+			m_Thickness = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
 	public override Texture mainTexture => m_Pattern != null ? m_Pattern : s_WhiteTexture;
 
 	[SerializeField]              Direction m_Direction;

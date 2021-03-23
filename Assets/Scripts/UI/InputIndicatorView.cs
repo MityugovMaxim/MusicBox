@@ -28,6 +28,8 @@ public abstract class InputIndicatorView : UIBehaviour
 	RectTransform m_RectTransform;
 	CanvasGroup   m_CanvasGroup;
 
+	public abstract void Begin();
+
 	public abstract void Process(float _Time);
 
 	public abstract void Complete(Action _Callback = null);

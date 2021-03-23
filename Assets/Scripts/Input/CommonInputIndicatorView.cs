@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class CommonInputIndicatorView : InputIndicatorView
 {
-	[SerializeField] Indicator    m_Indicator;
+	[SerializeField] Indicator      m_Indicator;
 	[SerializeField] float          m_SourceRadius;
 	[SerializeField] float          m_TargetRadius;
+	[SerializeField] float          m_Size       = 0.1f;
 	[SerializeField] AnimationCurve m_AlphaCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
 	bool   m_Complete;
 	Action m_CompleteCallback;
+
+	public override void Begin()
+	{
+		m_Complete = false;
+	}
 
 	public override void Process(float _Time)
 	{
@@ -19,7 +25,8 @@ public class CommonInputIndicatorView : InputIndicatorView
 		
 		CanvasGroup.alpha = m_AlphaCurve.Evaluate(_Time);
 		
-		m_Indicator.Radius = Mathf.Lerp(m_SourceRadius, m_TargetRadius, _Time);
+		m_Indicator.Radius    = Mathf.Lerp(m_SourceRadius, m_TargetRadius, _Time) + m_Size * 0.5f;
+		m_Indicator.Thickness = m_Size;
 	}
 
 	public override void Complete(Action _Callback = null)
