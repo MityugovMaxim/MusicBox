@@ -30,7 +30,7 @@ public class InputTrackDrawer : TrackDrawer
 		
 		DrawName();
 		
-		if (GUILayout.Button("+", GUILayout.Width(20)))
+		if (GUILayout.Button(AddIconContent, AddButtonStyle))
 		{
 			InputClip clip = ScriptableObject.CreateInstance<InputClip>();
 			

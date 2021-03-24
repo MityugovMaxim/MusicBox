@@ -28,6 +28,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MinTime: 12
   m_MaxTime: 12
+--- !u!114 &-3750126486113808013
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
+  m_Name: Input Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 2
+  m_MaxTime: 2
 --- !u!114 &-3418459243284923747
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -69,8 +83,10 @@ MonoBehaviour:
   m_Name: Right
   m_EditorClassIdentifier: 
   m_Height: 0
+  m_Expanded: 0
   m_Offset: 0
   m_Clips:
+  - {fileID: -3750126486113808013}
   - {fileID: 3086028277517522275}
   - {fileID: 5412576885611542182}
   - {fileID: 2166360817326764462}

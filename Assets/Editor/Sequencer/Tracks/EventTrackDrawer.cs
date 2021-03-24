@@ -17,7 +17,7 @@ public class EventTrackDrawer : TrackDrawer
 		
 		DrawName();
 		
-		if (GUILayout.Button("+", GUILayout.Width(20)))
+		if (GUILayout.Button(AddIconContent, AddButtonStyle))
 		{
 			EventClip clip = ScriptableObject.CreateInstance<EventClip>();
 			

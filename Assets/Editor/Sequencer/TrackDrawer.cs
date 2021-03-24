@@ -48,7 +48,7 @@ public class TrackDrawer
 		return typeof(TrackDrawer);
 	}
 
-	static GUIStyle FoldoutStyle
+	protected static GUIStyle FoldoutStyle
 	{
 		get
 		{
@@ -62,7 +62,34 @@ public class TrackDrawer
 		}
 	}
 
-	static GUIStyle m_FoldoutStyle;
+	protected static GUIStyle AddButtonStyle
+	{
+		get
+		{
+			if (m_AddButtonStyle == null)
+			{
+				m_AddButtonStyle               = new GUIStyle();
+				m_AddButtonStyle.alignment     = TextAnchor.MiddleCenter;
+				m_AddButtonStyle.fixedWidth    = 20;
+				m_AddButtonStyle.fixedHeight   = 18;
+				m_AddButtonStyle.imagePosition = ImagePosition.ImageOnly;
+				m_AddButtonStyle.stretchWidth  = false;
+				m_AddButtonStyle.stretchHeight = false;
+				m_AddButtonStyle.padding       = new RectOffset(0, 0, 1, 1);
+			}
+			return m_AddButtonStyle;
+		}
+	}
+
+	protected static GUIContent AddIconContent
+	{
+		get
+		{
+			if (m_AddIconContent == null)
+				m_AddIconContent = EditorGUIUtility.IconContent("d_Toolbar Plus");
+			return m_AddIconContent;
+		}
+	}
 
 	protected Track            Track           { get; }
 	protected SerializedObject TrackObject     { get; }
@@ -71,6 +98,10 @@ public class TrackDrawer
 	protected Rect  TrackRect   { get; private set; }
 	protected Rect  ContentRect { get; private set; }
 	protected float Time        { get; private set; }
+
+	static GUIStyle   m_FoldoutStyle;
+	static GUIStyle   m_AddButtonStyle;
+	static GUIContent m_AddIconContent;
 
 	public TrackDrawer(Track _Track)
 	{
