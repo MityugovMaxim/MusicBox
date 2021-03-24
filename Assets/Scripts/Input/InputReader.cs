@@ -3,6 +3,7 @@ using UnityEngine;
 
 public enum InputType
 {
+	None       = -1,
 	TouchDown  = 0,
 	TouchUp    = 1,
 	SwipeLeft  = 2,
@@ -16,12 +17,22 @@ public class InputReader : MonoBehaviour
 	[SerializeField] InputType          m_InputType;
 	[SerializeField] InputZoneView      m_InputZone;
 	[SerializeField] InputIndicatorView m_InputIndicator;
+	[SerializeField] InputFXView        m_InputFX;
+	[SerializeField] InputEvent         m_OnSuccess;
+	[SerializeField] InputEvent         m_OnFail;
 
-	readonly Pool<InputIndicatorView> m_Pool = new Pool<InputIndicatorView>();
+	readonly Pool<InputIndicatorView> m_IndicatorPool = new Pool<InputIndicatorView>();
+	readonly Pool<InputFXView>        m_FXPool        = new Pool<InputFXView>();
 
 	readonly Dictionary<int, InputIndicatorView> m_InputIndicators = new Dictionary<int, InputIndicatorView>();
 	readonly Queue<int>                          m_InputIDs        = new Queue<int>();
 	int                                          m_InputID;
+
+	void OnDestroy()
+	{
+		m_IndicatorPool?.Release();
+		m_FXPool?.Release();
+	}
 
 	public void SetupZone(float _Zone, float _ZoneMin, float _ZoneMax)
 	{
@@ -37,7 +48,6 @@ public class InputReader : MonoBehaviour
 		
 		if (inputIndicator != null)
 		{
-			inputIndicator.gameObject.SetActive(true);
 			inputIndicator.Begin();
 			inputIndicator.Process(_Time);
 		}
@@ -57,7 +67,6 @@ public class InputReader : MonoBehaviour
 		
 		if (inputIndicator != null)
 		{
-			inputIndicator.gameObject.SetActive(false);
 			inputIndicator.Process(_Time);
 			inputIndicator.Complete(() => RemoveInputIndicator(_ID));
 		}
@@ -83,7 +92,7 @@ public class InputReader : MonoBehaviour
 		InputIndicatorView inputIndicator = GetInputView(_ID);
 		
 		if (inputIndicator != null && Application.isPlaying)
-			inputIndicator.Fail();
+			inputIndicator.Fail(() => RemoveInputIndicator(_ID));
 	}
 
 	public void ProcessInput(InputType _InputType)
@@ -111,6 +120,8 @@ public class InputReader : MonoBehaviour
 		{
 			inputIndicator.Success(() => RemoveInputIndicator(m_InputID));
 			m_InputIDs.Dequeue();
+			
+			PlayInputFX();
 		}
 		else if (_InputType != InputType.TouchDown)
 		{
@@ -127,7 +138,7 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		InputIndicatorView indicatorView = m_Pool.Instantiate(m_InputIndicator, transform);
+		InputIndicatorView indicatorView = m_IndicatorPool.Instantiate(m_InputIndicator, transform);
 		
 		m_InputIndicators[_ID] = indicatorView;
 	}
@@ -150,16 +161,29 @@ public class InputReader : MonoBehaviour
 			return;
 		}
 		
-		m_Pool.Remove(inputIndicator);
+		m_IndicatorPool.Remove(inputIndicator);
+	}
+
+	void PlayInputFX()
+	{
+		InputFXView inputFX = m_FXPool.Instantiate(m_InputFX, transform);
+		
+		if (inputFX != null)
+			inputFX.Play(() => m_FXPool.Remove(inputFX));
 	}
 
 	InputIndicatorView GetInputView(int _ID)
 	{
-		if (m_InputIndicators.ContainsKey(_ID))
-			return m_InputIndicators[_ID];
-		
-		Debug.LogError($"[{GetType().Name}] Get input indicator failed. Indicator with id '{_ID}' doesn't exists.", gameObject);
-		
-		return null;
+		return m_InputIndicators.ContainsKey(_ID) ? m_InputIndicators[_ID] : null;
+	}
+
+	void InvokeSuccess()
+	{
+		m_OnSuccess?.Invoke(m_InputType);
+	}
+
+	void InvokeFail()
+	{
+		m_OnFail?.Invoke(m_InputType);
 	}
 }

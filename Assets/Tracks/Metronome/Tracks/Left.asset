@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8676591707760916330
+--- !u!114 &-4856829446394198429
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
   m_Name: Input Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 3.6771576
-  m_MaxTime: 4.427158
+  m_MinTime: 4.3632197
+  m_MaxTime: 5.1132197
 --- !u!114 &-3418459243284923747
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -28,6 +28,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MinTime: 7.4745784
   m_MaxTime: 8.284578
+--- !u!114 &-3279390189236513001
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
+  m_Name: Input Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 6.3625
+  m_MaxTime: 7.1125
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38,17 +52,49 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3b988af16ea848cca46082e89b774c90, type: 3}
-  m_Name: Swipe Down
+  m_Name: Left
   m_EditorClassIdentifier: 
   m_Height: 0
   m_Offset: 0
   m_Clips:
-  - {fileID: -8676591707760916330}
-  m_InputReader: /Sequencer/Canvas/SwipeDownReader
+  - {fileID: -4856829446394198429}
+  - {fileID: 880379863413539403}
+  - {fileID: -3279390189236513001}
+  - {fileID: 1630448495631947282}
+  - {fileID: 9005745402793562119}
+  m_InputReader: /Sequencer/Canvas/LeftReader
   m_Duration: 0.75
   m_Zone: 0.85
-  m_ZoneMin: 0.6
+  m_ZoneMin: 0.70000005
   m_ZoneMax: 0.95000005
+--- !u!114 &880379863413539403
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
+  m_Name: Input Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 5.3625
+  m_MaxTime: 6.1125
+--- !u!114 &1630448495631947282
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
+  m_Name: Input Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 7.3625
+  m_MaxTime: 8.1125
 --- !u!114 &6320045044172176327
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -91,3 +137,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MinTime: 5.9081826
   m_MaxTime: 6.4081826
+--- !u!114 &9005745402793562119
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6179246942964bdc92cd7f97560b248f, type: 3}
+  m_Name: Input Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 20.3625
+  m_MaxTime: 21.1125

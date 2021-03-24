@@ -31,64 +31,47 @@ public class CommonInputIndicatorView : InputIndicatorView
 
 	public override void Complete(Action _Callback = null)
 	{
-		InvokeCompleteCallback();
-		
 		if (m_Complete)
 			return;
 		
-		m_Complete = true;
-		
+		m_Complete         = true;
 		m_CompleteCallback = _Callback;
 		
-		InvokeCompleteCallback();
+		if (gameObject.activeInHierarchy)
+			StartCoroutine(CompleteRoutine(0.2f));
+		else
+			InvokeCompleteCallback();
 	}
 
 	public override void Success(Action _Callback = null)
 	{
-		InvokeCompleteCallback();
-		
-		if (m_Complete)
-			return;
-		
-		m_Complete = true;
-		
-		m_CompleteCallback = _Callback;
-		
-		StartCoroutine(ProcessRoutine(new Color(0, 1, 0, 0)));
+		Complete(_Callback);
 	}
 
 	public override void Fail(Action _Callback = null)
 	{
-		InvokeCompleteCallback();
-		
-		if (m_Complete)
-			return;
-		
-		m_Complete = true;
-		
-		m_CompleteCallback = _Callback;
-		
-		StartCoroutine(ProcessRoutine(new Color(1, 0, 0, 0)));
+		Complete(_Callback);
 	}
 
-	IEnumerator ProcessRoutine(Color _Color)
+	IEnumerator CompleteRoutine(float _Duration)
 	{
-		Color source = m_Indicator.color;
-		Color target = _Color;
+		float source = CanvasGroup.alpha;
+		float target = 0;
 		
-		const float duration = 0.2f;
-		
-		float time = 0;
-		while (time < duration)
+		if (!Mathf.Approximately(source, target))
 		{
-			yield return null;
-			
-			time += Time.deltaTime;
-			
-			m_Indicator.color = Color.Lerp(source, target, time / duration);
+			float time = 0;
+			while (time < _Duration)
+			{
+				yield return null;
+				
+				time += Time.deltaTime;
+				
+				CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
+			}
 		}
 		
-		m_Indicator.color = target;
+		CanvasGroup.alpha = target;
 		
 		InvokeCompleteCallback();
 	}
