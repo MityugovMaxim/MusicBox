@@ -15,7 +15,6 @@ public enum InputType
 public class InputReader : MonoBehaviour
 {
 	[SerializeField] InputType          m_InputType;
-	[SerializeField] InputZoneView      m_InputZone;
 	[SerializeField] InputIndicatorView m_InputIndicator;
 	[SerializeField] InputFXView        m_InputFX;
 	[SerializeField] InputEvent         m_OnSuccess;
@@ -32,12 +31,6 @@ public class InputReader : MonoBehaviour
 	{
 		m_IndicatorPool?.Release();
 		m_FXPool?.Release();
-	}
-
-	public void SetupZone(float _Zone, float _ZoneMin, float _ZoneMax)
-	{
-		if (m_InputZone != null)
-			m_InputZone.Setup(_Zone, _ZoneMin, _ZoneMax);
 	}
 
 	public void StartProcessing(int _ID, float _Time)

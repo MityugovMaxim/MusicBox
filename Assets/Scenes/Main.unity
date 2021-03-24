@@ -172,7 +172,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InputType: 5
-  m_InputZone: {fileID: 870130384}
   m_InputIndicator: {fileID: 1447819134}
   m_InputFX: {fileID: 106878841}
   m_OnSuccess:
@@ -325,7 +324,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InputType: 2
-  m_InputZone: {fileID: 870130384}
   m_InputIndicator: {fileID: 2122846609}
   m_InputFX: {fileID: 1265460175}
   m_OnSuccess:
@@ -10025,7 +10023,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InputType: 3
-  m_InputZone: {fileID: 870130384}
   m_InputIndicator: {fileID: 1321289519}
   m_InputFX: {fileID: 841341801}
   m_OnSuccess:
@@ -10034,6 +10031,106 @@ MonoBehaviour:
   m_OnFail:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &193651031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 193651032}
+  - component: {fileID: 193651034}
+  - component: {fileID: 193651033}
+  m_Layer: 5
+  m_Name: InputIndicator(Clone)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &193651032
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193651031}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1378523335}
+  m_Father: {fileID: 1869471085}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &193651033
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193651031}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
+--- !u!114 &193651034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193651031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 054a55c1b55c41fab01752f8fff1795d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Indicator: {fileID: 1378523336}
+  m_SourceRadius: 0.75
+  m_TargetRadius: 0
+  m_ZoneMin: 0.7
+  m_ZoneMax: 0.95
+  m_AlphaCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.85
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -14.014946
+      outSlope: -14.014946
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.100062706
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &210738314
 GameObject:
   m_ObjectHideFlags: 0
@@ -15196,7 +15293,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 1797214674}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0
+  m_ZoneMax: 0
   m_AlphaCurve:
     serializedVersion: 2
     m_Curve:
@@ -30272,7 +30370,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 974881509}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0.8
+  m_ZoneMax: 0.9
 --- !u!224 &870130385
 RectTransform:
   m_ObjectHideFlags: 0
@@ -30351,8 +30450,8 @@ MonoBehaviour:
       m_Calls: []
   m_Direction: 0
   m_Pattern: {fileID: 2800000, guid: e3813d2182f5a4184b557a8cadd3d161, type: 3}
-  m_Radius: 0.16249998
-  m_Thickness: 0.1
+  m_Radius: 0.14999999
+  m_Thickness: 0.07499997
   m_Smooth: 0.0125
   m_Size: 80
 --- !u!222 &974881510
@@ -30468,16 +30567,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_MinTime: 0
-  m_MaxTime: 4.1884875
+  m_MaxTime: 11.903893
   m_TracksWidth: 290
-  m_ScrollPosition: 0
+  m_ScrollPosition: -0
   m_Tracks:
   - {fileID: 11400000, guid: dc626437459b440029578a7e51929f14, type: 2}
   - {fileID: 11400000, guid: 5b25164b0479c4dbb985529c3a5d6dc1, type: 2}
   - {fileID: 11400000, guid: 61efd65fdcc1046aea51eeef69fc1956, type: 2}
   - {fileID: 11400000, guid: 4f6420554ddff4c0bb652fa0c3b552aa, type: 2}
   - {fileID: 11400000, guid: 697694384646741088b6ca6026312c24, type: 2}
-  m_Time: 0
+  m_Time: 1
   m_AutoPlay: 1
 --- !u!4 &1093235551
 Transform:
@@ -40557,7 +40656,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 1505267692}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0
+  m_ZoneMax: 0
   m_AlphaCurve:
     serializedVersion: 2
     m_Curve:
@@ -40591,6 +40691,76 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &1378523334
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1378523335}
+  - component: {fileID: 1378523337}
+  - component: {fileID: 1378523336}
+  m_Layer: 5
+  m_Name: Indicator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1378523335
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1378523334}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 193651032}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1378523336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1378523334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dffcc7a7e39a4de98086c3a70699b42e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 2100000, guid: 5780f333dda374848b4360f97b0c16b1, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Direction: 0
+  m_Pattern: {fileID: 2800000, guid: e3813d2182f5a4184b557a8cadd3d161, type: 3}
+  m_Radius: 0.15937494
+  m_Thickness: 0.125
+  m_Smooth: 0.02
+  m_Size: 80
+--- !u!222 &1378523337
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1378523334}
+  m_CullTransparentMesh: 0
 --- !u!1 &1386126809
 GameObject:
   m_ObjectHideFlags: 0
@@ -40642,7 +40812,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InputType: 4
-  m_InputZone: {fileID: 870130384}
   m_InputIndicator: {fileID: 401141733}
   m_InputFX: {fileID: 739188710}
   m_OnSuccess:
@@ -40846,7 +41015,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 1245067166}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0
+  m_ZoneMax: 0
   m_AlphaCurve:
     serializedVersion: 2
     m_Curve:
@@ -46151,7 +46321,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 496353932}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0.8
+  m_ZoneMax: 0.9
   m_AlphaCurve:
     serializedVersion: 2
     m_Curve:
@@ -46485,6 +46656,7 @@ RectTransform:
   m_Children:
   - {fileID: 1761328393}
   - {fileID: 1220427010}
+  - {fileID: 193651032}
   m_Father: {fileID: 1955155151}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -46506,7 +46678,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InputType: 0
-  m_InputZone: {fileID: 870130384}
   m_InputIndicator: {fileID: 1761328395}
   m_InputFX: {fileID: 1220427013}
   m_OnSuccess:
@@ -51444,7 +51615,8 @@ MonoBehaviour:
   m_Indicator: {fileID: 1766417147}
   m_SourceRadius: 0.75
   m_TargetRadius: 0
-  m_Size: 0.1
+  m_ZoneMin: 0
+  m_ZoneMax: 0
   m_AlphaCurve:
     serializedVersion: 2
     m_Curve:

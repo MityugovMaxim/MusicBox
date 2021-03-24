@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class CommonInputIndicatorView : InputIndicatorView
 {
-	[SerializeField] Indicator      m_Indicator;
-	[SerializeField] float          m_SourceRadius;
-	[SerializeField] float          m_TargetRadius;
-	[SerializeField] float          m_Size       = 0.1f;
-	[SerializeField] AnimationCurve m_AlphaCurve = AnimationCurve.Linear(0, 0, 1, 1);
+	[SerializeField]              Indicator      m_Indicator;
+	[SerializeField]              AnimationCurve m_AlphaCurve = AnimationCurve.Linear(0, 0, 1, 1);
+	[SerializeField, Range(0, 1)] float          m_SourceRadius;
+	[SerializeField, Range(0, 1)] float          m_TargetRadius;
+	[SerializeField, Range(0, 1)] float          m_ZoneMin;
+	[SerializeField, Range(0, 1)] float          m_ZoneMax;
 
 	bool   m_Complete;
 	Action m_CompleteCallback;
@@ -25,8 +26,13 @@ public class CommonInputIndicatorView : InputIndicatorView
 		
 		CanvasGroup.alpha = m_AlphaCurve.Evaluate(_Time);
 		
-		m_Indicator.Radius    = Mathf.Lerp(m_SourceRadius, m_TargetRadius, _Time) + m_Size * 0.5f;
-		m_Indicator.Thickness = m_Size;
+		float offset = (m_ZoneMax - m_ZoneMin) * 0.5f;
+		
+		float minRadius = Mathf.Lerp(m_SourceRadius, m_TargetRadius, _Time - offset);
+		float maxRadius = Mathf.Lerp(m_SourceRadius, m_TargetRadius, _Time + offset);
+		
+		m_Indicator.Radius    = Mathf.Max(minRadius, maxRadius);
+		m_Indicator.Thickness = Mathf.Abs(minRadius - maxRadius);
 	}
 
 	public override void Complete(Action _Callback = null)

@@ -14,6 +14,4 @@ public abstract class InputZoneView : UIBehaviour
 	}
 
 	RectTransform m_RectTransform;
-
-	public abstract void Setup(float _Zone, float _ZoneMin, float _ZoneMax);
 }
