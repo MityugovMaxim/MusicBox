@@ -33,6 +33,11 @@ public class Pool<T> where T : MonoBehaviour
 
 	public T Instantiate(T _Object, Transform _Transform)
 	{
+		#if UNITY_EDITOR
+		if (!Application.isPlaying)
+			return Object.Instantiate(_Object, _Transform, false);
+		#endif
+		
 		T instance = Pop(_Object);
 		
 		if (instance != null)
@@ -43,6 +48,14 @@ public class Pool<T> where T : MonoBehaviour
 
 	public bool Remove(T _Instance)
 	{
+		#if UNITY_EDITOR
+		if (!Application.isPlaying)
+		{
+			Object.DestroyImmediate(_Instance.gameObject, true);
+			return true;
+		}
+		#endif
+		
 		if (_Instance != null)
 			_Instance.transform.SetParent(Root, false);
 		

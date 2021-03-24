@@ -1,11 +1,15 @@
 public class InputClip : Clip
 {
+	public override float MinTime => base.MinTime - m_Duration * Zone;
+	public override float MaxTime => base.MaxTime + m_Duration * (1 - Zone);
+
 	public float Zone { get; private set; }
 	public float ZoneMin  { get; private set; }
 	public float ZoneMax  { get; private set; }
 
 	InputReader m_InputReader;
 	int         m_InputID;
+	float       m_Duration;
 	bool        m_Reading;
 
 	public void Initialize(
@@ -22,35 +26,11 @@ public class InputClip : Clip
 		
 		m_InputReader = _InputReader;
 		m_InputID     = _ID;
-		
-		float sourceTime = MathUtility.Remap(Zone, 0, 1, MinTime, MaxTime);
-		float targetTime = MathUtility.Remap(_Zone, 0, 1, MinTime, MaxTime);
-		float deltaTime  = targetTime - sourceTime;
-		float minTime    = targetTime - _Duration * _Zone;
-		float maxTime    = targetTime + _Duration * (1 - _Zone);
-		
-		MinTime = minTime - deltaTime;
-		MaxTime = maxTime - deltaTime;
+		m_Duration    = _Duration;
 		
 		Zone    = _Zone;
 		ZoneMin = _ZoneMin;
 		ZoneMax = _ZoneMax;
-	}
-
-	public void Setup(float _Duration, float _Time, float _MinZone, float _MaxZone)
-	{
-		float sourceTime = MathUtility.Remap(Zone, 0, 1, MinTime, MaxTime);
-		float targetTime = MathUtility.Remap(_Time, 0, 1, MinTime, MaxTime);
-		float deltaTime  = targetTime - sourceTime;
-		float minTime    = targetTime - _Duration * _Time;
-		float maxTime    = targetTime + _Duration * (1 - _Time);
-		
-		MinTime = minTime - deltaTime;
-		MaxTime = maxTime - deltaTime;
-		
-		Zone    = _Time;
-		ZoneMin = _MinZone;
-		ZoneMax = _MaxZone;
 	}
 
 	protected override void OnEnter(float _Time)

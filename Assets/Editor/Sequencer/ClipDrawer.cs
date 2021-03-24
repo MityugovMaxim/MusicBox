@@ -66,7 +66,7 @@ public class ClipDrawer
 	protected Clip             Clip       { get; }
 	protected SerializedObject ClipObject { get; }
 
-	protected virtual bool Visible => TrackMinTime < MaxTime && TrackMaxTime > MinTime;
+	protected virtual bool Visible => TrackMinTime < Clip.MaxTime && TrackMaxTime > Clip.MinTime;
 
 	protected float MinTime
 	{
@@ -117,8 +117,8 @@ public class ClipDrawer
 		TrackMinTime = _TrackMinTime;
 		TrackMaxTime = _TrackMaxTime;
 		
-		float clipMin = MathUtility.Remap01(MinTime, TrackMinTime, TrackMaxTime);
-		float clipMax = MathUtility.Remap01(MaxTime, TrackMinTime, TrackMaxTime);
+		float clipMin = MathUtility.Remap01(Clip.MinTime, TrackMinTime, TrackMaxTime);
+		float clipMax = MathUtility.Remap01(Clip.MaxTime, TrackMinTime, TrackMaxTime);
 		
 		ClipRect = new Rect(
 			_TrackRect.x + _TrackRect.width * clipMin,
@@ -127,8 +127,8 @@ public class ClipDrawer
 			_TrackRect.height
 		);
 		
-		float viewMin = MathUtility.Remap01Clamped(MinTime, TrackMinTime, TrackMaxTime);
-		float viewMax = MathUtility.Remap01Clamped(MaxTime, TrackMinTime, TrackMaxTime);
+		float viewMin = MathUtility.Remap01Clamped(Clip.MinTime, TrackMinTime, TrackMaxTime);
+		float viewMax = MathUtility.Remap01Clamped(Clip.MaxTime, TrackMinTime, TrackMaxTime);
 		
 		ViewRect = new Rect(
 			_TrackRect.x + _TrackRect.width * viewMin,
@@ -188,7 +188,10 @@ public class ClipDrawer
 			case EventType.MouseDown:
 			{
 				if (ViewRect.Contains(Event.current.mousePosition))
+				{
+					GUI.FocusControl(null);
 					Selection.activeObject = Clip;
+				}
 				
 				break;
 			}

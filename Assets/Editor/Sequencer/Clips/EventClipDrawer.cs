@@ -98,7 +98,10 @@ public class EventClipDrawer : ClipDrawer
 			case EventType.MouseDown:
 			{
 				if (handleRect.Contains(Event.current.mousePosition))
+				{
+					GUI.FocusControl(null);
 					Selection.activeObject = Clip;
+				}
 				
 				break;
 			}

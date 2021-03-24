@@ -4,13 +4,13 @@ public abstract class Clip : ScriptableObject
 {
 	public Sequencer Sequencer { get; private set; }
 
-	public float MinTime
+	public virtual float MinTime
 	{
 		get => m_MinTime;
 		protected set => m_MinTime = value;
 	}
 
-	public float MaxTime
+	public virtual float MaxTime
 	{
 		get => m_MaxTime;
 		protected set => m_MaxTime = value;

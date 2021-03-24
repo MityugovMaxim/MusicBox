@@ -10,14 +10,25 @@ public partial class Track
 {
 	public float Height
 	{
-		get => Mathf.Clamp(m_Height, MinHeight, MaxHeight);
-		set => m_Height = Mathf.Clamp(value, MinHeight, MaxHeight);
+		get => Expanded ? Mathf.Clamp(m_Height, MinHeight, MaxHeight) : 30;
+		set
+		{
+			if (Expanded)
+				m_Height = Mathf.Clamp(value, MinHeight, MaxHeight);
+		}
+	}
+
+	public bool Expanded
+	{
+		get => m_Expanded;
+		set => m_Expanded = value;
 	}
 
 	protected virtual float MinHeight => 30;
 	protected virtual float MaxHeight => 200;
 
 	[SerializeField, HideInInspector] float m_Height;
+	[SerializeField, HideInInspector] bool  m_Expanded = true;
 
 	public virtual void DropPerform(float _Time, Object[] _Objects) { }
 

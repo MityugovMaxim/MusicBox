@@ -74,12 +74,7 @@ public class InputClipDrawer : ClipDrawer
 						time = SnapTime(time);
 					time = Mathf.Max(0, time);
 					
-					float duration = MaxTime - MinTime;
-					
-					Resize(
-						time - duration * InputClip.Zone,
-						time + duration * (1 - InputClip.Zone)
-					);
+					Resize(time, time);
 					
 					Event.current.Use();
 				}

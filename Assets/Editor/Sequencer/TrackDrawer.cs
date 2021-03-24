@@ -48,6 +48,22 @@ public class TrackDrawer
 		return typeof(TrackDrawer);
 	}
 
+	static GUIStyle FoldoutStyle
+	{
+		get
+		{
+			if (m_FoldoutStyle == null)
+			{
+				m_FoldoutStyle              = new GUIStyle(EditorStyles.foldout);
+				m_FoldoutStyle.fixedWidth   = 20;
+				m_FoldoutStyle.stretchWidth = false;
+			}
+			return m_FoldoutStyle;
+		}
+	}
+
+	static GUIStyle m_FoldoutStyle;
+
 	protected Track            Track           { get; }
 	protected SerializedObject TrackObject     { get; }
 	protected int              HandleControlID { get; }
@@ -93,7 +109,18 @@ public class TrackDrawer
 		if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
 			GUI.FocusControl(null);
 		
+		EditorGUILayout.BeginHorizontal();
+		
+		float fieldWidth = EditorGUIUtility.fieldWidth;
+		EditorGUIUtility.fieldWidth = 10;
+		
+		Track.Expanded = EditorGUILayout.Foldout(Track.Expanded, GUIContent.none, FoldoutStyle);
+		
+		EditorGUIUtility.fieldWidth = fieldWidth;
+		
 		string trackName = EditorGUILayout.DelayedTextField(Track.name, EditorStyles.boldLabel);
+		
+		EditorGUILayout.EndHorizontal();
 		
 		if (Track.name == trackName)
 			return;
