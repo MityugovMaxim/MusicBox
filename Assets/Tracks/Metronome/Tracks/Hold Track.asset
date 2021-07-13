@@ -1,0 +1,204 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-2701939511119455581
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 18.488035
+  m_MaxTime: 24.512005
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0.6666667
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.049577948, y: 0}
+    - m_Time: 0.16525982
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.049577948, y: 0}
+      m_OutTangent: {x: 0.050384205, y: 0}
+    - m_Time: 0.33320716
+      m_Value: 1
+      m_InTangent: {x: -0.050384205, y: 0}
+      m_OutTangent: {x: 0.024642574, y: 0}
+    - m_Time: 0.41534907
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.024642574, y: 0}
+      m_OutTangent: {x: 0.02492205, y: 0}
+    - m_Time: 0.49842256
+      m_Value: 1
+      m_InTangent: {x: -0.02492205, y: 0}
+      m_OutTangent: {x: 0.024654973, y: 0}
+    - m_Time: 0.5806058
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.024654973, y: 0}
+      m_OutTangent: {x: 0.049952157, y: 0}
+    - m_Time: 0.747113
+      m_Value: 1
+      m_InTangent: {x: -0.049952157, y: 0}
+      m_OutTangent: {x: 0.02346039, y: 0}
+    - m_Time: 0.8253143
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.02346039, y: 0}
+      m_OutTangent: {x: 0.027786542, y: 0}
+    - m_Time: 0.9179361
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.027786542, y: 0}
+      m_OutTangent: {x: 0.024619175, y: 0}
+    - m_Time: 1
+      m_Value: 0
+      m_InTangent: {x: -0.024619175, y: 0}
+      m_OutTangent: {x: 0, y: 0}
+--- !u!114 &-2532109112375396865
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 8.503122
+  m_MaxTime: 11.503118
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.3, y: 0}
+    - m_Time: 1
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.3, y: 0}
+      m_OutTangent: {x: 0, y: 0}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 587d3439e379492283953813be6edf72, type: 3}
+  m_Name: Hold Track
+  m_EditorClassIdentifier: 
+  m_Height: 162
+  m_Expanded: 1
+  m_Offset: 0
+  m_Clips:
+  - {fileID: 102868933649558290}
+  - {fileID: -2532109112375396865}
+  - {fileID: 1417136517232667958}
+  - {fileID: -2701939511119455581}
+  - {fileID: 9177983142980210918}
+  m_Track: tracks/tracks_area/hold_track_1
+--- !u!114 &102868933649558290
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 1.8159752
+  m_MaxTime: 7.5332694
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0.33333334
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.3, y: 0}
+    - m_Time: 1
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.3, y: 0}
+      m_OutTangent: {x: 0, y: 0}
+--- !u!114 &1417136517232667958
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 12
+  m_MaxTime: 17.999994
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0.33333334
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.050175533, y: 0}
+    - m_Time: 0.16725177
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.050175533, y: 0}
+      m_OutTangent: {x: 0.04978662, y: 0}
+    - m_Time: 0.33320716
+      m_Value: 1
+      m_InTangent: {x: -0.04978662, y: 0}
+      m_OutTangent: {x: 0.049730644, y: 0}
+    - m_Time: 0.49897596
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.049730644, y: 0}
+      m_OutTangent: {x: 0.050321758, y: 0}
+    - m_Time: 0.66671515
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.050321758, y: 0}
+      m_OutTangent: {x: 0.025005074, y: 0}
+    - m_Time: 0.7500654
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.025005074, y: 0}
+      m_OutTangent: {x: 0.026185477, y: 0}
+    - m_Time: 0.8373503
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.026185477, y: 0}
+      m_OutTangent: {x: 0.023403669, y: 0}
+    - m_Time: 0.91536254
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.023403669, y: 0}
+      m_OutTangent: {x: 0.02539124, y: 0}
+    - m_Time: 1
+      m_Value: 0.6666667
+      m_InTangent: {x: -0.02539124, y: 0}
+      m_OutTangent: {x: 0, y: 0}
+--- !u!114 &9177983142980210918
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 25
+  m_MaxTime: 28
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0.33333334
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.3, y: 0}
+    - m_Time: 1
+      m_Value: 0.33333334
+      m_InTangent: {x: -0.3, y: 0}
+      m_OutTangent: {x: 0, y: 0}

@@ -59,7 +59,6 @@ public partial class Sequencer : MonoBehaviour
 		if (!Application.isPlaying || !m_AutoPlay)
 			return;
 		
-		Stop();
 		Play();
 	}
 
@@ -82,6 +81,9 @@ public partial class Sequencer : MonoBehaviour
 
 	public void Initialize()
 	{
+		if (m_Tracks == null || m_Tracks.Length == 0)
+			return;
+		
 		foreach (Track track in m_Tracks)
 			track.Initialize(this);
 	}

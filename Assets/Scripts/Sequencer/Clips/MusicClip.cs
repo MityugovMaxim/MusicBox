@@ -41,7 +41,7 @@ public class MusicClip : Clip
 			
 			m_AudioSource.time = time;
 		}
-		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying)
+		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
 			m_AudioSource.clip = m_AudioClip;
 			

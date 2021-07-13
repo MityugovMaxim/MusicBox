@@ -1,4 +1,4 @@
-//#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
 
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -74,3 +74,4 @@ public class iOSHaptic : Haptic
 		}
 	}
 }
+#endif

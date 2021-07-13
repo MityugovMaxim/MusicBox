@@ -114,6 +114,14 @@ public class SequencerEditor : EditorWindow
 		Repaint();
 	}
 
+	void Update()
+	{
+		Repaint();
+		
+		if (Sequencer != null && Sequencer.Playing)
+			EditorApplication.QueuePlayerLoopUpdate();
+	}
+
 	void OnGUI()
 	{
 		if (Sequencer == null)
@@ -163,14 +171,6 @@ public class SequencerEditor : EditorWindow
 		GUILayout.EndHorizontal();
 		
 		GUILayout.EndArea();
-	}
-
-	void Update()
-	{
-		Repaint();
-		
-		if (Sequencer != null && Sequencer.Playing)
-			EditorApplication.QueuePlayerLoopUpdate();
 	}
 
 	void DrawTimeline(Rect _Rect)
@@ -428,6 +428,9 @@ public class SequencerEditor : EditorWindow
 
 	void DrawTracks(Rect _Rect)
 	{
+		if (Sequencer.Tracks == null)
+			return;
+		
 		float position = ScrollPosition;
 		
 		RectOffset trackPadding = new RectOffset(0, 0, 1, 1);

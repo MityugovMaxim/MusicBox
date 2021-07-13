@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ public partial class EventTrack
 }
 #endif
 
+[SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
 [CreateAssetMenu(fileName = "Event Track", menuName = "Tracks/Event Track")]
 public partial class EventTrack : Track<EventClip>
 {

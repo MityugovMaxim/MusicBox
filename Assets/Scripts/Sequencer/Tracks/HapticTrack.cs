@@ -20,12 +20,4 @@ public partial class HapticTrack : Track<HapticClip>
 		
 		Haptic.Initialize();
 	}
-
-	public override void Sample(float _MinTime, float _MaxTime)
-	{
-		_MinTime += HapticCalibrationView.HapticOffset;
-		_MaxTime += HapticCalibrationView.HapticOffset;
-		
-		base.Sample(_MinTime, _MaxTime);
-	}
 }

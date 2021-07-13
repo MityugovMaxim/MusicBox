@@ -1,4 +1,4 @@
-using System.Text;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -71,19 +71,14 @@ public class ReferenceAttributeDrawer : PropertyDrawer
 				return null;
 		}
 		
-		StringBuilder reference = new StringBuilder();
-		
-		while (transform != null)
+		List<string> path = new List<string>();
+		while (transform != null && transform != _Context.transform)
 		{
-			reference.Insert(0, transform.name);
-			reference.Insert(0, '/');
-			
-			if (transform == _Context.transform)
-				break;
-			
+			path.Add(transform.name);
 			transform = transform.parent;
 		}
+		path.Reverse();
 		
-		return reference.ToString();
+		return string.Join("/", path.ToArray());
 	}
 }

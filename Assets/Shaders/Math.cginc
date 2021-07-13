@@ -51,12 +51,53 @@ float getAngle(float _Radians)
 half2 rotate(half2 _Vector, half2 _Pivot, float _Angle)
 {
     float angle = getRadians(_Angle);
-    
+    float s = sin(angle);
+    float c = cos(angle);
     _Vector -= _Pivot;
     _Vector = half2(
-        _Vector.x * angle + _Vector.y * -angle,
-        _Vector.x * angle + _Vector.y * angle
+        _Vector.x * c + _Vector.y * -s,
+        _Vector.x * s + _Vector.y * c
     );
+    _Vector += _Pivot;
+    
+    return _Vector;
+}
+
+half2 rotate45(half2 _Vector, half2 _Pivot)
+{
+    float value = 0.7071067812;
+    _Vector -= _Pivot;
+    _Vector = half2(
+        _Vector.x * value + _Vector.y * -value,
+        _Vector.x * value + _Vector.y * value
+    );
+    _Vector += _Pivot;
+    
+    return _Vector;
+}
+
+half2 rotate90(half2 _Vector, half2 _Pivot)
+{
+    _Vector -= _Pivot;
+    _Vector = half2(-_Vector.y, _Vector.x);
+    _Vector += _Pivot;
+    
+    return _Vector;
+}
+
+half2 rotate180(half2 _Vector, half2 _Pivot)
+{
+    _Vector -= _Pivot;
+    _Vector = half2(-_Vector.x, -_Vector.y);
+    _Vector += _Pivot;
+    
+    return _Vector;
+}
+
+half2 rotate270(half2 _Vector, half2 _Pivot)
+{
+    _Vector -= _Pivot;
+    _Vector = half2(_Vector.y, -_Vector.x);
     _Vector += _Pivot;
     
     return _Vector;
