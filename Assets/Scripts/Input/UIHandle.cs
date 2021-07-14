@@ -6,7 +6,7 @@ public abstract class UIHandle : UIEntity
 	public event Action OnSuccess;
 	public event Action OnFail;
 
-	public virtual bool Select(Rect _Rect)
+	public bool Select(Rect _Rect)
 	{
 		Rect area = RectTransform.InverseTransformRect(_Rect);
 		Rect rect = RectTransform.rect;
@@ -14,13 +14,11 @@ public abstract class UIHandle : UIEntity
 		return rect.Overlaps(area);
 	}
 
-	public abstract void TouchDown(Vector2 _Position);
-	public abstract void TouchMove(Vector2 _Position);
-	public abstract void TouchUp(Vector2   _Position);
-
 	public abstract void StartReceiveInput();
-
 	public abstract void StopReceiveInput();
+	public abstract void TouchDown(int _ID, Vector2 _Position);
+	public abstract void TouchUp(int   _ID, Vector2 _Position);
+	public abstract void TouchMove(int _ID, Vector2 _Position);
 
 	protected void InvokeSuccess()
 	{

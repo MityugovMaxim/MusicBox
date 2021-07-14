@@ -15,20 +15,6 @@ public class UIHoldHandle : UIHandle
 	float   m_Progress;
 	Vector2 m_Position;
 
-	public void Progress(float _Progress)
-	{
-		if (!m_Interactable || !m_Hold || m_Processed)
-			return;
-		
-		m_Progress = _Progress;
-		
-		if (Mathf.Approximately(m_Progress, 1))
-		{
-			m_Processed = true;
-			InvokeSuccess();
-		}
-	}
-
 	public override void StartReceiveInput()
 	{
 		if (m_Interactable)
@@ -62,7 +48,21 @@ public class UIHoldHandle : UIHandle
 		m_Progress     = 0;
 	}
 
-	public override void TouchDown(Vector2 _Position)
+	public void Progress(float _Progress)
+	{
+		if (!m_Interactable || !m_Hold || m_Processed)
+			return;
+		
+		m_Progress = _Progress;
+		
+		if (Mathf.Approximately(m_Progress, 1))
+		{
+			m_Processed = true;
+			InvokeSuccess();
+		}
+	}
+
+	public override void TouchDown(int _ID, Vector2 _Position)
 	{
 		if (!m_Interactable || m_Processed)
 			return;
@@ -73,7 +73,7 @@ public class UIHoldHandle : UIHandle
 		InvokeStartHold();
 	}
 
-	public override void TouchUp(Vector2 _Position)
+	public override void TouchUp(int _ID, Vector2 _Position)
 	{
 		if (!m_Interactable || m_Processed)
 			return;
@@ -81,8 +81,8 @@ public class UIHoldHandle : UIHandle
 		if (m_Marker != null)
 			m_Marker.anchoredPosition = Vector2.zero;
 		
-		m_Processed = true;
 		m_Hold      = false;
+		m_Processed = true;
 		
 		InvokeStopHold();
 		
@@ -92,7 +92,7 @@ public class UIHoldHandle : UIHandle
 			InvokeFail();
 	}
 
-	public override void TouchMove(Vector2 _Position)
+	public override void TouchMove(int _ID, Vector2 _Position)
 	{
 		if (!m_Interactable || m_Processed)
 			return;
@@ -106,8 +106,8 @@ public class UIHoldHandle : UIHandle
 		if (rect.Contains(position))
 			return;
 		
-		m_Processed = true;
 		m_Hold      = false;
+		m_Processed = true;
 		
 		InvokeStopHold();
 		
