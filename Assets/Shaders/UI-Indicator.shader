@@ -94,15 +94,10 @@
                 UNITY_SETUP_INSTANCE_ID(IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 
-                float4 vPosition = UnityObjectToClipPos(IN.vertex);
-                OUT.worldPosition = IN.vertex;
-                OUT.vertex = vPosition;
+                OUT.vertex = UnityObjectToClipPos(IN.vertex);
                 
-                float2 pixelSize = vPosition.w;
-                pixelSize /= float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
-                
+                float2 pixelSize = OUT.vertex.w / float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
                 float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
-                float2 maskUV = (IN.vertex.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
                 OUT.uv = rotate45(IN.uv, half2(0.5, 0.5));
                 OUT.mask = half4(IN.vertex.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy)));
                 
@@ -114,7 +109,7 @@
                 return OUT;
             }
 
-            fixed4 frag (fragData IN) : SV_Target
+            fixed4 frag (vertData IN) : SV_Target
             {
                 float radius    = IN.data0.x;
                 float thickness = IN.data0.y * 0.5;

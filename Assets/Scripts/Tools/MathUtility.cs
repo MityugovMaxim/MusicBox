@@ -104,4 +104,9 @@ public static class MathUtility
 		
 		return Fit(rect, _Target.width / _Target.height);
 	}
+
+	public static int Repeat(int _Value, int _Length)
+	{
+		return _Value >= 0 ? _Value % _Length : _Length + _Value % _Length;
+	}
 }

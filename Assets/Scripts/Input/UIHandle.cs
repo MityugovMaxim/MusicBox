@@ -1,23 +1,10 @@
 using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public abstract class UIHandle : UIBehaviour
+public abstract class UIHandle : UIEntity
 {
-	public RectTransform RectTransform
-	{
-		get
-		{
-			if (m_RectTransform == null)
-				m_RectTransform = GetComponent<RectTransform>();
-			return m_RectTransform;
-		}
-	}
-
 	public event Action OnSuccess;
 	public event Action OnFail;
-
-	RectTransform m_RectTransform;
 
 	public virtual bool Select(Rect _Rect)
 	{

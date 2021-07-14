@@ -191,6 +191,8 @@ public class UISplineCurve : MaskableGraphic
 
 	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
 	{
+		_VertexHelper.Clear();
+		
 		if (Spline == null)
 			return;
 		
@@ -204,7 +206,6 @@ public class UISplineCurve : MaskableGraphic
 		else
 			BuildStraightMesh();
 		
-		_VertexHelper.Clear();
 		for (int i = 0; i < m_Vertices.Count; i++)
 		{
 			_VertexHelper.AddVert(

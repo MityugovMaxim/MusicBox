@@ -67,7 +67,7 @@ Shader "UI/Additive"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct v2f
+            struct fragData
             {
                 float4 vertex   : SV_POSITION;
                 fixed4 color    : COLOR;
@@ -85,9 +85,9 @@ Shader "UI/Additive"
             float _UIMaskSoftnessX;
             float _UIMaskSoftnessY;
 
-            v2f vert(appdata_t v)
+            fragData vert(appdata_t v)
             {
-                v2f OUT;
+                fragData OUT;
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 float4 vPosition = UnityObjectToClipPos(v.vertex);
@@ -106,7 +106,7 @@ Shader "UI/Additive"
                 return OUT;
             }
 
-            fixed4 frag(v2f IN) : SV_Target
+            fixed4 frag(fragData IN) : SV_Target
             {
                 half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
 

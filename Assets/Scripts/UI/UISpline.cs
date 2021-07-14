@@ -2,10 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 [ExecuteInEditMode]
-public class UISpline : UIBehaviour, IEnumerable<UISpline.Point>
+public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 {
 	#region nested types
 
@@ -86,16 +85,6 @@ public class UISpline : UIBehaviour, IEnumerable<UISpline.Point>
 	#endregion
 
 	#region properties
-
-	public RectTransform RectTransform
-	{
-		get
-		{
-			if (m_RectTransform == null)
-				m_RectTransform = GetComponent<RectTransform>();
-			return m_RectTransform;
-		}
-	}
 
 	public Point this[int _Index] => m_Points[_Index];
 
@@ -183,8 +172,6 @@ public class UISpline : UIBehaviour, IEnumerable<UISpline.Point>
 	[SerializeField, HideInInspector] bool      m_Uniform   = false;
 	[SerializeField, HideInInspector] bool      m_Optimize  = false;
 	[SerializeField, HideInInspector] float     m_Threshold = 10;
-
-	RectTransform m_RectTransform;
 
 	bool m_SplineDirty;
 
@@ -338,6 +325,49 @@ public class UISpline : UIBehaviour, IEnumerable<UISpline.Point>
 	public Vector2 Evaluate(float _Phase)
 	{
 		return Uniform ? GetUniformPosition(_Phase) : GetPosition(_Phase);
+	}
+
+	public Point GetPoint(float _Phase)
+	{
+		if (m_Points == null || m_Points.Count == 0)
+			return default;
+		
+		int i = 0;
+		int j = m_Points.Count - 1;
+		if (m_Points.Count > 2)
+		{
+			while (i < j)
+			{
+				int k = i + (j - i) / 2;
+				
+				Point value = m_Points[k];
+				
+				if (Mathf.Approximately(value.Phase, _Phase))
+				{
+					i = j = k;
+					break;
+				}
+				
+				if (value.Phase > _Phase)
+					j = k;
+				else
+					i = k;
+				
+				if (j - i <= 1)
+					break;
+			}
+		}
+		
+		Point source = m_Points[i];
+		Point target = m_Points[j];
+		
+		float phase = Mathf.InverseLerp(source.Phase, target.Phase, _Phase);
+		
+		return new Point(
+			Vector2.Lerp(source.Position, target.Position, phase),
+			Vector2.Lerp(source.Normal, target.Normal, phase).normalized,
+			Mathf.Lerp(source.Phase, target.Phase, phase)
+		);
 	}
 
 	void SetSplineDirty()

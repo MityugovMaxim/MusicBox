@@ -1,20 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public abstract class UITrack<T> : UIBehaviour where T : Clip
+public abstract class UITrack<T> : UIEntity where T : Clip
 {
-	public RectTransform RectTransform
-	{
-		get
-		{
-			if (m_RectTransform == null)
-				m_RectTransform = GetComponent<RectTransform>();
-			return m_RectTransform;
-		}
-	}
-
 	protected float Time => m_Time;
 
 	[SerializeField] float   m_Time;
@@ -22,8 +11,6 @@ public abstract class UITrack<T> : UIBehaviour where T : Clip
 
 	[NonSerialized] List<T> m_Clips       = new List<T>();
 	[NonSerialized] List<T> m_ClipsBuffer = new List<T>();
-
-	RectTransform m_RectTransform;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()

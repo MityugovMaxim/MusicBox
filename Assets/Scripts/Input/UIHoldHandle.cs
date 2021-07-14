@@ -7,6 +7,7 @@ public class UIHoldHandle : UIHandle
 	public event Action OnStopHold;
 
 	[SerializeField] RectTransform m_Marker;
+	[SerializeField] RectOffset    m_Margin;
 
 	bool    m_Interactable;
 	bool    m_Processed;
@@ -59,8 +60,6 @@ public class UIHoldHandle : UIHandle
 		m_Processed    = false;
 		m_Hold         = false;
 		m_Progress     = 0;
-		
-		RectTransform.sizeDelta = new Vector2(150, 150);
 	}
 
 	public override void TouchDown(Vector2 _Position)
@@ -98,12 +97,11 @@ public class UIHoldHandle : UIHandle
 		if (!m_Interactable || m_Processed)
 			return;
 		
-		Rect    rect     = new RectOffset(50, 50, 50, 50).Add(RectTransform.rect);
-		Vector2 position = RectTransform.InverseTransformPoint(_Position);
-		Vector2 delta    = position - m_Position;
+		Rect    rect     = GetLocalRect(m_Margin);
+		Vector2 position = GetLocalPoint(_Position) - m_Position;
 		
 		if (m_Marker != null)
-			m_Marker.anchoredPosition = new Vector2(delta.x, 0);
+			m_Marker.anchoredPosition = new Vector2(position.x, 0);
 		
 		if (rect.Contains(position))
 			return;

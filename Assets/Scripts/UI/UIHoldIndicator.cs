@@ -23,12 +23,12 @@ public class UIHoldIndicator : UIIndicator
 	static readonly int m_FailParameterID    = Animator.StringToHash("Fail");
 	static readonly int m_HoldParameterID    = Animator.StringToHash("Hold");
 
-	[SerializeField] UIHoldHandle  m_Handle;
-	[SerializeField] RectTransform m_MinCap;
-	[SerializeField] RectTransform m_MaxCap;
-	[SerializeField] UISpline      m_Spline;
-	[SerializeField] UISplineCurve m_Highlight;
-	[SerializeField] float         m_SamplesPerUnit = 0.5f;
+	[SerializeField] UIHoldHandle     m_Handle;
+	[SerializeField] RectTransform    m_MinCap;
+	[SerializeField] RectTransform    m_MaxCap;
+	[SerializeField] UISpline         m_Spline;
+	[SerializeField] UISplineProgress m_Highlight;
+	[SerializeField] float            m_SamplesPerUnit = 0.5f;
 
 	Animator m_Animator;
 
@@ -91,16 +91,20 @@ public class UIHoldIndicator : UIIndicator
 
 	public void Progress(float _Progress)
 	{
-		if (m_Handle == null)
+		if (m_Spline == null)
 			return;
 		
 		float   phase    = m_Spline.EvaluateVertical(_Progress);
 		Vector2 position = m_Spline.Evaluate(phase);
 		
-		m_Highlight.SpriteOffset = phase;
+		if (m_Highlight != null)
+			m_Highlight.Offset = phase;
 		
-		m_Handle.Progress(_Progress);
-		m_Handle.RectTransform.anchoredPosition = position;
+		if (m_Handle != null)
+		{
+			m_Handle.Progress(_Progress);
+			m_Handle.RectTransform.anchoredPosition = position;
+		}
 	}
 
 	public void Restore()
