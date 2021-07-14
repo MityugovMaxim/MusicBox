@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEditor;
 
-[CustomEditor(typeof(UIHandle), true)]
-public class UIHandleEditor : Editor
+[CustomEditor(typeof(UIInputReceiver), true)]
+public class UIInputReceiverEditor : Editor
 {
 	static readonly HashSet<string> m_ExcludedFields = new HashSet<string>()
 	{
