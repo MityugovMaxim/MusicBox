@@ -150,6 +150,9 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			if (!rectTransform.Intersects(handle.RectTransform))
 				continue;
 			
+			if (m_Selection.ContainsKey(handle))
+				m_Selection.Remove(handle);
+			
 			handle.StartReceiveInput();
 			
 			m_Active.Add(handle);
@@ -172,6 +175,9 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			if (rectTransform.Intersects(handle.RectTransform))
 				continue;
+			
+			if (m_Selection.ContainsKey(handle))
+				m_Selection.Remove(handle);
 			
 			handle.StopReceiveInput();
 			
