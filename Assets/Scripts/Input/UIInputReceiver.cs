@@ -39,7 +39,9 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			return;
 		
 		if (m_Selection.ContainsKey(_Handle))
-			Debug.LogError($"[UIInputReceiver] Handle '{_Handle.name}' already selected.");
+			m_Selection.Remove(_Handle);
+		
+		_Handle.StopReceiveInput();
 		
 		m_Inactive.Add(_Handle);
 	}
@@ -49,10 +51,10 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		if (_Handle == null)
 			return;
 		
-		_Handle.StopReceiveInput();
-		
 		if (m_Selection.ContainsKey(_Handle))
 			m_Selection.Remove(_Handle);
+		
+		_Handle.StopReceiveInput();
 		
 		m_Inactive.Remove(_Handle);
 		m_Active.Remove(_Handle);
@@ -74,13 +76,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
 	{
 		int     pointerID = _EventData.pointerId;
-		Vector2 position  = _EventData.position;
-		Rect    zone      = m_Zone.GetWorldRect();
-		Vector2 size      = new Vector2(zone.height, zone.height);
-		
-		position = ProjectPosition(position);
-		
-		Rect area = new Rect(position - size * 0.5f, size);
+		Vector2 position  = GetZonePosition(_EventData.position);
+		Rect    area      = GetZoneArea(_EventData.position);
 		
 		m_Pointers[pointerID] = position;
 		
@@ -97,9 +94,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
 	{
 		int     pointerID = _EventData.pointerId;
-		Vector2 position  = _EventData.position;
-		
-		position = ProjectPosition(position);
+		Vector2 position  = GetZonePosition(_EventData.position);
 		
 		m_Pointers.Remove(pointerID);
 		
@@ -116,18 +111,27 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
 		int     pointerID = _EventData.pointerId;
-		Vector2 position  = _EventData.position;
-		
-		position = ProjectPosition(position);
+		Vector2 position  = GetZonePosition(_EventData.position);
 		
 		m_Pointers[pointerID] = position;
 	}
 
-	Vector2 ProjectPosition(Vector2 _Position)
+	Vector2 GetZonePosition(Vector2 _Position)
 	{
 		Rect rect = m_Zone.GetWorldRect();
 		
 		return new Vector2(_Position.x, rect.y + rect.height * 0.5f);
+	}
+
+	Rect GetZoneArea(Vector2 _Position)
+	{
+		Rect rect = m_Zone.GetWorldRect();
+		
+		Vector2 position = new Vector2(_Position.x, rect.y + rect.height * 0.5f);
+		
+		float size = Mathf.Min(rect.width, rect.height);
+		
+		return new Rect(position.x - size * 0.5f, position.y - size * 0.5f, size, size);
 	}
 
 	List<int> GetPointerIDs(UIHandle _Handle)
