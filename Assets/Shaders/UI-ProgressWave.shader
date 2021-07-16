@@ -114,6 +114,7 @@
 				return OUT;
 			}
 
+			// TODO: Support atlas
 			fixed4 frag(fragData IN) : SV_Target
 			{
 				half3 wave = UnpackNormal(tex2D(_WaveTex, IN.screen - _Time.x * _Speed)) * _Strength;

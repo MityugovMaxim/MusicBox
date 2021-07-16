@@ -154,9 +154,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			if (!rectTransform.Intersects(handle.RectTransform))
 				continue;
 			
-			if (m_Selection.ContainsKey(handle))
-				m_Selection.Remove(handle);
-			
 			handle.StartReceiveInput();
 			
 			m_Active.Add(handle);
@@ -179,9 +176,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			if (rectTransform.Intersects(handle.RectTransform))
 				continue;
-			
-			if (m_Selection.ContainsKey(handle))
-				m_Selection.Remove(handle);
 			
 			handle.StopReceiveInput();
 			
@@ -237,10 +231,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	bool DeselectHandle(UIHandle _Handle, int _PointerID)
 	{
 		if (!m_Selection.ContainsKey(_Handle))
-		{
-			Debug.LogError($"[UIInputReceiver] Deselect handle failed. Handle '{_Handle.name}' is not selected", _Handle.gameObject);
 			return false;
-		}
 		
 		if (!m_Selection[_Handle].Contains(_PointerID))
 		{
