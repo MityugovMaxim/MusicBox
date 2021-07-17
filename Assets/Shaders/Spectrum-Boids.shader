@@ -3,8 +3,8 @@
 	Properties
 	{
 		_SourceColor ("Source", Color) = (1,1,1,1)
-		_TargetColor ("Source", Color) = (1,1,1,1)
-		_Scale ("Scale", Float) = 0.1
+		_TargetColor ("Target", Color) = (1,1,1,1)
+		_Scale ("Scale", Float) = 0.9
 	}
 
 	 SubShader
@@ -55,10 +55,7 @@
 				fixed4 bend = lerp(_SourceColor, _TargetColor, value);
 				bend.a = value;
 				
-				half2 uv = IN.localTexcoord;
-				uv -= 0.5;
-				uv = scale(uv, 0.95);
-				uv += 0.5;
+				const half2 uv = scale(IN.localTexcoord, half2(0.5, 0.5), half2(_Scale, _Scale));
 				
 				fixed4 color = tex2D(_SelfTexture2D, uv);
 				
