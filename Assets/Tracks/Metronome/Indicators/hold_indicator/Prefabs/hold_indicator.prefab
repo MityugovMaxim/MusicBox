@@ -70,7 +70,7 @@ MonoBehaviour:
   m_Sprite: {fileID: 0}
   m_StartCap: {fileID: 3721159279284602499}
   m_EndCap: {fileID: 1222423515922601605}
-  m_Size: 22
+  m_Size: 35
   m_RenderingMode: 0
   m_Min: 0
   m_Max: 0
@@ -209,6 +209,7 @@ MonoBehaviour:
   m_MaxCap: {fileID: 2863812448454999031}
   m_Spline: {fileID: 2863812449723147369}
   m_Highlight: {fileID: 3858417666560272349}
+  m_Progress: {fileID: 1127804533352457303}
   m_SamplesPerUnit: 0.5
 --- !u!95 &1577931085029179515
 Animator:
@@ -369,81 +370,7 @@ MonoBehaviour:
       m_Calls: []
   m_Spline: {fileID: 2863812449723147369}
   m_Sprite: {fileID: 21300000, guid: a28fca184ce8646f8822956721aa8059, type: 3}
-  m_Size: 60
---- !u!1 &2863812448688324760
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2863812448688324761}
-  - component: {fileID: 2863812448688324763}
-  - component: {fileID: 2863812448688324762}
-  m_Layer: 5
-  m_Name: mount
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &2863812448688324761
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2863812448688324760}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 3957064086468520863}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 150, y: 150}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &2863812448688324763
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2863812448688324760}
-  m_CullTransparentMesh: 0
---- !u!114 &2863812448688324762
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2863812448688324760}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 152a8bbeeae9745e49a34dde55d9f4ab, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_Size: 90
 --- !u!1 &2863812449723147368
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,7 +504,7 @@ MonoBehaviour:
   m_Sprite: {fileID: 21300000, guid: a28fca184ce8646f8822956721aa8059, type: 3}
   m_StartCap: {fileID: 0}
   m_EndCap: {fileID: 0}
-  m_Size: 80
+  m_Size: 90
   m_RenderingMode: 1
   m_Min: 0
   m_Max: 1
@@ -687,7 +614,6 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 2863812448688324761}
   - {fileID: 6369926620245332417}
   m_Father: {fileID: 2863812448227296272}
   m_RootOrder: 3
@@ -718,7 +644,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Marker: {fileID: 6369926620245332417}
-  m_ProgressBar: {fileID: 1127804533352457303}
   m_Margin:
     m_Left: 15
     m_Right: 15
@@ -828,7 +753,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3957064086468520863}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -862,8 +787,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5a395cfd2f20743da9662e216f03241f, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 2728ddef327dc4f5c80fa5c8926bf0fa, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

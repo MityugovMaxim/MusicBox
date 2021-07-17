@@ -41,7 +41,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 		indicator.Restore();
 		
 		m_Indicators.Remove(_Clip);
-		m_InputReceiver.UnregisterHandle(indicator.Handle);
+		m_InputReceiver.UnregisterIndicator(indicator);
 		
 		Pool.Remove(indicator);
 	}
@@ -69,7 +69,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 			
 			float progress = Mathf.InverseLerp(clip.MinTime, clip.MaxTime, Time);
 			
-			indicator.Progress(progress);
+			indicator.Process(progress);
 		}
 		
 		m_InputReceiver.Process();
@@ -101,7 +101,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 		indicator.Setup(_Clip, duration);
 		
 		if (m_InputReceiver != null)
-			m_InputReceiver.RegisterHandle(indicator.Handle);
+			m_InputReceiver.RegisterIndicator(indicator);
 		
 		return indicator;
 	}

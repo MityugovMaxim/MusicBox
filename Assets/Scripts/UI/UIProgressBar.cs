@@ -15,10 +15,15 @@ public class UIProgressBar : UIEntity
 		if (!IsInstanced)
 			return;
 		
-		SetProgress(m_Progress);
+		Process(m_Progress);
 	}
 
-	public void SetProgress(float _Progress)
+	public void Process(float _Time, float _Length)
+	{
+		Process(_Time / _Length);
+	}
+
+	public void Process(float _Progress)
 	{
 		float progress = Mathf.Clamp01(_Progress);
 		

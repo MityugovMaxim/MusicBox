@@ -4,6 +4,27 @@ using UnityEngine.EventSystems;
 [ExecuteAlways]
 public class UISafeArea : UIBehaviour
 {
+	public Canvas Canvas
+	{
+		get
+		{
+			if (m_Canvas == null)
+			{
+				Transform target = RectTransform;
+				while (target != null)
+				{
+					m_Canvas = target.GetComponent<Canvas>();
+					if (m_Canvas != null)
+						break;
+					target = target.parent;
+				}
+			}
+			return m_Canvas;
+		}
+	}
+
+	
+
 	RectTransform RectTransform
 	{
 		get
@@ -19,6 +40,7 @@ public class UISafeArea : UIBehaviour
 	[SerializeField] bool    m_Top    = true;
 	[SerializeField] bool    m_Bottom = true;
 	[SerializeField] Vector4 m_Padding;
+	[SerializeField] Canvas  m_Canvas;
 
 	RectTransform m_RectTransform;
 
@@ -72,19 +94,24 @@ public class UISafeArea : UIBehaviour
 		
 		Rect safeArea = Screen.safeArea;
 		
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(
+		Camera camera = Canvas.renderMode != RenderMode.ScreenSpaceOverlay ? Canvas.worldCamera : null;
+		
+		RectTransformUtility.ScreenPointToWorldPointInRectangle(
 			RectTransform,
 			safeArea.min,
-			null,
-			out Vector2 min
+			camera,
+			out Vector3 min
 		);
 		
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(
+		RectTransformUtility.ScreenPointToWorldPointInRectangle(
 			RectTransform,
 			safeArea.max,
-			null,
-			out Vector2 max
+			camera,
+			out Vector3 max
 		);
+		
+		min = RectTransform.InverseTransformPoint(min);
+		max = RectTransform.InverseTransformPoint(max);
 		
 		Rect source = RectTransform.rect;
 		Rect target = Rect.MinMaxRect(min.x, min.y, max.x, max.y);

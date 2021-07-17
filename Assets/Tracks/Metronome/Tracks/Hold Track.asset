@@ -68,8 +68,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
   m_Name: Hold Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 8
-  m_MaxTime: 10.999995
+  m_MinTime: 8.242909
+  m_MaxTime: 11.242905
   m_Curve:
     m_Keys:
     - m_Time: 0
@@ -92,40 +92,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 587d3439e379492283953813be6edf72, type: 3}
   m_Name: Hold Track
   m_EditorClassIdentifier: 
-  m_Height: 162
-  m_Expanded: 1
+  m_Height: 89
+  m_Expanded: 0
   m_Offset: 0
   m_Clips:
-  - {fileID: 102868933649558290}
   - {fileID: -2532109112375396865}
   - {fileID: 1417136517232667958}
   - {fileID: -2701939511119455581}
   - {fileID: 9177983142980210918}
-  m_Track: tracks/tracks_area/hold_track_1
---- !u!114 &102868933649558290
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
-  m_Name: Hold Clip
-  m_EditorClassIdentifier: 
-  m_MinTime: 2
-  m_MaxTime: 7.5
-  m_Curve:
-    m_Keys:
-    - m_Time: 0
-      m_Value: 0.33333334
-      m_InTangent: {x: 0, y: 0}
-      m_OutTangent: {x: 0.3, y: 0}
-    - m_Time: 1
-      m_Value: 0.6666667
-      m_InTangent: {x: -0.3, y: 0}
-      m_OutTangent: {x: 0, y: 0}
+  m_Track: game_canvas/tracks/tracks_area/hold_track_1
 --- !u!114 &1417136517232667958
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -14,7 +14,13 @@ public partial class Sequencer
 	{
 		get => m_MaxTime;
 		set => m_MaxTime = value;
-	} 
+	}
+
+	public float Length
+	{
+		get => m_Length;
+		set => m_Length = value;
+	}
 
 	public float TracksWidth
 	{
@@ -38,13 +44,7 @@ public partial class Sequencer
 public partial class Sequencer : MonoBehaviour
 {
 	[Serializable]
-	public class SampleEvent : UnityEvent<float>
-	{
-		public override string ToString()
-		{
-			return base.ToString();
-		}
-	}
+	public class SampleEvent : UnityEvent<float, float> { }
 
 	public float Time
 	{
@@ -139,7 +139,7 @@ public partial class Sequencer : MonoBehaviour
 		
 		Time = _Time;
 		
-		m_OnSample?.Invoke(Time / m_Length);
+		m_OnSample?.Invoke(Time, m_Length);
 		
 		if (Time >= m_Length)
 		{

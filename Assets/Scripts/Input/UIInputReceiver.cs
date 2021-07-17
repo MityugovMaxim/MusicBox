@@ -1,15 +1,27 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
+	[Serializable]
+	public class IndicatorEvent : UnityEvent { }
+
+	[Serializable]
+	public class HandleEvent : UnityEvent<float> { }
+
 	public RectTransform Zone => m_Zone;
 
 	public override bool raycastTarget => true;
 
-	[SerializeField] RectTransform m_Zone;
+	[SerializeField] RectTransform  m_Zone;
+	[SerializeField] HandleEvent    m_OnSuccess;
+	[SerializeField] HandleEvent    m_OnFail;
+	[SerializeField] IndicatorEvent m_OnHit;
+	[SerializeField] IndicatorEvent m_OnMiss;
 
 	readonly UIVertex[] m_Vertices =
 	{
@@ -19,45 +31,60 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		new UIVertex(),
 	};
 
-	readonly Dictionary<int, Vector2>        m_Pointers  = new Dictionary<int, Vector2>();
-	readonly Dictionary<UIHandle, List<int>> m_Selection = new Dictionary<UIHandle, List<int>>();
-	readonly List<UIHandle>                  m_Inactive  = new List<UIHandle>();
-	readonly List<UIHandle>                  m_Active    = new List<UIHandle>();
+	readonly Dictionary<int, Rect>           m_Pointers           = new Dictionary<int, Rect>();
+	readonly Dictionary<UIHandle, List<int>> m_Selection          = new Dictionary<UIHandle, List<int>>();
+	readonly List<UIHandle>                  m_InactiveHandles    = new List<UIHandle>();
+	readonly List<UIHandle>                  m_ActiveHandles      = new List<UIHandle>();
+	readonly List<UIIndicator>               m_InactiveIndicators = new List<UIIndicator>();
+	readonly List<UIIndicator>               m_ActiveIndicators   = new List<UIIndicator>();
 
 	public void Process()
 	{
-		EnableInput();
+		EnableIndicators();
+		
+		EnableHandles();
 		
 		MoveInput();
 		
-		DisableInput();
+		DisableHandles();
+		
+		DisableIndicators();
 	}
 
-	public void RegisterHandle(UIHandle _Handle)
+	public void RegisterIndicator(UIIndicator _Indicator)
 	{
-		if (_Handle == null)
+		if (_Indicator == null || _Indicator.Handle == null)
 			return;
 		
-		if (m_Selection.ContainsKey(_Handle))
-			m_Selection.Remove(_Handle);
+		UIHandle handle = _Indicator.Handle;
 		
-		_Handle.StopReceiveInput();
+		if (m_Selection.ContainsKey(handle))
+			m_Selection.Remove(handle);
 		
-		m_Inactive.Add(_Handle);
+		handle.StopReceiveInput();
+		
+		m_InactiveHandles.Add(handle);
+		
+		m_InactiveIndicators.Add(_Indicator);
 	}
 
-	public void UnregisterHandle(UIHandle _Handle)
+	public void UnregisterIndicator(UIIndicator _Indicator)
 	{
-		if (_Handle == null)
+		if (_Indicator == null || _Indicator.Handle == null)
 			return;
 		
-		if (m_Selection.ContainsKey(_Handle))
-			m_Selection.Remove(_Handle);
+		UIHandle handle = _Indicator.Handle;
 		
-		_Handle.StopReceiveInput();
+		if (m_Selection.ContainsKey(handle))
+			m_Selection.Remove(handle);
 		
-		m_Inactive.Remove(_Handle);
-		m_Active.Remove(_Handle);
+		handle.StopReceiveInput();
+		
+		m_InactiveHandles.Remove(handle);
+		m_ActiveHandles.Remove(handle);
+		
+		m_ActiveIndicators.Remove(_Indicator);
+		m_InactiveIndicators.Remove(_Indicator);
 	}
 
 	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
@@ -75,19 +102,18 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
 	{
-		int     pointerID = _EventData.pointerId;
-		Vector2 position  = GetZonePosition(_EventData.position);
-		Rect    area      = GetZoneArea(_EventData.position);
+		int  pointerID = _EventData.pointerId;
+		Rect area      = GetZoneArea(_EventData);
 		
-		m_Pointers[pointerID] = position;
+		m_Pointers[pointerID] = area;
 		
-		foreach (UIHandle handle in m_Active)
+		foreach (UIHandle handle in m_ActiveHandles)
 		{
 			if (handle == null)
 				continue;
 			
 			if (handle.Select(area) && SelectHandle(handle, pointerID))
-				handle.TouchDown(pointerID, position);
+				handle.TouchDown(pointerID, area);
 		}
 		
 		_EventData.Use();
@@ -95,18 +121,18 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
 	{
-		int     pointerID = _EventData.pointerId;
-		Vector2 position  = GetZonePosition(_EventData.position);
+		int  pointerID = _EventData.pointerId;
+		Rect area      = GetZoneArea(_EventData);
 		
 		m_Pointers.Remove(pointerID);
 		
-		foreach (UIHandle handle in m_Active)
+		foreach (UIHandle handle in m_ActiveHandles)
 		{
 			if (handle == null)
 				continue;
 			
 			if (DeselectHandle(handle, pointerID))
-				handle.TouchUp(pointerID, position);
+				handle.TouchUp(pointerID, area);
 		}
 		
 		_EventData.Use();
@@ -114,26 +140,22 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
-		int     pointerID = _EventData.pointerId;
-		Vector2 position  = GetZonePosition(_EventData.position);
+		int  pointerID = _EventData.pointerId;
+		Rect area      = GetZoneArea(_EventData);
 		
-		m_Pointers[pointerID] = position;
+		m_Pointers[pointerID] = area;
 		
 		_EventData.Use();
 	}
 
-	Vector2 GetZonePosition(Vector2 _Position)
+	Rect GetZoneArea(PointerEventData _EventData)
 	{
 		Rect rect = m_Zone.GetWorldRect();
 		
-		return new Vector2(_Position.x, rect.y + rect.height * 0.5f);
-	}
-
-	Rect GetZoneArea(Vector2 _Position)
-	{
-		Rect rect = m_Zone.GetWorldRect();
-		
-		Vector2 position = new Vector2(_Position.x, rect.y + rect.height * 0.5f);
+		Vector2 position = new Vector2(
+			_EventData.pointerCurrentRaycast.worldPosition.x,
+			rect.y + rect.height * 0.5f
+		);
 		
 		Vector2 size = new Vector2(
 			EventSystem.current.pixelDragThreshold,
@@ -148,15 +170,62 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		return m_Selection.ContainsKey(_Handle) ? m_Selection[_Handle] : null;
 	}
 
-	void EnableInput()
+	void EnableIndicators()
 	{
-		for (int i = m_Inactive.Count - 1; i >= 0; i--)
+		for (int i = m_InactiveIndicators.Count - 1; i >= 0; i--)
 		{
-			UIHandle handle = m_Inactive[i];
+			UIIndicator indicator = m_InactiveIndicators[i];
+			
+			if (indicator == null)
+			{
+				m_InactiveHandles.RemoveAt(i);
+				continue;
+			}
+			
+			if (!m_Zone.Intersects(indicator.RectTransform))
+				continue;
+			
+			m_InactiveIndicators.RemoveAt(i);
+			m_ActiveIndicators.Add(indicator);
+		}
+	}
+
+	void DisableIndicators()
+	{
+		for (int i = m_ActiveIndicators.Count - 1; i >= 0; i--)
+		{
+			UIIndicator indicator = m_ActiveIndicators[i];
+			
+			if (indicator == null)
+			{
+				m_ActiveIndicators.RemoveAt(i);
+				continue;
+			}
+			
+			if (m_Zone.Intersects(indicator.RectTransform))
+				continue;
+			
+			m_ActiveIndicators.RemoveAt(i);
+			
+			UIHandle handle = indicator.Handle;
+			
+			if (handle == null)
+				continue;
+			
+			if (Mathf.Approximately(handle.Progress, 0))
+				m_OnMiss?.Invoke();
+		}
+	}
+
+	void EnableHandles()
+	{
+		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
+		{
+			UIHandle handle = m_InactiveHandles[i];
 			
 			if (handle == null)
 			{
-				m_Inactive.RemoveAt(i);
+				m_InactiveHandles.RemoveAt(i);
 				continue;
 			}
 			
@@ -165,21 +234,24 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			handle.StartReceiveInput();
 			
-			m_Active.Add(handle);
+			m_ActiveHandles.Add(handle);
 			
-			m_Inactive.RemoveAt(i);
+			m_InactiveHandles.RemoveAt(i);
+			
+			handle.OnSuccess += m_OnSuccess.Invoke;
+			handle.OnFail    += m_OnFail.Invoke;
 		}
 	}
 
-	void DisableInput()
+	void DisableHandles()
 	{
-		for (int i = m_Active.Count - 1; i >= 0; i--)
+		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
-			UIHandle handle = m_Active[i];
+			UIHandle handle = m_ActiveHandles[i];
 			
 			if (handle == null)
 			{
-				m_Active.RemoveAt(i);
+				m_ActiveHandles.RemoveAt(i);
 				continue;
 			}
 			
@@ -188,19 +260,22 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			handle.StopReceiveInput();
 			
-			m_Active.RemoveAt(i);
+			m_ActiveHandles.RemoveAt(i);
+			
+			handle.OnSuccess -= m_OnSuccess.Invoke;
+			handle.OnFail    -= m_OnFail.Invoke;
 		}
 	}
 
 	void MoveInput()
 	{
-		for (int i = m_Active.Count - 1; i >= 0; i--)
+		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
-			UIHandle handle = m_Active[i];
+			UIHandle handle = m_ActiveHandles[i];
 			
 			if (handle == null)
 			{
-				m_Active.RemoveAt(i);
+				m_ActiveHandles.RemoveAt(i);
 				continue;
 			}
 			
@@ -214,9 +289,9 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				if (!m_Pointers.ContainsKey(pointerID))
 					continue;
 				
-				Vector2 position = m_Pointers[pointerID];
+				Rect area = m_Pointers[pointerID];
 				
-				handle.TouchMove(pointerID, position);
+				handle.TouchMove(pointerID, area);
 			}
 		}
 	}
@@ -233,6 +308,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		}
 		
 		m_Selection[_Handle].Add(_PointerID);
+		
+		m_OnHit?.Invoke();
 		
 		return true;
 	}

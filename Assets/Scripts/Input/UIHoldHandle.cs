@@ -3,18 +3,23 @@ using UnityEngine;
 
 public class UIHoldHandle : UIHandle
 {
+	public override float Progress => MaxProgress - MinProgress;
+
 	public event Action OnStartHold;
 	public event Action OnStopHold;
 
-	[SerializeField] RectTransform    m_Marker;
-	[SerializeField] UISplineProgress m_ProgressBar;
-	[SerializeField] RectOffset       m_Margin;
+	public float MinProgress => m_MinProgress;
+	public float MaxProgress => m_MaxProgress;
 
-	bool    m_Interactable;
-	bool    m_Processed;
-	bool    m_Hold;
-	float   m_Progress;
-	Vector2 m_Position;
+	[SerializeField] RectTransform m_Marker;
+	[SerializeField] RectOffset    m_Margin;
+
+	bool  m_Interactable;
+	bool  m_Processed;
+	bool  m_Hold;
+	float m_MinProgress;
+	float m_MaxProgress;
+	Rect  m_Area;
 
 	public override void StartReceiveInput()
 	{
@@ -24,10 +29,8 @@ public class UIHoldHandle : UIHandle
 		m_Interactable = true;
 		m_Processed    = false;
 		m_Hold         = false;
-		m_Progress     = 0;
-		
-		if (m_ProgressBar != null)
-			m_ProgressBar.gameObject.SetActive(false);
+		m_MinProgress  = 0;
+		m_MaxProgress  = 0;
 	}
 
 	public override void StopReceiveInput()
@@ -40,7 +43,7 @@ public class UIHoldHandle : UIHandle
 		
 		if (!m_Processed)
 		{
-			if (Mathf.Approximately(m_Progress, 1))
+			if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
 				InvokeSuccess();
 			else
 				InvokeFail();
@@ -49,52 +52,47 @@ public class UIHoldHandle : UIHandle
 		m_Interactable = false;
 		m_Processed    = false;
 		m_Hold         = false;
-		m_Progress     = 0;
-		
-		if (m_ProgressBar != null)
-			m_ProgressBar.gameObject.SetActive(false);
+		m_MinProgress  = 0;
+		m_MaxProgress  = 0;
 	}
 
-	public void Progress(float _Progress)
+	public void Process(float _Phase)
 	{
 		if (!m_Interactable || m_Processed)
 			return;
 		
 		if (m_Hold)
 		{
-			m_ProgressBar.Max = _Progress;
-			m_ProgressBar.gameObject.SetActive(true);
+			m_MaxProgress = _Phase;
+			
+			if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
+			{
+				m_Hold      = false;
+				m_Processed = true;
+				InvokeSuccess();
+			}
 		}
 		else
 		{
-			m_ProgressBar.Min = _Progress;
-			m_ProgressBar.Max = _Progress;
-			return;
-		}
-		
-		m_Progress = _Progress;
-		
-		if (Mathf.Approximately(m_Progress, 1))
-		{
-			m_Processed = true;
-			InvokeSuccess();
+			m_MinProgress = _Phase;
+			m_MaxProgress = _Phase;
 		}
 	}
 
-	public override void TouchDown(int _ID, Vector2 _Position)
+	public override void TouchDown(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (!m_Interactable || m_Processed || m_Hold)
 			return;
 		
-		m_Hold     = true;
-		m_Position = GetLocalPoint(_Position);
+		m_Hold = true;
+		m_Area = GetLocalRect(_Area);
 		
 		InvokeStartHold();
 	}
 
-	public override void TouchUp(int _ID, Vector2 _Position)
+	public override void TouchUp(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (!m_Interactable || m_Processed || !m_Hold)
 			return;
 		
 		if (m_Marker != null)
@@ -105,24 +103,24 @@ public class UIHoldHandle : UIHandle
 		
 		InvokeStopHold();
 		
-		if (Mathf.Approximately(m_Progress, 1))
+		if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
 			InvokeSuccess();
 		else
 			InvokeFail();
 	}
 
-	public override void TouchMove(int _ID, Vector2 _Position)
+	public override void TouchMove(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (!m_Interactable || m_Processed || !m_Hold)
 			return;
 		
-		Rect    rect     = GetLocalRect(m_Margin);
-		Vector2 position = GetLocalPoint(_Position) - m_Position;
+		Rect rect = GetLocalRect(m_Margin);
+		Rect area = GetLocalRect(_Area);
 		
 		if (m_Marker != null)
-			m_Marker.anchoredPosition = new Vector2(position.x, 0);
+			m_Marker.anchoredPosition = new Vector2(area.center.x - m_Area.center.x, 0);
 		
-		if (position.x >= rect.xMin && position.x <= rect.xMax)
+		if (rect.Overlaps(area))
 			return;
 		
 		m_Hold      = false;
@@ -130,7 +128,7 @@ public class UIHoldHandle : UIHandle
 		
 		InvokeStopHold();
 		
-		if (Mathf.Approximately(m_Progress, 1))
+		if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
 			InvokeSuccess();
 		else
 			InvokeFail();

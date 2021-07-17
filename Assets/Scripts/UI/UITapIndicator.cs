@@ -50,12 +50,12 @@ public class UITapIndicator : UIIndicator
 		Animator.Update(0);
 	}
 
-	void Success()
+	void Success(float _Progress)
 	{
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 
-	void Fail()
+	void Fail(float _Progress)
 	{
 		Animator.SetTrigger(m_FailParameterID);
 	}

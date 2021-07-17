@@ -28,6 +28,7 @@ public class UIHoldIndicator : UIIndicator
 	[SerializeField] RectTransform    m_MaxCap;
 	[SerializeField] UISpline         m_Spline;
 	[SerializeField] UISplineProgress m_Highlight;
+	[SerializeField] UISplineProgress m_Progress;
 	[SerializeField] float            m_SamplesPerUnit = 0.5f;
 
 	Animator m_Animator;
@@ -78,6 +79,13 @@ public class UIHoldIndicator : UIIndicator
 		if (m_MaxCap != null)
 			m_MaxCap.anchoredPosition = m_Spline.Last().Position;
 		
+		if (m_Progress != null)
+		{
+			m_Progress.Min = 0;
+			m_Progress.Max = 0;
+			m_Progress.gameObject.SetActive(false);
+		}
+		
 		if (m_Handle != null)
 		{
 			m_Handle.OnSuccess   += Success;
@@ -89,12 +97,12 @@ public class UIHoldIndicator : UIIndicator
 		}
 	}
 
-	public void Progress(float _Progress)
+	public void Process(float _Phase)
 	{
 		if (m_Spline == null)
 			return;
 		
-		float   phase    = m_Spline.EvaluateVertical(_Progress);
+		float   phase    = m_Spline.EvaluateVertical(_Phase);
 		Vector2 position = m_Spline.Evaluate(phase);
 		
 		if (m_Highlight != null)
@@ -102,8 +110,16 @@ public class UIHoldIndicator : UIIndicator
 		
 		if (m_Handle != null)
 		{
-			m_Handle.Progress(phase);
+			m_Handle.Process(phase);
+			
 			m_Handle.RectTransform.anchoredPosition = position;
+			
+			if (m_Progress != null && m_Handle.MaxProgress > m_Handle.MinProgress)
+			{
+				m_Progress.Min = m_Handle.MinProgress;
+				m_Progress.Max = m_Handle.MaxProgress;
+				m_Progress.gameObject.SetActive(true);
+			}
 		}
 	}
 
@@ -124,12 +140,12 @@ public class UIHoldIndicator : UIIndicator
 		Animator.Update(0);
 	}
 
-	void Success()
+	void Success(float _Progress)
 	{
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 
-	void Fail()
+	void Fail(float _Progress)
 	{
 		Animator.SetTrigger(m_FailParameterID);
 	}

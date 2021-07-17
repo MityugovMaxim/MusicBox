@@ -3,8 +3,10 @@ using UnityEngine;
 
 public abstract class UIHandle : UIEntity
 {
-	public event Action OnSuccess;
-	public event Action OnFail;
+	public abstract float Progress { get; }
+
+	public event Action<float> OnSuccess;
+	public event Action<float> OnFail;
 
 	public bool Select(Rect _Rect)
 	{
@@ -16,17 +18,17 @@ public abstract class UIHandle : UIEntity
 
 	public abstract void StartReceiveInput();
 	public abstract void StopReceiveInput();
-	public abstract void TouchDown(int _ID, Vector2 _Position);
-	public abstract void TouchUp(int   _ID, Vector2 _Position);
-	public abstract void TouchMove(int _ID, Vector2 _Position);
+	public abstract void TouchDown(int _ID, Rect _Area);
+	public abstract void TouchUp(int   _ID, Rect _Area);
+	public abstract void TouchMove(int _ID, Rect _Area);
 
 	protected void InvokeSuccess()
 	{
-		OnSuccess?.Invoke();
+		OnSuccess?.Invoke(Progress);
 	}
 
 	protected void InvokeFail()
 	{
-		OnFail?.Invoke();
+		OnFail?.Invoke(Progress);
 	}
 }

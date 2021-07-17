@@ -47,6 +47,12 @@ public class SequencerEditor : EditorWindow
 		set => Sequencer.MaxTime = value;
 	}
 
+	float Length
+	{
+		get => Sequencer.Length;
+		set => Sequencer.Length = value;
+	}
+
 	float TracksWidth
 	{
 		get => Sequencer.TracksWidth;
@@ -135,6 +141,8 @@ public class SequencerEditor : EditorWindow
 		
 		Rect clipsRect = new Rect(TracksWidth, 25, position.width - TracksWidth, position.height - 25);
 		
+		Rect lengthRect = new Rect(TracksWidth, 0, position.width - TracksWidth, position.height);
+		
 		DrawTracks(tracksRect);
 		DrawClips(clipsRect);
 		DrawToolbar(toolbarRect);
@@ -146,6 +154,7 @@ public class SequencerEditor : EditorWindow
 		MoveInput(clipsRect);
 		ZoomInput(clipsRect);
 		DragDropInput(clipsRect);
+		LengthInput(lengthRect);
 		ResizeTracksInput(tracksRect);
 	}
 
@@ -793,6 +802,84 @@ public class SequencerEditor : EditorWindow
 			}
 			
 			position += track.Height;
+		}
+	}
+
+	void LengthInput(Rect _Rect)
+	{
+		int controlID = EditorGUIUtility.GetControlID("sequence_editor_length_handle".GetHashCode(), FocusType.Passive);
+		
+		float position = MathUtility.RemapClamped(Length, MinTime, MaxTime, _Rect.xMin, _Rect.xMax);
+		
+		Rect areaRect = new Rect(
+			position,
+			_Rect.y,
+			_Rect.xMax - position,
+			_Rect.height
+		);
+		
+		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
+		
+		Rect handleRect = new Rect(
+			position - 4,
+			_Rect.y,
+			8,
+			_Rect.height
+		);
+		
+		switch (Event.current.type)
+		{
+			case EventType.Repaint:
+			{
+				Handles.DrawSolidRectangleWithOutline(
+					areaRect,
+					new Color(0, 0, 0, 0.25f),
+					Color.clear
+				);
+				
+				EditorGUIUtility.AddCursorRect(
+					GUIUtility.hotControl == controlID
+						? handlePadding.Add(handleRect)
+						: handleRect,
+					MouseCursor.SplitResizeLeftRight,
+					controlID
+				);
+				
+				break;
+			}
+			
+			case EventType.MouseDown:
+			{
+				if (!handleRect.Contains(Event.current.mousePosition))
+					break;
+				
+				GUIUtility.hotControl = controlID;
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
+			
+			case EventType.MouseDrag:
+			{
+				if (GUIUtility.hotControl != controlID)
+					break;
+				
+				float length = MathUtility.Remap(Event.current.mousePosition.x, _Rect.xMin, _Rect.xMax, MinTime, MaxTime);
+				
+				if (Event.current.modifiers == EventModifiers.Command)
+					length = MathUtility.Snap(length, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+				
+				Length = length;
+				
+				Event.current.Use();
+				
+				Repaint();
+				
+				break;
+			}
 		}
 	}
 

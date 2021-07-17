@@ -38,7 +38,7 @@ public class UITapTrack : UITrack<TapClip>
 		indicator.Restore();
 		
 		m_Indicators.Remove(_Clip);
-		m_InputReceiver.UnregisterHandle(indicator.Handle);
+		m_InputReceiver.UnregisterIndicator(indicator);
 		
 		Pool.Remove(indicator);
 	}
@@ -87,7 +87,7 @@ public class UITapTrack : UITrack<TapClip>
 		indicator.Setup();
 		
 		if (m_InputReceiver != null)
-			m_InputReceiver.RegisterHandle(indicator.Handle);
+			m_InputReceiver.RegisterIndicator(indicator);
 		
 		return indicator;
 	}
