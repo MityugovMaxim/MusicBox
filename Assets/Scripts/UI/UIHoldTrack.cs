@@ -63,13 +63,13 @@ public class UIHoldTrack : UITrack<HoldClip>
 			if (indicator == null)
 				continue;
 			
-			float progress = Mathf.InverseLerp(clip.MinTime, clip.MaxTime, Time);
-			
-			indicator.Progress(progress);
-			
 			indicator.RectTransform.anchorMin        = anchor;
 			indicator.RectTransform.anchorMax        = anchor;
 			indicator.RectTransform.anchoredPosition = new Vector2(0, GetDistance(clip.MinTime));
+			
+			float progress = Mathf.InverseLerp(clip.MinTime, clip.MaxTime, Time);
+			
+			indicator.Progress(progress);
 		}
 		
 		m_InputReceiver.Process();

@@ -19,7 +19,7 @@ public static class TransformExtension
 
 	public static bool Intersects(this RectTransform _RectTransform, RectTransform _Target, RectOffset _Padding)
 	{
-		return _Padding.Add(_Target.rect).Overlaps(_RectTransform.GetLocalRect(_Target));
+		return _Padding.Add(_Target.rect).Overlaps(_RectTransform.GetLocalRect(_Target), true);
 	}
 
 	public static Rect TransformRect(this Transform _Transform, Rect _Rect)

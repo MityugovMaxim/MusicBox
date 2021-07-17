@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public partial class Sequencer
 {
@@ -35,6 +37,15 @@ public partial class Sequencer
 [ExecuteInEditMode]
 public partial class Sequencer : MonoBehaviour
 {
+	[Serializable]
+	public class SampleEvent : UnityEvent<float>
+	{
+		public override string ToString()
+		{
+			return base.ToString();
+		}
+	}
+
 	public float Time
 	{
 		get => m_Time;
@@ -45,9 +56,12 @@ public partial class Sequencer : MonoBehaviour
 
 	public Track[] Tracks => m_Tracks;
 
-	[SerializeField] Track[] m_Tracks;
-	[SerializeField] float   m_Time;
-	[SerializeField] bool    m_AutoPlay;
+	[SerializeField] Track[]     m_Tracks;
+	[SerializeField] float       m_Time;
+	[SerializeField] float       m_Length;
+	[SerializeField] bool        m_AutoPlay;
+	[SerializeField] SampleEvent m_OnSample;
+	[SerializeField] UnityEvent  m_OnComplete;
 
 	int m_Frame;
 	int m_SampleFrame;
@@ -124,5 +138,19 @@ public partial class Sequencer : MonoBehaviour
 			track.Sample(Time, _Time);
 		
 		Time = _Time;
+		
+		m_OnSample?.Invoke(Time / m_Length);
+		
+		if (Time >= m_Length)
+		{
+			Playing = false;
+			
+			foreach (Track track in m_Tracks)
+				track.Sample(Time, m_Length);
+			
+			Time = m_Length;
+			
+			m_OnComplete?.Invoke();
+		}
 	}
 }

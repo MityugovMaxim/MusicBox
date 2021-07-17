@@ -89,6 +89,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			if (handle.Select(area) && SelectHandle(handle, pointerID))
 				handle.TouchDown(pointerID, position);
 		}
+		
+		_EventData.Use();
 	}
 
 	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
@@ -106,6 +108,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			if (DeselectHandle(handle, pointerID))
 				handle.TouchUp(pointerID, position);
 		}
+		
+		_EventData.Use();
 	}
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
@@ -114,6 +118,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		Vector2 position  = GetZonePosition(_EventData.position);
 		
 		m_Pointers[pointerID] = position;
+		
+		_EventData.Use();
 	}
 
 	Vector2 GetZonePosition(Vector2 _Position)
@@ -129,9 +135,12 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		
 		Vector2 position = new Vector2(_Position.x, rect.y + rect.height * 0.5f);
 		
-		float size = Mathf.Min(rect.width, rect.height);
+		Vector2 size = new Vector2(
+			EventSystem.current.pixelDragThreshold,
+			rect.height
+		);
 		
-		return new Rect(position.x - size * 0.5f, position.y - size * 0.5f, size, size);
+		return new Rect(position - size * 0.5f, size);
 	}
 
 	List<int> GetPointerIDs(UIHandle _Handle)
@@ -151,7 +160,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (!rectTransform.Intersects(handle.RectTransform))
+			if (!m_Zone.Intersects(handle.RectTransform))
 				continue;
 			
 			handle.StartReceiveInput();
@@ -174,7 +183,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (rectTransform.Intersects(handle.RectTransform))
+			if (m_Zone.Intersects(handle.RectTransform))
 				continue;
 			
 			handle.StopReceiveInput();

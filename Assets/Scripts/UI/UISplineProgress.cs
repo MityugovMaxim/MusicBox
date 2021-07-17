@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -9,6 +10,34 @@ public class UISplineProgress : MaskableGraphic
 	{
 		Blend,
 		Additive
+	}
+
+	public float Min
+	{
+		get => m_Min;
+		set
+		{
+			if (Mathf.Approximately(m_Min, value))
+				return;
+			
+			m_Min = value;
+			
+			SetVerticesDirty();;
+		}
+	}
+
+	public float Max
+	{
+		get => m_Max;
+		set
+		{
+			if (Mathf.Approximately(m_Max, value))
+				return;
+			
+			m_Max = value;
+			
+			SetVerticesDirty();
+		}
 	}
 
 	public float Offset
@@ -33,7 +62,7 @@ public class UISplineProgress : MaskableGraphic
 			{
 				if (m_BlendMaterial == null)
 				{
-					m_BlendMaterial = new Material(Shader.Find("UI/Progress"));
+					m_BlendMaterial = new Material(Shader.Find("UI/Spline/Default"));
 					m_BlendMaterial.SetInt(m_SrcBlend, (int)BlendMode.SrcAlpha);
 					m_BlendMaterial.SetInt(m_DstBlend, (int)BlendMode.OneMinusSrcAlpha);
 				}
@@ -43,7 +72,7 @@ public class UISplineProgress : MaskableGraphic
 			{
 				if (m_AdditiveMaterial == null)
 				{
-					m_AdditiveMaterial = new Material(Shader.Find("UI/Progress"));
+					m_AdditiveMaterial = new Material(Shader.Find("UI/Spline/Default"));
 					m_AdditiveMaterial.SetInt(m_SrcBlend, (int)BlendMode.SrcAlpha);
 					m_AdditiveMaterial.SetInt(m_DstBlend, (int)BlendMode.One);
 				}
@@ -60,15 +89,17 @@ public class UISplineProgress : MaskableGraphic
 	static Material m_BlendMaterial;
 	static Material m_AdditiveMaterial;
 
-	[SerializeField]              UISpline       m_Spline;
-	[SerializeField]              float          m_Size;
-	[SerializeField]              RenderingMode  m_RenderingMode;
-	[SerializeField, Range(0, 1)] float          m_Min = 0;
-	[SerializeField, Range(0, 1)] float          m_Max = 1;
-	[SerializeField, Range(0, 1)] float          m_FadeIn;
-	[SerializeField, Range(0, 1)] float          m_FadeOut;
-	[SerializeField]              float          m_Offset;
-	[SerializeField]              Sprite         m_Sprite;
+	[SerializeField]              UISpline      m_Spline;
+	[SerializeField]              Sprite        m_Sprite;
+	[SerializeField]              Graphic       m_StartCap;
+	[SerializeField]              Graphic       m_EndCap;
+	[SerializeField]              float         m_Size;
+	[SerializeField]              RenderingMode m_RenderingMode;
+	[SerializeField, Range(0, 1)] float         m_Min = 0;
+	[SerializeField, Range(0, 1)] float         m_Max = 1;
+	[SerializeField, Range(0, 1)] float         m_FadeIn;
+	[SerializeField, Range(0, 1)] float         m_FadeOut;
+	[SerializeField]              float         m_Offset;
 
 	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
 
@@ -125,6 +156,20 @@ public class UISplineProgress : MaskableGraphic
 				i * 2 + 2
 			);
 		}
+		
+		if (m_StartCap != null)
+		{
+			UISpline.Point point    = first;
+			Vector2        position = rectTransform.TransformPoint(point.Position);
+			m_StartCap.rectTransform.position = position;
+		}
+		
+		if (m_EndCap != null)
+		{
+			UISpline.Point point    = last;
+			Vector2        position = rectTransform.TransformPoint(point.Position);
+			m_EndCap.rectTransform.position = position;
+		}
 	}
 
 	void ProcessPoint(UISpline.Point _Point, float _Min, float _Max, Rect _UV)
@@ -135,18 +180,16 @@ public class UISplineProgress : MaskableGraphic
 		UIVertex left  = new UIVertex();
 		left.position = _Point.Position + _Point.Normal * size;
 		left.color    = color;
-		left.uv0      = new Vector2(_UV.xMin, _UV.y + _UV.height * phase);
+		left.uv0      = new Vector2(0, phase);
 		left.uv1      = new Vector2(m_FadeIn, m_FadeOut);
-		left.uv2      = new Vector2(0, phase * 3);
 		left.tangent  = _UV.ToVector();
 		left.normal   = new Vector4(_Min, _Max, _Point.Phase, _Point.Phase);
 		
 		UIVertex right = new UIVertex();
 		right.position = _Point.Position - _Point.Normal * size;
 		right.color    = color;
-		right.uv0      = new Vector2(_UV.xMax, _UV.y + _UV.height * phase);
+		right.uv0      = new Vector2(1, phase);
 		right.uv1      = new Vector2(m_FadeIn, m_FadeOut);
-		right.uv2      = new Vector2(1, phase * 3);
 		right.tangent  = _UV.ToVector();
 		right.normal   = new Vector4(_Min, _Max, _Point.Phase, _Point.Phase);
 		

@@ -26,11 +26,6 @@
 			fixed4 _TraceColor;
 			fixed _Scale;
 
-			half remap01(float _Value, float _Low, float _High)
-			{
-				return (_Value - _Low) / (_High - _Low);
-			}
-
 			float4 frag(v2f_customrendertexture IN) : COLOR
 			{
 				const half aspect = _ScreenParams.x / _ScreenParams.y;

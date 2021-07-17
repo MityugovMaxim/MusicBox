@@ -6,12 +6,6 @@ using UnityEngine.UI;
 
 public class UISplineCurve : MaskableGraphic
 {
-	#region constants
-
-	const float MAX_SIZE = 3;
-
-	#endregion
-
 	#region properties
 
 	public UISpline Spline
@@ -52,76 +46,20 @@ public class UISplineCurve : MaskableGraphic
 
 	public override Texture mainTexture => Sprite != null ? Sprite.texture : base.mainTexture;
 
-	public float Size
-	{
-		get => m_Size;
-		set
-		{
-			if (Mathf.Approximately(m_Size, value))
-				return;
-			
-			m_Size = value;
-			
-			SetVerticesDirty();
-		}
-	}
-
-	public float SpriteOffset
-	{
-		get { return m_SpriteOffset; }
-		set
-		{
-			if (Mathf.Approximately(m_SpriteOffset, value))
-				return;
-			
-			m_SpriteOffset = value;
-			
-			SetVerticesDirty();
-		}
-	}
-
-	public float SpriteScale
-	{
-		get { return m_SpriteScale; }
-		set
-		{
-			if (Mathf.Approximately(m_SpriteScale, value))
-				return;
-			
-			m_SpriteScale = value;
-			
-			SetVerticesDirty();
-		}
-	}
-
-	public Gradient Gradient
-	{
-		get { return m_Gradient; }
-		set
-		{
-			m_Gradient = value;
-			
-			SetVerticesDirty();
-		}
-	}
-
 	#endregion
 
 	#region attributes
 
+	static Material m_BlendMaterial;
+	static Material m_AdditiveMaterial;
+
 	[SerializeField] UISpline m_Spline;
 	[SerializeField] Sprite   m_Sprite;
 	[SerializeField] float    m_Size;
-	[SerializeField] float    m_SpriteOffset;
-	[SerializeField] float    m_SpriteScale;
-	[SerializeField] Gradient m_Gradient;
 
 	[NonSerialized] UISpline m_SplineCache;
 
-	readonly List<Vector3> m_Vertices  = new List<Vector3>();
-	readonly List<int>     m_Triangles = new List<int>();
-	readonly List<Vector2> m_UV        = new List<Vector2>();
-	readonly List<Color>   m_Colors    = new List<Color>();
+	readonly List<UIVertex> m_Vertices  = new List<UIVertex>();
 
 	#endregion
 
@@ -197,30 +135,38 @@ public class UISplineCurve : MaskableGraphic
 			return;
 		
 		m_Vertices.Clear();
-		m_UV.Clear();
-		m_Colors.Clear();
-		m_Triangles.Clear();
 		
-		if (Spline.Loop)
-			BuildLoopMesh();
-		else
-			BuildStraightMesh();
-		
-		for (int i = 0; i < m_Vertices.Count; i++)
+		Rect uv = new Rect(0, 0, 1, 1);
+		if (Sprite != null && Sprite.texture != null)
 		{
-			_VertexHelper.AddVert(
-				m_Vertices[i],
-				m_Colors[i],
-				m_UV[i]
-			);
+			uv        =  Sprite.textureRect;
+			uv.x      /= Sprite.texture.width;
+			uv.y      /= Sprite.texture.height;
+			uv.width  /= Sprite.texture.width;
+			uv.height /= Sprite.texture.height;
 		}
 		
-		for (int i = 0; i < m_Triangles.Count; i += 3)
+		if (Spline.Loop)
+			BuildLoopMesh(uv);
+		else
+			BuildStraightMesh(uv);
+		
+		foreach (UIVertex vertex in m_Vertices)
+			_VertexHelper.AddVert(vertex);
+		
+		int quads = m_Vertices.Count / 2 - 1;
+		for (int i = 0; i < quads; i++)
 		{
 			_VertexHelper.AddTriangle(
-				m_Triangles[i + 2],
-				m_Triangles[i + 1],
-				m_Triangles[i + 0]
+				i * 2 + 1,
+				i * 2 + 0,
+				i * 2 + 2
+			);
+			
+			_VertexHelper.AddTriangle(
+				i * 2 + 3,
+				i * 2 + 1,
+				i * 2 + 2
 			);
 		}
 	}
@@ -230,7 +176,7 @@ public class UISplineCurve : MaskableGraphic
 		SetVerticesDirty();
 	}
 
-	void BuildStraightMesh()
+	void BuildStraightMesh(Rect _UV)
 	{
 		if (Spline == null || Spline.Length < 2)
 			return;
@@ -238,128 +184,59 @@ public class UISplineCurve : MaskableGraphic
 		// process first point
 		UISpline.Point firstPoint = Spline.First();
 		
-		ProcessVertex(firstPoint.Position, firstPoint.Normal, Size);
-		ProcessUV(0);
-		ProcessColor(0);
+		ProcessPoint(firstPoint, _UV, 0);
 		
 		for (int i = 1; i < Spline.Length - 1; i++)
 		{
 			UISpline.Point point = Spline[i];
 			
-			Vector2 direction = Spline[i - 1].Position - point.Position;
-			
-			float angle = Vector2.SignedAngle(direction, point.Normal);
-			
-			float length = Size / Mathf.Sin(angle * Mathf.Deg2Rad);
-			
-			ProcessVertex(point.Position, point.Normal, length);
-			ProcessUV(point.Phase);
-			ProcessColor(point.Phase);
+			ProcessPoint(point, _UV, point.Phase);
 		}
 		
 		// process last point
 		UISpline.Point lastPoint = Spline.Last();
 		
-		ProcessVertex(lastPoint.Position, lastPoint.Normal, Size);
-		ProcessUV(1);
-		ProcessColor(1);
-		
-		ProcessTriangles(Spline.Length - 1);
+		ProcessPoint(lastPoint, _UV, lastPoint.Phase);
 	}
 
-	void BuildLoopMesh()
+	void BuildLoopMesh(Rect _UV)
 	{
 		if (Spline == null || Spline.Length < 2)
 			return;
 		
 		// process origin point
-		UISpline.Point originPoint     = Spline[0];
-		Vector2        originDirection = Spline[Spline.Length - 1].Position - originPoint.Position;
-		float          originAngle     = Vector2.SignedAngle(originDirection, originPoint.Normal);
-		float          originLength    = Size / Mathf.Sin(originAngle * Mathf.Deg2Rad);
+		UISpline.Point originPoint = Spline[0];
 		
-		ProcessVertex(originPoint.Position, originPoint.Normal, originLength);
-		ProcessUV(0);
-		ProcessColor(0);
+		ProcessPoint(originPoint, _UV, 0);
 		
 		for (int i = 1; i < Spline.Length; i++)
 		{
 			UISpline.Point point = Spline[i];
 			
-			Vector2 direction = Spline[i - 1].Position - point.Position;
-			
-			float angle = Vector2.SignedAngle(direction, point.Normal);
-			
-			float length = Size / Mathf.Sin(angle * Mathf.Deg2Rad);
-			
-			ProcessVertex(point.Position, point.Normal, length);
-			ProcessUV(point.Phase);
-			ProcessColor(point.Phase);
+			ProcessPoint(point, _UV, point.Phase);
 		}
 		
-		ProcessVertex(originPoint.Position, originPoint.Normal, originLength);
-		ProcessUV(1);
-		ProcessColor(1);
-		
-		ProcessTriangles(Spline.Length);
+		ProcessPoint(originPoint, _UV, 1);
 	}
 
-	void ProcessVertex(Vector2 _Position, Vector2 _Normal, float _Length)
+	void ProcessPoint(UISpline.Point _Point, Rect _UV, float _Phase)
 	{
-		float length = Mathf.Clamp(_Length, Size, Size * MAX_SIZE);
+		float size = m_Size * 0.5f;
 		
-		Vector2 point = _Normal * length;
+		UIVertex left = new UIVertex();
+		left.position = _Point.Position + _Point.Normal * size;
+		left.color    = color;
+		left.uv0      = new Vector2(_UV.xMin, _UV.y + _UV.height * _Phase);
+		left.tangent  = _UV.ToVector();
 		
-		m_Vertices.Add(_Position + point);
-		m_Vertices.Add(_Position - point);
-	}
-
-	void ProcessUV(float _Phase)
-	{
-		float phase = _Phase - SpriteOffset;
+		UIVertex right = new UIVertex();
+		right.position = _Point.Position - _Point.Normal * size;
+		right.color    = color;
+		right.uv0      = new Vector2(_UV.xMax, _UV.y + _UV.height * _Phase);
+		right.tangent  = _UV.ToVector();
 		
-		if (Sprite == null || Sprite.texture == null)
-		{
-			m_UV.Add(new Vector2(0, phase));
-			m_UV.Add(new Vector2(1, phase));
-			return;
-		}
-		
-		Rect uv = Sprite.textureRect;
-		
-		uv.height /= SpriteScale;
-		
-		uv.x      /= Sprite.texture.width;
-		uv.y      /= Sprite.texture.height;
-		uv.width  /= Sprite.texture.width;
-		uv.height /= Sprite.texture.height;
-		
-		float value = uv.y + uv.height * phase;
-		
-		m_UV.Add(new Vector2(uv.xMin, value));
-		m_UV.Add(new Vector2(uv.xMax, value));
-	}
-
-	void ProcessColor(float _Phase)
-	{
-		Color color = m_Gradient.Evaluate(_Phase) * base.color;
-		
-		m_Colors.Add(color);
-		m_Colors.Add(color);
-	}
-
-	void ProcessTriangles(int _Quads)
-	{
-		for (int i = 0; i < _Quads; i++)
-		{
-			m_Triangles.Add(i * 2 + 1);
-			m_Triangles.Add(i * 2 + 0);
-			m_Triangles.Add(i * 2 + 2);
-			
-			m_Triangles.Add(i * 2 + 3);
-			m_Triangles.Add(i * 2 + 1);
-			m_Triangles.Add(i * 2 + 2);
-		}
+		m_Vertices.Add(right);
+		m_Vertices.Add(left);
 	}
 
 	#endregion

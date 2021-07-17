@@ -6,8 +6,9 @@ public class UIHoldHandle : UIHandle
 	public event Action OnStartHold;
 	public event Action OnStopHold;
 
-	[SerializeField] RectTransform m_Marker;
-	[SerializeField] RectOffset    m_Margin;
+	[SerializeField] RectTransform    m_Marker;
+	[SerializeField] UISplineProgress m_ProgressBar;
+	[SerializeField] RectOffset       m_Margin;
 
 	bool    m_Interactable;
 	bool    m_Processed;
@@ -24,6 +25,9 @@ public class UIHoldHandle : UIHandle
 		m_Processed    = false;
 		m_Hold         = false;
 		m_Progress     = 0;
+		
+		if (m_ProgressBar != null)
+			m_ProgressBar.gameObject.SetActive(false);
 	}
 
 	public override void StopReceiveInput()
@@ -46,12 +50,27 @@ public class UIHoldHandle : UIHandle
 		m_Processed    = false;
 		m_Hold         = false;
 		m_Progress     = 0;
+		
+		if (m_ProgressBar != null)
+			m_ProgressBar.gameObject.SetActive(false);
 	}
 
 	public void Progress(float _Progress)
 	{
-		if (!m_Interactable || !m_Hold || m_Processed)
+		if (!m_Interactable || m_Processed)
 			return;
+		
+		if (m_Hold)
+		{
+			m_ProgressBar.Max = _Progress;
+			m_ProgressBar.gameObject.SetActive(true);
+		}
+		else
+		{
+			m_ProgressBar.Min = _Progress;
+			m_ProgressBar.Max = _Progress;
+			return;
+		}
 		
 		m_Progress = _Progress;
 		
@@ -68,7 +87,7 @@ public class UIHoldHandle : UIHandle
 			return;
 		
 		m_Hold     = true;
-		m_Position = RectTransform.InverseTransformPoint(_Position);
+		m_Position = GetLocalPoint(_Position);
 		
 		InvokeStartHold();
 	}
@@ -103,7 +122,7 @@ public class UIHoldHandle : UIHandle
 		if (m_Marker != null)
 			m_Marker.anchoredPosition = new Vector2(position.x, 0);
 		
-		if (rect.Contains(position))
+		if (position.x >= rect.xMin && position.x <= rect.xMax)
 			return;
 		
 		m_Hold      = false;

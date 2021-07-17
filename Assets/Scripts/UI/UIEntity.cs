@@ -14,6 +14,8 @@ public class UIEntity : UIBehaviour
 		}
 	}
 
+	protected bool IsInstanced => gameObject.scene.isLoaded;
+
 	[NonSerialized] RectTransform m_RectTransform;
 
 	public Vector2 GetLocalPoint(Vector2 _Point)

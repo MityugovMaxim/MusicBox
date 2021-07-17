@@ -29,12 +29,12 @@
 				
 				const int index = floor(IN.localTexcoord.x * size);
 				
-				half s = frac(IN.localTexcoord.x * size);
-				half body = step(0.05, s) * step(s, 0.95);
+				const half width = frac(IN.localTexcoord.x * size);
+				const half gap = step(0.05, width) * step(width, 0.95);
 				
 				const half spectrum = _Spectrum[index] * 0.25;
 				
-				const fixed value = body * smoothstep(spectrum, 0, IN.localTexcoord.y);
+				const fixed value = smoothstep(spectrum, 0, IN.localTexcoord.y) * gap;
 				
 				fixed4 color = lerp(_SourceColor, _TargetColor, value);
 				color.a *= 1 - step(value, 0);

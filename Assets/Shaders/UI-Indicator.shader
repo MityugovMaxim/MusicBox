@@ -119,7 +119,7 @@
                 half2 pattern = IN.uv * size;
                 half2 position = ceil(pattern) - size * 0.5 - 0.5;
                 
-                float value = ring(
+                float value = getRing(
                     position,
                     (radius + thickness) * size,
                     (radius - thickness) * size,
@@ -138,7 +138,7 @@
                 #endif
                 
                 #ifdef DEBUG
-                float debug = ring(
+                float debug = getRing(
                     IN.uv - 0.5,
                     radius + thickness,
                     radius - thickness,

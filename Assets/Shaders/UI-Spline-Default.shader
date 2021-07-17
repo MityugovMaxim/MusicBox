@@ -1,4 +1,4 @@
-﻿Shader "UI/Progress"
+﻿Shader "UI/Spline/Default"
 {
 	Properties
 	{
@@ -50,6 +50,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 
+			#include "UIMask.cginc"
 			#include "UnityCG.cginc"
 
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
@@ -57,68 +58,45 @@
 
 			struct vertData
 			{
-				float4 vertex   : POSITION;
-				float4 color    : COLOR;
-				float2 uv       : TEXCOORD0;
-				float2 fade     : TEXCOORD1;
-				float4 progress : NORMAL;
+				float4 vertex : POSITION;
+				fixed4 color  : COLOR;
+				half2 uv      : TEXCOORD0;
+				half4 rect    : TANGENT;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct fragData
 			{
-				float4 vertex   : SV_POSITION;
-				fixed4 color    : COLOR;
-				float2 uv       : TEXCOORD0;
-				half4 mask      : TEXCOORD1;
-				float2 fade     : TEXCOORD2;
-				float4 progress : NORMAL;
+				float4 vertex : SV_POSITION;
+				fixed4 color  : COLOR;
+				half2 uv      : TEXCOORD0;
+				half4 mask    : TEXCOORD1;
+				half4 rect    : TANGENT;
 			};
 
 			sampler2D _MainTex;
-			float4 _MainTex_ST;
 			fixed4 _Color;
-			float4 _ClipRect;
 			fixed4 _TextureSampleAdd;
-			float _UIMaskSoftnessX;
-			float _UIMaskSoftnessY;
 
-			fragData vert(vertData IN)
+			fragData vert(const vertData IN)
 			{
 				fragData OUT;
 				UNITY_SETUP_INSTANCE_ID(IN);
 				
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
-				OUT.progress = IN.progress;
-				OUT.fade = IN.fade;
-				OUT.color = IN.color * _Color;
-				OUT.uv = TRANSFORM_TEX(IN.uv.xy, _MainTex);
-				
-				float2 pixelSize = OUT.vertex.w / float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
-				float4 rect = clamp(_ClipRect, -2e10, 2e10);
-				OUT.mask = half4(
-					IN.vertex.xy * 2 - rect.xy - rect.zw,
-					0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy))
-				);
+				OUT.color  = IN.color * _Color;
+				OUT.uv     = IN.rect.xy + IN.rect.zw * IN.uv;
+				OUT.rect   = IN.rect;
+				OUT.mask   = getUIMask(OUT.vertex.w, IN.vertex.xy);
 				
 				return OUT;
 			}
 
-			fixed4 frag(fragData IN) : SV_Target
+			fixed4 frag(const fragData IN) : SV_Target
 			{
-				half4 color = (tex2D(_MainTex, IN.uv) + _TextureSampleAdd) * IN.color;
+				fixed4 color = (tex2D(_MainTex, IN.uv) + _TextureSampleAdd) * IN.color;
 				
-				#ifdef UNITY_UI_CLIP_RECT
-				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-				color.a *= m.x * m.y;
-				#endif
-				
-				#ifdef UNITY_UI_ALPHACLIP
-				clip (color.a - 0.001);
-				#endif
-				
-				color.a *= smoothstep(IN.progress.x, IN.progress.x + IN.fade.x, IN.progress.z);
-				color.a *= smoothstep(IN.progress.y, IN.progress.y - IN.fade.y, IN.progress.z);
+				color = useUIMask(color, IN.mask);
 				
 				return color;
 			}

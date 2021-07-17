@@ -102,7 +102,7 @@ public class UIHoldIndicator : UIIndicator
 		
 		if (m_Handle != null)
 		{
-			m_Handle.Progress(_Progress);
+			m_Handle.Progress(phase);
 			m_Handle.RectTransform.anchoredPosition = position;
 		}
 	}
