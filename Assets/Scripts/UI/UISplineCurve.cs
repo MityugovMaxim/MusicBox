@@ -53,9 +53,11 @@ public class UISplineCurve : MaskableGraphic
 	static Material m_BlendMaterial;
 	static Material m_AdditiveMaterial;
 
-	[SerializeField] UISpline m_Spline;
-	[SerializeField] Sprite   m_Sprite;
-	[SerializeField] float    m_Size;
+	[SerializeField] UISpline      m_Spline;
+	[SerializeField] Sprite        m_Sprite;
+	[SerializeField] RectTransform m_MinCap;
+	[SerializeField] RectTransform m_MaxCap;
+	[SerializeField] float         m_Size;
 
 	[NonSerialized] UISpline m_SplineCache;
 
@@ -135,6 +137,22 @@ public class UISplineCurve : MaskableGraphic
 			return;
 		
 		m_Vertices.Clear();
+		
+		if (m_MinCap != null)
+		{
+			UISpline.Point first = m_Spline.First();
+			Vector2 position = rectTransform.TransformPoint(first.Position);
+			m_MinCap.position = position;
+			m_MinCap.rotation = first.Normal.ToRotation();
+		}
+		
+		if (m_MaxCap != null)
+		{
+			UISpline.Point last  = m_Spline.Last();
+			Vector2 position = rectTransform.TransformPoint(last.Position);
+			m_MaxCap.position = position;
+			m_MaxCap.rotation = last.Normal.ToRotation(180);
+		}
 		
 		Rect uv = new Rect(0, 0, 1, 1);
 		if (Sprite != null && Sprite.texture != null)

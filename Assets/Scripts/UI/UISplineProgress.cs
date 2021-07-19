@@ -119,12 +119,14 @@ public class UISplineProgress : MaskableGraphic
 		{
 			Vector2 position = rectTransform.TransformPoint(first.Position);
 			m_StartCap.rectTransform.position = position;
+			m_StartCap.rectTransform.rotation = first.Normal.ToRotation();
 		}
 		
 		if (m_EndCap != null)
 		{
 			Vector2 position = rectTransform.TransformPoint(last.Position);
 			m_EndCap.rectTransform.position = position;
+			m_EndCap.rectTransform.rotation = last.Normal.ToRotation(180);
 		}
 		
 		if (Mathf.Approximately(Min, Max) || Min >= Max)

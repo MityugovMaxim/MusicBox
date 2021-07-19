@@ -1,12 +1,11 @@
-using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class UIHoldIndicator : UIIndicator
 {
 	public override UIHandle Handle      => m_Handle;
-	public override float   MinPadding => m_MinCap.rect.yMin;
-	public override float   MaxPadding => m_MaxCap.rect.yMax;
+	public override float   MinPadding => 150;
+	public override float   MaxPadding => 150;
 
 	Animator Animator
 	{
@@ -24,8 +23,6 @@ public class UIHoldIndicator : UIIndicator
 	static readonly int m_HoldParameterID    = Animator.StringToHash("Hold");
 
 	[SerializeField] UIHoldHandle     m_Handle;
-	[SerializeField] RectTransform    m_MinCap;
-	[SerializeField] RectTransform    m_MaxCap;
 	[SerializeField] UISpline         m_Spline;
 	[SerializeField] UISplineProgress m_Highlight;
 	[SerializeField] UISplineProgress m_Progress;
@@ -72,12 +69,6 @@ public class UIHoldIndicator : UIIndicator
 		m_Spline.Samples = Mathf.FloorToInt(m_Spline.GetLength(1) * m_SamplesPerUnit);
 		
 		m_Spline.Rebuild();
-		
-		if (m_MinCap != null)
-			m_MinCap.anchoredPosition = m_Spline.First().Position; 
-		
-		if (m_MaxCap != null)
-			m_MaxCap.anchoredPosition = m_Spline.Last().Position;
 		
 		if (m_Progress != null)
 		{
