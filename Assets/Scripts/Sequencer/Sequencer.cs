@@ -78,7 +78,10 @@ public partial class Sequencer : MonoBehaviour
 
 	void OnDisable()
 	{
-		Stop();
+		if (!Application.isPlaying)
+			return;
+		
+		Pause();
 	}
 
 	void LateUpdate()

@@ -8,6 +8,7 @@ public class UIProgressBar : UIEntity
 	[SerializeField, Range(0, 1)] float m_Max;
 	[SerializeField]              Image m_Graphic;
 
+	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
 		base.OnValidate();
@@ -17,6 +18,7 @@ public class UIProgressBar : UIEntity
 		
 		Process(m_Progress);
 	}
+	#endif
 
 	public void Process(float _Time, float _Length)
 	{

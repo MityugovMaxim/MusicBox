@@ -17,7 +17,9 @@ public class UITapTrack : UITrack<TapClip>
 		base.Initialize(_Clips);
 		
 		if (Pool != null)
-			Pool.Release();
+		{
+			//Pool.Release();
+		}
 		else
 			Pool = new Pool<UITapIndicator>(m_Indicator, MIN_CAPACITY);
 		

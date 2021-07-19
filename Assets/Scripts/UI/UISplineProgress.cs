@@ -106,14 +106,29 @@ public class UISplineProgress : MaskableGraphic
 	{
 		_VertexHelper.Clear();
 		
-		if (m_Spline == null || Mathf.Approximately(m_Min, m_Max) || m_Min >= m_Max)
+		if (m_Spline == null)
 			return;
 		
-		float min = m_Min + m_Offset;
-		float max = m_Max + m_Offset;
+		float min = Min + Offset;
+		float max = Max + Offset;
 		
 		UISpline.Point first = m_Spline.GetPoint(min);
 		UISpline.Point last  = m_Spline.GetPoint(max);
+		
+		if (m_StartCap != null)
+		{
+			Vector2 position = rectTransform.TransformPoint(first.Position);
+			m_StartCap.rectTransform.position = position;
+		}
+		
+		if (m_EndCap != null)
+		{
+			Vector2 position = rectTransform.TransformPoint(last.Position);
+			m_EndCap.rectTransform.position = position;
+		}
+		
+		if (Mathf.Approximately(Min, Max) || Min >= Max)
+			return;
 		
 		Rect uv = new Rect(0, 0, 1, 1);
 		if (m_Sprite != null && m_Sprite.texture != null)
@@ -154,20 +169,6 @@ public class UISplineProgress : MaskableGraphic
 				i * 2 + 1,
 				i * 2 + 2
 			);
-		}
-		
-		if (m_StartCap != null)
-		{
-			UISpline.Point point    = first;
-			Vector2        position = rectTransform.TransformPoint(point.Position);
-			m_StartCap.rectTransform.position = position;
-		}
-		
-		if (m_EndCap != null)
-		{
-			UISpline.Point point    = last;
-			Vector2        position = rectTransform.TransformPoint(point.Position);
-			m_EndCap.rectTransform.position = position;
 		}
 	}
 

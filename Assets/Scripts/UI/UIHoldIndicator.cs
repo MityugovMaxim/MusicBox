@@ -83,7 +83,6 @@ public class UIHoldIndicator : UIIndicator
 		{
 			m_Progress.Min = 0;
 			m_Progress.Max = 0;
-			m_Progress.gameObject.SetActive(false);
 		}
 		
 		if (m_Handle != null)
@@ -114,11 +113,10 @@ public class UIHoldIndicator : UIIndicator
 			
 			m_Handle.RectTransform.anchoredPosition = position;
 			
-			if (m_Progress != null && m_Handle.MaxProgress > m_Handle.MinProgress)
+			if (m_Progress != null)
 			{
 				m_Progress.Min = m_Handle.MinProgress;
 				m_Progress.Max = m_Handle.MaxProgress;
-				m_Progress.gameObject.SetActive(true);
 			}
 		}
 	}
@@ -137,7 +135,9 @@ public class UIHoldIndicator : UIIndicator
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		Animator.SetTrigger(m_RestoreParameterID);
-		Animator.Update(0);
+		
+		if (gameObject.activeInHierarchy)
+			Animator.Update(0);
 	}
 
 	void Success(float _Progress)
