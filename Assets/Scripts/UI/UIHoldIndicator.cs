@@ -3,9 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class UIHoldIndicator : UIIndicator
 {
-	public override UIHandle Handle      => m_Handle;
-	public override float   MinPadding => 150;
-	public override float   MaxPadding => 150;
+	public override UIHandle Handle     => m_Handle;
+	public override float    MinPadding => 150;
+	public override float    MaxPadding => 150;
 
 	Animator Animator
 	{
