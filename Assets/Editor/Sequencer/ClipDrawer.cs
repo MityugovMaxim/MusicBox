@@ -200,7 +200,7 @@ public class ClipDrawer
 
 	protected virtual void DrawHandles()
 	{
-		const float minDuration = 0.1f;
+		const float minDuration = 0.01f;
 		
 		RectOffset handlePadding = new RectOffset(100, 100, 0, 0);
 		
@@ -376,7 +376,7 @@ public class ClipDrawer
 
 	protected virtual void Resize(float _MinTime, float _MaxTime)
 	{
-		MinTime  = _MinTime;
+		MinTime = _MinTime;
 		MaxTime = _MaxTime;
 		
 		ClipObject.ApplyModifiedProperties();

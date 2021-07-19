@@ -2,9 +2,8 @@
 {
 	Properties
 	{
-		_SourceColor ("Source", Color) = (1,1,1,1)
-		_TargetColor ("Target", Color) = (1,1,1,1)
 		_Scale ("Scale", Float) = 0.9
+		_Dampen ("Dampen", Range(0, 1)) = 0.1
 	}
 
 	 SubShader
@@ -16,16 +15,15 @@
 		Pass
 		{
 			CGPROGRAM
-			#include "UnityCustomRenderTexture.cginc"
 			#include "Math.cginc"
+			#include "Color.cginc"
+			#include "UnityCustomRenderTexture.cginc"
 			#pragma vertex CustomRenderTextureVertexShader
 			#pragma fragment frag
 
 			float _Spectrum[64];
-			fixed4 _SourceColor;
-			fixed4 _TargetColor;
-			fixed4 _TraceColor;
 			fixed _Scale;
+			fixed _Dampen;
 
 			float4 frag(v2f_customrendertexture IN) : COLOR
 			{
@@ -52,22 +50,14 @@
 				}
 				value *= value;
 				
-				fixed4 bend = lerp(_SourceColor, _TargetColor, value);
-				bend.a = value;
-				
 				const half2 uv = scale(IN.localTexcoord, half2(0.5, 0.5), half2(_Scale, _Scale));
 				
 				fixed4 color = tex2D(_SelfTexture2D, uv);
+				color.a *= 1 - _Dampen;
 				
-				const float average = (color.r + color.g + color.b) * 0.333333;
+				color = clamp(color + value, 0, 1);
 				
-				color *= lerp(
-					fixed4(0.32, 0.64, 0.72, 0.8),
-					fixed4(0.72, 0.10, 0.23, 0.8),
-					average
-				);
-				
-				color += bend;
+				color = BACKGROUND_BY_ALPHA(color);
 				
 				return color;
 			}

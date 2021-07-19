@@ -178,7 +178,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			if (indicator == null)
 			{
-				m_InactiveHandles.RemoveAt(i);
+				m_InactiveIndicators.RemoveAt(i);
 				continue;
 			}
 			

@@ -136,7 +136,7 @@ public partial class Track<T> : Track where T : Clip
 	protected List<T> Clips => m_Clips;
 
 	[SerializeField] float   m_Offset;
-	[SerializeField] List<T> m_Clips;
+	[SerializeField] List<T> m_Clips = new List<T>();
 
 	readonly List<T> m_Buffer = new List<T>();
 
