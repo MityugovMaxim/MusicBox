@@ -12,22 +12,20 @@ public class UITapTrack : UITrack<TapClip>
 
 	readonly Dictionary<TapClip, UITapIndicator> m_Indicators = new Dictionary<TapClip, UITapIndicator>();
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		if (Pool != null)
+			Pool.Release();
+	}
+
 	public override void Initialize(List<TapClip> _Clips)
 	{
 		base.Initialize(_Clips);
 		
-		if (Pool != null)
-		{
-			//Pool.Release();
-		}
-		else
+		if (Pool == null)
 			Pool = new Pool<UITapIndicator>(m_Indicator, MIN_CAPACITY);
-		
-		#if UNITY_EDITOR
-		UITapIndicator[] indicators = GetComponentsInChildren<UITapIndicator>();
-		foreach (UITapIndicator indicator in indicators)
-			Pool.Remove(indicator);
-		#endif
 	}
 
 	protected override void RemoveIndicator(TapClip _Clip)

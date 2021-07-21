@@ -13,7 +13,7 @@ public class ColorClip : Clip
 	#if UNITY_EDITOR
 	void OnValidate()
 	{
-		if (m_Track != null)
+		if (Application.isEditor && !Application.isPlaying && m_Track != null)
 			m_Track.Initialize(Sequencer);
 	}
 	#endif

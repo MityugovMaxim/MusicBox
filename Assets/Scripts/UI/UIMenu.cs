@@ -20,19 +20,20 @@ public class UIMenu : UIEntity
 		base.Awake();
 		
 		m_CanvasGroup                = GetComponent<CanvasGroup>();
+		m_CanvasGroup.alpha          = 0;
 		m_CanvasGroup.interactable   = false;
 		m_CanvasGroup.blocksRaycasts = false;
 	}
 
-	public void Toggle()
+	public void Toggle(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
 	{
 		if (m_Shown)
-			Hide();
+			Hide(_Instant, _Started, _Finished);
 		else
-			Show();
+			Show(_Instant, _Started, _Finished);
 	}
 
-	public void Show(UnityAction _Started = null, UnityAction _Finished = null)
+	public void Show(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
 	{
 		if (m_Shown)
 			return;
@@ -48,12 +49,29 @@ public class UIMenu : UIEntity
 		if (m_Routine != null)
 			StopCoroutine(m_Routine);
 		
-		m_Routine = ShowRoutine(0.2f);
-		
-		StartCoroutine(m_Routine);
+		if (_Instant || !gameObject.activeInHierarchy)
+		{
+			m_CanvasGroup.alpha          = 1;
+			m_CanvasGroup.interactable   = true;
+			m_CanvasGroup.blocksRaycasts = true;
+			
+			OnShowFinished();
+			
+			if (m_OnShowFinished != null)
+			{
+				m_OnShowFinished.Invoke();
+				m_OnShowFinished.RemoveAllListeners();
+			}
+		}
+		else
+		{
+			m_Routine = ShowRoutine(0.2f);
+			
+			StartCoroutine(m_Routine);
+		}
 	}
 
-	public virtual void Hide(UnityAction _Started = null, UnityAction _Finished = null)
+	public void Hide(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
 	{
 		if (!m_Shown)
 			return;
@@ -69,9 +87,26 @@ public class UIMenu : UIEntity
 		if (m_Routine != null)
 			StopCoroutine(m_Routine);
 		
-		m_Routine = HideRoutine(0.2f);
-		
-		StartCoroutine(m_Routine);
+		if (_Instant || !gameObject.activeInHierarchy)
+		{
+			m_CanvasGroup.alpha          = 0;
+			m_CanvasGroup.interactable   = false;
+			m_CanvasGroup.blocksRaycasts = false;
+			
+			OnHideFinished();
+			
+			if (m_OnHideFinished != null)
+			{
+				m_OnHideFinished.Invoke();
+				m_OnHideFinished.RemoveAllListeners();
+			}
+		}
+		else
+		{
+			m_Routine = HideRoutine(0.2f);
+			
+			StartCoroutine(m_Routine);
+		}
 	}
 
 	protected virtual void OnShowStarted() { }

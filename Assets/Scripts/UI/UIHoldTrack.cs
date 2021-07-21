@@ -12,20 +12,20 @@ public class UIHoldTrack : UITrack<HoldClip>
 
 	readonly Dictionary<HoldClip, UIHoldIndicator> m_Indicators = new Dictionary<HoldClip, UIHoldIndicator>();
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		if (Pool != null)
+			Pool.Release();
+	}
+
 	public override void Initialize(List<HoldClip> _Clips)
 	{
 		base.Initialize(_Clips);
 		
-		if (Pool != null)
-			Pool.Release();
-		else
+		if (Pool == null)
 			Pool = new Pool<UIHoldIndicator>(m_Indicator, MIN_CAPACITY);
-		
-		#if UNITY_EDITOR
-		UIHoldIndicator[] indicators = GetComponentsInChildren<UIHoldIndicator>();
-		foreach (UIHoldIndicator indicator in indicators)
-			Pool.Remove(indicator);
-		#endif
 	}
 
 	protected override void RemoveIndicator(HoldClip _Clip)

@@ -56,6 +56,18 @@ public partial class Sequencer : MonoBehaviour
 
 	public Track[] Tracks => m_Tracks;
 
+	public event UnityAction<float, float> OnSample
+	{
+		add => m_OnSample.AddListener(value);
+		remove => m_OnSample.RemoveListener(value);
+	}
+
+	public event UnityAction OnComplete
+	{
+		add => m_OnComplete.AddListener(value);
+		remove => m_OnComplete.RemoveListener(value);
+	}
+
 	[SerializeField] Track[]     m_Tracks;
 	[SerializeField] float       m_Time;
 	[SerializeField] float       m_Length;

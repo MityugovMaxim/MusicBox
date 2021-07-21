@@ -45,7 +45,7 @@ public class UIEntity : UIBehaviour
 
 	public Rect GetWorldRect()
 	{
-		return RectTransform.TransformRect(GetLocalRect());
+		return RectTransform.GetWorldRect();
 	}
 
 	public Rect GetWorldRect(RectOffset _Margin)

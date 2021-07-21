@@ -34,6 +34,9 @@ public partial class ColorTrack : Track<ColorClip>
 	{
 		base.Initialize(_Sequencer);
 		
+		if (ColorProcessor == null)
+			return;
+		
 		ColorScheme colorScheme = ColorProcessor.DefaultColorScheme;
 		
 		foreach (ColorClip clip in Clips)
@@ -49,10 +52,12 @@ public partial class ColorTrack : Track<ColorClip>
 		}
 	}
 
+	#if UNITY_EDITOR
 	public override void Sort()
 	{
 		base.Sort();
 		
 		Initialize(Sequencer);
 	}
+	#endif
 }

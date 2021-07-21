@@ -12,20 +12,20 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 
 	readonly Dictionary<DoubleClip, UIDoubleIndicator> m_Indicators = new Dictionary<DoubleClip, UIDoubleIndicator>();
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		if (Pool != null)
+			Pool.Release();
+	}
+
 	public override void Initialize(List<DoubleClip> _Clips)
 	{
 		base.Initialize(_Clips);
 		
-		if (Pool != null)
-			Pool.Release();
-		else
+		if (Pool == null)
 			Pool = new Pool<UIDoubleIndicator>(m_Indicator, MIN_CAPACITY);
-		
-		#if UNITY_EDITOR
-		UIDoubleIndicator[] indicators = GetComponentsInChildren<UIDoubleIndicator>();
-		foreach (UIDoubleIndicator indicator in indicators)
-			Pool.Remove(indicator);
-		#endif
 	}
 
 	protected override void RemoveIndicator(DoubleClip _Clip)
