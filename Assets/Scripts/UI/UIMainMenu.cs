@@ -1,20 +1,24 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 public class UIMainMenu : UIMenu
 {
+	[Inject] Thumbnail.Factory m_ThumbnailFactory;
+	[Inject] LevelProvider     m_LevelProvider;
+	[Inject] UIPauseMenu       m_PauseMenu;
+	[Inject] UIGameMenu        m_GameMenu;
+
 	[SerializeField] UIPreview     m_Preview;
 	[SerializeField] LevelInfo[]   m_LevelInfos;
 	[SerializeField] RectTransform m_GridContent;
 	[SerializeField] CanvasGroup   m_GridGroup;
 	[SerializeField] CanvasGroup   m_ControlGroup;
 	[SerializeField] ScrollRect    m_Scroll;
-	[SerializeField] UIPauseMenu   m_PauseMenu;
-	[SerializeField] UIGameMenu    m_GameMenu;
 
-	Preview[] m_Previews;
-	int       m_PreviewIndex = -1;
+	Thumbnail[] m_Thumbnails;
+	int         m_ThumbnailIndex = -1;
 
 	IEnumerator m_GridRoutine;
 	IEnumerator m_ControlRoutine;
@@ -28,7 +32,7 @@ public class UIMainMenu : UIMenu
 		LoadPreviews();
 	}
 
-	public void ShowPreview(int _PreviewIndex)
+	public void ShowPreview(int _ThumbnailIndex)
 	{
 		if (m_Preview == null)
 		{
@@ -36,26 +40,26 @@ public class UIMainMenu : UIMenu
 			return;
 		}
 		
-		if (m_PreviewIndex == _PreviewIndex)
+		if (m_ThumbnailIndex == _ThumbnailIndex)
 		{
 			HidePreview();
 			return;
 		}
 		
-		Preview preview = m_Previews[_PreviewIndex];
-		if (preview == null)
+		Thumbnail thumbnail = m_Thumbnails[_ThumbnailIndex];
+		if (thumbnail == null)
 		{
-			Debug.LogErrorFormat(gameObject, "[UIMainMenu] Show preview failed. Preview is null at '{0}' index.", _PreviewIndex);
+			Debug.LogErrorFormat(gameObject, "[UIMainMenu] Show preview failed. Thumbnail is null at '{0}' index.", _ThumbnailIndex);
 			HidePreview();
 			return;
 		}
 		
-		m_PreviewIndex = _PreviewIndex;
+		m_ThumbnailIndex = _ThumbnailIndex;
 		
 		EnableControl();
 		DisableGrid();
 		
-		m_Preview.Show(preview);
+		m_Preview.Show(thumbnail);
 	}
 
 	public void HidePreview()
@@ -66,7 +70,7 @@ public class UIMainMenu : UIMenu
 			return;
 		}
 		
-		m_PreviewIndex = -1;
+		m_ThumbnailIndex = -1;
 		
 		DisableControl();
 		EnableGrid();
@@ -83,7 +87,7 @@ public class UIMainMenu : UIMenu
 			return;
 		}
 		
-		int previewIndex = MathUtility.Repeat(m_PreviewIndex + 1, m_Previews.Length);
+		int previewIndex = MathUtility.Repeat(m_ThumbnailIndex + 1, m_Thumbnails.Length);
 		
 		Recenter(previewIndex);
 		
@@ -98,7 +102,7 @@ public class UIMainMenu : UIMenu
 			return;
 		}
 		
-		int previewIndex = MathUtility.Repeat(m_PreviewIndex - 1, m_Previews.Length);
+		int previewIndex = MathUtility.Repeat(m_ThumbnailIndex - 1, m_Thumbnails.Length);
 		
 		Recenter(previewIndex);
 		
@@ -107,13 +111,13 @@ public class UIMainMenu : UIMenu
 
 	public void Play()
 	{
-		if (m_PreviewIndex < 0 || m_PreviewIndex >= m_LevelInfos.Length)
+		if (m_ThumbnailIndex < 0 || m_ThumbnailIndex >= m_LevelInfos.Length)
 		{
-			Debug.LogError("[UIMainMenu] Play failed. Preview index is out of range.", gameObject);
+			Debug.LogError("[UIMainMenu] Play failed. Thumbnail index is out of range.", gameObject);
 			return;
 		}
 		
-		LevelInfo levelInfo = m_LevelInfos[m_PreviewIndex];
+		LevelInfo levelInfo = m_LevelInfos[m_ThumbnailIndex];
 		
 		if (levelInfo == null)
 		{
@@ -121,61 +125,38 @@ public class UIMainMenu : UIMenu
 			return;
 		}
 		
-		levelInfo.InstantiateLevel(
-			null,
-			_Level =>
-			{
-				Hide(
-					false,
-					() =>
-					{
-						if (m_PauseMenu != null)
-							m_PauseMenu.Initialize(_Level);
-						
-						if (m_GameMenu != null)
-						{
-							m_GameMenu.Initialize(_Level, levelInfo.Title, levelInfo.Artist);
-							m_GameMenu.Show(true);
-						}
-						
-						_Level.Initialize();
-					},
-					_Level.Play
-				);
-			}
-		);
+		m_LevelProvider.Create(levelInfo);
+		
+		if (m_GameMenu != null)
+			m_GameMenu.Show(true);
+		
+		Hide(false, null, m_LevelProvider.Play);
 	}
 
 	void LoadPreviews()
 	{
 		int count = m_LevelInfos.Length;
 		
-		m_Previews = new Preview[count];
+		m_Thumbnails = new Thumbnail[count];
 		
 		int index = 0;
 		foreach (var levelInfo in m_LevelInfos)
 		{
 			RectTransform mount = CreateMount(m_GridContent);
 			
-			int indexClosure = index;
+			Thumbnail thumbnail = m_ThumbnailFactory.Create($"{levelInfo.ID}/thumbnail", mount);
 			
-			levelInfo.InstantiatePreview(
-				mount,
-				_Preview =>
-				{
-					m_Previews[indexClosure] = _Preview;
-					
-					_Preview.OnClick += () => ShowPreview(indexClosure);
-				}
-			);
+			var indexClosure = index;
 			
-			index++;
+			thumbnail.OnClick += () => ShowPreview(indexClosure);
+			
+			m_Thumbnails[index++] = thumbnail;
 		}
 	}
 
 	void Recenter(int _PreviewIndex)
 	{
-		Rect source = m_Previews[_PreviewIndex].GetWorldRect();
+		Rect source = m_Thumbnails[_PreviewIndex].GetWorldRect();
 		Rect target = m_Scroll.content.GetWorldRect();
 		
 		float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);
@@ -189,7 +170,7 @@ public class UIMainMenu : UIMenu
 		DisableControl(true);
 		EnableGrid(true);
 		
-		m_PreviewIndex = -1;
+		m_ThumbnailIndex = -1;
 		
 		if (m_Preview != null)
 			m_Preview.Hide(true);

@@ -1,33 +1,34 @@
 ﻿using UnityEngine;
+using Zenject;
 
 public class UIPauseMenu : UIMenu
 {
-	[SerializeField] UIMainMenu m_MainMenu;
-
-	Level m_Level;
-
-	public void Initialize(Level _Level)
-	{
-		m_Level = _Level;
-	}
-
-	public void Resume()
-	{
-		Hide();
-	}
+	[Inject] UIMainMenu    m_MainMenu;
+	[Inject] LevelProvider m_LevelProvider;
 
 	public void Restart()
 	{
-		if (m_Level != null)
-			m_Level.Restart();
+		if (m_LevelProvider == null)
+		{
+			Debug.LogError("[UIPauseMenu] Restart level failed. Level provider is null.", gameObject);
+			return;
+		}
+		
+		m_LevelProvider.Stop();
 		
 		Hide();
 	}
 
 	public void Leave()
 	{
-		if (m_Level != null)
-			Destroy(m_Level.gameObject);
+		if (m_LevelProvider == null)
+		{
+			Debug.LogError("[UIPauseMenu] Leave level failed. Level provider is null.", gameObject);
+			return;
+		}
+		
+		m_LevelProvider.Stop();
+		m_LevelProvider.Remove();
 		
 		if (m_MainMenu != null)
 			m_MainMenu.Show();
@@ -35,13 +36,13 @@ public class UIPauseMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
-		if (m_Level != null)
-			m_Level.Pause();
+		if (m_LevelProvider != null)
+			m_LevelProvider.Pause();
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_Level != null)
-			m_Level.Play();
+		if (m_LevelProvider != null)
+			m_LevelProvider.Play();
 	}
 }

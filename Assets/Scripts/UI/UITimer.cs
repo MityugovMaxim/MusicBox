@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UITimer : UIEntity, IPointerDownHandler
+public class UITimer : UIEntity, IPointerDownHandler, ISampleReceiver
 {
 	public enum TimerMode
 	{
@@ -28,7 +28,7 @@ public class UITimer : UIEntity, IPointerDownHandler
 		LoadMode();
 	}
 
-	public void Process(float _Time, float _Length)
+	public void Sample(float _Time, float _Length)
 	{
 		m_Time   = _Time;
 		m_Length = _Length;
@@ -57,7 +57,9 @@ public class UITimer : UIEntity, IPointerDownHandler
 				m_Mode = TimerMode.ActualTime;
 				break;
 		}
-		Process(m_Time, m_Length);
+		
+		Sample(m_Time, m_Length);
+		
 		SaveMode();
 	}
 

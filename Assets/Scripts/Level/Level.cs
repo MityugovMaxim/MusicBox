@@ -1,31 +1,46 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+using UnityEngine;
+using Zenject;
 
 [RequireComponent(typeof(Sequencer))]
 public class Level : MonoBehaviour
 {
-	public event UnityAction<float, float> OnSample;
-	public event UnityAction               OnComplete;
+	Sequencer      m_Sequencer;
+	ScoreProcessor m_ScoreProcessor;
+	AudioProcessor m_AudioProcessor;
+	ColorProcessor m_ColorProcessor;
 
-	Sequencer m_Sequencer;
-
-	void Awake()
+	[Inject]
+	public void Construct(
+		Sequencer             _Sequencer,
+		ScoreProcessor        _ScoreProcessor,
+		AudioProcessor        _AudioProcessor,
+		ColorProcessor        _ColorProcessor,
+		List<ISampleReceiver> _SampleReceivers
+	)
 	{
-		m_Sequencer = GetComponent<Sequencer>();
-	}
-
-	public void Initialize()
-	{
+		m_Sequencer      = _Sequencer;
+		m_ScoreProcessor = _ScoreProcessor;
+		m_AudioProcessor = _AudioProcessor;
+		m_ColorProcessor = _ColorProcessor;
+		
 		if (m_Sequencer == null)
 		{
 			Debug.LogErrorFormat(gameObject, "[Level] Initialize level failed. Sequencer is not found at level '{0}'", name);
 			return;
 		}
 		
-		m_Sequencer.Initialize();
+		if (m_ScoreProcessor != null)
+			m_ScoreProcessor.Restore();
 		
-		m_Sequencer.OnSample   += OnSample;
-		m_Sequencer.OnComplete += OnComplete;
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.Restore();
+		
+		if (m_ColorProcessor != null)
+			m_ColorProcessor.Restore();
+		
+		m_Sequencer.Initialize();
 	}
 
 	public void Play()
@@ -50,7 +65,7 @@ public class Level : MonoBehaviour
 		m_Sequencer.Pause();
 	}
 
-	public void Restart()
+	public void Stop()
 	{
 		if (m_Sequencer == null)
 		{
@@ -59,5 +74,14 @@ public class Level : MonoBehaviour
 		}
 		
 		m_Sequencer.Stop();
+		
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.Restore();
+		
+		if (m_ColorProcessor != null)
+			m_ColorProcessor.Restore();
 	}
+
+	[UsedImplicitly]
+	public class Factory : PlaceholderFactory<string, Level> { }
 }

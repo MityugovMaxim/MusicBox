@@ -1,15 +1,16 @@
+using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class UIMenu : UIEntity
 {
 	[SerializeField] UIBlur     m_Blur;
-	[SerializeField] UnityEvent m_OnShowStarted;
-	[SerializeField] UnityEvent m_OnShowFinished;
-	[SerializeField] UnityEvent m_OnHideStarted;
-	[SerializeField] UnityEvent m_OnHideFinished;
+
+	Action m_ShowStarted;
+	Action m_ShowFinished;
+	Action m_HideStarted;
+	Action m_HideFinished;
 
 	CanvasGroup m_CanvasGroup;
 	bool        m_Shown;
@@ -25,7 +26,7 @@ public class UIMenu : UIEntity
 		m_CanvasGroup.blocksRaycasts = false;
 	}
 
-	public void Toggle(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
+	public void Toggle(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
 		if (m_Shown)
 			Hide(_Instant, _Started, _Finished);
@@ -33,18 +34,14 @@ public class UIMenu : UIEntity
 			Show(_Instant, _Started, _Finished);
 	}
 
-	public void Show(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
+	public void Show(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
 		if (m_Shown)
 			return;
 		
-		m_Shown = true;
-		
-		if (_Started != null)
-			m_OnShowStarted.AddListener(_Started);
-		
-		if (_Finished != null)
-			m_OnShowFinished.AddListener(_Finished);
+		m_Shown        = true;
+		m_ShowStarted  = _Started;
+		m_ShowFinished = _Finished;
 		
 		if (m_Routine != null)
 			StopCoroutine(m_Routine);
@@ -55,13 +52,13 @@ public class UIMenu : UIEntity
 			m_CanvasGroup.interactable   = true;
 			m_CanvasGroup.blocksRaycasts = true;
 			
+			OnShowStarted();
+			
+			InvokeShowStarted();
+			
 			OnShowFinished();
 			
-			if (m_OnShowFinished != null)
-			{
-				m_OnShowFinished.Invoke();
-				m_OnShowFinished.RemoveAllListeners();
-			}
+			InvokeShowFinished();
 		}
 		else
 		{
@@ -71,18 +68,14 @@ public class UIMenu : UIEntity
 		}
 	}
 
-	public void Hide(bool _Instant = false, UnityAction _Started = null, UnityAction _Finished = null)
+	public void Hide(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
 		if (!m_Shown)
 			return;
 		
-		m_Shown = false;
-		
-		if (_Started != null)
-			m_OnHideStarted.AddListener(_Started);
-		
-		if (_Finished != null)
-			m_OnHideFinished.AddListener(_Finished);
+		m_Shown        = false;
+		m_HideStarted  = _Started;
+		m_HideFinished = _Finished;
 		
 		if (m_Routine != null)
 			StopCoroutine(m_Routine);
@@ -93,13 +86,13 @@ public class UIMenu : UIEntity
 			m_CanvasGroup.interactable   = false;
 			m_CanvasGroup.blocksRaycasts = false;
 			
+			OnHideStarted();
+			
+			InvokeHideStarted();
+			
 			OnHideFinished();
 			
-			if (m_OnHideFinished != null)
-			{
-				m_OnHideFinished.Invoke();
-				m_OnHideFinished.RemoveAllListeners();
-			}
+			InvokeHideFinished();
 		}
 		else
 		{
@@ -124,11 +117,7 @@ public class UIMenu : UIEntity
 		
 		OnShowStarted();
 		
-		if (m_OnShowStarted != null)
-		{
-			m_OnShowStarted.Invoke();
-			m_OnShowStarted.RemoveAllListeners();
-		}
+		InvokeShowStarted();
 		
 		if (m_Blur != null)
 			m_Blur.Blur();
@@ -155,22 +144,14 @@ public class UIMenu : UIEntity
 		
 		OnShowFinished();
 		
-		if (m_OnShowFinished != null)
-		{
-			m_OnShowFinished.Invoke();
-			m_OnShowFinished.RemoveAllListeners();
-		}
+		InvokeShowFinished();
 	}
 
 	IEnumerator HideRoutine(float _Duration)
 	{
 		OnHideStarted();
 		
-		if (m_OnHideStarted != null)
-		{
-			m_OnHideStarted.Invoke();
-			m_OnHideStarted.RemoveAllListeners();
-		}
+		InvokeHideStarted();
 		
 		float source = m_CanvasGroup.alpha;
 		float target = 0;
@@ -195,10 +176,34 @@ public class UIMenu : UIEntity
 		
 		OnHideFinished();
 		
-		if (m_OnHideFinished != null)
-		{
-			m_OnHideFinished.Invoke();
-			m_OnHideFinished.RemoveAllListeners();
-		}
+		InvokeHideFinished();
+	}
+
+	void InvokeShowStarted()
+	{
+		Action action = m_ShowStarted;
+		m_ShowStarted = null;
+		action?.Invoke();
+	}
+
+	void InvokeShowFinished()
+	{
+		Action action = m_ShowFinished;
+		m_ShowFinished = null;
+		action?.Invoke();
+	}
+
+	void InvokeHideStarted()
+	{
+		Action action = m_HideStarted;
+		m_HideStarted = null;
+		action?.Invoke();
+	}
+
+	void InvokeHideFinished()
+	{
+		Action action = m_HideFinished;
+		m_HideFinished = null;
+		action?.Invoke();
 	}
 }

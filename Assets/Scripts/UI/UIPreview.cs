@@ -10,31 +10,29 @@ public class UIPreview : UIEntity
 
 	bool m_Shown;
 
-	Preview       m_Preview;
-	RectTransform m_Mount;
-	IEnumerator   m_MoveRoutine;
+	Thumbnail   m_Thumbnail;
+	IEnumerator m_MoveRoutine;
 
-	public void Show(Preview _Preview)
+	public void Show(Thumbnail _Thumbnail)
 	{
-		if (m_Preview != _Preview)
+		if (m_Thumbnail != _Thumbnail)
 		{
-			if (m_Preview != null)
+			if (m_Thumbnail != null)
 			{
-				m_Preview.RectTransform.SetParent(m_Mount);
-				m_Preview.RectTransform.anchorMin = Vector2.zero;
-				m_Preview.RectTransform.anchorMax = Vector2.one;
-				m_Preview.RectTransform.offsetMin = Vector2.zero;
-				m_Preview.RectTransform.offsetMax = Vector2.zero;
+				m_Thumbnail.RectTransform.SetParent(m_Thumbnail.Mount);
+				m_Thumbnail.RectTransform.anchorMin = Vector2.zero;
+				m_Thumbnail.RectTransform.anchorMax = Vector2.one;
+				m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
+				m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
 			}
 			
-			m_Preview = _Preview;
-			m_Mount   = m_Preview.RectTransform.parent as RectTransform;
+			m_Thumbnail = _Thumbnail;
 			
-			m_Preview.RectTransform.SetParent(m_Content, true);
+			m_Thumbnail.RectTransform.SetParent(m_Content, true);
 		}
 		
 		Rect source = m_Content.GetWorldRect();
-		Rect target = m_Preview.GetWorldRect();
+		Rect target = m_Thumbnail.GetWorldRect();
 		
 		Vector2 anchorMin = new Vector2(
 			(target.xMin - source.xMin) / source.width,
@@ -46,12 +44,12 @@ public class UIPreview : UIEntity
 			(target.yMax - source.yMin) / source.height
 		);
 		
-		m_Preview.RectTransform.anchorMin = anchorMin;
-		m_Preview.RectTransform.anchorMax = anchorMax;
-		m_Preview.RectTransform.offsetMin = Vector2.zero;
-		m_Preview.RectTransform.offsetMax = Vector2.zero;
+		m_Thumbnail.RectTransform.anchorMin = anchorMin;
+		m_Thumbnail.RectTransform.anchorMax = anchorMax;
+		m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
+		m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
 		
-		Move(_Preview, Vector2.zero, Vector2.one, m_Shown);
+		Move(_Thumbnail, Vector2.zero, Vector2.one, m_Shown);
 		
 		m_Shown = true;
 	}
@@ -64,7 +62,7 @@ public class UIPreview : UIEntity
 		m_Shown = false;
 		
 		Rect source = m_Content.GetWorldRect();
-		Rect target = m_Mount.GetWorldRect();
+		Rect target = m_Thumbnail.Mount.GetWorldRect();
 		
 		Vector2 anchorMin = new Vector2(
 			(target.xMin - source.xMin) / source.width,
@@ -77,20 +75,19 @@ public class UIPreview : UIEntity
 		);
 		
 		Move(
-			m_Preview,
+			m_Thumbnail,
 			anchorMin,
 			anchorMax,
 			_Instant,
 			() =>
 			{
-				m_Preview.RectTransform.SetParent(m_Mount, true);
-				m_Preview.RectTransform.anchorMin = Vector2.zero;
-				m_Preview.RectTransform.anchorMax = Vector2.one;
-				m_Preview.RectTransform.offsetMin = Vector2.zero;
-				m_Preview.RectTransform.offsetMax = Vector2.zero;
+				m_Thumbnail.RectTransform.SetParent(m_Thumbnail.Mount, true);
+				m_Thumbnail.RectTransform.anchorMin = Vector2.zero;
+				m_Thumbnail.RectTransform.anchorMax = Vector2.one;
+				m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
+				m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
 				
-				m_Preview = null;
-				m_Mount   = null;
+				m_Thumbnail = null;
 			}
 		);
 	}

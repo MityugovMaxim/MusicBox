@@ -6,6 +6,11 @@ public class AudioProcessor : MonoBehaviour
 	[SerializeField] AudioMixerSnapshot m_HitSnapshot;
 	[SerializeField] AudioMixerSnapshot m_MissSnapshot;
 
+	public void Restore()
+	{
+		m_HitSnapshot.TransitionTo(0);
+	}
+
 	public void RegisterHit()
 	{
 		m_HitSnapshot.TransitionTo(0.1f);

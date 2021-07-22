@@ -1,27 +1,19 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Zenject;
 
 public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-	[Serializable]
-	public class IndicatorEvent : UnityEvent { }
-
-	[Serializable]
-	public class HandleEvent : UnityEvent<float> { }
-
 	public RectTransform Zone => m_Zone;
 
 	public override bool raycastTarget => true;
 
+	[Inject] ScoreProcessor m_ScoreProcessor;
+	[Inject] AudioProcessor m_AudioProcessor;
+
 	[SerializeField] RectTransform  m_Zone;
-	[SerializeField] HandleEvent    m_OnSuccess;
-	[SerializeField] HandleEvent    m_OnFail;
-	[SerializeField] IndicatorEvent m_OnHit;
-	[SerializeField] IndicatorEvent m_OnMiss;
 
 	readonly UIVertex[] m_Vertices =
 	{
@@ -213,7 +205,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			
 			if (Mathf.Approximately(handle.Progress, 0))
-				m_OnMiss?.Invoke();
+				RegisterMiss();
 		}
 	}
 
@@ -238,8 +230,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			m_InactiveHandles.RemoveAt(i);
 			
-			handle.OnSuccess += m_OnSuccess.Invoke;
-			handle.OnFail    += m_OnFail.Invoke;
+			handle.OnSuccess += RegisterSuccess;
+			handle.OnFail    += RegisterFail;
 		}
 	}
 
@@ -262,8 +254,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			
 			m_ActiveHandles.RemoveAt(i);
 			
-			handle.OnSuccess -= m_OnSuccess.Invoke;
-			handle.OnFail    -= m_OnFail.Invoke;
+			handle.OnSuccess -= RegisterSuccess;
+			handle.OnFail    -= RegisterFail;
 		}
 	}
 
@@ -309,7 +301,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		
 		m_Selection[_Handle].Add(_PointerID);
 		
-		m_OnHit?.Invoke();
+		RegisterHit();
 		
 		return true;
 	}
@@ -331,5 +323,35 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			m_Selection.Remove(_Handle);
 		
 		return true;
+	}
+
+	void RegisterSuccess(float _Progress)
+	{
+		if (m_ScoreProcessor != null)
+			m_ScoreProcessor.RegisterSuccess(_Progress);
+		
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.RegisterHit();
+	}
+
+	void RegisterFail(float _Progress)
+	{
+		if (m_ScoreProcessor != null)
+			m_ScoreProcessor.RegisterFail(_Progress);
+		
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.RegisterMiss();
+	}
+
+	void RegisterHit()
+	{
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.RegisterHit();
+	}
+
+	void RegisterMiss()
+	{
+		if (m_AudioProcessor != null)
+			m_AudioProcessor.RegisterMiss();
 	}
 }

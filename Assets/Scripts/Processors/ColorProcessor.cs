@@ -2,7 +2,7 @@
 
 public class ColorProcessor : MonoBehaviour
 {
-	public ColorScheme DefaultColorScheme => m_DefaultColorScheme != null ? m_DefaultColorScheme.ColorScheme : default;
+	public ColorScheme DefaultColorScheme => m_DefaultColorScheme;
 
 	public ColorScheme ColorScheme
 	{
@@ -38,6 +38,11 @@ public class ColorProcessor : MonoBehaviour
 		ColorScheme = DefaultColorScheme;
 	}
 	#endif
+
+	public void Restore()
+	{
+		ColorScheme = DefaultColorScheme;
+	}
 
 	void ProcessColors()
 	{

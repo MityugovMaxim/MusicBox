@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using Zenject;
 
 public partial class Sequencer
 {
@@ -43,6 +44,8 @@ public partial class Sequencer
 [ExecuteInEditMode]
 public partial class Sequencer : MonoBehaviour
 {
+	[Inject] ISampleReceiver[] m_SampleReceivers;
+
 	[Serializable]
 	public class SampleEvent : UnityEvent<float, float> { }
 
@@ -56,24 +59,10 @@ public partial class Sequencer : MonoBehaviour
 
 	public Track[] Tracks => m_Tracks;
 
-	public event UnityAction<float, float> OnSample
-	{
-		add => m_OnSample.AddListener(value);
-		remove => m_OnSample.RemoveListener(value);
-	}
-
-	public event UnityAction OnComplete
-	{
-		add => m_OnComplete.AddListener(value);
-		remove => m_OnComplete.RemoveListener(value);
-	}
-
-	[SerializeField] Track[]     m_Tracks;
-	[SerializeField] float       m_Time;
-	[SerializeField] float       m_Length;
-	[SerializeField] bool        m_AutoPlay;
-	[SerializeField] SampleEvent m_OnSample;
-	[SerializeField] UnityEvent  m_OnComplete;
+	[SerializeField] Track[] m_Tracks;
+	[SerializeField] float   m_Time;
+	[SerializeField] float   m_Length;
+	[SerializeField] bool    m_AutoPlay;
 
 	int m_Frame;
 	int m_SampleFrame;
@@ -154,7 +143,11 @@ public partial class Sequencer : MonoBehaviour
 		
 		Time = _Time;
 		
-		m_OnSample?.Invoke(Time, m_Length);
+		if (m_SampleReceivers != null)
+		{
+			foreach (var sampleReceiver in m_SampleReceivers)
+				sampleReceiver.Sample(Time, Length);
+		}
 		
 		if (Time >= m_Length)
 		{
@@ -165,7 +158,8 @@ public partial class Sequencer : MonoBehaviour
 			
 			Time = m_Length;
 			
-			m_OnComplete?.Invoke();
+			// TODO: Support ICompleteReceiver
+			//m_OnComplete?.Invoke();
 		}
 	}
 }
