@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -8,6 +9,8 @@ public class UIMenu : UIEntity
 	public bool Shown => m_Shown;
 
 	[SerializeField] UIBlur m_Blur;
+
+	protected Action CloseAction;
 
 	Action m_ShowStarted;
 	Action m_ShowFinished;
@@ -95,6 +98,8 @@ public class UIMenu : UIEntity
 			OnHideFinished();
 			
 			InvokeHideFinished();
+			
+			InvokeCloseAction();
 		}
 		else
 		{
@@ -112,6 +117,13 @@ public class UIMenu : UIEntity
 
 	protected virtual void OnHideFinished() { }
 
+	void InvokeCloseAction()
+	{
+		Action action = CloseAction;
+		CloseAction = null;
+		action?.Invoke();
+	}
+
 	IEnumerator ShowRoutine(float _Duration)
 	{
 		m_CanvasGroup.interactable   = true;
@@ -122,9 +134,10 @@ public class UIMenu : UIEntity
 		InvokeShowStarted();
 		
 		if (m_Blur != null)
+		{
 			m_Blur.Blur();
-		
-		yield return null;
+			yield return null;
+		}
 		
 		float source = m_CanvasGroup.alpha;
 		float target = 1;
@@ -179,6 +192,8 @@ public class UIMenu : UIEntity
 		OnHideFinished();
 		
 		InvokeHideFinished();
+		
+		InvokeCloseAction();
 	}
 
 	void InvokeShowStarted()

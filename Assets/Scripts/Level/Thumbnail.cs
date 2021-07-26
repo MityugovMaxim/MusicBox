@@ -25,6 +25,8 @@ public class Thumbnail : UIEntity, IPointerClickHandler
 		OnClick?.Invoke();
 	}
 
+	public virtual void OnShow() { }
+
 	[UsedImplicitly]
 	public class Factory : PlaceholderFactory<string, RectTransform, Thumbnail> { }
 }

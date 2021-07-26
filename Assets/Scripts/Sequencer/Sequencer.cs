@@ -44,6 +44,7 @@ public partial class Sequencer
 [ExecuteInEditMode]
 public partial class Sequencer : MonoBehaviour
 {
+	[Inject] SignalBus         m_SignalBus;
 	[Inject] ISampleReceiver[] m_SampleReceivers;
 
 	[Serializable]
@@ -158,8 +159,7 @@ public partial class Sequencer : MonoBehaviour
 			
 			Time = m_Length;
 			
-			// TODO: Support Complete signal
-			//m_OnComplete?.Invoke();
+			m_SignalBus.Fire<LevelCompleteSignal>();
 		}
 	}
 }

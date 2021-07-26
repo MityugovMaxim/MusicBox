@@ -7,8 +7,6 @@ public class UIPauseMenu : UIMenu
 	[Inject] UIMainMenu    m_MainMenu;
 	[Inject] LevelProvider m_LevelProvider;
 
-	Action m_Action;
-
 	public void Pause()
 	{
 		if (m_LevelProvider != null)
@@ -35,7 +33,7 @@ public class UIPauseMenu : UIMenu
 		
 		m_LevelProvider.Stop();
 		
-		m_Action = m_LevelProvider.Play;
+		CloseAction = m_LevelProvider.Play;
 		
 		Hide();
 	}
@@ -53,12 +51,5 @@ public class UIPauseMenu : UIMenu
 		
 		if (m_MainMenu != null)
 			m_MainMenu.Show();
-	}
-
-	protected override void OnHideFinished()
-	{
-		Action action = m_Action;
-		m_Action = null;
-		action?.Invoke();
 	}
 }

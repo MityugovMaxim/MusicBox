@@ -32,7 +32,7 @@ public class UIMainMenu : UIMenu
 		LoadPreviews();
 	}
 
-	public void ShowPreview(int _ThumbnailIndex)
+	public void ShowPreview(int _ThumbnailIndex, bool _Instant = false)
 	{
 		if (m_Preview == null)
 		{
@@ -56,13 +56,13 @@ public class UIMainMenu : UIMenu
 		
 		m_ThumbnailIndex = _ThumbnailIndex;
 		
-		EnableControl();
-		DisableGrid();
+		EnableControl(_Instant);
+		DisableGrid(_Instant);
 		
-		m_Preview.Show(thumbnail);
+		m_Preview.Show(thumbnail, _Instant);
 	}
 
-	public void HidePreview()
+	public void HidePreview(bool _Instant = false)
 	{
 		if (m_Preview == null)
 		{
@@ -72,14 +72,13 @@ public class UIMainMenu : UIMenu
 		
 		m_ThumbnailIndex = -1;
 		
-		DisableControl();
-		EnableGrid();
+		DisableControl(_Instant);
+		EnableGrid(_Instant);
 		
-		if (m_Preview != null)
-			m_Preview.Hide();
+		m_Preview.Hide(_Instant);
 	}
 
-	public void NextPreview()
+	public void NextPreview(bool _Instant = false)
 	{
 		if (m_Preview == null)
 		{
@@ -91,10 +90,10 @@ public class UIMainMenu : UIMenu
 		
 		Recenter(previewIndex);
 		
-		ShowPreview(previewIndex);
+		ShowPreview(previewIndex, _Instant);
 	}
 
-	public void PreviousPreview()
+	public void PreviousPreview(bool _Instant = false)
 	{
 		if (m_Preview == null)
 		{
@@ -106,7 +105,7 @@ public class UIMainMenu : UIMenu
 		
 		Recenter(previewIndex);
 		
-		ShowPreview(previewIndex);
+		ShowPreview(previewIndex, _Instant);
 	}
 
 	public void Play()

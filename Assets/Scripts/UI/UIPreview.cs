@@ -13,7 +13,7 @@ public class UIPreview : UIEntity
 	Thumbnail   m_Thumbnail;
 	IEnumerator m_MoveRoutine;
 
-	public void Show(Thumbnail _Thumbnail)
+	public void Show(Thumbnail _Thumbnail, bool _Instant = false)
 	{
 		if (m_Thumbnail != _Thumbnail)
 		{
@@ -49,7 +49,7 @@ public class UIPreview : UIEntity
 		m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
 		m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
 		
-		Move(_Thumbnail, Vector2.zero, Vector2.one, m_Shown);
+		Move(_Thumbnail, Vector2.zero, Vector2.one, _Instant || m_Shown);
 		
 		m_Shown = true;
 	}
