@@ -1,10 +1,29 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Zenject;
 
 public class UIPauseMenu : UIMenu
 {
 	[Inject] UIMainMenu    m_MainMenu;
 	[Inject] LevelProvider m_LevelProvider;
+
+	Action m_Action;
+
+	public void Pause()
+	{
+		if (m_LevelProvider != null)
+			m_LevelProvider.Pause();
+		
+		Show();
+	}
+
+	public void Resume()
+	{
+		if (m_LevelProvider != null)
+			m_LevelProvider.Play();
+		
+		Hide();
+	}
 
 	public void Restart()
 	{
@@ -15,6 +34,8 @@ public class UIPauseMenu : UIMenu
 		}
 		
 		m_LevelProvider.Stop();
+		
+		m_Action = m_LevelProvider.Play;
 		
 		Hide();
 	}
@@ -34,15 +55,10 @@ public class UIPauseMenu : UIMenu
 			m_MainMenu.Show();
 	}
 
-	protected override void OnShowStarted()
+	protected override void OnHideFinished()
 	{
-		if (m_LevelProvider != null)
-			m_LevelProvider.Pause();
-	}
-
-	protected override void OnHideStarted()
-	{
-		if (m_LevelProvider != null)
-			m_LevelProvider.Play();
+		Action action = m_Action;
+		m_Action = null;
+		action?.Invoke();
 	}
 }

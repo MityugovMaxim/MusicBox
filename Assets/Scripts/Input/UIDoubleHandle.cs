@@ -4,12 +4,15 @@ public class UIDoubleHandle : UIHandle
 {
 	const int MIN_COUNT = 2;
 
-	public override float Progress => m_Progress;
+	UIDoubleIndicator m_Indicator;
+	bool              m_Interactable;
+	bool              m_Processed;
+	int               m_Count;
 
-	bool  m_Interactable;
-	bool  m_Processed;
-	int   m_Count;
-	float m_Progress;
+	public void Setup(UIDoubleIndicator _Indicator)
+	{
+		m_Indicator = _Indicator;
+	}
 
 	public override void StartReceiveInput()
 	{
@@ -27,7 +30,7 @@ public class UIDoubleHandle : UIHandle
 			return;
 		
 		if (!m_Processed)
-			InvokeFail();
+			ProcessFail(0);
 		
 		m_Interactable = false;
 		m_Processed    = false;
@@ -39,7 +42,11 @@ public class UIDoubleHandle : UIHandle
 		if (!m_Interactable || m_Processed)
 			return;
 		
+		#if UNITY_EDITOR
+		m_Count += 2;
+		#else
 		m_Count++;
+		#endif
 		
 		if (m_Count < MIN_COUNT)
 			return;
@@ -49,12 +56,11 @@ public class UIDoubleHandle : UIHandle
 		
 		float distance = Mathf.Abs(area.center.y - rect.center.y);
 		float length   = (rect.height + area.height) * 0.5f;
-		
-		m_Progress = 1.0f - distance / length;
+		float progress = 1.0f - distance / length;
 		
 		m_Processed = true;
 		
-		InvokeSuccess();
+		ProcessSuccess(progress);
 	}
 
 	public override void TouchUp(int _ID, Rect _Area)
@@ -66,4 +72,16 @@ public class UIDoubleHandle : UIHandle
 	}
 
 	public override void TouchMove(int _ID, Rect _Area) { }
+
+	void ProcessSuccess(float _Progress)
+	{
+		if (m_Indicator != null)
+			m_Indicator.Success(_Progress);
+	}
+
+	void ProcessFail(float _Progress)
+	{
+		if (m_Indicator != null)
+			m_Indicator.Fail(_Progress);
+	}
 }

@@ -1,25 +1,30 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class UIHoldHandle : UIHandle
 {
-	public override float Progress => MaxProgress - MinProgress;
+	[Serializable]
+	public class HoldEvent : UnityEvent<bool> { }
 
-	public event Action OnStartHold;
-	public event Action OnStopHold;
+	public float MinProgress { get; private set; }
 
-	public float MinProgress => m_MinProgress;
-	public float MaxProgress => m_MaxProgress;
+	public float MaxProgress { get; private set; }
 
 	[SerializeField] RectTransform m_Marker;
 	[SerializeField] RectOffset    m_Margin;
 
-	bool  m_Interactable;
-	bool  m_Processed;
-	bool  m_Hold;
-	float m_MinProgress;
-	float m_MaxProgress;
-	Rect  m_Area;
+	UIHoldIndicator m_Indicator;
+	bool            m_Interactable;
+	bool            m_Processed;
+	bool            m_Hold;
+	bool            m_Miss;
+	Rect            m_Area;
+
+	public void Setup(UIHoldIndicator _Indicator)
+	{
+		m_Indicator = _Indicator;
+	}
 
 	public override void StartReceiveInput()
 	{
@@ -29,8 +34,9 @@ public class UIHoldHandle : UIHandle
 		m_Interactable = true;
 		m_Processed    = false;
 		m_Hold         = false;
-		m_MinProgress  = 0;
-		m_MaxProgress  = 0;
+		m_Miss         = false;
+		MinProgress    = 0;
+		MaxProgress    = 0;
 	}
 
 	public override void StopReceiveInput()
@@ -42,18 +48,14 @@ public class UIHoldHandle : UIHandle
 			m_Marker.anchoredPosition = Vector2.zero;
 		
 		if (!m_Processed)
-		{
-			if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
-				InvokeSuccess();
-			else
-				InvokeFail();
-		}
+			ProcessFail();
 		
 		m_Interactable = false;
 		m_Processed    = false;
 		m_Hold         = false;
-		m_MinProgress  = 0;
-		m_MaxProgress  = 0;
+		m_Miss         = false;
+		MinProgress    = 0;
+		MaxProgress    = 0;
 	}
 
 	public void Process(float _Phase)
@@ -63,19 +65,27 @@ public class UIHoldHandle : UIHandle
 		
 		if (m_Hold)
 		{
-			m_MaxProgress = _Phase;
+			MaxProgress = _Phase;
 			
-			if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
+			if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
 			{
 				m_Hold      = false;
 				m_Processed = true;
-				InvokeSuccess();
+				
+				ProcessSuccess();
 			}
 		}
 		else
 		{
-			m_MinProgress = _Phase;
-			m_MaxProgress = _Phase;
+			MinProgress = _Phase;
+			MaxProgress = _Phase;
+			
+			if (!m_Miss && !m_Indicator.RectTransform.Intersects(RectTransform))
+			{
+				m_Miss = true;
+				
+				ProcessMiss();
+			}
 		}
 	}
 
@@ -87,7 +97,7 @@ public class UIHoldHandle : UIHandle
 		m_Hold = true;
 		m_Area = GetLocalRect(_Area);
 		
-		InvokeStartHold();
+		ProcessHit();
 	}
 
 	public override void TouchUp(int _ID, Rect _Area)
@@ -101,12 +111,10 @@ public class UIHoldHandle : UIHandle
 		m_Hold      = false;
 		m_Processed = true;
 		
-		InvokeStopHold();
-		
-		if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
-			InvokeSuccess();
+		if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
+			ProcessSuccess();
 		else
-			InvokeFail();
+			ProcessFail();
 	}
 
 	public override void TouchMove(int _ID, Rect _Area)
@@ -126,21 +134,33 @@ public class UIHoldHandle : UIHandle
 		m_Hold      = false;
 		m_Processed = true;
 		
-		InvokeStopHold();
-		
-		if (m_MaxProgress >= 1 || Mathf.Approximately(m_MaxProgress, 1))
-			InvokeSuccess();
+		if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
+			ProcessSuccess();
 		else
-			InvokeFail();
+			ProcessFail();
 	}
 
-	void InvokeStartHold()
+	void ProcessHit()
 	{
-		OnStartHold?.Invoke();
+		if (m_Indicator != null)
+			m_Indicator.Hit(MinProgress, MaxProgress);
 	}
 
-	void InvokeStopHold()
+	void ProcessMiss()
 	{
-		OnStopHold?.Invoke();
+		if (m_Indicator != null)
+			m_Indicator.Miss(MinProgress, MaxProgress);
+	}
+
+	void ProcessSuccess()
+	{
+		if (m_Indicator != null)
+			m_Indicator.Success(MinProgress, MaxProgress);
+	}
+
+	void ProcessFail()
+	{
+		if (m_Indicator != null)
+			m_Indicator.Fail(MinProgress, MaxProgress);
 	}
 }

@@ -5,7 +5,9 @@ using UnityEngine;
 [RequireComponent(typeof(CanvasGroup))]
 public class UIMenu : UIEntity
 {
-	[SerializeField] UIBlur     m_Blur;
+	public bool Shown => m_Shown;
+
+	[SerializeField] UIBlur m_Blur;
 
 	Action m_ShowStarted;
 	Action m_ShowFinished;

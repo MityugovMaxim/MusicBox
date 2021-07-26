@@ -54,6 +54,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 
+			#include "Color.cginc"
 			#include "Math.cginc"
 			#include "UIMask.cginc"
 			#include "UnityCG.cginc"
@@ -100,7 +101,7 @@
 				UNITY_SETUP_INSTANCE_ID(IN);
 				
 				OUT.vertex   = UnityObjectToClipPos(IN.vertex);
-				OUT.color    = IN.color * _Color;
+				OUT.color    = IN.color * _ForegroundSecondaryColor;
 				OUT.uv       = IN.rect.xy + IN.rect.zw * IN.uv.xy;
 				OUT.fade     = IN.fade;
 				OUT.wave     = ComputeScreenPos(OUT.vertex).xy - _Time.y * _Speed;
@@ -113,16 +114,14 @@
 
 			fixed4 frag(const fragData IN) : SV_Target
 			{
-				const half3 wave   = UnpackNormal(tex2D(_WaveTex, IN.wave)) * _Strength;
-				const half2 uv     = IN.uv + wave.xy * IN.rect.zz;
-				const fixed clampH = step(IN.rect.x, uv.x) * (1 - step(IN.rect.x + IN.rect.z, uv.x));
-				const fixed clampV = step(IN.rect.y, uv.y) * (1 - step(IN.rect.y + IN.rect.w, uv.y));
-				
-				clip(clampH * clampV - 0.001);
+				const half3 wave = UnpackNormal(tex2D(_WaveTex, IN.wave)) * _Strength;
+				const half2 uv   = IN.uv + wave.xy * IN.rect.zz;
 				
 				fixed4 color = (tex2D(_MainTex, uv) + _TextureSampleAdd) * IN.color;
 				
-				color.rgb = lerp(_SourceColor, _TargetColor, grayscale(color.rgb + wave.xyz));
+				color.rgb *= color.a;
+				
+				color += grayscale(color);
 				
 				#ifdef UNITY_UI_CLIP_RECT
 				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);

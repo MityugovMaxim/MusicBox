@@ -1,21 +1,20 @@
 using UnityEngine;
+using UnityEngine.Scripting;
+using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UITapIndicator : UIIndicator
 {
-	public override UIHandle Handle => m_Handle;
-	public override float MinPadding => RectTransform.rect.yMin;
-	public override float MaxPadding => RectTransform.rect.yMax;
-
-	Animator Animator
+	[Preserve]
+	public class Pool : MonoMemoryPool<UITapIndicator>
 	{
-		get
+		protected override void Reinitialize(UITapIndicator _Item)
 		{
-			if (m_Animator == null)
-				m_Animator = GetComponent<Animator>();
-			return m_Animator;
+			_Item.Restore();
 		}
 	}
+
+	public override UIHandle Handle     => m_Handle;
 
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_SuccessParameterID = Animator.StringToHash("Success");
@@ -23,26 +22,16 @@ public class UITapIndicator : UIIndicator
 
 	[SerializeField] UITapHandle m_Handle;
 
-	Animator m_Animator;
-
 	public void Setup()
 	{
 		if (m_Handle != null)
-		{
-			m_Handle.OnSuccess += Success;
-			m_Handle.OnFail    += Fail;
-		}
+			m_Handle.Setup(this);
 	}
 
 	public void Restore()
 	{
 		if (m_Handle != null)
-		{
 			m_Handle.StopReceiveInput();
-			
-			m_Handle.OnSuccess -= Success;
-			m_Handle.OnFail    -= Fail;
-		}
 		
 		Animator.ResetTrigger(m_SuccessParameterID);
 		Animator.ResetTrigger(m_FailParameterID);
@@ -52,13 +41,17 @@ public class UITapIndicator : UIIndicator
 			Animator.Update(0);
 	}
 
-	void Success(float _Progress)
+	public void Success(float _Progress)
 	{
+		SignalBus.Fire(new TapSuccess(_Progress));
+		
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 
-	void Fail(float _Progress)
+	public void Fail(float _Progress)
 	{
+		SignalBus.Fire(new TapFail(_Progress));
+		
 		Animator.SetTrigger(m_FailParameterID);
 	}
 }

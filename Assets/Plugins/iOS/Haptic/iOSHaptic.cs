@@ -32,7 +32,7 @@ public class iOSHaptic : Haptic
 
 	static bool SupportsHaptic => Device.generation >= DeviceGeneration.iPhone7;
 
-	protected override void InitializeInternal()
+	protected override void Initialize()
 	{
 		if (!SupportsHaptic)
 			return;
@@ -40,7 +40,7 @@ public class iOSHaptic : Haptic
 		InitializeHapticGenerators();
 	}
 
-	protected override void ProcessInternal(Type _Type)
+	public override void Process(Type _Type)
 	{
 		if (!SupportsHaptic)
 			return;

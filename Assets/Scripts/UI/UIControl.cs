@@ -7,6 +7,20 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasGroup))]
 public class UIControl : Graphic, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
+	public bool Locked
+	{
+		get => m_Locked;
+		set
+		{
+			if (m_Locked == value)
+				return;
+			
+			m_Locked = value;
+			
+			m_FadeTime = Time.time + m_FadeDelay;
+		}
+	}
+
 	CanvasGroup CanvasGroup
 	{
 		get
@@ -26,6 +40,7 @@ public class UIControl : Graphic, IPointerClickHandler, IPointerDownHandler, IPo
 
 	bool        m_Detect;
 	bool        m_Active;
+	bool        m_Locked;
 	float       m_FadeTime;
 	CanvasGroup m_CanvasGroup;
 
@@ -40,7 +55,7 @@ public class UIControl : Graphic, IPointerClickHandler, IPointerDownHandler, IPo
 
 	void Update()
 	{
-		if (m_Active && Time.time >= m_FadeTime)
+		if (m_Active && !Locked && Time.time >= m_FadeTime)
 		{
 			m_Active = false;
 			

@@ -10,10 +10,9 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	public override bool raycastTarget => true;
 
-	[Inject] ScoreProcessor m_ScoreProcessor;
-	[Inject] AudioProcessor m_AudioProcessor;
-
 	[SerializeField] RectTransform  m_Zone;
+
+	SignalBus m_SignalBus;
 
 	readonly UIVertex[] m_Vertices =
 	{
@@ -23,24 +22,18 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		new UIVertex(),
 	};
 
-	readonly Dictionary<int, Rect>           m_Pointers           = new Dictionary<int, Rect>();
-	readonly Dictionary<UIHandle, List<int>> m_Selection          = new Dictionary<UIHandle, List<int>>();
-	readonly List<UIHandle>                  m_InactiveHandles    = new List<UIHandle>();
-	readonly List<UIHandle>                  m_ActiveHandles      = new List<UIHandle>();
-	readonly List<UIIndicator>               m_InactiveIndicators = new List<UIIndicator>();
-	readonly List<UIIndicator>               m_ActiveIndicators   = new List<UIIndicator>();
+	readonly Dictionary<int, Rect>           m_Pointers        = new Dictionary<int, Rect>();
+	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
+	readonly List<UIHandle>                  m_InactiveHandles = new List<UIHandle>();
+	readonly List<UIHandle>                  m_ActiveHandles   = new List<UIHandle>();
 
 	public void Process()
 	{
-		EnableIndicators();
-		
 		EnableHandles();
 		
 		MoveInput();
 		
 		DisableHandles();
-		
-		DisableIndicators();
 	}
 
 	public void RegisterIndicator(UIIndicator _Indicator)
@@ -56,8 +49,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		handle.StopReceiveInput();
 		
 		m_InactiveHandles.Add(handle);
-		
-		m_InactiveIndicators.Add(_Indicator);
 	}
 
 	public void UnregisterIndicator(UIIndicator _Indicator)
@@ -74,9 +65,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		
 		m_InactiveHandles.Remove(handle);
 		m_ActiveHandles.Remove(handle);
-		
-		m_ActiveIndicators.Remove(_Indicator);
-		m_InactiveIndicators.Remove(_Indicator);
 	}
 
 	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
@@ -162,53 +150,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		return m_Selection.ContainsKey(_Handle) ? m_Selection[_Handle] : null;
 	}
 
-	void EnableIndicators()
-	{
-		for (int i = m_InactiveIndicators.Count - 1; i >= 0; i--)
-		{
-			UIIndicator indicator = m_InactiveIndicators[i];
-			
-			if (indicator == null)
-			{
-				m_InactiveIndicators.RemoveAt(i);
-				continue;
-			}
-			
-			if (!m_Zone.Intersects(indicator.RectTransform))
-				continue;
-			
-			m_InactiveIndicators.RemoveAt(i);
-			m_ActiveIndicators.Add(indicator);
-		}
-	}
-
-	void DisableIndicators()
-	{
-		for (int i = m_ActiveIndicators.Count - 1; i >= 0; i--)
-		{
-			UIIndicator indicator = m_ActiveIndicators[i];
-			
-			if (indicator == null)
-			{
-				m_ActiveIndicators.RemoveAt(i);
-				continue;
-			}
-			
-			if (m_Zone.Intersects(indicator.RectTransform))
-				continue;
-			
-			m_ActiveIndicators.RemoveAt(i);
-			
-			UIHandle handle = indicator.Handle;
-			
-			if (handle == null)
-				continue;
-			
-			if (Mathf.Approximately(handle.Progress, 0))
-				RegisterMiss();
-		}
-	}
-
 	void EnableHandles()
 	{
 		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
@@ -229,9 +170,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			m_ActiveHandles.Add(handle);
 			
 			m_InactiveHandles.RemoveAt(i);
-			
-			handle.OnSuccess += RegisterSuccess;
-			handle.OnFail    += RegisterFail;
 		}
 	}
 
@@ -253,9 +191,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			handle.StopReceiveInput();
 			
 			m_ActiveHandles.RemoveAt(i);
-			
-			handle.OnSuccess -= RegisterSuccess;
-			handle.OnFail    -= RegisterFail;
 		}
 	}
 
@@ -301,8 +236,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		
 		m_Selection[_Handle].Add(_PointerID);
 		
-		RegisterHit();
-		
 		return true;
 	}
 
@@ -323,35 +256,5 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			m_Selection.Remove(_Handle);
 		
 		return true;
-	}
-
-	void RegisterSuccess(float _Progress)
-	{
-		if (m_ScoreProcessor != null)
-			m_ScoreProcessor.RegisterSuccess(_Progress);
-		
-		if (m_AudioProcessor != null)
-			m_AudioProcessor.RegisterHit();
-	}
-
-	void RegisterFail(float _Progress)
-	{
-		if (m_ScoreProcessor != null)
-			m_ScoreProcessor.RegisterFail(_Progress);
-		
-		if (m_AudioProcessor != null)
-			m_AudioProcessor.RegisterMiss();
-	}
-
-	void RegisterHit()
-	{
-		if (m_AudioProcessor != null)
-			m_AudioProcessor.RegisterHit();
-	}
-
-	void RegisterMiss()
-	{
-		if (m_AudioProcessor != null)
-			m_AudioProcessor.RegisterMiss();
 	}
 }

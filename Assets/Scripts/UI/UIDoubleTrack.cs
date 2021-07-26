@@ -1,31 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class UIDoubleTrack : UITrack<DoubleClip>
 {
-	const int MIN_CAPACITY = 5;
+	protected override RectTransform Zone => m_InputReceiver.Zone;
 
-	Pool<UIDoubleIndicator> Pool { get; set; }
-
-	[SerializeField] UIDoubleIndicator m_Indicator;
-	[SerializeField] UIInputReceiver   m_InputReceiver;
+	UIInputReceiver        m_InputReceiver;
+	UIDoubleIndicator.Pool m_IndicatorPool;
 
 	readonly Dictionary<DoubleClip, UIDoubleIndicator> m_Indicators = new Dictionary<DoubleClip, UIDoubleIndicator>();
 
-	protected override void OnDestroy()
+	[Inject]
+	public void Construct(UIInputReceiver _InputReceiver, UIDoubleIndicator.Pool _IndicatorPool)
 	{
-		base.OnDestroy();
-		
-		if (Pool != null)
-			Pool.Release();
-	}
-
-	public override void Initialize(List<DoubleClip> _Clips)
-	{
-		base.Initialize(_Clips);
-		
-		if (Pool == null)
-			Pool = new Pool<UIDoubleIndicator>(m_Indicator, MIN_CAPACITY);
+		m_InputReceiver = _InputReceiver;
+		m_IndicatorPool = _IndicatorPool;
 	}
 
 	protected override void RemoveIndicator(DoubleClip _Clip)
@@ -40,7 +30,10 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		m_Indicators.Remove(_Clip);
 		m_InputReceiver.UnregisterIndicator(indicator);
 		
-		Pool.Remove(indicator);
+		if (Application.isPlaying)
+			m_IndicatorPool.Despawn(indicator);
+		else
+			DestroyImmediate(indicator.gameObject);
 	}
 
 	protected override void DrawIndicators(List<DoubleClip> _Clips)
@@ -66,23 +59,11 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		}
 	}
 
-	protected override float GetMinTime()
-	{
-		Rect rect = RectTransform.GetLocalRect(m_InputReceiver.Zone);
-		
-		return GetTime(rect.yMin + m_Indicator.MinPadding);
-	}
-
-	protected override float GetMaxTime()
-	{
-		Rect rect = RectTransform.GetLocalRect(m_InputReceiver.Zone);
-		
-		return GetTime(rect.yMax + m_Indicator.MaxPadding);
-	}
-
 	UIDoubleIndicator CreateIndicator()
 	{
-		UIDoubleIndicator indicator = Pool.Instantiate(m_Indicator, RectTransform);
+		UIDoubleIndicator indicator = m_IndicatorPool.Spawn();
+		
+		indicator.RectTransform.SetParent(RectTransform);
 		
 		indicator.Setup();
 		

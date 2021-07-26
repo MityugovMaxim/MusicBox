@@ -4,6 +4,7 @@ using Zenject;
 
 public class LevelProvider
 {
+	public string ID     => m_ID;
 	public string Title  => m_Title;
 	public string Artist => m_Artist;
 
@@ -12,6 +13,7 @@ public class LevelProvider
 	[Inject] Level.Factory m_LevelFactory;
 
 	Level  m_Level;
+	string m_ID;
 	string m_Title;
 	string m_Artist;
 
@@ -30,6 +32,7 @@ public class LevelProvider
 		}
 		
 		m_Level  = m_LevelFactory.Create($"{_LevelInfo.ID}/level");
+		m_ID     = _LevelInfo.ID;
 		m_Title  = _LevelInfo.Title;
 		m_Artist = _LevelInfo.Artist;
 		

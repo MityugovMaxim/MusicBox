@@ -1,31 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using Zenject;
 
 public class UITapTrack : UITrack<TapClip>
 {
-	const int MIN_CAPACITY = 5;
+	protected override RectTransform Zone => m_InputReceiver.Zone;
 
-	Pool<UITapIndicator> Pool { get; set; }
-
-	[SerializeField] UITapIndicator  m_Indicator;
-	[SerializeField] UIInputReceiver m_InputReceiver;
+	UITapIndicator.Pool m_IndicatorPool;
+	UIInputReceiver     m_InputReceiver;
 
 	readonly Dictionary<TapClip, UITapIndicator> m_Indicators = new Dictionary<TapClip, UITapIndicator>();
 
-	protected override void OnDestroy()
+	[Inject]
+	public void Construct(UIInputReceiver _InputReceiver, UITapIndicator.Pool _IndicatorPool)
 	{
-		base.OnDestroy();
-		
-		if (Pool != null)
-			Pool.Release();
-	}
-
-	public override void Initialize(List<TapClip> _Clips)
-	{
-		base.Initialize(_Clips);
-		
-		if (Pool == null)
-			Pool = new Pool<UITapIndicator>(m_Indicator, MIN_CAPACITY);
+		m_InputReceiver = _InputReceiver;
+		m_IndicatorPool = _IndicatorPool;
 	}
 
 	protected override void RemoveIndicator(TapClip _Clip)
@@ -40,7 +30,10 @@ public class UITapTrack : UITrack<TapClip>
 		m_Indicators.Remove(_Clip);
 		m_InputReceiver.UnregisterIndicator(indicator);
 		
-		Pool.Remove(indicator);
+		if (Application.isPlaying)
+			m_IndicatorPool.Despawn(indicator);
+		else
+			DestroyImmediate(indicator.gameObject);
 	}
 
 	protected override void DrawIndicators(List<TapClip> _Clips)
@@ -66,23 +59,11 @@ public class UITapTrack : UITrack<TapClip>
 		}
 	}
 
-	protected override float GetMinTime()
-	{
-		Rect rect = RectTransform.GetLocalRect(m_InputReceiver.Zone);
-		
-		return GetTime(rect.yMin + m_Indicator.MinPadding);
-	}
-
-	protected override float GetMaxTime()
-	{
-		Rect rect = RectTransform.GetLocalRect(m_InputReceiver.Zone);
-		
-		return GetTime(rect.yMax + m_Indicator.MaxPadding);
-	}
-
 	UITapIndicator CreateIndicator()
 	{
-		UITapIndicator indicator = Pool.Instantiate(m_Indicator, RectTransform);
+		UITapIndicator indicator = m_IndicatorPool.Spawn();
+		
+		indicator.RectTransform.SetParent(RectTransform);
 		
 		indicator.Setup();
 		

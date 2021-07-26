@@ -1,21 +1,20 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Zenject;
 
-[RequireComponent(typeof(Animator))]
 public class UIHoldIndicator : UIIndicator
 {
-	public override UIHandle Handle     => m_Handle;
-	public override float    MinPadding => -150;
-	public override float    MaxPadding => 0;
-
-	Animator Animator
+	[Preserve]
+	public class Pool : MonoMemoryPool<UIHoldIndicator>
 	{
-		get
+		protected override void Reinitialize(UIHoldIndicator _Item)
 		{
-			if (m_Animator == null)
-				m_Animator = GetComponent<Animator>();
-			return m_Animator;
+			_Item.Restore();
 		}
 	}
+
+	public override UIHandle Handle => m_Handle;
 
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_SuccessParameterID = Animator.StringToHash("Success");
@@ -28,7 +27,7 @@ public class UIHoldIndicator : UIIndicator
 	[SerializeField] UISplineProgress m_Progress;
 	[SerializeField] float            m_SamplesPerUnit = 0.5f;
 
-	Animator m_Animator;
+	IEnumerator m_HighlightRoutine;
 
 	public void Setup(HoldClip _Clip, float _Distance)
 	{
@@ -38,8 +37,6 @@ public class UIHoldIndicator : UIIndicator
 		Rect rect = RectTransform.rect;
 		
 		m_Spline.ClearKeys();
-		
-		m_Spline.Samples = 25;
 		
 		Vector2 size = new Vector2(rect.width, _Distance);
 		
@@ -66,9 +63,19 @@ public class UIHoldIndicator : UIIndicator
 			);
 		}
 		
-		m_Spline.Samples = Mathf.FloorToInt(m_Spline.GetLength(1) * m_SamplesPerUnit);
-		
+		// Build spline with low amount samples for calculating length of spline
+		m_Spline.Samples = 25;
 		m_Spline.Rebuild();
+		
+		// Calculate samples amount by spline length
+		m_Spline.Samples = Mathf.CeilToInt(m_Spline.GetLength(1) * m_SamplesPerUnit);
+		m_Spline.Rebuild();
+		
+		if (m_Highlight != null)
+		{
+			m_Highlight.Min = 0;
+			m_Highlight.Max = 0;
+		}
 		
 		if (m_Progress != null)
 		{
@@ -78,12 +85,8 @@ public class UIHoldIndicator : UIIndicator
 		
 		if (m_Handle != null)
 		{
-			m_Handle.OnSuccess   += Success;
-			m_Handle.OnFail      += Fail;
-			m_Handle.OnStartHold += StartHold;
-			m_Handle.OnStopHold  += StopHold;
-			
-			m_Handle.RectTransform.anchoredPosition =  m_Spline.Evaluate(0);
+			m_Handle.Setup(this);
+			m_Handle.RectTransform.anchoredPosition = m_Spline.Evaluate(0);
 		}
 	}
 
@@ -96,12 +99,11 @@ public class UIHoldIndicator : UIIndicator
 		Vector2 position = m_Spline.Evaluate(phase);
 		
 		if (m_Highlight != null)
-			m_Highlight.Offset = phase;
+			m_Highlight.Min = phase;
 		
 		if (m_Handle != null)
 		{
 			m_Handle.Process(phase);
-			
 			m_Handle.RectTransform.anchoredPosition = position;
 			
 			if (m_Progress != null)
@@ -116,38 +118,86 @@ public class UIHoldIndicator : UIIndicator
 	{
 		if (m_Handle != null)
 		{
-			m_Handle.OnSuccess   -= Success;
-			m_Handle.OnFail      -= Fail;
-			m_Handle.OnStartHold -= StartHold;
-			m_Handle.OnStopHold  -= StopHold;
+			m_Handle.Process(0);
+			m_Handle.RectTransform.anchoredPosition = m_Spline.Evaluate(0);
 		}
 		
 		Animator.ResetTrigger(m_SuccessParameterID);
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		Animator.SetTrigger(m_RestoreParameterID);
+		Animator.Update(0);
+	}
+
+	[Preserve]
+	public void Success(float _MinProgress, float _MaxProgress)
+	{
+		SignalBus.Fire(new HoldSuccess(_MinProgress, _MaxProgress));
 		
-		if (gameObject.activeInHierarchy)
-			Animator.Update(0);
-	}
-
-	void Success(float _Progress)
-	{
 		Animator.SetTrigger(m_SuccessParameterID);
+		Animator.SetBool(m_HoldParameterID, false);
 	}
 
-	void Fail(float _Progress)
+	[Preserve]
+	public void Fail(float _MinProgress, float _MaxProgress)
 	{
+		SignalBus.Fire(new HoldFail(_MinProgress, _MaxProgress));
+		
 		Animator.SetTrigger(m_FailParameterID);
+		Animator.SetBool(m_HoldParameterID, false);
 	}
 
-	void StartHold()
+	[Preserve]
+	public void Hit(float _MinProgress, float _MaxProgress)
 	{
+		SignalBus.Fire(new HoldHit(_MinProgress, _MaxProgress));
+		
+		Highlight();
+		
 		Animator.SetBool(m_HoldParameterID, true);
 	}
 
-	void StopHold()
+	[Preserve]
+	public void Miss(float _MinProgress, float _MaxProgress)
 	{
-		Animator.SetBool(m_HoldParameterID, false);
+		SignalBus.Fire(new HoldMiss(_MinProgress, _MaxProgress));
+	}
+
+	void Highlight()
+	{
+		if (m_HighlightRoutine != null)
+			StopCoroutine(m_HighlightRoutine);
+		
+		m_HighlightRoutine = HighlightRoutine();
+		
+		StartCoroutine(m_HighlightRoutine);
+	}
+
+	IEnumerator HighlightRoutine()
+	{
+		if (m_Highlight == null)
+			yield break;
+		
+		float source = m_Spline.GetLength(m_Highlight.Min);
+		float target = m_Spline.GetLength(1);
+		
+		const float speed = 1500;
+		
+		float duration = Mathf.Abs(target - source) / speed;
+		
+		float time = 0;
+		
+		m_Highlight.Max = m_Highlight.Min;
+		
+		while (time < duration)
+		{
+			yield return null;
+			
+			time += Time.deltaTime;
+			
+			m_Highlight.Max = Mathf.Lerp(m_Highlight.Min, 1, time / duration);
+		}
+		
+		m_Highlight.Max = 1;
 	}
 }

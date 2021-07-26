@@ -158,7 +158,7 @@ public partial class Sequencer : MonoBehaviour
 			
 			Time = m_Length;
 			
-			// TODO: Support ICompleteReceiver
+			// TODO: Support Complete signal
 			//m_OnComplete?.Invoke();
 		}
 	}

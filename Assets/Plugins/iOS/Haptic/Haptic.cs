@@ -1,4 +1,6 @@
-public class Haptic
+using Zenject;
+
+public abstract class Haptic
 {
 	public enum Type
 	{
@@ -12,28 +14,22 @@ public class Haptic
 		ImpactHeavy  = 7,
 	}
 
-	public static void Initialize()
+	SignalBus m_SignalBus;
+
+	public static Haptic Create()
 	{
-		if (m_Instance != null)
-			return;
-		
-		#if !UNITY_EDITOR && UNITY_IOS
-		m_Instance = new iOSHaptic();
+		#if UNITY_IOS && !UNITY_EDITOR
+		Haptic haptic = new iOSHaptic();
 		#else
-		m_Instance = new Haptic();
+		Haptic haptic = new EditorHaptic();
 		#endif
 		
-		m_Instance.InitializeInternal();
+		haptic.Initialize();
+		
+		return haptic;
 	}
 
-	static Haptic m_Instance;
+	public abstract void Process(Type _Type);
 
-	public static void Process(Type _Type)
-	{
-		m_Instance?.ProcessInternal(_Type);
-	}
-
-	protected virtual void InitializeInternal() { }
-
-	protected virtual void ProcessInternal(Type _Type) { }
+	protected abstract void Initialize();
 }

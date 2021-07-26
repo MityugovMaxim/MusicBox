@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Sequencer))]
@@ -82,6 +82,6 @@ public class Level : MonoBehaviour
 			m_ColorProcessor.Restore();
 	}
 
-	[UsedImplicitly]
+	[Preserve]
 	public class Factory : PlaceholderFactory<string, Level> { }
 }

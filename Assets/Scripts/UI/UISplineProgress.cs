@@ -96,9 +96,10 @@ public class UISplineProgress : MaskableGraphic
 	[SerializeField]              RenderingMode m_RenderingMode;
 	[SerializeField, Range(0, 1)] float         m_Min = 0;
 	[SerializeField, Range(0, 1)] float         m_Max = 1;
-	[SerializeField, Range(0, 1)] float         m_FadeIn;
-	[SerializeField, Range(0, 1)] float         m_FadeOut;
+	[SerializeField]              float         m_FadeIn;
+	[SerializeField]              float         m_FadeOut;
 	[SerializeField]              float         m_Offset;
+	[SerializeField]              bool          m_AbsoluteFade;
 
 	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
 
@@ -176,14 +177,17 @@ public class UISplineProgress : MaskableGraphic
 
 	void ProcessPoint(UISpline.Point _Point, float _Min, float _Max, Rect _UV)
 	{
-		float size  = m_Size * 0.5f;
-		float phase = Mathf.InverseLerp(_Min, _Max, _Point.Phase);
+		float size    = m_Size * 0.5f;
+		float phase   = Mathf.InverseLerp(_Min, _Max, _Point.Phase);
+		float length  = m_Spline.GetLength(1);
+		float fadeIn  = m_AbsoluteFade ? m_FadeIn / length : m_FadeIn;
+		float fadeOut = m_AbsoluteFade ? m_FadeOut / length : m_FadeOut;
 		
 		UIVertex left  = new UIVertex();
 		left.position = _Point.Position + _Point.Normal * size;
 		left.color    = color;
 		left.uv0      = new Vector2(0, phase);
-		left.uv1      = new Vector2(m_FadeIn, m_FadeOut);
+		left.uv1      = new Vector2(fadeIn, fadeOut);
 		left.tangent  = _UV.ToVector();
 		left.normal   = new Vector4(_Min, _Max, _Point.Phase, _Point.Phase);
 		
@@ -191,7 +195,7 @@ public class UISplineProgress : MaskableGraphic
 		right.position = _Point.Position - _Point.Normal * size;
 		right.color    = color;
 		right.uv0      = new Vector2(1, phase);
-		right.uv1      = new Vector2(m_FadeIn, m_FadeOut);
+		right.uv1      = new Vector2(fadeIn, fadeOut);
 		right.tangent  = _UV.ToVector();
 		right.normal   = new Vector4(_Min, _Max, _Point.Phase, _Point.Phase);
 		

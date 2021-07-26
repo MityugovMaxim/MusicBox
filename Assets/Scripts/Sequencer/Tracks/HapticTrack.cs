@@ -1,4 +1,5 @@
 using UnityEngine;
+using Zenject;
 
 #if UNITY_EDITOR
 public partial class HapticTrack
@@ -11,13 +12,13 @@ public partial class HapticTrack
 [CreateAssetMenu(fileName = "Haptic Track", menuName = "Tracks/Haptic Track")]
 public partial class HapticTrack : Track<HapticClip>
 {
+	[Inject] Haptic m_Haptic;
+
 	public override void Initialize(Sequencer _Sequencer)
 	{
 		base.Initialize(_Sequencer);
 		
 		foreach (HapticClip clip in Clips)
-			clip.Initialize(Sequencer);
-		
-		Haptic.Initialize();
+			clip.Initialize(Sequencer, m_Haptic);
 	}
 }

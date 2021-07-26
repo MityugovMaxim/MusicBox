@@ -48,7 +48,7 @@ public class ColorProcessor : MonoBehaviour
 	{
 		Shader.SetGlobalColor(m_BackgroundPrimaryColorPropertyID, ColorScheme.BackgroundPrimary);
 		Shader.SetGlobalColor(m_BackgroundSecondaryColorPropertyID, ColorScheme.BackgroundSecondary);
-		Shader.SetGlobalColor(m_ForegroundPrimaryColorPropertyID, ColorScheme.ForegroundSecondary);
-		Shader.SetGlobalColor(m_ForegroundSecondaryColorPropertyID, ColorScheme.ForegroundPrimary);
+		Shader.SetGlobalColor(m_ForegroundPrimaryColorPropertyID, ColorScheme.ForegroundPrimary);
+		Shader.SetGlobalColor(m_ForegroundSecondaryColorPropertyID, ColorScheme.ForegroundSecondary);
 	}
 }

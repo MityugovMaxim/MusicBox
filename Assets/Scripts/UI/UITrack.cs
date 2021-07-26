@@ -6,20 +6,15 @@ public abstract class UITrack<T> : UIEntity where T : Clip
 {
 	protected float Time => m_Time;
 
-	[SerializeField] float   m_Time;
-	[SerializeField] float   m_Speed;
+	protected abstract RectTransform Zone { get; }
+
+	[SerializeField] float m_Time;
+	[SerializeField] float m_Speed;
+	[SerializeField] float m_MinPadding;
+	[SerializeField] float m_MaxPadding;
 
 	[NonSerialized] List<T> m_Clips       = new List<T>();
 	[NonSerialized] List<T> m_ClipsBuffer = new List<T>();
-
-	#if UNITY_EDITOR
-	protected override void OnValidate()
-	{
-		base.OnValidate();
-		
-		Process(m_Time);
-	}
-	#endif
 
 	public virtual void Initialize(List<T> _Clips)
 	{
@@ -137,7 +132,17 @@ public abstract class UITrack<T> : UIEntity where T : Clip
 		return index;
 	}
 
-	protected abstract float GetMinTime();
+	protected virtual float GetMinTime()
+	{
+		Rect rect = RectTransform.GetLocalRect(Zone);
+		
+		return GetTime(rect.yMin - m_MinPadding);
+	}
 
-	protected abstract float GetMaxTime();
+	protected virtual float GetMaxTime()
+	{
+		Rect rect = RectTransform.GetLocalRect(Zone);
+		
+		return GetTime(rect.yMax + m_MaxPadding);
+	}
 }

@@ -166,12 +166,13 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 
 	public event Action OnRebuild;
 
-	[SerializeField, HideInInspector] List<Key> m_Keys      = new List<Key>();
-	[SerializeField, HideInInspector] int       m_Samples   = 1;
-	[SerializeField, HideInInspector] bool      m_Loop      = false;
-	[SerializeField, HideInInspector] bool      m_Uniform   = false;
-	[SerializeField, HideInInspector] bool      m_Optimize  = false;
-	[SerializeField, HideInInspector] float     m_Threshold = 10;
+	[SerializeField]                  bool      m_AutoRebuild = true;
+	[SerializeField, HideInInspector] List<Key> m_Keys        = new List<Key>();
+	[SerializeField, HideInInspector] int       m_Samples     = 1;
+	[SerializeField, HideInInspector] bool      m_Loop        = false;
+	[SerializeField, HideInInspector] bool      m_Uniform     = false;
+	[SerializeField, HideInInspector] bool      m_Optimize    = false;
+	[SerializeField, HideInInspector] float     m_Threshold   = 10;
 
 	bool m_SplineDirty;
 
@@ -189,9 +190,6 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 	{
 		base.OnValidate();
 		
-		if (!gameObject.scene.isLoaded)
-			return;
-		
 		SetSplineDirty();
 	}
 	#endif
@@ -200,7 +198,8 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 	{
 		base.OnEnable();
 		
-		Rebuild();
+		if (m_AutoRebuild)
+			Rebuild();
 	}
 
 	void LateUpdate()
@@ -372,9 +371,10 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 
 	void SetSplineDirty()
 	{
-		m_SplineDirty = true;
+		m_SplineDirty = m_AutoRebuild;
 	}
 
+	[ContextMenu("Rebuild")]
 	public void Rebuild()
 	{
 		GenerateLUT();
