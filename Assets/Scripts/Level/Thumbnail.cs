@@ -4,8 +4,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using Zenject;
 
-public class Thumbnail : UIEntity, IPointerClickHandler
+public abstract class Thumbnail : UIEntity, IPointerClickHandler
 {
+	public abstract string ID { get; }
+
 	public RectTransform Mount => m_Mount;
 
 	public event Action OnClick;
@@ -26,6 +28,8 @@ public class Thumbnail : UIEntity, IPointerClickHandler
 	}
 
 	public virtual void OnShow() { }
+
+	public virtual void OnHide() { }
 
 	[UsedImplicitly]
 	public class Factory : PlaceholderFactory<string, RectTransform, Thumbnail> { }

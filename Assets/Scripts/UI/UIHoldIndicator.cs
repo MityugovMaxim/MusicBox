@@ -132,7 +132,7 @@ public class UIHoldIndicator : UIIndicator
 	[Preserve]
 	public void Success(float _MinProgress, float _MaxProgress)
 	{
-		SignalBus.Fire(new HoldSuccess(_MinProgress, _MaxProgress));
+		SignalBus.Fire(new HoldSuccessSignal(_MinProgress, _MaxProgress));
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
@@ -141,7 +141,7 @@ public class UIHoldIndicator : UIIndicator
 	[Preserve]
 	public void Fail(float _MinProgress, float _MaxProgress)
 	{
-		SignalBus.Fire(new HoldFail(_MinProgress, _MaxProgress));
+		SignalBus.Fire(new HoldFailSignal(_MinProgress, _MaxProgress));
 		
 		Animator.SetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
@@ -150,7 +150,7 @@ public class UIHoldIndicator : UIIndicator
 	[Preserve]
 	public void Hit(float _MinProgress, float _MaxProgress)
 	{
-		SignalBus.Fire(new HoldHit(_MinProgress, _MaxProgress));
+		SignalBus.Fire(new HoldHitSignal(_MinProgress, _MaxProgress));
 		
 		Highlight();
 		
@@ -160,7 +160,7 @@ public class UIHoldIndicator : UIIndicator
 	[Preserve]
 	public void Miss(float _MinProgress, float _MaxProgress)
 	{
-		SignalBus.Fire(new HoldMiss(_MinProgress, _MaxProgress));
+		SignalBus.Fire(new HoldMissSignal(_MinProgress, _MaxProgress));
 	}
 
 	void Highlight()

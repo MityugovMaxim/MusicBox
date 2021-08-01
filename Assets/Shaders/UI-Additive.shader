@@ -6,6 +6,7 @@ Shader "UI/Additive"
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
+        _Power ("Power", Float) = 1
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -48,7 +49,7 @@ Shader "UI/Additive"
         Pass
         {
             Name "Additive"
-        CGPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
             #pragma target 2.0
@@ -84,6 +85,7 @@ Shader "UI/Additive"
             float4 _MainTex_ST;
             float _UIMaskSoftnessX;
             float _UIMaskSoftnessY;
+            float _Power;
 
             fragData vert(appdata_t v)
             {
@@ -110,6 +112,9 @@ Shader "UI/Additive"
             {
                 half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
 
+                color.rgb *= color.rgb;
+                color.rgb *= _Power;
+                
                 #ifdef UNITY_UI_CLIP_RECT
                 half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
                 color.a *= m.x * m.y;

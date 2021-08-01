@@ -24,6 +24,7 @@ public class UIPreview : UIEntity
 				m_Thumbnail.RectTransform.anchorMax = Vector2.one;
 				m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
 				m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
+				m_Thumbnail.OnHide();
 			}
 			
 			m_Thumbnail = _Thumbnail;
@@ -44,12 +45,15 @@ public class UIPreview : UIEntity
 			(target.yMax - source.yMin) / source.height
 		);
 		
-		m_Thumbnail.RectTransform.anchorMin = anchorMin;
-		m_Thumbnail.RectTransform.anchorMax = anchorMax;
-		m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
-		m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
+		m_Thumbnail.RectTransform.anchorMin  = anchorMin;
+		m_Thumbnail.RectTransform.anchorMax  = anchorMax;
+		m_Thumbnail.RectTransform.offsetMin  = Vector2.zero;
+		m_Thumbnail.RectTransform.offsetMax  = Vector2.zero;
+		m_Thumbnail.RectTransform.localScale = Vector3.one;
 		
-		Move(_Thumbnail, Vector2.zero, Vector2.one, _Instant || m_Shown);
+		m_Thumbnail.OnShow();
+		
+		Move(m_Thumbnail, Vector2.zero, Vector2.one, _Instant || m_Shown);
 		
 		m_Shown = true;
 	}
@@ -74,6 +78,8 @@ public class UIPreview : UIEntity
 			(target.yMax - source.yMin) / source.height
 		);
 		
+		m_Thumbnail.OnHide();
+		
 		Move(
 			m_Thumbnail,
 			anchorMin,
@@ -82,10 +88,11 @@ public class UIPreview : UIEntity
 			() =>
 			{
 				m_Thumbnail.RectTransform.SetParent(m_Thumbnail.Mount, true);
-				m_Thumbnail.RectTransform.anchorMin = Vector2.zero;
-				m_Thumbnail.RectTransform.anchorMax = Vector2.one;
-				m_Thumbnail.RectTransform.offsetMin = Vector2.zero;
-				m_Thumbnail.RectTransform.offsetMax = Vector2.zero;
+				m_Thumbnail.RectTransform.anchorMin  = Vector2.zero;
+				m_Thumbnail.RectTransform.anchorMax  = Vector2.one;
+				m_Thumbnail.RectTransform.offsetMin  = Vector2.zero;
+				m_Thumbnail.RectTransform.offsetMax  = Vector2.zero;
+				m_Thumbnail.RectTransform.localScale = Vector3.one;
 				
 				m_Thumbnail = null;
 			}

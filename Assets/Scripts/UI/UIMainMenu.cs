@@ -1,321 +1,130 @@
-using System.Collections;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class UIMainMenu : UIMenu
+public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
-	[Inject] Thumbnail.Factory m_ThumbnailFactory;
-	[Inject] LevelProvider     m_LevelProvider;
-	[Inject] UIPauseMenu       m_PauseMenu;
-	[Inject] UIGameMenu        m_GameMenu;
+	[SerializeField] UIMainMenuTrack m_Track;
+	[SerializeField] RectTransform   m_Container;
+	[SerializeField] ScrollRect      m_Scroll;
 
-	[SerializeField] UIPreview     m_Preview;
-	[SerializeField] LevelInfo[]   m_LevelInfos;
-	[SerializeField] RectTransform m_GridContent;
-	[SerializeField] CanvasGroup   m_GridGroup;
-	[SerializeField] CanvasGroup   m_ControlGroup;
-	[SerializeField] ScrollRect    m_Scroll;
+	SignalBus               m_SignalBus;
+	LevelProcessor          m_LevelProcessor;
+	UIMainMenuTrack.Factory m_TrackFactory;
 
-	Thumbnail[] m_Thumbnails;
-	int         m_ThumbnailIndex = -1;
+	readonly List<UIMainMenuTrack> m_Tracks = new List<UIMainMenuTrack>();
 
-	IEnumerator m_GridRoutine;
-	IEnumerator m_ControlRoutine;
+	string[] m_LevelIDs;
+
+	[Inject]
+	public void Construct(
+		SignalBus               _SignalBus,
+		LevelProcessor          _LevelProcessor,
+		UIMainMenuTrack.Factory _TrackFactory
+	)
+	{
+		m_SignalBus      = _SignalBus;
+		m_LevelProcessor = _LevelProcessor;
+		m_TrackFactory   = _TrackFactory;
+	}
+
+	void IInitializable.Initialize()
+	{
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+	}
+
+	void RegisterLevelStart(LevelStartSignal _Signal)
+	{
+		Recenter(_Signal.LevelID);
+		Hide(true);
+	}
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
 		Show(true);
-		
-		LoadPreviews();
 	}
 
-	public void ShowPreview(int _ThumbnailIndex, bool _Instant = false)
+	protected override void OnShowStarted()
 	{
-		if (m_Preview == null)
-		{
-			Debug.LogError("[UIMainMenu] Show preview failed. Preview is not assigned.", gameObject);
-			return;
-		}
-		
-		if (m_ThumbnailIndex == _ThumbnailIndex)
-		{
-			HidePreview();
-			return;
-		}
-		
-		Thumbnail thumbnail = m_Thumbnails[_ThumbnailIndex];
-		if (thumbnail == null)
-		{
-			Debug.LogErrorFormat(gameObject, "[UIMainMenu] Show preview failed. Thumbnail is null at '{0}' index.", _ThumbnailIndex);
-			HidePreview();
-			return;
-		}
-		
-		m_ThumbnailIndex = _ThumbnailIndex;
-		
-		EnableControl(_Instant);
-		DisableGrid(_Instant);
-		
-		m_Preview.Show(thumbnail, _Instant);
+		RefreshPreviews();
 	}
 
-	public void HidePreview(bool _Instant = false)
+	void RefreshPreviews()
 	{
-		if (m_Preview == null)
-		{
-			Debug.LogError("[UIMainMenu] Hide preview failed. Preview is not assigned.", gameObject);
+		if (m_LevelProcessor == null)
 			return;
+		
+		m_LevelIDs = m_LevelProcessor.GetLevelIDs();
+		
+		int delta = m_LevelIDs.Length - m_Tracks.Count;
+		int count = Mathf.Abs(delta);
+		
+		if (delta > 0)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				UIMainMenuTrack track = m_TrackFactory.Create(m_Track);
+				track.RectTransform.SetParent(m_Container, false);
+				m_Tracks.Add(track);
+			}
+		}
+		else if (delta < 0)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				int             index = m_Tracks.Count - 1;
+				UIMainMenuTrack track = m_Tracks[index];
+				Destroy(track.gameObject);
+				m_Tracks.RemoveAt(index);
+			}
 		}
 		
-		m_ThumbnailIndex = -1;
+		foreach (UIMainMenuTrack track in m_Tracks)
+			track.gameObject.SetActive(false);
 		
-		DisableControl(_Instant);
-		EnableGrid(_Instant);
-		
-		m_Preview.Hide(_Instant);
-	}
-
-	public void NextPreview(bool _Instant = false)
-	{
-		if (m_Preview == null)
+		for (var i = 0; i < m_LevelIDs.Length; i++)
 		{
-			Debug.LogError("[UIMainMenu] Next preview failed. Preview is not assigned.", gameObject);
-			return;
-		}
-		
-		int previewIndex = MathUtility.Repeat(m_ThumbnailIndex + 1, m_Thumbnails.Length);
-		
-		Recenter(previewIndex);
-		
-		ShowPreview(previewIndex, _Instant);
-	}
-
-	public void PreviousPreview(bool _Instant = false)
-	{
-		if (m_Preview == null)
-		{
-			Debug.LogError("[UIMainMenu] Next preview failed. Preview is not assigned.", gameObject);
-			return;
-		}
-		
-		int previewIndex = MathUtility.Repeat(m_ThumbnailIndex - 1, m_Thumbnails.Length);
-		
-		Recenter(previewIndex);
-		
-		ShowPreview(previewIndex, _Instant);
-	}
-
-	public void Play()
-	{
-		if (m_ThumbnailIndex < 0 || m_ThumbnailIndex >= m_LevelInfos.Length)
-		{
-			Debug.LogError("[UIMainMenu] Play failed. Thumbnail index is out of range.", gameObject);
-			return;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[m_ThumbnailIndex];
-		
-		if (levelInfo == null)
-		{
-			Debug.LogError("[UIMainMenu] Play failed. Level is not assigned.", gameObject);
-			return;
-		}
-		
-		m_LevelProvider.Create(levelInfo);
-		
-		if (m_GameMenu != null)
-			m_GameMenu.Show(true);
-		
-		Hide(false, null, m_LevelProvider.Play);
-	}
-
-	void LoadPreviews()
-	{
-		int count = m_LevelInfos.Length;
-		
-		m_Thumbnails = new Thumbnail[count];
-		
-		int index = 0;
-		foreach (var levelInfo in m_LevelInfos)
-		{
-			RectTransform mount = CreateMount(m_GridContent);
+			UIMainMenuTrack track   = m_Tracks[i];
+			string          levelID = m_LevelIDs[i];
 			
-			Thumbnail thumbnail = m_ThumbnailFactory.Create($"{levelInfo.ID}/thumbnail", mount);
+			track.Setup(levelID);
 			
-			var indexClosure = index;
-			
-			thumbnail.OnClick += () => ShowPreview(indexClosure);
-			
-			m_Thumbnails[index++] = thumbnail;
+			track.gameObject.SetActive(true);
 		}
 	}
 
-	void Recenter(int _PreviewIndex)
+	void Recenter(string _LevelID)
 	{
-		Rect source = m_Thumbnails[_PreviewIndex].GetWorldRect();
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Level ID '{0}' is null or empty.", _LevelID);
+			return;
+		}
+		
+		UIMainMenuTrack track = m_Tracks.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
+		
+		if (track == null)
+		{
+			Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Track with level ID '{0}' not found.", _LevelID);
+			return;
+		}
+		
+		Rect source = track.GetWorldRect();
 		Rect target = m_Scroll.content.GetWorldRect();
 		
 		float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);
 		
 		m_Scroll.StopMovement();
 		m_Scroll.verticalNormalizedPosition = position;
-	}
-
-	protected override void OnHideFinished()
-	{
-		DisableControl(true);
-		EnableGrid(true);
-		
-		m_ThumbnailIndex = -1;
-		
-		if (m_Preview != null)
-			m_Preview.Hide(true);
-	}
-
-	protected override void OnShowFinished()
-	{
-		if (m_PauseMenu != null)
-			m_PauseMenu.Hide(true);
-		
-		if (m_GameMenu != null)
-			m_GameMenu.Hide(true);
-	}
-
-	static RectTransform CreateMount(Transform _Parent)
-	{
-		GameObject mountObject = new GameObject("mount", typeof(RectTransform));
-		
-		RectTransform mount = mountObject.GetComponent<RectTransform>();
-		
-		mount.SetParent(_Parent, false);
-		
-		return mount;
-	}
-
-	void EnableGrid(bool _Instant = false)
-	{
-		if (m_GridRoutine != null)
-			StopCoroutine(m_GridRoutine);
-		
-		if (_Instant || !gameObject.activeInHierarchy)
-		{
-			m_GridGroup.alpha          = 1;
-			m_GridGroup.blocksRaycasts = true;
-		}
-		else
-		{
-			m_GridRoutine = EnableGroupRoutine(m_GridGroup, 0.2f);
-			
-			StartCoroutine(m_GridRoutine);
-		}
-	}
-
-	void DisableGrid(bool _Instant = false)
-	{
-		if (m_GridRoutine != null)
-			StopCoroutine(m_GridRoutine);
-		
-		if (_Instant || !gameObject.activeInHierarchy)
-		{
-			m_GridGroup.alpha          = 0;
-			m_GridGroup.blocksRaycasts = false;
-		}
-		else
-		{
-			m_GridRoutine = DisableGroupRoutine(m_GridGroup, 0.2f);
-			
-			StartCoroutine(m_GridRoutine);
-		}
-	}
-
-	void EnableControl(bool _Instant = false)
-	{
-		if (m_ControlRoutine != null)
-			StopCoroutine(m_ControlRoutine);
-		
-		if (_Instant || !gameObject.activeInHierarchy)
-		{
-			m_ControlGroup.alpha          = 1;
-			m_ControlGroup.blocksRaycasts = true;
-		}
-		else
-		{
-			m_ControlRoutine = EnableGroupRoutine(m_ControlGroup, 0.2f);
-			
-			StartCoroutine(m_ControlRoutine);
-		}
-	}
-
-	void DisableControl(bool _Instant = false)
-	{
-		if (m_ControlRoutine != null)
-			StopCoroutine(m_ControlRoutine);
-		
-		if (_Instant)
-		{
-			m_ControlGroup.alpha          = 0;
-			m_ControlGroup.blocksRaycasts = false;
-		}
-		else
-		{
-			m_ControlRoutine = DisableGroupRoutine(m_ControlGroup, 0.2f);
-			
-			StartCoroutine(m_ControlRoutine);
-		}
-	}
-
-	static IEnumerator EnableGroupRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		float source = _CanvasGroup.alpha;
-		float target = 1;
-		
-		if (!Mathf.Approximately(source, target) && _Duration > float.Epsilon)
-		{
-			float time = 0;
-			while (time < _Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
-			}
-		}
-		
-		_CanvasGroup.alpha = target;
-		
-		_CanvasGroup.blocksRaycasts = true;
-	}
-
-	static IEnumerator DisableGroupRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		float source = _CanvasGroup.alpha;
-		float target = 0;
-		
-		_CanvasGroup.blocksRaycasts = false;
-		
-		if (!Mathf.Approximately(source, target) && _Duration > float.Epsilon)
-		{
-			float time = 0;
-			while (time < _Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
-			}
-		}
-		
-		_CanvasGroup.alpha = target;
 	}
 }

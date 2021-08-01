@@ -44,9 +44,6 @@ public partial class Sequencer
 [ExecuteInEditMode]
 public partial class Sequencer : MonoBehaviour
 {
-	[Inject] SignalBus         m_SignalBus;
-	[Inject] ISampleReceiver[] m_SampleReceivers;
-
 	[Serializable]
 	public class SampleEvent : UnityEvent<float, float> { }
 
@@ -63,20 +60,11 @@ public partial class Sequencer : MonoBehaviour
 	[SerializeField] Track[] m_Tracks;
 	[SerializeField] float   m_Time;
 	[SerializeField] float   m_Length;
-	[SerializeField] bool    m_AutoPlay;
 
-	int m_Frame;
-	int m_SampleFrame;
-
-	void OnEnable()
-	{
-		Initialize();
-		
-		if (!Application.isPlaying || !m_AutoPlay)
-			return;
-		
-		Play();
-	}
+	ISampleReceiver[] m_SampleReceivers;
+	Action            m_Finished;
+	int               m_Frame;
+	int               m_SampleFrame;
 
 	void OnDisable()
 	{
@@ -98,6 +86,12 @@ public partial class Sequencer : MonoBehaviour
 		m_Frame++;
 	}
 
+	[Inject]
+	public void Construct(ISampleReceiver[] _SampleReceivers)
+	{
+		m_SampleReceivers = _SampleReceivers;
+	}
+
 	public void Initialize()
 	{
 		if (m_Tracks == null || m_Tracks.Length == 0)
@@ -107,10 +101,11 @@ public partial class Sequencer : MonoBehaviour
 			track.Initialize(this);
 	}
 
-	public void Play()
+	public void Play(Action _Finished = null)
 	{
 		Playing = true;
 		
+		m_Finished    = _Finished;
 		m_Frame       = 0;
 		m_SampleFrame = 0;
 		
@@ -159,7 +154,7 @@ public partial class Sequencer : MonoBehaviour
 			
 			Time = m_Length;
 			
-			m_SignalBus.Fire<LevelCompleteSignal>();
+			m_Finished?.Invoke();
 		}
 	}
 }

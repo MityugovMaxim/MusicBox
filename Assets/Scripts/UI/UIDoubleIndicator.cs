@@ -43,14 +43,14 @@ public class UIDoubleIndicator : UIIndicator
 
 	public void Success(float _Progress)
 	{
-		SignalBus.Fire(new DoubleSuccess(_Progress));
+		SignalBus.Fire(new DoubleSuccessSignal(_Progress));
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 
 	public void Fail(float _Progress)
 	{
-		SignalBus.Fire(new DoubleFail(_Progress));
+		SignalBus.Fire(new DoubleFailSignal(_Progress));
 		
 		Animator.SetTrigger(m_FailParameterID);
 	}

@@ -23,8 +23,6 @@ public class UISafeArea : UIBehaviour
 		}
 	}
 
-	
-
 	RectTransform RectTransform
 	{
 		get
@@ -96,24 +94,29 @@ public class UISafeArea : UIBehaviour
 		
 		Camera camera = Canvas.renderMode != RenderMode.ScreenSpaceOverlay ? Canvas.worldCamera : null;
 		
+		RectTransform rectTransform = Canvas.transform as RectTransform;
+		
+		if (rectTransform == null)
+			return;
+		
 		RectTransformUtility.ScreenPointToWorldPointInRectangle(
-			RectTransform,
+			rectTransform,
 			safeArea.min,
 			camera,
 			out Vector3 min
 		);
 		
 		RectTransformUtility.ScreenPointToWorldPointInRectangle(
-			RectTransform,
+			rectTransform,
 			safeArea.max,
 			camera,
 			out Vector3 max
 		);
 		
-		min = RectTransform.InverseTransformPoint(min);
-		max = RectTransform.InverseTransformPoint(max);
+		min = rectTransform.InverseTransformPoint(min);
+		max = rectTransform.InverseTransformPoint(max);
 		
-		Rect source = RectTransform.rect;
+		Rect source = rectTransform.rect;
 		Rect target = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
 		
 		Vector4 padding = new Vector4(

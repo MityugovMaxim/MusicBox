@@ -33,27 +33,27 @@ public class AudioProcessor : MonoBehaviour, IInitializable, IDisposable
 
 	public void Initialize()
 	{
-		m_SignalBus.Subscribe<HoldSuccess>(RegisterHit);
-		m_SignalBus.Subscribe<HoldHit>(RegisterHit);
-		m_SignalBus.Subscribe<TapSuccess>(RegisterHit);
-		m_SignalBus.Subscribe<DoubleSuccess>(RegisterHit);
+		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHit);
+		m_SignalBus.Subscribe<HoldHitSignal>(RegisterHit);
+		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterHit);
+		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterHit);
 		
-		m_SignalBus.Subscribe<HoldFail>(RegisterMiss);
-		m_SignalBus.Subscribe<HoldMiss>(RegisterMiss);
-		m_SignalBus.Subscribe<TapFail>(RegisterMiss);
-		m_SignalBus.Subscribe<DoubleFail>(RegisterMiss);
+		m_SignalBus.Subscribe<HoldFailSignal>(RegisterMiss);
+		m_SignalBus.Subscribe<HoldMissSignal>(RegisterMiss);
+		m_SignalBus.Subscribe<TapFailSignal>(RegisterMiss);
+		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterMiss);
 	}
 
 	public void Dispose()
 	{
-		m_SignalBus.Unsubscribe<HoldSuccess>(RegisterHit);
-		m_SignalBus.Unsubscribe<HoldHit>(RegisterHit);
-		m_SignalBus.Unsubscribe<TapSuccess>(RegisterHit);
-		m_SignalBus.Unsubscribe<DoubleSuccess>(RegisterHit);
+		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHit);
+		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHit);
+		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterHit);
+		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterHit);
 		
-		m_SignalBus.Unsubscribe<HoldFail>(RegisterMiss);
-		m_SignalBus.Unsubscribe<HoldMiss>(RegisterMiss);
-		m_SignalBus.Unsubscribe<TapFail>(RegisterMiss);
-		m_SignalBus.Unsubscribe<DoubleFail>(RegisterMiss);
+		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterMiss);
+		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterMiss);
+		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterMiss);
+		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterMiss);
 	}
 }

@@ -17,20 +17,32 @@ public class HapticProcessor : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<HoldSuccess>(RegisterSuccess);
-		m_SignalBus.Subscribe<TapSuccess>(RegisterSuccess);
-		m_SignalBus.Subscribe<DoubleSuccess>(RegisterSuccess);
+		m_SignalBus.Subscribe<DoubleSuccessSignal>(ImpactHeavy);
+		m_SignalBus.Subscribe<HoldSuccessSignal>(ImpactMedium);
+		m_SignalBus.Subscribe<TapSuccessSignal>(ImpactMedium);
+		m_SignalBus.Subscribe<HoldHitSignal>(ImpactLight);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<HoldSuccess>(RegisterSuccess);
-		m_SignalBus.Unsubscribe<TapSuccess>(RegisterSuccess);
-		m_SignalBus.Unsubscribe<DoubleSuccess>(RegisterSuccess);
+		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(ImpactHeavy);
+		m_SignalBus.Unsubscribe<HoldSuccessSignal>(ImpactMedium);
+		m_SignalBus.Unsubscribe<TapSuccessSignal>(ImpactMedium);
+		m_SignalBus.Unsubscribe<HoldHitSignal>(ImpactLight);
 	}
 
-	void RegisterSuccess()
+	void ImpactHeavy()
+	{
+		m_Haptic.Process(Haptic.Type.ImpactHeavy);
+	}
+
+	void ImpactMedium()
 	{
 		m_Haptic.Process(Haptic.Type.ImpactMedium);
+	}
+
+	void ImpactLight()
+	{
+		m_Haptic.Process(Haptic.Type.ImpactLight);
 	}
 }

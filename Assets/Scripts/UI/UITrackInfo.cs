@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -6,25 +7,28 @@ public class UITrackInfo : MonoBehaviour
 {
 	[SerializeField] TMP_Text m_Label;
 
-	LevelProvider m_LevelProvider;
+	SignalBus      m_SignalBus;
+	LevelProcessor m_LevelProcessor;
 
 	[Inject]
-	public void Construct(LevelProvider _LevelProvider)
+	public void Construct(SignalBus _SignalBus, LevelProcessor _LevelProcessor)
 	{
-		m_LevelProvider = _LevelProvider;
+		m_SignalBus      = _SignalBus;
+		m_LevelProcessor = _LevelProcessor;
 		
-		if (m_LevelProvider == null)
-		{
-			Debug.LogError("[UITrackInfo] Construct failed. Level provider is null.");
-			return;
-		}
-		
-		m_LevelProvider.LevelChanged += LevelChanged;
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 	}
 
-	void LevelChanged()
+	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
-		if (m_Label != null && m_LevelProvider != null)
-			m_Label.text = $"<b>{m_LevelProvider.Title}</b>\n<size=32><color=#a0a0a0>{m_LevelProvider.Artist}</color></size>";
+		if (m_Label == null)
+			return;
+		
+		string levelID = _Signal.LevelID;
+		
+		string title  = m_LevelProcessor.GetTitle(levelID);
+		string artist = m_LevelProcessor.GetArtist(levelID);
+		
+		m_Label.text = $"<b>{title}</b>\n<size=26><color=#a0a0a0>{artist}</color></size>";
 	}
 }

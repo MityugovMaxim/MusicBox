@@ -1,16 +1,31 @@
 using System;
 using System.Collections;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class UIMenu : UIEntity
 {
-	public bool Shown => m_Shown;
+	public bool Shown { get; private set; }
+
+	protected float ShowDuration => m_ShowDuration;
+	protected float HideDuration => m_HideDuration;
+
+	CanvasGroup CanvasGroup
+	{
+		get
+		{
+			if (m_CanvasGroup == null)
+				m_CanvasGroup = GetComponent<CanvasGroup>();
+			return m_CanvasGroup;
+		}
+	}
 
 	[SerializeField] UIBlur m_Blur;
 
 	protected Action CloseAction;
+
+	[SerializeField] float m_ShowDuration = 0.2f;
+	[SerializeField] float m_HideDuration = 0.2f;
 
 	Action m_ShowStarted;
 	Action m_ShowFinished;
@@ -18,33 +33,23 @@ public class UIMenu : UIEntity
 	Action m_HideFinished;
 
 	CanvasGroup m_CanvasGroup;
-	bool        m_Shown;
 	IEnumerator m_Routine;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_CanvasGroup                = GetComponent<CanvasGroup>();
-		m_CanvasGroup.alpha          = 0;
-		m_CanvasGroup.interactable   = false;
-		m_CanvasGroup.blocksRaycasts = false;
-	}
-
-	public void Toggle(bool _Instant = false, Action _Started = null, Action _Finished = null)
-	{
-		if (m_Shown)
-			Hide(_Instant, _Started, _Finished);
-		else
-			Show(_Instant, _Started, _Finished);
+		Shown = false;
+		
+		Hide(true);
 	}
 
 	public void Show(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
-		if (m_Shown)
+		if (Shown)
 			return;
 		
-		m_Shown        = true;
+		Shown          = true;
 		m_ShowStarted  = _Started;
 		m_ShowFinished = _Finished;
 		
@@ -53,13 +58,14 @@ public class UIMenu : UIEntity
 		
 		if (_Instant || !gameObject.activeInHierarchy)
 		{
-			m_CanvasGroup.alpha          = 1;
-			m_CanvasGroup.interactable   = true;
-			m_CanvasGroup.blocksRaycasts = true;
+			CanvasGroup.interactable   = true;
+			CanvasGroup.blocksRaycasts = true;
 			
 			OnShowStarted();
 			
 			InvokeShowStarted();
+			
+			InstantShow(CanvasGroup);
 			
 			OnShowFinished();
 			
@@ -67,7 +73,7 @@ public class UIMenu : UIEntity
 		}
 		else
 		{
-			m_Routine = ShowRoutine(0.2f);
+			m_Routine = ShowRoutine(CanvasGroup, m_ShowDuration);
 			
 			StartCoroutine(m_Routine);
 		}
@@ -75,10 +81,10 @@ public class UIMenu : UIEntity
 
 	public void Hide(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
-		if (!m_Shown)
+		if (!Shown)
 			return;
 		
-		m_Shown        = false;
+		Shown          = false;
 		m_HideStarted  = _Started;
 		m_HideFinished = _Finished;
 		
@@ -87,13 +93,14 @@ public class UIMenu : UIEntity
 		
 		if (_Instant || !gameObject.activeInHierarchy)
 		{
-			m_CanvasGroup.alpha          = 0;
-			m_CanvasGroup.interactable   = false;
-			m_CanvasGroup.blocksRaycasts = false;
+			CanvasGroup.interactable   = false;
+			CanvasGroup.blocksRaycasts = false;
 			
 			OnHideStarted();
 			
 			InvokeHideStarted();
+			
+			InstantHide(CanvasGroup);
 			
 			OnHideFinished();
 			
@@ -103,7 +110,7 @@ public class UIMenu : UIEntity
 		}
 		else
 		{
-			m_Routine = HideRoutine(0.2f);
+			m_Routine = HideRoutine(CanvasGroup, m_HideDuration);
 			
 			StartCoroutine(m_Routine);
 		}
@@ -117,17 +124,13 @@ public class UIMenu : UIEntity
 
 	protected virtual void OnHideFinished() { }
 
-	void InvokeCloseAction()
+	IEnumerator ShowRoutine(CanvasGroup _CanvasGroup, float _Duration)
 	{
-		Action action = CloseAction;
-		CloseAction = null;
-		action?.Invoke();
-	}
-
-	IEnumerator ShowRoutine(float _Duration)
-	{
-		m_CanvasGroup.interactable   = true;
-		m_CanvasGroup.blocksRaycasts = true;
+		if (_CanvasGroup == null)
+			yield break;
+		
+		_CanvasGroup.interactable   = true;
+		_CanvasGroup.blocksRaycasts = true;
 		
 		OnShowStarted();
 		
@@ -139,7 +142,19 @@ public class UIMenu : UIEntity
 			yield return null;
 		}
 		
-		float source = m_CanvasGroup.alpha;
+		yield return ShowAnimation(_CanvasGroup, _Duration);
+		
+		OnShowFinished();
+		
+		InvokeShowFinished();
+	}
+
+	protected virtual IEnumerator ShowAnimation(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		if (_CanvasGroup == null)
+			yield break;
+		
+		float source = _CanvasGroup.alpha;
 		float target = 1;
 		
 		if (!Mathf.Approximately(source, target))
@@ -151,24 +166,40 @@ public class UIMenu : UIEntity
 				
 				time += Time.deltaTime;
 				
-				m_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
+				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
 			}
 		}
 		
-		m_CanvasGroup.alpha = target;
-		
-		OnShowFinished();
-		
-		InvokeShowFinished();
+		_CanvasGroup.alpha = target;
 	}
 
-	IEnumerator HideRoutine(float _Duration)
+	IEnumerator HideRoutine(CanvasGroup _CanvasGroup, float _Duration)
 	{
+		if (_CanvasGroup == null)
+			yield break;
+		
 		OnHideStarted();
 		
 		InvokeHideStarted();
 		
-		float source = m_CanvasGroup.alpha;
+		yield return HideAnimation(_CanvasGroup, _Duration);
+		
+		_CanvasGroup.interactable   = false;
+		_CanvasGroup.blocksRaycasts = false;
+		
+		OnHideFinished();
+		
+		InvokeHideFinished();
+		
+		InvokeCloseAction();
+	}
+
+	protected virtual IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		if (_CanvasGroup == null)
+			yield break;
+		
+		float source = _CanvasGroup.alpha;
 		float target = 0;
 		
 		if (!Mathf.Approximately(source, target))
@@ -180,20 +211,23 @@ public class UIMenu : UIEntity
 				
 				time += Time.deltaTime;
 				
-				m_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
+				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
 			}
 		}
 		
-		m_CanvasGroup.alpha = target;
-		
-		m_CanvasGroup.interactable   = false;
-		m_CanvasGroup.blocksRaycasts = false;
-		
-		OnHideFinished();
-		
-		InvokeHideFinished();
-		
-		InvokeCloseAction();
+		_CanvasGroup.alpha = target;
+	}
+
+	protected virtual void InstantShow(CanvasGroup _CanvasGroup)
+	{
+		if (_CanvasGroup != null)
+			_CanvasGroup.alpha = 1;
+	}
+
+	protected virtual void InstantHide(CanvasGroup _CanvasGroup)
+	{
+		if (_CanvasGroup != null)
+			_CanvasGroup.alpha = 0;
 	}
 
 	void InvokeShowStarted()
@@ -221,6 +255,13 @@ public class UIMenu : UIEntity
 	{
 		Action action = m_HideFinished;
 		m_HideFinished = null;
+		action?.Invoke();
+	}
+
+	protected void InvokeCloseAction()
+	{
+		Action action = CloseAction;
+		CloseAction = null;
 		action?.Invoke();
 	}
 }

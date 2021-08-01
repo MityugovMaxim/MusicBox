@@ -1,102 +1,200 @@
 using System;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 public class UIResultMenu : UIMenu, IInitializable, IDisposable
 {
+	const int RESTART_ADS_COUNT = 2;
+	const int LEAVE_ADS_COUNT   = 3;
+	const int NEXT_ADS_COUNT    = 2;
+
+	[SerializeField] UILevelPreviewBackground m_Background;
+	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
+	[SerializeField] UILevelPreviewLabel      m_Label;
+	[SerializeField] UIScore                  m_Score;
+
 	SignalBus      m_SignalBus;
 	UIMainMenu     m_MainMenu;
-	LevelProvider  m_LevelProvider;
+	UILevelMenu    m_LevelMenu;
+	LevelProcessor m_LevelProcessor;
 	ScoreProcessor m_ScoreProcessor;
+	AdsProcessor   m_AdsProcessor;
+
+	string    m_LevelID;
+	ScoreData m_ScoreData;
+
+	int m_RestartAdsCount;
+	int m_LeaveAdsCount;
+	int m_NextAdsCount;
 
 	[Inject]
 	public void Construct(
 		SignalBus      _SignalBus,
 		UIMainMenu     _MainMenu,
-		LevelProvider  _LevelProvider,
-		ScoreProcessor _ScoreProcessor
+		UILevelMenu    _LevelMenu,
+		LevelProcessor _LevelProcessor,
+		ScoreProcessor _ScoreProcessor,
+		AdsProcessor   _AdsProcessor
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_MainMenu       = _MainMenu;
-		m_LevelProvider  = _LevelProvider;
+		m_LevelMenu      = _LevelMenu;
+		m_LevelProcessor = _LevelProcessor;
 		m_ScoreProcessor = _ScoreProcessor;
-	}
-
-	public void Restart()
-	{
-		// TODO: Add advertisement here
-		
-		if (m_LevelProvider == null)
-		{
-			Debug.LogError("[UIResultMenu] Restart level failed. Level provider is null.", gameObject);
-			return;
-		}
-		
-		m_LevelProvider.Stop();
-		
-		CloseAction = m_LevelProvider.Play;
-		
-		Hide();
-	}
-
-	public void Leave()
-	{
-		if (m_LevelProvider == null)
-		{
-			Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
-			return;
-		}
-		
-		m_LevelProvider.Stop();
-		m_LevelProvider.Remove();
-		
-		if (m_MainMenu != null)
-			m_MainMenu.Show();
-	}
-
-	public void Next()
-	{
-		// TODO: Add advertisement here
-		
-		if (m_LevelProvider == null)
-		{
-			Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
-			return;
-		}
-		
-		m_LevelProvider.Stop();
-		m_LevelProvider.Remove();
-		
-		if (m_MainMenu != null)
-		{
-			m_MainMenu.NextPreview();
-			m_MainMenu.Show();
-		}
-	}
-
-	protected override void OnShowFinished()
-	{
-		// Score animation
-		// Save score
-		// Show buttons
+		m_AdsProcessor   = _AdsProcessor;
 	}
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelCompleteSignal>(RegisterLevelComplete);
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelCompleteSignal>(RegisterLevelComplete);
+		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
 	}
 
-	void RegisterLevelComplete()
+	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
-		// Load score
-		// Restore score view
+		m_LevelID = _Signal.LevelID;
+		
+		Hide(true);
+	}
+
+	void RegisterLevelFinish(LevelFinishSignal _Signal)
+	{
+		m_LevelID = _Signal.LevelID;
+		
+		m_ScoreData = m_ScoreProcessor.ScoreData;
+		
+		m_ScoreProcessor.SaveLastScore(m_LevelID, m_ScoreData);
+		m_ScoreProcessor.SaveBestScore(m_LevelID, m_ScoreData);
+		
+		m_Background.Setup(m_LevelID, true);
+		m_Thumbnail.Setup(m_LevelID);
+		m_Label.Setup(m_LevelID);
+		m_Score.Setup(m_LevelID);
 		
 		Show();
+	}
+
+	[Preserve]
+	public void Restart()
+	{
+		void RestartInternal()
+		{
+			if (m_LevelProcessor == null)
+			{
+				Debug.LogError("[UIResultMenu] Restart level failed. Level provider is null.", gameObject);
+				return;
+			}
+			
+			m_LevelProcessor.Restart();
+			
+			CloseAction = m_LevelProcessor.Play;
+			
+			Hide();
+		}
+		
+		m_RestartAdsCount++;
+		
+		if (m_RestartAdsCount >= RESTART_ADS_COUNT)
+		{
+			m_RestartAdsCount = 0;
+			
+			m_AdsProcessor.ShowInterstitial(RestartInternal);
+		}
+		else
+		{
+			RestartInternal();
+		}
+	}
+
+	[Preserve]
+	public void Leave()
+	{
+		void LeaveInternal()
+		{
+			if (m_LevelProcessor == null)
+			{
+				Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
+				return;
+			}
+			
+			m_LevelProcessor.Remove();
+			
+			if (m_MainMenu != null)
+				m_MainMenu.Show();
+		}
+		
+		m_LeaveAdsCount++;
+		
+		if (m_LeaveAdsCount >= LEAVE_ADS_COUNT)
+		{
+			m_LeaveAdsCount = 0;
+			
+			m_AdsProcessor.ShowInterstitial(LeaveInternal);
+		}
+		else
+		{
+			LeaveInternal();
+		}
+	}
+
+	[Preserve]
+	public void Next()
+	{
+		void NextInternal()
+		{
+			if (m_LevelProcessor == null)
+			{
+				Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
+				return;
+			}
+			
+			m_LevelProcessor.Remove();
+			
+			if (m_MainMenu != null)
+				m_MainMenu.Show();
+			
+			if (m_LevelMenu != null)
+			{
+				string levelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
+				m_LevelMenu.Setup(levelID);
+				m_LevelMenu.Show();
+			}
+		}
+		
+		m_NextAdsCount++;
+		
+		if (m_NextAdsCount >= NEXT_ADS_COUNT)
+		{
+			m_NextAdsCount = 0;
+			
+			m_AdsProcessor.ShowInterstitial(NextInternal);
+		}
+		else
+		{
+			NextInternal();
+		}
+	}
+
+	protected override void OnShowStarted()
+	{
+		if (m_Score != null)
+			m_Score.Restore();
+	}
+
+	protected override void OnShowFinished()
+	{
+		if (m_Score != null)
+			m_Score.Play();
+		
+		if (m_LevelProcessor != null)
+			m_LevelProcessor.Pause();
 	}
 }

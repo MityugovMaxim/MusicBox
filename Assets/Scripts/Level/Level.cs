@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -7,21 +8,18 @@ using Zenject;
 public class Level : MonoBehaviour
 {
 	Sequencer      m_Sequencer;
-	ScoreProcessor m_ScoreProcessor;
 	AudioProcessor m_AudioProcessor;
 	ColorProcessor m_ColorProcessor;
 
 	[Inject]
 	public void Construct(
 		Sequencer             _Sequencer,
-		ScoreProcessor        _ScoreProcessor,
 		AudioProcessor        _AudioProcessor,
 		ColorProcessor        _ColorProcessor,
 		List<ISampleReceiver> _SampleReceivers
 	)
 	{
 		m_Sequencer      = _Sequencer;
-		m_ScoreProcessor = _ScoreProcessor;
 		m_AudioProcessor = _AudioProcessor;
 		m_ColorProcessor = _ColorProcessor;
 		
@@ -30,9 +28,6 @@ public class Level : MonoBehaviour
 			Debug.LogErrorFormat(gameObject, "[Level] Initialize level failed. Sequencer is not found at level '{0}'", name);
 			return;
 		}
-		
-		if (m_ScoreProcessor != null)
-			m_ScoreProcessor.Restore();
 		
 		if (m_AudioProcessor != null)
 			m_AudioProcessor.Restore();
@@ -43,7 +38,7 @@ public class Level : MonoBehaviour
 		m_Sequencer.Initialize();
 	}
 
-	public void Play()
+	public void Play(Action _Finished = null)
 	{
 		if (m_Sequencer == null)
 		{
@@ -51,7 +46,7 @@ public class Level : MonoBehaviour
 			return;
 		}
 		
-		m_Sequencer.Play();
+		m_Sequencer.Play(_Finished);
 	}
 
 	public void Pause()
@@ -83,5 +78,5 @@ public class Level : MonoBehaviour
 	}
 
 	[Preserve]
-	public class Factory : PlaceholderFactory<string, Level> { }
+	public class Factory : PlaceholderFactory<string, Action<Level>, ResourceRequest> { }
 }

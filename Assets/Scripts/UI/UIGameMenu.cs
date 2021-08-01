@@ -1,11 +1,35 @@
+using System;
 using UnityEngine;
 using Zenject;
 
-public class UIGameMenu : UIMenu
+public class UIGameMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIControl m_Control;
 
-	[Inject] UIPauseMenu m_PauseMenu;
+	SignalBus   m_SignalBus;
+	UIPauseMenu m_PauseMenu;
+
+	[Inject]
+	public void Construct(
+		SignalBus   _SignalBus,
+		UIPauseMenu _PauseMenu
+	)
+	{
+		m_SignalBus = _SignalBus;
+		m_PauseMenu = _PauseMenu;
+	}
+
+	void IInitializable.Initialize()
+	{
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<LevelExitSignal>(RegisterLevelExit);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<LevelExitSignal>(RegisterLevelExit);
+	}
 
 	public void Pause()
 	{
@@ -14,13 +38,25 @@ public class UIGameMenu : UIMenu
 		
 		if (m_PauseMenu.Shown)
 		{
+			// TODO: Remove this fucking bool
 			m_Control.Locked = false;
 			m_PauseMenu.Resume();
 		}
 		else
 		{
+			// TODO: Remove this fucking bool
 			m_Control.Locked = true;
 			m_PauseMenu.Pause();
 		}
+	}
+
+	void RegisterLevelStart()
+	{
+		Show(true);
+	}
+
+	void RegisterLevelExit()
+	{
+		Hide(true);
 	}
 }

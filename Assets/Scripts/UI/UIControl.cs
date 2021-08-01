@@ -7,6 +7,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasGroup))]
 public class UIControl : Graphic, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
+	// TODO: Remove this fucking bool
 	public bool Locked
 	{
 		get => m_Locked;

@@ -6,13 +6,12 @@
 		
 		_WaveTex ("Wave Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
-		_SourceColor ("Source Color", Color) = (1,1,1,1)
-		_TargetColor ("Target Color", Color) = (1,1,1,1)
-		_Strength ("Strength", Range(0, 1)) = 1
+		_Strength ("Strength", Float) = 1
 		_Speed ("Speed", Float) = 1
-		_Burn ("Burn", Range(0, 1)) = 1
+		_Scale ("Scale", Float) = 1
 		
 		[Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
+		[Toggle(COLOR_SCHEME)] _UseColorScheme ("Use Color Scheme", Float) = 0
 		[HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
 		[HideInInspector] _Stencil ("Stencil ID", Float) = 0
 		[HideInInspector] _StencilOp ("Stencil Operation", Float) = 0
@@ -61,6 +60,7 @@
 
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
 			#pragma multi_compile_local _ UNITY_UI_ALPHACLIP
+			#pragma multi_compile_local _ COLOR_SCHEME
 
 			struct vertData
 			{
@@ -88,12 +88,10 @@
 			sampler2D _MainTex;
 			sampler2D _WaveTex;
 			fixed4 _Color;
-			fixed4 _SourceColor;
-			fixed4 _TargetColor;
 			fixed4 _TextureSampleAdd;
 			float _Strength;
 			float _Speed;
-			float _Burn;
+			float _Scale;
 
 			fragData vert(const vertData IN)
 			{
@@ -101,10 +99,14 @@
 				UNITY_SETUP_INSTANCE_ID(IN);
 				
 				OUT.vertex   = UnityObjectToClipPos(IN.vertex);
+				#ifdef COLOR_SCHEME
 				OUT.color    = IN.color * _ForegroundSecondaryColor;
+				#else
+				OUT.color    = IN.color;
+				#endif
 				OUT.uv       = IN.rect.xy + IN.rect.zw * IN.uv.xy;
 				OUT.fade     = IN.fade;
-				OUT.wave     = ComputeScreenPos(OUT.vertex).xy - _Time.y * _Speed;
+				OUT.wave     = ComputeScreenPos(OUT.vertex).xy * _Scale - _Time.y * _Speed;
 				OUT.rect     = IN.rect;
 				OUT.progress = IN.progress;
 				OUT.mask     = getUIMask(OUT.vertex.w, IN.vertex.xy);

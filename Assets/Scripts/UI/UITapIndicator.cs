@@ -43,14 +43,14 @@ public class UITapIndicator : UIIndicator
 
 	public void Success(float _Progress)
 	{
-		SignalBus.Fire(new TapSuccess(_Progress));
+		SignalBus.Fire(new TapSuccessSignal(_Progress));
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 
 	public void Fail(float _Progress)
 	{
-		SignalBus.Fire(new TapFail(_Progress));
+		SignalBus.Fire(new TapFailSignal(_Progress));
 		
 		Animator.SetTrigger(m_FailParameterID);
 	}
