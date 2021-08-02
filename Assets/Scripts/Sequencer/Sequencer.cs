@@ -20,12 +20,6 @@ public partial class Sequencer
 
 	public float BPM => m_BPM;
 
-	public float Length
-	{
-		get => m_Length;
-		set => m_Length = value;
-	}
-
 	public float TracksWidth
 	{
 		get => m_TracksWidth;
@@ -95,6 +89,12 @@ public partial class Sequencer : MonoBehaviour
 	public bool Playing { get; private set; }
 
 	public Track[] Tracks => m_Tracks;
+
+	public float Length
+	{
+		get => m_Length;
+		set => m_Length = value;
+	}
 
 	[SerializeField] Track[] m_Tracks;
 	[SerializeField] float   m_Time;
