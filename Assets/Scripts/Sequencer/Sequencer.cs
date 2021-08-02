@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Zenject;
 
+#if UNITY_EDITOR
 public partial class Sequencer
 {
 	public float MinTime
@@ -16,6 +17,8 @@ public partial class Sequencer
 		get => m_MaxTime;
 		set => m_MaxTime = value;
 	}
+
+	public float BPM => m_BPM;
 
 	public float Length
 	{
@@ -39,7 +42,43 @@ public partial class Sequencer
 	[SerializeField] float m_MaxTime        = 60;
 	[SerializeField] float m_TracksWidth    = 120;
 	[SerializeField] float m_ScrollPosition = 0;
+	[SerializeField] float m_BPM            = 90;
+
+	[Obsolete]
+	[ContextMenu("Normalize")]
+	public void Normalize()
+	{
+		float minTime = float.MaxValue;
+		float maxTime = float.MinValue;
+		
+		foreach (Track track in Tracks)
+		foreach (Clip clip in track)
+		{
+			minTime = Mathf.Min(clip.MinTime, minTime);
+			maxTime = Mathf.Max(clip.MaxTime, maxTime);
+		}
+		
+		float offset = 60.0f / BPM;
+		
+		foreach (Track track in Tracks)
+		foreach (Clip clip in track)
+		{
+			using (UnityEditor.SerializedObject clipObject = new UnityEditor.SerializedObject(clip))
+			{
+				UnityEditor.SerializedProperty minTimeProperty = clipObject.FindProperty("m_MinTime");
+				UnityEditor.SerializedProperty maxTimeProperty = clipObject.FindProperty("m_MaxTime");
+				
+				minTimeProperty.floatValue += offset * 2 - minTime;
+				maxTimeProperty.floatValue += offset * 2 - minTime;
+				
+				clipObject.ApplyModifiedProperties();
+			}
+		}
+		
+		Length = maxTime - minTime + offset * 4;
+	}
 }
+#endif
 
 [ExecuteInEditMode]
 public partial class Sequencer : MonoBehaviour
@@ -90,6 +129,9 @@ public partial class Sequencer : MonoBehaviour
 	public void Construct(ISampleReceiver[] _SampleReceivers)
 	{
 		m_SampleReceivers = _SampleReceivers;
+		
+		foreach (ISampleReceiver sampleReceiver in m_SampleReceivers)
+			sampleReceiver.Sample(0, Length);
 	}
 
 	public void Initialize()

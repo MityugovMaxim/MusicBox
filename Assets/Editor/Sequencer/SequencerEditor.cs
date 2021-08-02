@@ -65,6 +65,8 @@ public class SequencerEditor : EditorWindow
 		set => Sequencer.ScrollPosition = value;
 	}
 
+	float BPM => Sequencer.BPM;
+
 	static readonly Dictionary<int, TrackDrawer> m_TrackDrawers = new Dictionary<int, TrackDrawer>();
 	static readonly Dictionary<int, ClipDrawer>  m_ClipDrawers  = new Dictionary<int, ClipDrawer>();
 
@@ -358,8 +360,10 @@ public class SequencerEditor : EditorWindow
 					MaxTime
 				);
 				
-				if (Event.current.command)
-					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+				if (Event.current.modifiers == EventModifiers.Command)
+					time = SnapTime(time);
+				else if (Event.current.modifiers == EventModifiers.Control)
+					time = SnapBPM(time);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Pause();
@@ -387,8 +391,10 @@ public class SequencerEditor : EditorWindow
 					MaxTime
 				);
 				
-				if (Event.current.command)
-					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+				if (Event.current.modifiers == EventModifiers.Command)
+					time = SnapTime(time);
+				else if (Event.current.modifiers == EventModifiers.Control)
+					time = SnapBPM(time);
 				time = Mathf.Max(time, 0);
 				
 				Sequencer.Sample(time);
@@ -415,8 +421,10 @@ public class SequencerEditor : EditorWindow
 					MaxTime
 				);
 				
-				if (Event.current.command)
-					time = MathUtility.Snap(time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+				if (Event.current.modifiers == EventModifiers.Command)
+					time = SnapTime(time);
+				else if (Event.current.modifiers == EventModifiers.Control)
+					time = SnapBPM(time);
 				time = Mathf.Max(time, 0);
 				
 				if (GUIUtility.hotControl == playControlID)
@@ -538,6 +546,11 @@ public class SequencerEditor : EditorWindow
 		}
 		
 		GUI.EndClip();
+		
+		// BPM
+		Handles.color = new Color(0.5f, 0.75f, 0.5f, 1);
+		DrawTimelineGuide(_Rect, 60.0f / BPM);
+		Handles.color = Color.white;
 	}
 
 	void DrawClip(Rect _Rect, Clip _Clip)
@@ -870,7 +883,9 @@ public class SequencerEditor : EditorWindow
 				float length = MathUtility.Remap(Event.current.mousePosition.x, _Rect.xMin, _Rect.xMax, MinTime, MaxTime);
 				
 				if (Event.current.modifiers == EventModifiers.Command)
-					length = MathUtility.Snap(length, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+					length = SnapTime(length);
+				else if (Event.current.modifiers == EventModifiers.Control)
+					length = SnapBPM(length);
 				
 				Length = length;
 				
@@ -950,5 +965,15 @@ public class SequencerEditor : EditorWindow
 		
 		_MinTime = Mathf.Max(0, _MinTime);
 		_MaxTime = _MinTime + delta;
+	}
+
+	float SnapTime(float _Time)
+	{
+		return MathUtility.Snap(_Time, MinTime, MaxTime, 0.01f, 0.1f, 1, 5);
+	}
+
+	float SnapBPM(float _Time)
+	{
+		return MathUtility.Snap(_Time, MinTime, MaxTime, 15.0f / BPM, 30.0f / BPM, 60.0f / BPM);
 	}
 }

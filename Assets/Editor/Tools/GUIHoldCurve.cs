@@ -3,13 +3,13 @@ using UnityEngine;
 
 public static class GUIHoldCurve
 {
-	const float SNAP = 1.0f / 3.0f;
+	const float SNAP = 1.0f / 6.0f;
 
 	static int m_ControlID;
 
 	static HoldCurve.Key m_Selection;
 
-	public static void DrawSpline(Rect _Rect, HoldCurve _HoldCurve)
+	public static void DrawSpline(Rect _Rect, HoldCurve _HoldCurve, bool _Interactable = true)
 	{
 		m_ControlID = $"spline_curve_control_id_${_HoldCurve.GetHashCode()}".GetHashCode();
 		
@@ -19,13 +19,16 @@ public static class GUIHoldCurve
 		
 		DrawKeys(_Rect, _HoldCurve);
 		
-		SelectInput(_Rect, _HoldCurve);
-		
-		AddInput(_Rect, _HoldCurve);
-		
-		RemoveInput(_HoldCurve);
-		
-		MoveInput(_Rect, _HoldCurve);
+		if (_Interactable)
+		{
+			SelectInput(_Rect, _HoldCurve);
+			
+			AddInput(_Rect, _HoldCurve);
+			
+			RemoveInput(_HoldCurve);
+			
+			MoveInput(_Rect, _HoldCurve);
+		}
 	}
 
 	static void DrawBackground(Rect _Rect)

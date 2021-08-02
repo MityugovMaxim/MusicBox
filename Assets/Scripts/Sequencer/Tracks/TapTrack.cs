@@ -40,6 +40,9 @@ public partial class TapTrack : Track<TapClip>
 			return;
 		}
 		
+		foreach (TapClip clip in Clips)
+			clip.Initialize(Sequencer);
+		
 		Track.Initialize(Clips);
 	}
 

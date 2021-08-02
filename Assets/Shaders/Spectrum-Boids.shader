@@ -25,39 +25,54 @@
 			fixed _Scale;
 			fixed _Dampen;
 
-			float4 frag(v2f_customrendertexture IN) : COLOR
+			float4 frag(const v2f_customrendertexture IN) : COLOR
 			{
-				const half aspect = _ScreenParams.x / _ScreenParams.y;
-				half2 base = IN.localTexcoord;
-				base -= 0.5;
-				base /= 0.5;
-				base.y /= aspect;
+				half2 base = IN.localTexcoord * 2 - 1;
+				base.y /= _ScreenParams.x / _ScreenParams.y;
 				
-				const half size = 63;
+				const half size = 61;
+				
+				fixed distances[size];
 				
 				const half step = UNITY_TWO_PI / size;
-				
-				half value = 0;
+				const half s = sin(step);
+				const half c = cos(step);
+				half2 normal = rotate(half2(1, 0), _Time.w);
 				for (int i = 0; i < size; i++)
 				{
-					const half angle = step * i + _Time.w;
+					const half2 position = normal * (0.45 + _Spectrum[i] * 0.5) - base;
 					
-					half2 position = half2(0.45 + _Spectrum[i] * 0.5, 0);
+					distances[i] = position.x * position.x + position.y * position.y;
 					
-					position = rotate(position, angle);
-					
-					value += smoothstep(0.06, 0.03, length(position - base));
+					normal = rotate(normal, s, c);
 				}
-				value *= value;
 				
-				const half2 uv = scale(IN.localTexcoord, half2(0.5, 0.5), half2(_Scale, _Scale));
+				const half2 uv = scale(
+					IN.localTexcoord,
+					half2(0.5, 0.5),
+					half2(_Scale, _Scale)
+				);
 				
 				fixed4 color = tex2D(_SelfTexture2D, uv);
 				color.a *= 1 - _Dampen;
 				
-				color = clamp(color + value, 0, 1);
+				fixed value     = 0;
+				fixed highlight = 0;
+				for (int i = 0; i < size; i++)
+				{
+					const fixed valueMin = 0.0004; // 0.02
+					const fixed valueMax = 0.0064;  // 0.08
+					value += smoothstep(valueMax, valueMin, distances[i]);
+					
+					const fixed highlightMin = 0.000001; // 0.001
+					const fixed highlightMax = 0.0025;    // 0.05
+					highlight += smoothstep(highlightMax, highlightMin, distances[i]);
+				}
+				value *= value;
 				
+				color += value * 0.1;
 				color = BACKGROUND_BY_ALPHA(color);
+				color += highlight * 0.5;
 				
 				return color;
 			}

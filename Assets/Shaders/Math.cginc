@@ -36,11 +36,16 @@ fixed grayscale(const fixed3 _Color)
 
 half getCircle(const half2 _Position, const half _Radius, const half _Smooth)
 {
-	return smoothstep(_Radius, _Radius - _Smooth, length(_Position));
+	const half delta = _Radius - _Smooth;
+	const half min = delta * delta;
+	const half max = _Radius * _Radius;
+	const half value = _Position.x * _Position.x + _Position.y * _Position.y;
+	return smoothstep(max, min, value);
 }
 
 half getRing(const half2 _Position, const half _OutRadius, const half _InRadius, const half _Smooth)
 {
+	// TODO: Optimize
 	const half value     = length(_Position);
 	const half outCircle = smoothstep(_OutRadius, _OutRadius - _Smooth, value);
 	const half inCircle  = smoothstep(_InRadius, _InRadius + _Smooth, value);
@@ -52,8 +57,12 @@ half getLine(const half2 _Position, const half2 _A, const half2 _B, const half _
 	const half2 a = _Position - _A;
 	const half2 b = _B - _A;
 	const half phase = clamp(dot(a, b) / dot(b, b), 0, 1);
-	const half value = length(a - b * phase);
-	return smoothstep(_Width, _Width - _Smooth, length(a - b * phase));
+	const half2 c = a - b * phase;
+	const half delta = _Width - _Smooth;
+	const half min = delta * delta;
+	const half max = _Width * _Width;
+	const half value = c.x * c.x + c.y * c.y;
+	return smoothstep(max, min, value);
 }
 
 half getRadians(const half _Angle)
@@ -84,9 +93,17 @@ half2 scale(half2 _Vector, const half2 _Pivot, const half2 _Scale)
 half2 rotate(const half2 _Vector, const half _Angle)
 {
 	const half s = sin(_Angle);
-	const half c = cos(_Angle); 
+	const half c = cos(_Angle);
 	const half2x2 rotation = { c, -s, -s, c };
 	return mul(_Vector, rotation);
+}
+
+half2 rotate(const half2 _Vector, const half _Sin, const half _Cos)
+{
+	return half2(
+		_Vector.x * _Cos - _Vector.y * _Sin,
+		_Vector.x * _Sin + _Vector.y * _Cos
+	);
 }
 
 half2 rotate(half2 _Vector, const half2 _Pivot, const half _Angle)

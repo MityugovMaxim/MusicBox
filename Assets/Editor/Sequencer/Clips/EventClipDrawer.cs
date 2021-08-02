@@ -160,8 +160,10 @@ public class EventClipDrawer : ClipDrawer
 						TrackMaxTime
 					);
 					
-					if (Event.current.command)
+					if (Event.current.modifiers == EventModifiers.Command)
 						time = SnapTime(time);
+					else if (Event.current.modifiers == EventModifiers.Control)
+						time = SnapBPM(time);
 					time = Mathf.Max(0, time);
 					
 					Resize(time, time);

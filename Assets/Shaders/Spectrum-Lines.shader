@@ -2,8 +2,8 @@
 {
 	Properties
 	{
-		_ScaleX ("Scale", Float) = 0.98
-		_ScaleY ("Scale", Float) = 0.95
+		_ScaleX ("Scale X", Float) = 0.98
+		_ScaleY ("Scale Y", Float) = 0.95
 		_Dampen ("Dampen", Range(0, 1)) = 0.1
 	}
 
@@ -30,13 +30,12 @@
 			float4 frag(const v2f_customrendertexture IN) : COLOR
 			{
 				const half aspect = _ScreenParams.x / _ScreenParams.y;
-				half2 base = IN.localTexcoord;
-				base.y /= aspect;
+				const half2 base = IN.localTexcoord / half2(1, aspect);
 				
 				const half size = 63;
 				
 				const half step   = 1.0 / size;
-				const half offset = 0.35 / aspect;
+				const half offset = 0.45 / aspect;
 				
 				const int cIndex = floor(base.x * size);
 				const int lIndex = max(0, cIndex - 1);
@@ -49,15 +48,22 @@
 				fixed value = 0;
 				value += getLine(base, cPosition, lPosition, 0.008, 0.008);
 				value += getLine(base, cPosition, rPosition, 0.008, 0.008);
+				fixed highlight = 0;
+				highlight += getLine(base, cPosition, lPosition, 0.004, 0.003);
+				highlight += getLine(base, cPosition, rPosition, 0.004, 0.003);
 				
-				const half2 uv = scale(IN.localTexcoord, half2(0.5, 0.5), half2(_ScaleX, _ScaleY));
+				const half2 uv = scale(
+					IN.localTexcoord,
+					half2(0.5, 0.5),
+					half2(_ScaleX, _ScaleY)
+				);
 				
 				fixed4 color = tex2D(_SelfTexture2D, uv);
 				color.a *= 1 - _Dampen;
 				
-				color = clamp(color + value, 0, 1);
-				
+				color += value * 0.25;
 				color = BACKGROUND_BY_RANGE(color, 0, 0.5);
+				color += highlight;
 				
 				return color;
 			}

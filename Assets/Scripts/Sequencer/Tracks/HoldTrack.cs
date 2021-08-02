@@ -40,6 +40,9 @@ public partial class HoldTrack : Track<HoldClip>
 			return;
 		}
 		
+		foreach (HoldClip clip in Clips)
+			clip.Initialize(Sequencer);
+		
 		Track.Initialize(Clips);
 	}
 

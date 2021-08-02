@@ -73,7 +73,7 @@ public class ScoreData
 	{
 		get
 		{
-			const float coefficient = 0.95f;
+			const float coefficient = 0.9f;
 			
 			double holdCount   = HoldSuccess + HoldFail;
 			double tapCount    = TapSuccess + TapFail;

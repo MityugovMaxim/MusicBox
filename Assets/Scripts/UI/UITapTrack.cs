@@ -63,7 +63,10 @@ public class UITapTrack : UITrack<TapClip>
 	{
 		UITapIndicator indicator = m_IndicatorPool.Spawn();
 		
-		indicator.RectTransform.SetParent(RectTransform);
+		if (indicator == null)
+			return null;
+		
+		indicator.RectTransform.SetParent(RectTransform, false);
 		
 		indicator.Setup();
 		

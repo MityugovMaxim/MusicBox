@@ -127,6 +127,8 @@ public partial class Track<T>
 	public override void Sort()
 	{
 		Clips.Sort((_A, _B) => _A.MinTime.CompareTo(_B.MinTime));
+		
+		Initialize(Sequencer);
 	}
 }
 #endif

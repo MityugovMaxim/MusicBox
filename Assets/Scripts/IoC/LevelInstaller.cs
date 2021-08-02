@@ -4,6 +4,8 @@ using Zenject;
 public class LevelInstaller : MonoInstaller
 {
 	[SerializeField] AudioProcessor    m_AudioProcessor;
+	[SerializeField] FXProcessor       m_FXProcessor;
+	[SerializeField] ColorProcessor    m_ColorProcessor;
 	[SerializeField] UIInputReceiver   m_InputReceiver;
 	[SerializeField] UITapIndicator    m_TapIndicator;
 	[SerializeField] UIDoubleIndicator m_DoubleIndicator;
@@ -13,7 +15,8 @@ public class LevelInstaller : MonoInstaller
 	{
 		Container.Bind<Sequencer>().FromComponentOnRoot().AsSingle();
 		Container.BindInterfacesAndSelfTo<AudioProcessor>().FromInstance(m_AudioProcessor).AsSingle();
-		Container.Bind<ColorProcessor>().FromComponentInChildren().AsSingle();
+		Container.BindInterfacesAndSelfTo<FXProcessor>().FromInstance(m_FXProcessor).AsSingle();
+		Container.BindInterfacesAndSelfTo<ColorProcessor>().FromInstance(m_ColorProcessor).AsSingle();
 		
 		Container.Bind<UIInputReceiver>().FromInstance(m_InputReceiver).AsSingle();
 		

@@ -69,10 +69,10 @@ public class UIHoldTrack : UITrack<HoldClip>
 	{
 		UIHoldIndicator indicator = m_IndicatorPool.Spawn();
 		
-		indicator.RectTransform.SetParent(RectTransform, false);
-		
 		if (indicator == null)
 			return null;
+		
+		indicator.RectTransform.SetParent(RectTransform, false);
 		
 		float duration = GetDistance(_Clip.MaxTime) - GetDistance(_Clip.MinTime);
 		

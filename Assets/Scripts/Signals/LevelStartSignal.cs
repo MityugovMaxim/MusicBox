@@ -7,23 +7,3 @@ public class LevelStartSignal
 		LevelID = _LevelID;
 	}
 }
-
-public class LevelRestartSignal
-{
-	public string LevelID { get; }
-
-	public LevelRestartSignal(string _LevelID)
-	{
-		LevelID = _LevelID;
-	}
-}
-
-public class LevelExitSignal
-{
-	public string LevelID { get; }
-
-	public LevelExitSignal(string _LevelID)
-	{
-		LevelID = _LevelID;
-	}
-}

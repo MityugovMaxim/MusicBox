@@ -5,6 +5,8 @@ using Zenject;
 
 public class UILoadingMenu : UIMenu, IInitializable, IDisposable
 {
+	[SerializeField] UILoadingIndicator m_LoadingIndicator;
+
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
 
@@ -25,9 +27,21 @@ public class UILoadingMenu : UIMenu, IInitializable, IDisposable
 		m_LevelID = _LevelID;
 	}
 
+	protected override void OnShowStarted()
+	{
+		base.OnShowStarted();
+		
+		if (m_LoadingIndicator != null)
+			m_LoadingIndicator.Restore();
+	}
+
 	protected override void OnShowFinished()
 	{
-		m_LevelProcessor.Create(m_LevelID);
+		if (m_LoadingIndicator != null)
+			m_LoadingIndicator.Play();
+		
+		if (m_LevelProcessor != null)
+			m_LevelProcessor.Create(m_LevelID);
 	}
 
 	void IInitializable.Initialize()
@@ -44,10 +58,10 @@ public class UILoadingMenu : UIMenu, IInitializable, IDisposable
 	{
 		CloseAction = m_LevelProcessor.Play;
 		
-		StartCoroutine(DelayRoutine(0.5f, () => Hide()));
+		StartCoroutine(DelayRoutine(2.5f, () => Hide()));
 	}
 
-	IEnumerator DelayRoutine(float _Delay, Action _Callback)
+	static IEnumerator DelayRoutine(float _Delay, Action _Callback)
 	{
 		yield return new WaitForSeconds(_Delay);
 		

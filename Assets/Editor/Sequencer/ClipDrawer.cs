@@ -300,8 +300,10 @@ public class ClipDrawer
 						TrackMaxTime
 					);
 					
-					if (Event.current.command)
+					if (Event.current.modifiers == EventModifiers.Command)
 						time = SnapTime(time);
+					else if (Event.current.modifiers == EventModifiers.Control)
+						time = SnapBPM(time);
 					time = Mathf.Clamp(time, 0, MaxTime - minDuration);
 					
 					Resize(time, MaxTime);
@@ -319,8 +321,10 @@ public class ClipDrawer
 						TrackMaxTime
 					);
 					
-					if (Event.current.command)
+					if (Event.current.modifiers == EventModifiers.Command)
 						time = SnapTime(time);
+					else if (Event.current.modifiers == EventModifiers.Control)
+						time = SnapBPM(time);
 					time = Mathf.Max(MinTime + minDuration, time);
 					
 					Resize(MinTime, time);
@@ -338,8 +342,10 @@ public class ClipDrawer
 						TrackMaxTime
 					);
 					
-					if (Event.current.command)
+					if (Event.current.modifiers == EventModifiers.Command)
 						time = SnapTime(time);
+					else if (Event.current.modifiers == EventModifiers.Control)
+						time = SnapBPM(time);
 					time = Mathf.Max(0, time);
 					
 					Resize(time, time + MaxTime - MinTime);
@@ -372,6 +378,18 @@ public class ClipDrawer
 	protected float SnapTime(float _Time)
 	{
 		return MathUtility.Snap(_Time, TrackMinTime, TrackMaxTime, 0.01f, 0.1f, 1, 5);
+	}
+
+	protected float SnapBPM(float _Time)
+	{
+		return MathUtility.Snap(
+			_Time,
+			TrackMinTime,
+			TrackMaxTime,
+			15.0f / Clip.Sequencer.BPM,
+			30.0f / Clip.Sequencer.BPM,
+			60.0f / Clip.Sequencer.BPM
+		);
 	}
 
 	protected virtual void Resize(float _MinTime, float _MaxTime)

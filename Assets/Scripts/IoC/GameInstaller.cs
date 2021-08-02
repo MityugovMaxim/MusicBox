@@ -41,8 +41,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<PurchaseProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
-		
-		Container.Bind<LevelProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
 		
 		Container.BindFactory<string, Action<Level>, ResourceRequest, Level.Factory>().FromFactory<AsyncPrefabResourceFactory<Level>>();
 		

@@ -1,11 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public interface ISampleReceiver
-{
-	void Sample(float _Time, float _Length);
-}
-
 public class UIProgressBar : UIEntity, ISampleReceiver
 {
 	[SerializeField, Range(0, 1)] float m_Progress;

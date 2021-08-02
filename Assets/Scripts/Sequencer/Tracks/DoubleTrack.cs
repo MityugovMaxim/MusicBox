@@ -40,6 +40,9 @@ public partial class DoubleTrack : Track<DoubleClip>
 			return;
 		}
 		
+		foreach (DoubleClip clip in Clips)
+			clip.Initialize(Sequencer);
+		
 		Track.Initialize(Clips);
 	}
 

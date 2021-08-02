@@ -16,14 +16,16 @@ public abstract class UIIndicator : UIEntity
 		}
 	}
 
-	protected SignalBus SignalBus { get; private set; }
+	protected SignalBus   SignalBus   { get; private set; }
+	protected FXProcessor FXProcessor { get; private set; }
 
 	Animator m_Animator;
 
 	[Inject]
-	public void Construct(SignalBus _SignalBus)
+	public void Construct(SignalBus _SignalBus, FXProcessor _FXProcessor)
 	{
-		SignalBus = _SignalBus;
+		SignalBus   = _SignalBus;
+		FXProcessor = _FXProcessor;
 		
 		Animator.keepAnimatorControllerStateOnDisable = true;
 	}

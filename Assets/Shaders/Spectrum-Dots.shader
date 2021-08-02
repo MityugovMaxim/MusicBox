@@ -15,6 +15,7 @@
 		Pass
 		{
 			CGPROGRAM
+			#include "Math.cginc"
 			#include "Color.cginc"
 			#include "UnityCustomRenderTexture.cginc"
 			#pragma vertex CustomRenderTextureVertexShader
@@ -27,27 +28,28 @@
 			float4 frag(const v2f_customrendertexture IN) : COLOR
 			{
 				const half aspect = _ScreenParams.x / _ScreenParams.y;
-				half2 uv = IN.localTexcoord;
-				uv.y /= aspect;
+				const half2 base = IN.localTexcoord / half2(1, aspect);
 				
 				const half size = 63;
 				
 				const half step = 1.0 / size;
-				const int index = floor(uv.x * size);
+				const int index = floor(base.x * size);
 				
 				const half spectrum = _Spectrum[index];
 				
-				const half2 position = half2(step * 0.5 + step * index, spectrum * 0.5 + 0.45 / aspect);
+				const half2 position = half2(step * 0.5 + step * index, spectrum * 0.5 + 0.45 / aspect) - base;
 				
-				const fixed value = smoothstep(0.5 / size, 0.5 / (size + size), length(position - uv));
+				const fixed radius = 0.5 / size;
+				const fixed value = getCircle(position, radius, 0.001);
+				const fixed highlight = getCircle(position, radius, radius);
 				
 				fixed4 color = tex2D(_SelfTexture2D, IN.localTexcoord);
 				
 				color.a *= 1 - _Dampen;
 				
 				color = clamp(color + value, 0, 1);
-				
 				color = BACKGROUND_BY_ALPHA(color);
+				color += highlight * highlight;
 				
 				return color;
 			}

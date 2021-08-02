@@ -11,6 +11,6 @@ public class HoldClipDrawer : ClipDrawer
 
 	protected override void DrawContent()
 	{
-		GUIHoldCurve.DrawSpline(ClipRect, Curve);
+		GUIHoldCurve.DrawSpline(ClipRect, Curve, false);
 	}
 }

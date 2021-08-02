@@ -52,7 +52,6 @@ Shader "UI/Cube"
 
 			#include "UnityCG.cginc"
 			#include "UIMask.cginc"
-			#include "Math.cginc"
 
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
 			#pragma multi_compile_local _ UNITY_UI_ALPHACLIP
@@ -86,13 +85,15 @@ Shader "UI/Cube"
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
-				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_SETUP_INSTANCE_ID(IN);
+				
+				const half offset = frac(_Time.x);
 				
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.color = IN.color * _Color;
 				OUT.uv = IN.uv;
 				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
-				OUT.screen = ComputeScreenPos(OUT.vertex) * 2 - half2(_Time.x * 4, _Time.x * 6);
+				OUT.screen = ComputeScreenPos(OUT.vertex) * 2 - half2(offset * 4, offset * 6);
 				
 				return OUT;
 			}
