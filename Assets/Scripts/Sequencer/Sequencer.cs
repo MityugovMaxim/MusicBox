@@ -68,14 +68,14 @@ public partial class Sequencer
 				UnityEditor.SerializedProperty minTimeProperty = clipObject.FindProperty("m_MinTime");
 				UnityEditor.SerializedProperty maxTimeProperty = clipObject.FindProperty("m_MaxTime");
 				
-				minTimeProperty.floatValue += offset * 2 - minTime;
-				maxTimeProperty.floatValue += offset * 2 - minTime;
+				minTimeProperty.floatValue += offset * 4 - minTime;
+				maxTimeProperty.floatValue += offset * 4 - minTime;
 				
 				clipObject.ApplyModifiedProperties();
 			}
 		}
 		
-		Length = maxTime - minTime + offset * 4;
+		Length = maxTime - minTime + offset * 6;
 	}
 }
 #endif
