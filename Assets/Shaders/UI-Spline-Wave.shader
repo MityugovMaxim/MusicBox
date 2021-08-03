@@ -89,14 +89,16 @@
 			sampler2D _WaveTex;
 			fixed4 _Color;
 			fixed4 _TextureSampleAdd;
-			float _Strength;
-			float _Speed;
-			float _Scale;
+			half _Strength;
+			half _Speed;
+			half _Scale;
 
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
 				UNITY_SETUP_INSTANCE_ID(IN);
+				
+				const half offset = frac(_Time.y * _Speed);
 				
 				OUT.vertex   = UnityObjectToClipPos(IN.vertex);
 				#ifdef COLOR_SCHEME
@@ -106,7 +108,7 @@
 				#endif
 				OUT.uv       = IN.rect.xy + IN.rect.zw * IN.uv.xy;
 				OUT.fade     = IN.fade;
-				OUT.wave     = ComputeScreenPos(OUT.vertex).xy * _Scale - _Time.y * _Speed;
+				OUT.wave     = ComputeScreenPos(OUT.vertex).xy * _Scale - offset;
 				OUT.rect     = IN.rect;
 				OUT.progress = IN.progress;
 				OUT.mask     = getUIMask(OUT.vertex.w, IN.vertex.xy);
