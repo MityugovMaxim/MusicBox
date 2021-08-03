@@ -134,7 +134,7 @@ public class UIHoldIndicator : UIIndicator
 	{
 		SignalBus.Fire(new HoldSuccessSignal(_MinProgress, _MaxProgress));
 		
-		FXProcessor.HoldFX(m_Handle.GetWorldRect());
+		FXProcessor.HoldFX(Handle.GetWorldRect());
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 		Animator.SetBool(m_HoldParameterID, false);

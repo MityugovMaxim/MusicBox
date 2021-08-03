@@ -93,7 +93,7 @@ Shader "UI/ColorScheme"
 			fixed4 frag(const fragData IN) : SV_Target
 			{
 				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
-
+				
 				#ifdef BACKGROUND_SCHEME
 				color.rgb *= BACKGROUND_BY_RANGE(color, 0, 0.8);
 				#else

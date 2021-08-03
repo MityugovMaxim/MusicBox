@@ -149,7 +149,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			return;
 		}
 		
-		if (m_BestScore.TryGetValue(_LevelID, out ScoreData scoreData) && scoreData != null && scoreData.Score > _ScoreData.Score)
+		if (m_BestScore.TryGetValue(_LevelID, out ScoreData scoreData) && scoreData != null && scoreData.Rank > _ScoreData.Rank)
 			return;
 		
 		m_BestScore[_LevelID] = _ScoreData;
@@ -159,7 +159,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		SaveScore(key, _ScoreData);
 	}
 
-	ScoreData LoadScore(string _Key)
+	static ScoreData LoadScore(string _Key)
 	{
 		if (string.IsNullOrEmpty(_Key))
 		{
@@ -183,7 +183,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return scoreData;
 	}
 
-	void SaveScore(string _Key, ScoreData _ScoreData)
+	static void SaveScore(string _Key, ScoreData _ScoreData)
 	{
 		if (string.IsNullOrEmpty(_Key))
 		{

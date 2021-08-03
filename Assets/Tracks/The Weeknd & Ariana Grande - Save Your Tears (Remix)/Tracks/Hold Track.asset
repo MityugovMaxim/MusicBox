@@ -1489,6 +1489,7 @@ MonoBehaviour:
   - {fileID: 850827753574846395}
   - {fileID: 1746416978481445777}
   - {fileID: 7634443088721110840}
+  - {fileID: 3695440084408321364}
   - {fileID: -38125383060598379}
   - {fileID: -5671883041587848496}
   - {fileID: -3256429085787349689}
@@ -2021,6 +2022,30 @@ MonoBehaviour:
       m_Value: 0.6666667
       m_InTangent: {x: -0.3, y: 0}
       m_OutTangent: {x: 0, y: 0}
+--- !u!114 &3695440084408321364
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
+  m_Name: Hold Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 109.32204
+  m_MaxTime: 110.08475
+  m_Curve:
+    m_Keys:
+    - m_Time: 0
+      m_Value: 0
+      m_InTangent: {x: 0, y: 0}
+      m_OutTangent: {x: 0.3, y: 0}
+    - m_Time: 1
+      m_Value: 0
+      m_InTangent: {x: -0.3, y: 0}
+      m_OutTangent: {x: 0, y: 0}
 --- !u!114 &3754191508248162839
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2545,7 +2570,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a70788bce58432aa37a1ce8e4687233, type: 3}
   m_Name: Hold Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 29.74577
+  m_MinTime: 29.491526
   m_MaxTime: 30.254246
   m_Curve:
     m_Keys:

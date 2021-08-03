@@ -4,8 +4,6 @@ using Zenject;
 
 public class UITapTrack : UITrack<TapClip>
 {
-	protected override RectTransform Zone => m_InputReceiver.Zone;
-
 	UITapIndicator.Pool m_IndicatorPool;
 	UIInputReceiver     m_InputReceiver;
 
@@ -38,10 +36,7 @@ public class UITapTrack : UITrack<TapClip>
 
 	protected override void DrawIndicators(List<TapClip> _Clips)
 	{
-		Vector2 anchor = new Vector2(
-			0.5f,
-			RectTransform.GetVerticalAnchor(m_InputReceiver.Zone, 0.5f)
-		);
+		Vector2 anchor = GetAnchor();
 		
 		foreach (TapClip clip in _Clips)
 		{

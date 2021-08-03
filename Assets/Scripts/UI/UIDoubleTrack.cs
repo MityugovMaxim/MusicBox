@@ -4,8 +4,6 @@ using Zenject;
 
 public class UIDoubleTrack : UITrack<DoubleClip>
 {
-	protected override RectTransform Zone => m_InputReceiver.Zone;
-
 	UIInputReceiver        m_InputReceiver;
 	UIDoubleIndicator.Pool m_IndicatorPool;
 
@@ -38,10 +36,7 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 
 	protected override void DrawIndicators(List<DoubleClip> _Clips)
 	{
-		Vector2 anchor = new Vector2(
-			0.5f,
-			RectTransform.GetVerticalAnchor(m_InputReceiver.Zone, 0.5f)
-		);
+		Vector2 anchor = GetAnchor();
 		
 		foreach (DoubleClip clip in _Clips)
 		{

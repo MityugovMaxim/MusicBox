@@ -45,6 +45,8 @@ public class UITapIndicator : UIIndicator
 	{
 		SignalBus.Fire(new TapSuccessSignal(_Progress));
 		
+		FXProcessor.TapFX(Handle.GetWorldRect());
+		
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 

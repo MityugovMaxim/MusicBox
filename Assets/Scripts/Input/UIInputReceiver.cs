@@ -6,11 +6,9 @@ using Zenject;
 
 public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-	public RectTransform Zone => m_Zone;
-
 	public override bool raycastTarget => true;
 
-	[SerializeField] RectTransform  m_Zone;
+	UIInputZone  m_InputZone;
 
 	SignalBus m_SignalBus;
 
@@ -26,6 +24,12 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
 	readonly List<UIHandle>                  m_InactiveHandles = new List<UIHandle>();
 	readonly List<UIHandle>                  m_ActiveHandles   = new List<UIHandle>();
+
+	[Inject]
+	public void Construct(UIInputZone _InputZone)
+	{
+		m_InputZone = _InputZone;
+	}
 
 	public void Process()
 	{
@@ -130,7 +134,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	Rect GetZoneArea(PointerEventData _EventData)
 	{
-		Rect rect = m_Zone.GetWorldRect();
+		Rect rect = m_InputZone.GetWorldRect();
 		
 		Vector2 position = new Vector2(
 			_EventData.pointerCurrentRaycast.worldPosition.x,
@@ -162,7 +166,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (!m_Zone.Intersects(handle.RectTransform))
+			if (!m_InputZone.RectTransform.Intersects(handle.RectTransform))
 				continue;
 			
 			handle.StartReceiveInput();
@@ -185,7 +189,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (m_Zone.Intersects(handle.RectTransform))
+			if (m_InputZone.RectTransform.Intersects(handle.RectTransform))
 				continue;
 			
 			handle.StopReceiveInput();

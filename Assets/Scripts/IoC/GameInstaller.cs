@@ -53,6 +53,7 @@ public class GameInstaller : MonoInstaller
 		SignalBusInstaller.Install(Container);
 		
 		Container.DeclareSignal<LevelStartSignal>();
+		Container.DeclareSignal<LevelPlaySignal>();
 		Container.DeclareSignal<LevelRestartSignal>();
 		Container.DeclareSignal<LevelExitSignal>();
 		Container.DeclareSignal<LevelFinishSignal>();

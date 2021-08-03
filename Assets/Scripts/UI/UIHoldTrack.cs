@@ -4,8 +4,6 @@ using Zenject;
 
 public class UIHoldTrack : UITrack<HoldClip>
 {
-	protected override RectTransform Zone => m_InputReceiver.Zone;
-
 	readonly Dictionary<HoldClip, UIHoldIndicator> m_Indicators = new Dictionary<HoldClip, UIHoldIndicator>();
 
 	UIInputReceiver      m_InputReceiver;
@@ -38,10 +36,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 
 	protected override void DrawIndicators(List<HoldClip> _Clips)
 	{
-		Vector2 anchor = new Vector2(
-			0.5f,
-			RectTransform.GetVerticalAnchor(m_InputReceiver.Zone, 0.5f)
-		);
+		Vector2 anchor = GetAnchor();
 		
 		foreach (HoldClip clip in _Clips)
 		{

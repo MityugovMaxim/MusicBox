@@ -45,6 +45,8 @@ public class UIDoubleIndicator : UIIndicator
 	{
 		SignalBus.Fire(new DoubleSuccessSignal(_Progress));
 		
+		FXProcessor.DoubleFX(Handle.GetWorldRect());
+		
 		Animator.SetTrigger(m_SuccessParameterID);
 	}
 

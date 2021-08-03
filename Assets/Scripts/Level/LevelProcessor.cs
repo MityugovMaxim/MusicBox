@@ -6,8 +6,6 @@ using Zenject;
 [Preserve]
 public class LevelProcessor
 {
-	public string LevelID => m_LevelID;
-
 	readonly SignalBus     m_SignalBus;
 	readonly Level.Factory m_LevelFactory;
 
@@ -221,6 +219,8 @@ public class LevelProcessor
 		}
 		
 		m_Level.Play(InvokeLevelComplete);
+		
+		m_SignalBus.Fire(new LevelPlaySignal(m_LevelID));
 	}
 
 	public void Pause()

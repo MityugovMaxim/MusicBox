@@ -1,20 +1,27 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public abstract class UITrack<T> : UIEntity where T : Clip
 {
 	protected float Time => m_Time;
-
-	protected abstract RectTransform Zone { get; }
 
 	[SerializeField] float m_Time;
 	[SerializeField] float m_Speed;
 	[SerializeField] float m_MinPadding;
 	[SerializeField] float m_MaxPadding;
 
+	UIInputZone m_InputZone;
+
 	[NonSerialized] List<T> m_Clips       = new List<T>();
 	[NonSerialized] List<T> m_ClipsBuffer = new List<T>();
+
+	[Inject]
+	public void Construct(UIInputZone _InputZone)
+	{
+		m_InputZone = _InputZone;
+	}
 
 	public virtual void Initialize(List<T> _Clips)
 	{
@@ -132,17 +139,25 @@ public abstract class UITrack<T> : UIEntity where T : Clip
 		return index;
 	}
 
-	protected virtual float GetMinTime()
+	float GetMinTime()
 	{
-		Rect rect = RectTransform.GetLocalRect(Zone);
+		Rect rect = RectTransform.GetLocalRect(m_InputZone.RectTransform);
 		
 		return GetTime(rect.yMin - m_MinPadding);
 	}
 
-	protected virtual float GetMaxTime()
+	float GetMaxTime()
 	{
-		Rect rect = RectTransform.GetLocalRect(Zone);
+		Rect rect = RectTransform.GetLocalRect(m_InputZone.RectTransform);
 		
 		return GetTime(rect.yMax + m_MaxPadding);
+	}
+
+	protected Vector2 GetAnchor()
+	{
+		return new Vector2(
+			0.5f,
+			RectTransform.GetVerticalAnchor(m_InputZone.RectTransform, 0.5f)
+		);
 	}
 }

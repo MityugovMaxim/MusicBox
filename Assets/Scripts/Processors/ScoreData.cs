@@ -17,27 +17,20 @@ public class ScoreData
 	const float HOLD_FAIL_MULTIPLIER      = 30;
 	const float HOLD_HIT_MULTIPLIER       = 5;
 	const float HOLD_MISS_MULTIPLIER      = -10;
-	const float TAP_SUCCESS_MULTIPLIER    = 10;
-	const float TAP_FAIL_MULTIPLIER       = -5;
-	const float DOUBLE_SUCCESS_MULTIPLIER = 20;
-	const float DOUBLE_FAIL_MULTIPLIER    = -10;
+	const float TAP_PERFECT_MULTIPLIER    = 10;
+	const float TAP_GOOD_MULTIPLIER       = 6;
+	const float TAP_BAD_MULTIPLIER        = 4;
+	const float DOUBLE_PERFECT_MULTIPLIER = 20;
+	const float DOUBLE_GOOD_MULTIPLIER    = 12;
+	const float DOUBLE_BAD_MULTIPLIER     = 8;
+	const float TAP_PERFECT_THRESHOLD     = 0.65f;
+	const float TAP_GOOD_THRESHOLD        = 0.35f;
+	const float DOUBLE_PERFECT_THRESHOLD  = 0.65f;
+	const float DOUBLE_GOOD_THRESHOLD     = 0.35f;
 	const float S_RANK                    = 0.95f;
 	const float A_RANK                    = 0.8f;
 	const float B_RANK                    = 0.5f;
 	const float C_RANK                    = 0.05f;
-
-	public int   HoldSuccess      => m_HoldSuccess;
-	public int   HoldFail         => m_HoldFail;
-	public int   HoldHit          => m_HoldHit;
-	public int   HoldMiss         => m_HoldMiss;
-	public int   TapSuccess       => m_TapSuccess;
-	public int   TapFail          => m_TapFail;
-	public int   DoubleSuccess    => m_DoubleSuccess;
-	public int   DoubleFail       => m_DoubleFail;
-	public float HoldSuccessScore => m_HoldSuccessScore;
-	public float HoldFailScore    => m_HoldFailScore;
-	public float TapScore         => m_TapScore;
-	public float DoubleScore      => m_DoubleScore;
 
 	public double Score
 	{
@@ -46,23 +39,23 @@ public class ScoreData
 			double score = 0;
 			
 			double holdScore = 0;
-			holdScore += HoldSuccess * HOLD_SUCCESS_MULTIPLIER;
-			holdScore += HoldFail * HOLD_FAIL_MULTIPLIER;
-			holdScore += HoldHit * HOLD_HIT_MULTIPLIER;
-			holdScore += HoldMiss * HOLD_MISS_MULTIPLIER;
-			holdScore *= HoldSuccessScore + HoldFailScore;
+			holdScore += m_HoldSuccess * HOLD_SUCCESS_MULTIPLIER;
+			holdScore += m_HoldFail * HOLD_FAIL_MULTIPLIER;
+			holdScore += m_HoldHit * HOLD_HIT_MULTIPLIER;
+			holdScore += m_HoldMiss * HOLD_MISS_MULTIPLIER;
+			holdScore *= m_HoldSuccessScore + m_HoldFailScore;
 			score     += (long)holdScore;
 			
 			double tapScore = 0;
-			tapScore += TapSuccess * TAP_SUCCESS_MULTIPLIER;
-			tapScore += TapFail * TAP_FAIL_MULTIPLIER;
-			tapScore *= TapScore;
+			tapScore += m_TapPerfect * TAP_PERFECT_MULTIPLIER;
+			tapScore += m_TapGood * TAP_GOOD_MULTIPLIER;
+			tapScore += m_TapBad * TAP_BAD_MULTIPLIER;
 			score    += (long)tapScore;
 			
 			double doubleScore = 0;
-			doubleScore += DoubleSuccess * DOUBLE_SUCCESS_MULTIPLIER;
-			doubleScore += DoubleFail * DOUBLE_FAIL_MULTIPLIER;
-			doubleScore *= DoubleScore;
+			doubleScore += m_DoublePerfect * DOUBLE_PERFECT_MULTIPLIER;
+			doubleScore += m_DoubleGood * DOUBLE_GOOD_MULTIPLIER;
+			doubleScore += m_DoubleBad * DOUBLE_BAD_MULTIPLIER;
 			score       += (long)doubleScore;
 			
 			return score;
@@ -73,34 +66,21 @@ public class ScoreData
 	{
 		get
 		{
-			const float coefficient = 0.9f;
+			double holdCount   = m_HoldSuccess + m_HoldFail;
+			double tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
+			double doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
 			
-			double holdCount   = HoldSuccess + HoldFail;
-			double tapCount    = TapSuccess + TapFail;
-			double doubleCount = DoubleSuccess + DoubleFail;
+			double score = 0;
 			
-			double source = Score;
-			double target = 0;
+			score += holdCount * HOLD_SUCCESS_MULTIPLIER;
+			score += holdCount * HOLD_HIT_MULTIPLIER;
+			score *= holdCount;
 			
-			double holdScore = 0;
-			holdScore += holdCount * HOLD_SUCCESS_MULTIPLIER;
-			holdScore += holdCount * HOLD_HIT_MULTIPLIER;
-			holdScore *= holdCount;
-			target    += holdScore;
+			score += tapCount * TAP_PERFECT_MULTIPLIER;
 			
-			double tapScore = 0;
-			tapScore += tapCount * TAP_SUCCESS_MULTIPLIER;
-			tapScore *= tapCount;
-			target   += tapScore;
+			score += doubleCount * DOUBLE_PERFECT_MULTIPLIER;
 			
-			double doubleScore = 0;
-			doubleScore += doubleCount * DOUBLE_SUCCESS_MULTIPLIER;
-			doubleScore *= doubleCount;
-			target      += doubleScore;
-			
-			target *= coefficient;
-			
-			return Math.Min(1, source / target);
+			return Math.Min(1, Score / score);
 		}
 	}
 
@@ -126,15 +106,17 @@ public class ScoreData
 	[SerializeField] int m_HoldFail;
 	[SerializeField] int m_HoldHit;
 	[SerializeField] int m_HoldMiss;
-	[SerializeField] int m_TapSuccess;
+	[SerializeField] int m_TapPerfect;
+	[SerializeField] int m_TapGood;
+	[SerializeField] int m_TapBad;
 	[SerializeField] int m_TapFail;
-	[SerializeField] int m_DoubleSuccess;
+	[SerializeField] int m_DoublePerfect;
+	[SerializeField] int m_DoubleGood;
+	[SerializeField] int m_DoubleBad;
 	[SerializeField] int m_DoubleFail;
 
 	[SerializeField] float m_HoldSuccessScore;
 	[SerializeField] float m_HoldFailScore;
-	[SerializeField] float m_TapScore;
-	[SerializeField] float m_DoubleScore;
 
 	public void RegisterHoldSuccess(float _Progress)
 	{
@@ -160,8 +142,12 @@ public class ScoreData
 
 	public void RegisterTapSuccess(float _Progress)
 	{
-		m_TapScore += _Progress;
-		m_TapSuccess++;
+		if (_Progress >= TAP_PERFECT_THRESHOLD)
+			m_TapPerfect++;
+		else if (_Progress >= TAP_GOOD_THRESHOLD)
+			m_TapGood++;
+		else
+			m_TapBad++;
 	}
 
 	public void RegisterTapFail()
@@ -171,8 +157,12 @@ public class ScoreData
 
 	public void RegisterDoubleSuccess(float _Progress)
 	{
-		m_DoubleScore += _Progress;
-		m_DoubleSuccess++;
+		if (_Progress >= DOUBLE_PERFECT_THRESHOLD)
+			m_DoublePerfect++;
+		else if (_Progress >= DOUBLE_GOOD_THRESHOLD)
+			m_DoubleGood++;
+		else
+			m_DoubleBad++;
 	}
 
 	public void RegisterDoubleFail()
