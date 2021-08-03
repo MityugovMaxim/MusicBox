@@ -30,6 +30,6 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 
 	void RegisterLevelExit()
 	{
-		Hide(true);
+		Hide();
 	}
 }
