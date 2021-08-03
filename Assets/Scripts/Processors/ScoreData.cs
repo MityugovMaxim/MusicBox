@@ -27,8 +27,8 @@ public class ScoreData
 	const float TAP_GOOD_THRESHOLD        = 0.35f;
 	const float DOUBLE_PERFECT_THRESHOLD  = 0.65f;
 	const float DOUBLE_GOOD_THRESHOLD     = 0.35f;
-	const float S_RANK                    = 0.95f;
-	const float A_RANK                    = 0.8f;
+	const float S_RANK                    = 0.98f;
+	const float A_RANK                    = 0.85f;
 	const float B_RANK                    = 0.5f;
 	const float C_RANK                    = 0.05f;
 
