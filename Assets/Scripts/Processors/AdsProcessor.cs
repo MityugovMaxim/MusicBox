@@ -5,6 +5,18 @@ using Zenject;
 
 public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 {
+	static bool TestMode
+	{
+		get
+		{
+			#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			return true;
+			#else
+			return false;
+			#endif
+		}
+	}
+
 	protected abstract string GameID         { get; }
 	protected abstract string InterstitialID { get; }
 	protected abstract string RewardedID     { get; }
@@ -15,18 +27,6 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 	Action m_InterstitialFinished;
 	Action m_RewardedSuccess;
 	Action m_RewardedFailed;
-
-	bool TestMode
-	{
-		get
-		{
-			#if UNITY_EDITOR || DEVELOPMENT_BUILD
-			return false;
-			#else
-			return false;
-			#endif
-		}
-	}
 
 	void IInitializable.Initialize()
 	{
