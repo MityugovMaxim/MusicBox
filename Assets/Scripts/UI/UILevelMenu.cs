@@ -11,12 +11,14 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
 	[SerializeField] UIScoreRank              m_ScoreRank;
 	[SerializeField] UILevelPreviewLabel      m_Label;
+	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
 	UILoadingMenu  m_LoadingMenu;
 	string         m_LevelID;
 	IEnumerator    m_RepositionRoutine;
+	AudioSource    m_AudioSource;
 
 	[Inject]
 	public void Construct(
@@ -63,6 +65,8 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Thumbnail.Setup(m_LevelID);
 		m_ScoreRank.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
+		
+		m_PreviewSource.Play(m_LevelID);
 	}
 
 	public void Previous()
@@ -73,12 +77,24 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Thumbnail.Setup(m_LevelID);
 		m_ScoreRank.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
+		
+		m_PreviewSource.Play(m_LevelID);
 	}
 
 	public void Play()
 	{
 		m_LoadingMenu.Setup(m_LevelID);
 		m_LoadingMenu.Show();
+	}
+
+	protected override void OnShowFinished()
+	{
+		m_PreviewSource.Play(m_LevelID);
+	}
+
+	protected override void OnHideStarted()
+	{
+		m_PreviewSource.Stop();
 	}
 
 	void Expand()
