@@ -4,7 +4,7 @@ public class HoldClip : Clip
 {
 	public HoldCurve Curve => m_Curve;
 
-	[SerializeField] HoldCurve m_Curve;
+	[SerializeField] HoldCurve m_Curve = new HoldCurve();
 
 	protected override void OnEnter(float _Time) { }
 

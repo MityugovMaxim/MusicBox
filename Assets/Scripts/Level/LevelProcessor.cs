@@ -24,7 +24,7 @@ public class LevelProcessor
 		m_SignalBus    = _SignalBus;
 		m_LevelFactory = _LevelFactory;
 		
-		LevelRegistry levelRegistry = Resources.Load<LevelRegistry>("LevelRegistry/level_registry");
+		LevelRegistry levelRegistry = Registry.Load<LevelRegistry>("level_registry");
 		
 		foreach (LevelInfo levelInfo in levelRegistry)
 		{
@@ -86,6 +86,31 @@ public class LevelProcessor
 		}
 		
 		return levelInfo.Title;
+	}
+
+	public string GetLeaderboardID(string _LevelID)
+	{
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogError("[LevelProcessor] Get leaderboard ID failed. Level ID is null or empty.");
+			return string.Empty;
+		}
+		
+		if (!m_LevelInfos.ContainsKey(_LevelID))
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get leaderboard ID failed. Level with ID '{0}' not found.", _LevelID);
+			return string.Empty;
+		}
+		
+		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		
+		if (levelInfo == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get leaderboard ID failed. Level info with ID '{0}' is null.", _LevelID);
+			return string.Empty;
+		}
+		
+		return levelInfo.LeaderboardID;
 	}
 
 	public string GetNextLevelID(string _LevelID)

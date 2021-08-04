@@ -27,12 +27,12 @@ public class ScoreData
 	const float TAP_GOOD_THRESHOLD        = 0.35f;
 	const float DOUBLE_PERFECT_THRESHOLD  = 0.65f;
 	const float DOUBLE_GOOD_THRESHOLD     = 0.35f;
-	const float S_RANK                    = 0.98f;
-	const float A_RANK                    = 0.85f;
-	const float B_RANK                    = 0.5f;
-	const float C_RANK                    = 0.05f;
+	const int   S_RANK                    = 98;
+	const int   A_RANK                    = 85;
+	const int   B_RANK                    = 50;
+	const int   C_RANK                    = 5;
 
-	public double Score
+	public long Score
 	{
 		get
 		{
@@ -58,11 +58,11 @@ public class ScoreData
 			doubleScore += m_DoubleBad * DOUBLE_BAD_MULTIPLIER;
 			score       += (long)doubleScore;
 			
-			return score;
+			return (long)score;
 		}
 	}
 
-	public double Accuracy
+	public int Accuracy
 	{
 		get
 		{
@@ -80,7 +80,7 @@ public class ScoreData
 			
 			score += doubleCount * DOUBLE_PERFECT_MULTIPLIER;
 			
-			return Math.Min(1, Score / score);
+			return Mathf.RoundToInt((float)Math.Min(1, Score / score) * 100);
 		}
 	}
 
@@ -88,7 +88,7 @@ public class ScoreData
 	{
 		get
 		{
-			double accuracy = Accuracy;
+			int accuracy = Accuracy;
 			if (accuracy >= S_RANK)
 				return ScoreRank.S;
 			else if (accuracy >= A_RANK)

@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -15,8 +16,8 @@ public class UIScore : UIEntity
 	[SerializeField]              UIScoreRank m_ScoreRank;
 
 	ScoreProcessor m_ScoreProcessor;
-	float          m_Accuracy;
-	float          m_Score;
+	int            m_Accuracy;
+	long           m_Score;
 	Animator       m_Animator;
 
 	[Inject]
@@ -70,12 +71,12 @@ public class UIScore : UIEntity
 	void ProcessScorePhase()
 	{
 		if (m_ScoreLabel != null)
-			m_ScoreLabel.text = Mathf.RoundToInt(m_Score * m_ScorePhase).ToString();
+			m_ScoreLabel.text = ((long)Math.Round(m_Score * m_ScorePhase)).ToString();
 	}
 
 	void ProcessAccuracyPhase()
 	{
 		if (m_AccuracyLabel != null)
-			m_AccuracyLabel.text = Mathf.RoundToInt(m_Accuracy * m_AccuracyPhase * 100).ToString();
+			m_AccuracyLabel.text = Mathf.RoundToInt(m_Accuracy * m_AccuracyPhase).ToString();
 	}
 }

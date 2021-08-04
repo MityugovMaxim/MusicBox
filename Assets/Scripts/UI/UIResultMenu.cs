@@ -14,12 +14,13 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UIScore                  m_Score;
 
-	SignalBus      m_SignalBus;
-	UIMainMenu     m_MainMenu;
-	UILevelMenu    m_LevelMenu;
-	LevelProcessor m_LevelProcessor;
-	ScoreProcessor m_ScoreProcessor;
-	AdsProcessor   m_AdsProcessor;
+	SignalBus       m_SignalBus;
+	UIMainMenu      m_MainMenu;
+	UILevelMenu     m_LevelMenu;
+	LevelProcessor  m_LevelProcessor;
+	ScoreProcessor  m_ScoreProcessor;
+	SocialProcessor m_SocialProcessor;
+	AdsProcessor    m_AdsProcessor;
 
 	string    m_LevelID;
 	ScoreData m_ScoreData;
@@ -30,20 +31,22 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 
 	[Inject]
 	public void Construct(
-		SignalBus      _SignalBus,
-		UIMainMenu     _MainMenu,
-		UILevelMenu    _LevelMenu,
-		LevelProcessor _LevelProcessor,
-		ScoreProcessor _ScoreProcessor,
-		AdsProcessor   _AdsProcessor
+		SignalBus       _SignalBus,
+		UIMainMenu      _MainMenu,
+		UILevelMenu     _LevelMenu,
+		LevelProcessor  _LevelProcessor,
+		ScoreProcessor  _ScoreProcessor,
+		SocialProcessor _SocialProcessor,
+		AdsProcessor    _AdsProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_MainMenu       = _MainMenu;
-		m_LevelMenu      = _LevelMenu;
-		m_LevelProcessor = _LevelProcessor;
-		m_ScoreProcessor = _ScoreProcessor;
-		m_AdsProcessor   = _AdsProcessor;
+		m_SignalBus       = _SignalBus;
+		m_MainMenu        = _MainMenu;
+		m_LevelMenu       = _LevelMenu;
+		m_LevelProcessor  = _LevelProcessor;
+		m_ScoreProcessor  = _ScoreProcessor;
+		m_SocialProcessor = _SocialProcessor;
+		m_AdsProcessor    = _AdsProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -78,6 +81,10 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		m_Thumbnail.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_Score.Setup(m_LevelID);
+		
+		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
+		long   score         = m_ScoreProcessor.GetBestScore(m_LevelID);
+		m_SocialProcessor.ReportScore(leaderboardID, score);
 		
 		Show();
 	}
@@ -181,6 +188,13 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		{
 			NextInternal();
 		}
+	}
+
+	[Preserve]
+	public void Leaderboard()
+	{
+		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
+		m_SocialProcessor.ShowLeaderboard(leaderboardID);
 	}
 
 	protected override void OnShowStarted()

@@ -9,22 +9,76 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 {
 	const string PURCHASES_KEY = "PURCHASES";
 
-	HashSet<string> m_Purchases = new HashSet<string>();
+	public bool Initialized => m_Controller != null && m_Extensions != null;
 
-	bool Initialized => m_Controller != null && m_Extensions != null; 
+	SignalBus m_SignalBus;
+
+	ProductRegistry m_ProductRegistry;
+	HashSet<string> m_Purchases = new HashSet<string>();
 
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
 
-	readonly Dictionary<string, Action<string>> m_Success = new Dictionary<string, Action<string>>();
-	readonly Dictionary<string, Action<string>> m_Failed  = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Sprite>         m_PreviewThumbnails = new Dictionary<string, Sprite>();
+	readonly Dictionary<string, Action<string>> m_Success           = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Failed            = new Dictionary<string, Action<string>>();
+
+	[Inject]
+	public void Construct(SignalBus _SignalBus)
+	{
+		m_SignalBus = _SignalBus;
+	}
+
+	void IInitializable.Initialize()
+	{
+		LoadPurchases();
+		
+		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+		
+		m_ProductRegistry = Registry.Load<ProductRegistry>("product_registry");
+		
+		if (m_ProductRegistry != null)
+		{
+			foreach (ProductInfo purchaseInfo in m_ProductRegistry)
+			{
+				if (purchaseInfo.Active)
+					config.AddProduct(purchaseInfo.ID, ProductType.NonConsumable);
+			}
+		}
+		
+		UnityPurchasing.Initialize(this, config);
+	}
+
+	public string[] GetProductIDs()
+	{
+		return m_ProductRegistry.Select(_ProductInfo => _ProductInfo.ID)
+			.SkipWhile(IsPurchased)
+			.ToArray();
+	}
+
+	public Sprite GetPreviewThumbnail(string _ProductID)
+	{
+		if (m_PreviewThumbnails.ContainsKey(_ProductID) && m_PreviewThumbnails[_ProductID] != null)
+			return m_PreviewThumbnails[_ProductID];
+		
+		string path = $"{_ProductID}/preview_thumbnail";
+		
+		Sprite previewThumbnail = Resources.Load<Sprite>(path);
+		
+		m_PreviewThumbnails[_ProductID] = previewThumbnail;
+		
+		return previewThumbnail;
+	}
 
 	public bool IsPurchased(string _ProductID)
 	{
+		if (m_Purchases.Contains(_ProductID))
+			return true;
+		
 		if (!Initialized)
 		{
 			Debug.LogWarningFormat("[PurchaseProcessor] Check product failed. Store not initialized. Reading product with ID '{0}' from cache...", _ProductID);
-			return m_Purchases.Contains(_ProductID);
+			return false;
 		}
 		
 		Product product = m_Controller.products.WithID(_ProductID);
@@ -32,10 +86,29 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		if (product == null)
 		{
 			Debug.LogWarningFormat("[PurchaseProcessor] Check product failed. Product with ID '{0}' not found. Reading product with ID '{0}' from cache...", _ProductID);
-			return m_Purchases.Contains(_ProductID);
+			return false;
 		}
 		
-		return !product.availableToPurchase && product.hasReceipt;
+		return !product.availableToPurchase || product.hasReceipt;
+	}
+
+	public string GetTitle(string _ProductID)
+	{
+		if (!Initialized)
+		{
+			Debug.LogError("[PurchaseProcessor] Get title failed. Store not initialized.");
+			return "-";
+		}
+		
+		Product product = m_Controller.products.WithID(_ProductID);
+		
+		if (product == null)
+		{
+			Debug.LogErrorFormat("[PurchaseProcessor] Get title failed. Product with ID '{0}' not found.", _ProductID);
+			return "-";
+		}
+		
+		return product.metadata.localizedTitle;
 	}
 
 	public string GetPrice(string _ProductID)
@@ -138,19 +211,6 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		);
 	}
 
-	void IInitializable.Initialize()
-	{
-		LoadPurchases();
-		
-		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
-		
-		// TODO: Load products from scriptable object
-		
-		config.AddProduct("com.audiobox.pixies_where_is_my_mind", ProductType.NonConsumable);
-		
-		UnityPurchasing.Initialize(this, config);
-	}
-
 	void IStoreListener.OnInitialized(IStoreController _Controller, IExtensionProvider _Extensions)
 	{
 		Debug.Log("[PurchaseProcessor] Initialize complete.");
@@ -177,6 +237,8 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		SavePurchases();
 		
 		InvokeSuccess(productID);
+		
+		m_SignalBus.Fire(new PurchaseSignal(productID));
 		
 		return PurchaseProcessingResult.Complete;
 	}

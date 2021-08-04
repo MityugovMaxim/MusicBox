@@ -14,6 +14,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	SignalBus               m_SignalBus;
 	LevelProcessor          m_LevelProcessor;
 	UIMainMenuTrack.Factory m_TrackFactory;
+	UIShopMenu              m_ShopMenu;
 
 	readonly List<UIMainMenuTrack> m_Tracks = new List<UIMainMenuTrack>();
 
@@ -23,12 +24,14 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	public void Construct(
 		SignalBus               _SignalBus,
 		LevelProcessor          _LevelProcessor,
-		UIMainMenuTrack.Factory _TrackFactory
+		UIMainMenuTrack.Factory _TrackFactory,
+		UIShopMenu              _ShopMenu
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_LevelProcessor = _LevelProcessor;
 		m_TrackFactory   = _TrackFactory;
+		m_ShopMenu       = _ShopMenu;
 	}
 
 	void IInitializable.Initialize()
@@ -54,12 +57,18 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		Show(true);
 	}
 
-	protected override void OnShowStarted()
+	public void Shop()
 	{
-		RefreshPreviews();
+		if (m_ShopMenu != null)
+			m_ShopMenu.Show();
 	}
 
-	void RefreshPreviews()
+	protected override void OnShowStarted()
+	{
+		Refresh();
+	}
+
+	void Refresh()
 	{
 		if (m_LevelProcessor == null)
 			return;

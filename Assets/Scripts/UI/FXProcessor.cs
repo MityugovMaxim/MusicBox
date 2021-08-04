@@ -1,47 +1,79 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using Zenject;
 
 public class FXProcessor : UIEntity
 {
-	// TODO: Make pool
-
-	[SerializeField] GameObject m_HoldFX;
-	[SerializeField] GameObject m_TapFX;
-	[SerializeField] GameObject m_DoubleFX;
-
-	UIInputZone m_InputZone;
+	UIInputZone     m_InputZone;
+	UITapFX.Pool    m_TapFXPool;
+	UIDoubleFX.Pool m_DoubleFXPool;
+	UIHoldFX.Pool   m_HoldFXPool;
 
 	[Inject]
-	public void Construct(UIInputZone _InputZone)
+	public void Construct(
+		UIInputZone     _InputZone,
+		UITapFX.Pool    _TapFXPool,
+		UIDoubleFX.Pool _DoubleFXPool,
+		UIHoldFX.Pool   _HoldFXPool
+	)
 	{
-		m_InputZone = _InputZone;
-	}
-
-	public void HoldFX(Rect _Rect)
-	{
-		GameObject holdFX = Instantiate(m_HoldFX, RectTransform);
-		
-		holdFX.transform.localPosition = GetZonePosition(_Rect.center);
-		
-		Destroy(holdFX, 2);
+		m_InputZone    = _InputZone;
+		m_TapFXPool    = _TapFXPool;
+		m_DoubleFXPool = _DoubleFXPool;
+		m_HoldFXPool   = _HoldFXPool;
 	}
 
 	public void TapFX(Rect _Rect)
 	{
-		GameObject tapFX = Instantiate(m_TapFX, RectTransform);
+		UITapFX tapFX = m_TapFXPool.Spawn();
 		
-		tapFX.transform.localPosition = GetZonePosition(_Rect.center);
+		tapFX.RectTransform.SetParent(RectTransform, false);
+		tapFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
-		Destroy(tapFX, 2);
+		IEnumerator delayRoutine = DelayRoutine(
+			tapFX.Duration,
+			() => m_TapFXPool.Despawn(tapFX)
+		);
+		
+		StartCoroutine(delayRoutine);
 	}
 
 	public void DoubleFX(Rect _Rect)
 	{
-		GameObject doubleFX = Instantiate(m_DoubleFX, RectTransform);
+		UIDoubleFX doubleFX = m_DoubleFXPool.Spawn();
 		
-		doubleFX.transform.localPosition = GetZonePosition(_Rect.center);
+		doubleFX.RectTransform.SetParent(RectTransform, false);
+		doubleFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
-		Destroy(doubleFX, 2);
+		IEnumerator delayRoutine = DelayRoutine(
+			doubleFX.Duration,
+			() => m_DoubleFXPool.Despawn(doubleFX)
+		);
+		
+		StartCoroutine(delayRoutine);
+	}
+
+	public void HoldFX(Rect _Rect)
+	{
+		UIHoldFX holdFX = m_HoldFXPool.Spawn();
+		
+		holdFX.RectTransform.SetParent(RectTransform, false);
+		holdFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
+		
+		IEnumerator delayRoutine = DelayRoutine(
+			holdFX.Duration,
+			() => m_HoldFXPool.Despawn(holdFX)
+		);
+		
+		StartCoroutine(delayRoutine);
+	}
+
+	static IEnumerator DelayRoutine(float _Delay, Action _Callback)
+	{
+		yield return new WaitForSeconds(_Delay);
+		
+		_Callback?.Invoke();
 	}
 
 	Vector2 GetZonePosition(Vector2 _Position)

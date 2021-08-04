@@ -20,18 +20,18 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_SignalBus = _SignalBus;
 	}
 
-	public float GetLastAccuracy(string _LevelID)
+	public int GetLastAccuracy(string _LevelID)
 	{
 		ScoreData scoreData = LoadLastScore(_LevelID);
 		
-		return (float)scoreData.Accuracy;
+		return scoreData.Accuracy;
 	}
 
-	public float GetLastScore(string _LevelID)
+	public long GetLastScore(string _LevelID)
 	{
 		ScoreData scoreData = LoadLastScore(_LevelID);
 		
-		return (float)scoreData.Score;
+		return scoreData.Score;
 	}
 
 	public ScoreRank GetLastRank(string _LevelID)
@@ -41,18 +41,18 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return scoreData.Rank;
 	}
 
-	public float GetBestAccuracy(string _LevelID)
+	public int GetBestAccuracy(string _LevelID)
 	{
 		ScoreData scoreData = LoadBestScore(_LevelID);
 		
-		return (float)scoreData.Accuracy;
+		return scoreData.Accuracy;
 	}
 
-	public float GetBestScore(string _LevelID)
+	public long GetBestScore(string _LevelID)
 	{
 		ScoreData scoreData = LoadBestScore(_LevelID);
 		
-		return (float)scoreData.Score;
+		return scoreData.Score;
 	}
 
 	public ScoreRank GetBestRank(string _LevelID)

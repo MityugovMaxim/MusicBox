@@ -366,7 +366,8 @@ public class ClipDrawer
 				string path  = AssetDatabase.GetAssetPath(Clip);
 				Track  track = AssetDatabase.LoadAssetAtPath<Track>(path);
 				
-				track.Sort();
+				if (track != null)
+					track.Sort();
 				
 				Event.current.Use();
 				

@@ -21,6 +21,9 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 	protected abstract string InterstitialID { get; }
 	protected abstract string RewardedID     { get; }
 
+	PurchaseProcessor m_PurchaseProcessor;
+	ProductInfo       m_NoAdsProduct;
+
 	bool m_InterstitialLoaded;
 	bool m_RewardedLoaded;
 
@@ -28,8 +31,18 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 	Action m_RewardedSuccess;
 	Action m_RewardedFailed;
 
+	[Inject]
+	public void Construct(PurchaseProcessor _PurchaseProcessor, ProductInfo _NoAdsProduct)
+	{
+		m_PurchaseProcessor = _PurchaseProcessor;
+		m_NoAdsProduct      = _NoAdsProduct;
+	}
+
 	void IInitializable.Initialize()
 	{
+		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+			return;
+		
 		if (!Advertisement.isSupported)
 		{
 			Debug.LogError("[AdsProcessor] Ads initialization failed. Ads not supported.");
@@ -44,6 +57,12 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	public void ShowInterstitial(Action _Finished = null)
 	{
+		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+		{
+			_Finished?.Invoke();
+			return;
+		}
+		
 		if (!Advertisement.isInitialized)
 		{
 			Debug.LogError("[AdsProcessor] Show interstitial failed. Ads not initialized.");
@@ -74,6 +93,12 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	public void ShowRewarded(Action _Success = null, Action _Failed = null)
 	{
+		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+		{
+			_Success?.Invoke();
+			return;
+		}
+		
 		if (!Advertisement.isInitialized)
 		{
 			Debug.LogError("[AdsProcessor] Show rewarded failed. Ads not initialized.");

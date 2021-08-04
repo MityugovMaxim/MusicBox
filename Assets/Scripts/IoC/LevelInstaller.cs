@@ -11,6 +11,9 @@ public class LevelInstaller : MonoInstaller
 	[SerializeField] UITapIndicator    m_TapIndicator;
 	[SerializeField] UIDoubleIndicator m_DoubleIndicator;
 	[SerializeField] UIHoldIndicator   m_HoldIndicator;
+	[SerializeField] UITapFX           m_TapFX;
+	[SerializeField] UIDoubleFX        m_DoubleFX;
+	[SerializeField] UIHoldFX          m_HoldFX;
 
 	public override void InstallBindings()
 	{
@@ -36,5 +39,20 @@ public class LevelInstaller : MonoInstaller
 			.WithInitialSize(2)
 			.FromComponentInNewPrefab(m_HoldIndicator)
 			.UnderTransformGroup("[UIHoldIndicator] Pool");
+		
+		Container.BindMemoryPool<UITapFX, UITapFX.Pool>()
+			.WithInitialSize(4)
+			.FromComponentInNewPrefab(m_TapFX)
+			.UnderTransformGroup("[UITapFX] Pool");
+		
+		Container.BindMemoryPool<UIDoubleFX, UIDoubleFX.Pool>()
+			.WithInitialSize(2)
+			.FromComponentInNewPrefab(m_DoubleFX)
+			.UnderTransformGroup("[UIDoubleFX] Pool");
+		
+		Container.BindMemoryPool<UIHoldFX, UIHoldFX.Pool>()
+			.WithInitialSize(1)
+			.FromComponentInNewPrefab(m_HoldFX)
+			.UnderTransformGroup("[UIHoldFX] Pool");
 	}
 }
