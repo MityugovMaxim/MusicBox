@@ -7,11 +7,13 @@ public class LevelInfo : RegistryEntry
 	public string    Title         => m_Title;
 	public string    Artist        => m_Artist;
 	public string    LeaderboardID => m_LeaderboardID;
+	public string    AchievementID => m_AchievementID;
 	public LevelMode Mode          => m_Mode;
 
 	[SerializeField] string    m_ID;
 	[SerializeField] string    m_Title;
 	[SerializeField] string    m_Artist;
 	[SerializeField] string    m_LeaderboardID;
+	[SerializeField] string    m_AchievementID;
 	[SerializeField] LevelMode m_Mode;
 }

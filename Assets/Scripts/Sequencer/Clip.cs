@@ -7,13 +7,13 @@ public abstract class Clip : ScriptableObject
 	public virtual float MinTime
 	{
 		get => m_MinTime;
-		protected set => m_MinTime = value;
+		set => m_MinTime = value;
 	}
 
 	public virtual float MaxTime
 	{
 		get => m_MaxTime;
-		protected set => m_MaxTime = value;
+		set => m_MaxTime = value;
 	}
 
 	public bool Playing { get; private set; }

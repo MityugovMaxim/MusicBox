@@ -132,6 +132,31 @@ public class LevelProcessor
 		return levelInfo.LeaderboardID;
 	}
 
+	public string GetAchievementID(string _LevelID)
+	{
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogError("[LevelProcessor] Get achievement ID failed. Level ID is null or empty.");
+			return string.Empty;
+		}
+		
+		if (!m_LevelInfos.ContainsKey(_LevelID))
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get achievement ID failed. Level with ID '{0}' not found.", _LevelID);
+			return string.Empty;
+		}
+		
+		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		
+		if (levelInfo == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get achievement ID failed. Level info with ID '{0}' is null.", _LevelID);
+			return string.Empty;
+		}
+		
+		return levelInfo.AchievementID;
+	}
+
 	public string GetNextLevelID(string _LevelID)
 	{
 		int index = m_LevelIDs.IndexOf(_LevelID);

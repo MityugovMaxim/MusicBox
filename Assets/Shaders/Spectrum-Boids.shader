@@ -37,7 +37,7 @@
 				const half step = UNITY_TWO_PI / size;
 				const half s = sin(step);
 				const half c = cos(step);
-				half2 normal = rotate(half2(1, 0), _Time.w);
+				half2 normal = rotate(half2(1, 0), -_Time.w);
 				for (int i = 0; i < size; i++)
 				{
 					const half2 position = normal * (0.45 + _Spectrum[i] * 0.5) - base;

@@ -24,9 +24,12 @@ public partial class Track
 		set => m_Expanded = value;
 	}
 
+	public char Mnemonic => m_Mnemonic;
+
 	protected virtual float MinHeight => 30;
 	protected virtual float MaxHeight => 200;
 
+	[SerializeField]                  char  m_Mnemonic;
 	[SerializeField, HideInInspector] float m_Height;
 	[SerializeField, HideInInspector] bool  m_Expanded = true;
 

@@ -88,6 +88,11 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		long   score         = m_ScoreProcessor.GetBestScore(m_LevelID);
 		m_SocialProcessor.ReportScore(leaderboardID, score);
 		
+		string    achievementID = m_LevelProcessor.GetAchievementID(m_LevelID);
+		ScoreRank rank          = m_ScoreProcessor.GetBestRank(m_LevelID);
+		if (rank == ScoreRank.S)
+			m_SocialProcessor.CompleteAchievement(achievementID);
+		
 		Show();
 	}
 
