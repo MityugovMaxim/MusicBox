@@ -722,11 +722,13 @@ public class SequencerEditorWindow : EditorWindow
 				
 				string[] clipsData = GUIUtility.systemCopyBuffer.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				
+				Dictionary<Track, List<Clip>> clipsMap = new Dictionary<Track, List<Clip>>();
+				
 				for (int i = 1; i < clipsData.Length; i++)
 				{
 					string clipData = clipsData[i];
 					
-					string[] clipParameters = clipData.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+					string[] clipParameters = clipData.Split(new char[] { ';' });
 					
 					string guidParameter = clipParameters[0];
 					string typeParameter = clipParameters[1];
@@ -747,8 +749,27 @@ public class SequencerEditorWindow : EditorWindow
 					
 					EditorJsonUtility.FromJsonOverwrite(jsonParameter, clip);
 					
-					TrackUtility.AddClip(track, clip, Sequencer.Time);
+					if (!clipsMap.ContainsKey(track))
+						clipsMap[track] = new List<Clip>();
 					
+					clipsMap[track].Add(clip);
+				}
+				
+				float minTime = float.MaxValue;
+				foreach (Clip clip in clipsMap.Values.SelectMany(_Clips => _Clips))
+					minTime = Mathf.Min(minTime, clip.MinTime);
+				foreach (Clip clip in clipsMap.Values.SelectMany(_Clips => _Clips))
+				{
+					clip.MinTime -= minTime;
+					clip.MaxTime -= minTime;
+				}
+				
+				foreach (var entry in clipsMap)
+				{
+					Track      track = entry.Key;
+					List<Clip> clips = entry.Value;
+					foreach (Clip clip in clips)
+						TrackUtility.AddClip(track, clip, Sequencer.Time + clip.MinTime);
 					track.Initialize(Sequencer);
 				}
 				

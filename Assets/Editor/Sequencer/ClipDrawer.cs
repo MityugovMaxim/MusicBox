@@ -190,7 +190,17 @@ public class ClipDrawer
 				if (ViewRect.Contains(Event.current.mousePosition))
 				{
 					GUI.FocusControl(null);
-					Selection.activeObject = Clip;
+					if (Event.current.modifiers == EventModifiers.Command)
+					{
+						if (Selection.Contains(Clip))
+							Selection.objects = Selection.objects.Where(_Object => _Object != Clip).ToArray();
+						else
+							Selection.objects = Selection.objects.Append(Clip).ToArray();
+					}
+					else
+					{
+						Selection.activeObject = Clip;
+					}
 				}
 				
 				break;

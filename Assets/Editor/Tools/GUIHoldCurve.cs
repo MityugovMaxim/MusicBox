@@ -102,7 +102,7 @@ public static class GUIHoldCurve
 
 	static HoldCurve.Key FindKey(Vector2 _Position, Rect _Rect, HoldCurve _HoldCurve)
 	{
-		const float tolerance = 5 * 5;
+		const float tolerance = 15 * 15;
 		
 		foreach (var key in _HoldCurve)
 		{

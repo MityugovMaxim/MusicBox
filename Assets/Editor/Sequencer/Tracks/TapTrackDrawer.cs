@@ -26,6 +26,17 @@ public class TapTrackDrawer : TrackDrawer
 			TrackUtility.AddClip(Track, clip, Time);
 		}
 		
+		if (Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic)
+		{
+			Event.current.Use();
+			
+			TapClip clip = ScriptableObject.CreateInstance<TapClip>();
+			
+			clip.name = "Tap Clip";
+			
+			TrackUtility.AddClip(Track, clip, Time);
+		}
+		
 		EditorGUILayout.EndHorizontal();
 		
 		EditorGUILayout.PropertyField(TrackProperty, GUIContent.none);
