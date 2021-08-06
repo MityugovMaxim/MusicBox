@@ -69,11 +69,15 @@ public class UILevelPreviewBackground : UIEntity
 		Image sourceBackground = _Background;
 		Image targetBackground = CreateBackground();
 		
-		Color source = new Color(1, 1, 1, 0);
-		Color target = new Color(1, 1, 1, 1);
+		const float source = 0;
+		const float target = 1;
+		
+		Color color = sourceBackground.color;
+		
+		color.a = source;
 		
 		targetBackground.sprite = _Sprite;
-		targetBackground.color  = source;
+		targetBackground.color  = color;
 		
 		float time = 0;
 		while (time < m_Duration)
@@ -84,10 +88,14 @@ public class UILevelPreviewBackground : UIEntity
 			
 			float phase = m_Curve.Evaluate(time / m_Duration);
 			
-			targetBackground.color = Color.Lerp(source, target, phase);
+			color.a = Mathf.Lerp(source, target, phase);
+			
+			targetBackground.color = color;
 		}
 		
-		targetBackground.color = target;
+		color.a = target;
+		
+		targetBackground.color = color;
 		
 		yield return null;
 		

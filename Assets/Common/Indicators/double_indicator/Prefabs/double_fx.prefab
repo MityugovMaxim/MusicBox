@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ad7a4ad274f45feb8db46fc8504b1d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Duration: 1.5
+  m_Duration: 0.6
 --- !u!1 &8277689942928383068
 GameObject:
   m_ObjectHideFlags: 0
@@ -97,7 +97,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8277689942928383068}
   serializedVersion: 6
-  lengthInSec: 0.3
+  lengthInSec: 0.4
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -171,9 +171,9 @@ ParticleSystem:
     enabled: 1
     startLifetime:
       serializedVersion: 2
-      minMaxState: 0
-      scalar: 0.3
-      minScalar: 5
+      minMaxState: 3
+      scalar: 0.35
+      minScalar: 0.3
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -341,7 +341,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 500
+      scalar: 600
       minScalar: 300
       maxCurve:
         serializedVersion: 2
@@ -803,7 +803,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 175
+      value: 225
       mode: 3
       spread: 0
       speed:
@@ -1032,7 +1032,7 @@ ParticleSystem:
       countCurve:
         serializedVersion: 2
         minMaxState: 0
-        scalar: 8
+        scalar: 14
         minScalar: 30
         maxCurve:
           serializedVersion: 2

@@ -55,13 +55,27 @@ public class RegistryEditor : Editor
 		
 		m_RegistryList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
 		{
-			SerializedProperty levelInfoProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(_Index);
-			
-			Rect indexRect = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
-			Rect levelRect = new Rect(_Rect.x + 25, _Rect.y, _Rect.width - 25, _Rect.height);
+			Rect indexRect  = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
+			Rect toggleRect = new Rect(_Rect.x + 25, _Rect.y, 25, _Rect.height);
+			Rect levelRect  = new Rect(_Rect.x + 50, _Rect.y, _Rect.width - 50, _Rect.height);
 			
 			EditorGUI.LabelField(indexRect, _Index.ToString());
+			
+			SerializedProperty levelInfoProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(_Index);
+			if (levelInfoProperty == null)
+				return;
+			
 			EditorGUI.PropertyField(levelRect, levelInfoProperty, GUIContent.none);
+			
+			if (levelInfoProperty.objectReferenceValue == null)
+				return;
+			
+			using (SerializedObject levelInfoObject = new SerializedObject(levelInfoProperty.objectReferenceValue))
+			{
+				SerializedProperty activeProperty = levelInfoObject.FindProperty("m_Active");
+				activeProperty.boolValue = EditorGUI.Toggle(toggleRect, activeProperty.boolValue);
+				levelInfoObject.ApplyModifiedProperties();
+			}
 		};
 	}
 

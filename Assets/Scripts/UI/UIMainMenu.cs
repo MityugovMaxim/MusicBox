@@ -7,47 +7,57 @@ using Zenject;
 
 public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
-	[SerializeField] UIMainMenuTrack m_Track;
-	[SerializeField] RectTransform   m_Container;
-	[SerializeField] ScrollRect      m_Scroll;
+	[SerializeField] UIMainMenuItem m_Item;
+	[SerializeField] RectTransform  m_Container;
+	[SerializeField] ScrollRect     m_Scroll;
 
-	SignalBus               m_SignalBus;
-	LevelProcessor          m_LevelProcessor;
-	UIMainMenuTrack.Factory m_TrackFactory;
-	UIShopMenu              m_ShopMenu;
+	SignalBus              m_SignalBus;
+	LevelProcessor         m_LevelProcessor;
+	SocialProcessor        m_SocialProcessor;
+	UIMainMenuItem.Factory m_ItemFactory;
+	UIShopMenu             m_ShopMenu;
 
-	readonly List<UIMainMenuTrack> m_Tracks = new List<UIMainMenuTrack>();
+	readonly List<UIMainMenuItem> m_Items = new List<UIMainMenuItem>();
 
 	string[] m_LevelIDs;
 
 	[Inject]
 	public void Construct(
-		SignalBus               _SignalBus,
-		LevelProcessor          _LevelProcessor,
-		UIMainMenuTrack.Factory _TrackFactory,
-		UIShopMenu              _ShopMenu
+		SignalBus              _SignalBus,
+		LevelProcessor         _LevelProcessor,
+		SocialProcessor        _SocialProcessor,
+		UIMainMenuItem.Factory _ItemFactory,
+		UIShopMenu             _ShopMenu
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_LevelProcessor = _LevelProcessor;
-		m_TrackFactory   = _TrackFactory;
-		m_ShopMenu       = _ShopMenu;
+		m_SignalBus       = _SignalBus;
+		m_LevelProcessor  = _LevelProcessor;
+		m_SocialProcessor = _SocialProcessor;
+		m_ItemFactory     = _ItemFactory;
+		m_ShopMenu        = _ShopMenu;
 	}
 
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
 	}
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
 		Recenter(_Signal.LevelID);
 		Hide(true);
+	}
+
+	void RegisterPurchase()
+	{
+		Refresh();
 	}
 
 	protected override void Awake()
@@ -63,6 +73,12 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 			m_ShopMenu.Show();
 	}
 
+	public void Achievements()
+	{
+		if (m_SocialProcessor != null)
+			m_SocialProcessor.ShowAchievements();
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();
@@ -75,40 +91,40 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		
 		m_LevelIDs = m_LevelProcessor.GetLevelIDs();
 		
-		int delta = m_LevelIDs.Length - m_Tracks.Count;
+		int delta = m_LevelIDs.Length - m_Items.Count;
 		int count = Mathf.Abs(delta);
 		
 		if (delta > 0)
 		{
 			for (int i = 0; i < count; i++)
 			{
-				UIMainMenuTrack track = m_TrackFactory.Create(m_Track);
-				track.RectTransform.SetParent(m_Container, false);
-				m_Tracks.Add(track);
+				UIMainMenuItem item = m_ItemFactory.Create(m_Item);
+				item.RectTransform.SetParent(m_Container, false);
+				m_Items.Add(item);
 			}
 		}
 		else if (delta < 0)
 		{
 			for (int i = 0; i < count; i++)
 			{
-				int             index = m_Tracks.Count - 1;
-				UIMainMenuTrack track = m_Tracks[index];
-				Destroy(track.gameObject);
-				m_Tracks.RemoveAt(index);
+				int            index = m_Items.Count - 1;
+				UIMainMenuItem item  = m_Items[index];
+				Destroy(item.gameObject);
+				m_Items.RemoveAt(index);
 			}
 		}
 		
-		foreach (UIMainMenuTrack track in m_Tracks)
-			track.gameObject.SetActive(false);
+		foreach (UIMainMenuItem item in m_Items)
+			item.gameObject.SetActive(false);
 		
 		for (var i = 0; i < m_LevelIDs.Length; i++)
 		{
-			UIMainMenuTrack track   = m_Tracks[i];
-			string          levelID = m_LevelIDs[i];
+			UIMainMenuItem item    = m_Items[i];
+			string         levelID = m_LevelIDs[i];
 			
-			track.Setup(levelID);
+			item.Setup(levelID);
 			
-			track.gameObject.SetActive(true);
+			item.gameObject.SetActive(true);
 		}
 	}
 
@@ -120,15 +136,15 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 			return;
 		}
 		
-		UIMainMenuTrack track = m_Tracks.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
+		UIMainMenuItem item = m_Items.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
 		
-		if (track == null)
+		if (item == null)
 		{
 			Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Track with level ID '{0}' not found.", _LevelID);
 			return;
 		}
 		
-		Rect source = track.GetWorldRect();
+		Rect source = item.GetWorldRect();
 		Rect target = m_Scroll.content.GetWorldRect();
 		
 		float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);

@@ -20,19 +20,19 @@
 			struct vertData
 			{
 				float4 vertex : POSITION;
-				float2 uv     : TEXCOORD0;
+				half2 uv      : TEXCOORD0;
 			};
 
 			struct fragData
 			{
 				float4 vertex : SV_POSITION;
-				float2 uv     : TEXCOORD0;
+				half2 uv      : TEXCOORD0;
 			};
 
 			sampler2D _MainTex;
 			float4 _MainTex_TexelSize;
 
-			fragData vert (vertData IN)
+			fragData vert (const vertData IN)
 			{
 				fragData OUT;
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
@@ -40,27 +40,36 @@
 				return OUT;
 			}
 
-			fixed4 frag (fragData IN) : SV_Target
+			fixed4 frag (const fragData IN) : SV_Target
 			{
 				const half x = _MainTex_TexelSize.x;
 				const half y = _MainTex_TexelSize.y;
 				
-				fixed4 color = tex2D(_MainTex, IN.uv);
+				// kernel [ 1 2 3 3 3 2 1 ] : 15
 				
-				color.rgb += tex2D(_MainTex, IN.uv + half2(x, y)).rgb;
-				color.rgb += tex2D(_MainTex, IN.uv + half2(x, 0)).rgb;
-				color.rgb += tex2D(_MainTex, IN.uv + half2(x, -y)).rgb;
+				// horizontal
+				fixed3 horizontal = fixed3(0, 0, 0);
+				horizontal += tex2D(_MainTex, IN.uv + half2(-x * 3, 0)).rgb;
+				horizontal += tex2D(_MainTex, IN.uv + half2(-x * 2, 0)).rgb * 2;
+				horizontal += tex2D(_MainTex, IN.uv + half2(-x, 0)).rgb * 3;
+				horizontal += tex2D(_MainTex, IN.uv).rgb * 3;
+				horizontal += tex2D(_MainTex, IN.uv + half2(x, 0)).rgb * 3;
+				horizontal += tex2D(_MainTex, IN.uv + half2(x * 2, 0)).rgb * 2;
+				horizontal += tex2D(_MainTex, IN.uv + half2(x * 3, 0)).rgb;
+				horizontal /= 15;
 				
-				color.rgb += tex2D(_MainTex, IN.uv + half2(0, y)).rgb;
-				color.rgb += tex2D(_MainTex, IN.uv + half2(0, -y)).rgb;
+				// vertical
+				fixed3 vertical = fixed3(0, 0, 0);
+				vertical += tex2D(_MainTex, IN.uv + half2(0, -y * 3)).rgb;
+				vertical += tex2D(_MainTex, IN.uv + half2(0, -y * 2)).rgb * 2;
+				vertical += tex2D(_MainTex, IN.uv + half2(0, -y)).rgb * 3;
+				vertical += tex2D(_MainTex, IN.uv).rgb * 3;
+				vertical += tex2D(_MainTex, IN.uv + half2(0, y)).rgb * 3;
+				vertical += tex2D(_MainTex, IN.uv + half2(0, y * 2)).rgb * 2;
+				vertical += tex2D(_MainTex, IN.uv + half2(0, y * 3)).rgb;
+				vertical /= 15;
 				
-				color.rgb += tex2D(_MainTex, IN.uv + half2(-x, y)).rgb;
-				color.rgb += tex2D(_MainTex, IN.uv + half2(-x, 0)).rgb;
-				color.rgb += tex2D(_MainTex, IN.uv + half2(-x, -y)).rgb;
-				
-				color.rgb /= 9;
-				
-				color.a = 1;
+				fixed4 color = fixed4((horizontal + vertical) * 0.5, 1);
 				
 				return color;
 			}

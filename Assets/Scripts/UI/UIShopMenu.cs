@@ -6,33 +6,33 @@ using Zenject;
 
 public class UIShopMenu : UIMenu, IInitializable, IDisposable
 {
+	[SerializeField] UIShopMenuItem m_Item;
 	[SerializeField] UILoader       m_Loader;
-	[SerializeField] CanvasGroup    m_PurchasesGroup;
-	[SerializeField] CanvasGroup    m_LoaderGroup;
-	[SerializeField] UIShopMenuItem m_Purchase;
 	[SerializeField] RectTransform  m_Container;
+	[SerializeField] CanvasGroup    m_ItemsGroup;
+	[SerializeField] CanvasGroup    m_LoaderGroup;
 
-	SignalBus                  m_SignalBus;
-	PurchaseProcessor          m_PurchaseProcessor;
-	UIShopMenuItem.Factory m_PurchaseFactory;
+	SignalBus              m_SignalBus;
+	PurchaseProcessor      m_PurchaseProcessor;
+	UIShopMenuItem.Factory m_ItemFactory;
 
 	IEnumerator m_WaitRoutine;
-	IEnumerator m_PurchasesRoutine;
+	IEnumerator m_ItemsRoutine;
 	IEnumerator m_LoaderRoutine;
-	string[]    m_PurchaseIDs;
+	string[]    m_ProductIDs;
 
-	readonly List<UIShopMenuItem> m_Purchases = new List<UIShopMenuItem>();
+	readonly List<UIShopMenuItem> m_Items = new List<UIShopMenuItem>();
 
 	[Inject]
 	public void Construct(
-		SignalBus                  _SignalBus,
-		PurchaseProcessor          _PurchaseProcessor,
-		UIShopMenuItem.Factory _PurchaseFactory
+		SignalBus              _SignalBus,
+		PurchaseProcessor      _PurchaseProcessor,
+		UIShopMenuItem.Factory _ItemFactory
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
-		m_PurchaseFactory   = _PurchaseFactory;
+		m_ItemFactory       = _ItemFactory;
 	}
 
 	void IInitializable.Initialize()
@@ -50,6 +50,16 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		Refresh();
 	}
 
+	public void Back()
+	{
+		Hide();
+	}
+
+	public void Restore()
+	{
+		m_PurchaseProcessor.RestorePurchases();
+	}
+
 	protected override void OnShowStarted()
 	{
 		if (m_PurchaseProcessor == null)
@@ -59,11 +69,11 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		{
 			Refresh();
 			DisableLoader(true);
-			EnablePurchases(true);
+			EnableItems(true);
 			return;
 		}
 		
-		DisablePurchases(true);
+		DisableItems(true);
 		EnableLoader(true);
 		m_Loader.Restore();
 		m_Loader.Play();
@@ -76,8 +86,8 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 			() =>
 			{
 				Refresh();
+				EnableItems(false);
 				DisableLoader(false);
-				EnablePurchases(false);
 			}
 		);
 	}
@@ -87,42 +97,43 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		if (m_PurchaseProcessor == null)
 			return;
 		
-		m_PurchaseIDs = m_PurchaseProcessor.GetProductIDs();
+		m_ProductIDs = m_PurchaseProcessor.GetProductIDs();
 		
-		int delta = m_PurchaseIDs.Length - m_Purchases.Count;
+		int delta = m_ProductIDs.Length - m_Items.Count;
 		int count = Mathf.Abs(delta);
 		
 		if (delta > 0)
 		{
 			for (int i = 0; i < count; i++)
 			{
-				UIShopMenuItem purchase = m_PurchaseFactory.Create(m_Purchase);
-				purchase.RectTransform.SetParent(m_Container, false);
-				m_Purchases.Add(purchase);
+				UIShopMenuItem item = m_ItemFactory.Create(m_Item);
+				item.RectTransform.SetParent(m_Container, false);
+				m_Items.Add(item);
 			}
 		}
 		else if (delta < 0)
 		{
 			for (int i = 0; i < count; i++)
 			{
-				int                index = m_Purchases.Count - 1;
-				UIShopMenuItem track = m_Purchases[index];
-				Destroy(track.gameObject);
-				m_Purchases.RemoveAt(index);
+				int            index = m_Items.Count - 1;
+				UIShopMenuItem item  = m_Items[index];
+				Destroy(item.gameObject);
+				m_Items.RemoveAt(index);
 			}
 		}
 		
-		foreach (UIShopMenuItem purchase in m_Purchases)
-			purchase.gameObject.SetActive(false);
+		foreach (UIShopMenuItem item in m_Items)
+			item.gameObject.SetActive(false);
 		
-		for (var i = 0; i < m_PurchaseIDs.Length; i++)
+		for (var i = 0; i < m_ProductIDs.Length; i++)
 		{
-			UIShopMenuItem purchase   = m_Purchases[i];
-			string         purchaseID = m_PurchaseIDs[i];
+			string productID = m_ProductIDs[i];
 			
-			purchase.Setup(purchaseID);
+			UIShopMenuItem item = m_Items[i];
 			
-			purchase.gameObject.SetActive(true);
+			item.Setup(productID);
+			
+			item.gameObject.SetActive(true);
 		}
 	}
 
@@ -164,41 +175,41 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		}
 	}
 
-	void DisablePurchases(bool _Instant)
+	void DisableItems(bool _Instant)
 	{
-		if (m_PurchasesRoutine != null)
-			StopCoroutine(m_PurchasesRoutine);
+		if (m_ItemsRoutine != null)
+			StopCoroutine(m_ItemsRoutine);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{
-			m_PurchasesRoutine = DisableGroupRoutine(m_PurchasesGroup, 0.3f);
+			m_ItemsRoutine = DisableGroupRoutine(m_ItemsGroup, 0.3f);
 			
-			StartCoroutine(m_PurchasesRoutine);
+			StartCoroutine(m_ItemsRoutine);
 		}
 		else
 		{
-			m_PurchasesGroup.alpha          = 0;
-			m_PurchasesGroup.interactable   = false;
-			m_PurchasesGroup.blocksRaycasts = false;
+			m_ItemsGroup.alpha          = 0;
+			m_ItemsGroup.interactable   = false;
+			m_ItemsGroup.blocksRaycasts = false;
 		}
 	}
 
-	void EnablePurchases(bool _Instant)
+	void EnableItems(bool _Instant)
 	{
-		if (m_PurchasesRoutine != null)
-			StopCoroutine(m_PurchasesRoutine);
+		if (m_ItemsRoutine != null)
+			StopCoroutine(m_ItemsRoutine);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{
-			m_PurchasesRoutine = EnableGroupRoutine(m_PurchasesGroup, 0.3f);
+			m_ItemsRoutine = EnableGroupRoutine(m_ItemsGroup, 0.3f);
 			
-			StartCoroutine(m_PurchasesRoutine);
+			StartCoroutine(m_ItemsRoutine);
 		}
 		else
 		{
-			m_PurchasesGroup.alpha          = 1;
-			m_PurchasesGroup.interactable   = true;
-			m_PurchasesGroup.blocksRaycasts = true;
+			m_ItemsGroup.alpha          = 1;
+			m_ItemsGroup.interactable   = true;
+			m_ItemsGroup.blocksRaycasts = true;
 		}
 	}
 

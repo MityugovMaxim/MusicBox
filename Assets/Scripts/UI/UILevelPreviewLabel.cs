@@ -17,10 +17,7 @@ public class UILevelPreviewLabel : UIEntity
 
 	public void Setup(string _LevelID)
 	{
-		string title  = m_LevelProcessor.GetTitle(_LevelID);
-		string artist = m_LevelProcessor.GetArtist(_LevelID);
-		
-		m_Title.text  = title;
-		m_Artist.text = artist;
+		m_Title.text  = m_LevelProcessor.GetTitle(_LevelID);
+		m_Artist.text = m_LevelProcessor.GetArtist(_LevelID);
 	}
 }

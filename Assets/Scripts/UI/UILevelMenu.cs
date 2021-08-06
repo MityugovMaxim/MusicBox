@@ -11,10 +11,12 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
 	[SerializeField] UIScoreRank              m_ScoreRank;
 	[SerializeField] UILevelPreviewLabel      m_Label;
+	[SerializeField] UILevelModeButton        m_PlayButton;
 	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
+	AdsProcessor   m_AdsProcessor;
 	UILoadingMenu  m_LoadingMenu;
 	string         m_LevelID;
 	IEnumerator    m_RepositionRoutine;
@@ -24,11 +26,13 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	public void Construct(
 		SignalBus      _SignalBus,
 		LevelProcessor _LevelProcessor,
+		AdsProcessor   _AdsProcessor,
 		UILoadingMenu  _LoadingMenu
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_LevelProcessor = _LevelProcessor;
+		m_AdsProcessor   = _AdsProcessor;
 		m_LoadingMenu    = _LoadingMenu;
 	}
 
@@ -55,6 +59,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Thumbnail.Setup(m_LevelID);
 		m_ScoreRank.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
+		m_PlayButton.Setup(m_LevelID);
 	}
 
 	public void Next()
@@ -65,6 +70,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Thumbnail.Setup(m_LevelID);
 		m_ScoreRank.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
+		m_PlayButton.Setup(m_LevelID);
 		
 		m_PreviewSource.Play(m_LevelID);
 	}
@@ -77,14 +83,27 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Thumbnail.Setup(m_LevelID);
 		m_ScoreRank.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
+		m_PlayButton.Setup(m_LevelID);
 		
 		m_PreviewSource.Play(m_LevelID);
 	}
 
 	public void Play()
 	{
-		m_LoadingMenu.Setup(m_LevelID);
-		m_LoadingMenu.Show();
+		void PlayInternal()
+		{
+			m_LoadingMenu.Setup(m_LevelID);
+			m_LoadingMenu.Show();
+		}
+		
+		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
+		
+		m_PreviewSource.Stop();
+		
+		if (levelMode == LevelMode.Ads)
+			m_AdsProcessor.ShowRewarded(PlayInternal, () => Setup(m_LevelID));
+		else
+			PlayInternal();
 	}
 
 	protected override void OnShowFinished()

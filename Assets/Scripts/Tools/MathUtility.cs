@@ -107,6 +107,7 @@ public static class MathUtility
 
 	public static int Repeat(int _Value, int _Length)
 	{
-		return _Value >= 0 ? _Value % _Length : _Length + _Value % _Length;
+		int value = _Value % _Length;
+		return value < 0 ? value + _Length : value;
 	}
 }

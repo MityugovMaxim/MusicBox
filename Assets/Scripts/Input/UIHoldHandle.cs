@@ -24,6 +24,9 @@ public class UIHoldHandle : UIHandle
 	public void Setup(UIHoldIndicator _Indicator)
 	{
 		m_Indicator = _Indicator;
+		
+		MinProgress = 0;
+		MaxProgress = 0;
 	}
 
 	public override void StartReceiveInput()
@@ -54,8 +57,6 @@ public class UIHoldHandle : UIHandle
 		m_Processed    = false;
 		m_Hold         = false;
 		m_Miss         = false;
-		MinProgress    = 0;
-		MaxProgress    = 0;
 	}
 
 	public void Process(float _Phase)

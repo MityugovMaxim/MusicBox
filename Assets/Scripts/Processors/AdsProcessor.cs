@@ -9,11 +9,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 	{
 		get
 		{
-			#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			return true;
-			#else
-			return false;
-			#endif
 		}
 	}
 
@@ -40,7 +36,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	void IInitializable.Initialize()
 	{
-		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return;
 		
 		if (!Advertisement.isSupported)
@@ -49,7 +45,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 			return;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, false);
+		Advertisement.Initialize(GameID, TestMode, true);
 		Advertisement.AddListener(this);
 		Advertisement.Load(InterstitialID);
 		Advertisement.Load(RewardedID);
@@ -57,7 +53,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	public void ShowInterstitial(Action _Finished = null)
 	{
-		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Finished?.Invoke();
 			return;
@@ -93,7 +89,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	public void ShowRewarded(Action _Success = null, Action _Failed = null)
 	{
-		if (m_PurchaseProcessor.IsPurchased(m_NoAdsProduct.ID))
+		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Success?.Invoke();
 			return;

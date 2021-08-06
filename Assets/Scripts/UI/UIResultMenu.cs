@@ -13,6 +13,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UIScore                  m_Score;
+	[SerializeField] UILevelModeButton        m_RestartButton;
 
 	SignalBus       m_SignalBus;
 	UIMainMenu      m_MainMenu;
@@ -81,6 +82,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		m_Thumbnail.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_Score.Setup(m_LevelID);
+		m_RestartButton.Setup(m_LevelID);
 		
 		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
 		long   score         = m_ScoreProcessor.GetBestScore(m_LevelID);
@@ -107,17 +109,26 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 			Hide();
 		}
 		
-		m_RestartAdsCount++;
+		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
 		
-		if (m_RestartAdsCount >= RESTART_ADS_COUNT)
+		if (levelMode == LevelMode.Ads)
 		{
-			m_RestartAdsCount = 0;
-			
-			m_AdsProcessor.ShowInterstitial(RestartInternal);
+			m_AdsProcessor.ShowRewarded(RestartInternal);
 		}
 		else
 		{
-			RestartInternal();
+			m_RestartAdsCount++;
+			
+			if (m_RestartAdsCount >= RESTART_ADS_COUNT)
+			{
+				m_RestartAdsCount = 0;
+				
+				m_AdsProcessor.ShowInterstitial(RestartInternal);
+			}
+			else
+			{
+				RestartInternal();
+			}
 		}
 	}
 
