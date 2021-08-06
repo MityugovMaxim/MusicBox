@@ -31,8 +31,41 @@ public class ScoreData
 	const int   A_RANK                    = 85;
 	const int   B_RANK                    = 50;
 	const int   C_RANK                    = 5;
+	const int   X4_COMBO                  = 25;
+	const int   X3_COMBO                  = 15;
+	const int   X2_COMBO                  = 10;
 
-	public long Score
+	public long Score => m_Score;
+
+	public int Accuracy
+	{
+		get
+		{
+			float score = (float)(SourceAccuracyScore / TargetAccuracyScore);
+			
+			return Mathf.RoundToInt(Mathf.Clamp01(score) * 100);
+		}
+	}
+
+	public ScoreRank Rank
+	{
+		get
+		{
+			int accuracy = Accuracy;
+			if (accuracy >= S_RANK)
+				return ScoreRank.S;
+			else if (accuracy >= A_RANK)
+				return ScoreRank.A;
+			else if (accuracy >= B_RANK)
+				return ScoreRank.B;
+			else if (accuracy >= C_RANK)
+				return ScoreRank.C;
+			else
+				return ScoreRank.None;
+		}
+	}
+
+	double SourceAccuracyScore
 	{
 		get
 		{
@@ -62,15 +95,15 @@ public class ScoreData
 		}
 	}
 
-	public int Accuracy
+	double TargetAccuracyScore
 	{
 		get
 		{
+			double score = 0;
+			
 			double holdCount   = m_HoldSuccess + m_HoldFail;
 			double tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
 			double doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
-			
-			double score = 0;
 			
 			score += holdCount * HOLD_SUCCESS_MULTIPLIER;
 			score += holdCount * HOLD_HIT_MULTIPLIER;
@@ -80,25 +113,22 @@ public class ScoreData
 			
 			score += doubleCount * DOUBLE_PERFECT_MULTIPLIER;
 			
-			return Mathf.RoundToInt((float)Math.Min(1, Score / score) * 100);
+			return score;
 		}
 	}
 
-	public ScoreRank Rank
+	int Multiplier
 	{
 		get
 		{
-			int accuracy = Accuracy;
-			if (accuracy >= S_RANK)
-				return ScoreRank.S;
-			else if (accuracy >= A_RANK)
-				return ScoreRank.A;
-			else if (accuracy >= B_RANK)
-				return ScoreRank.B;
-			else if (accuracy >= C_RANK)
-				return ScoreRank.C;
+			if (m_Combo >= X4_COMBO)
+				return 4;
+			else if (m_Combo >= X3_COMBO)
+				return 3;
+			else if (m_Combo >= X2_COMBO)
+				return 2;
 			else
-				return ScoreRank.None;
+				return 1;
 		}
 	}
 
@@ -117,15 +147,24 @@ public class ScoreData
 
 	[SerializeField] float m_HoldSuccessScore;
 	[SerializeField] float m_HoldFailScore;
+	[SerializeField] long  m_Score;
+
+	int m_Combo;
 
 	public void RegisterHoldSuccess(float _Progress)
 	{
+		m_Combo++;
+		
+		m_Score            += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
 		m_HoldSuccessScore += _Progress;
 		m_HoldSuccess++;
 	}
 
 	public void RegisterHoldFail(float _Progress)
 	{
+		m_Combo = 0;
+		
+		m_Score         += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
 		m_HoldFailScore += _Progress;
 		m_HoldFail++;
 	}
@@ -137,11 +176,17 @@ public class ScoreData
 
 	public void RegisterHoldMiss()
 	{
+		m_Combo = 0;
+		
 		m_HoldMiss++;
 	}
 
 	public void RegisterTapSuccess(float _Progress)
 	{
+		m_Combo++;
+		
+		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		
 		if (_Progress >= TAP_PERFECT_THRESHOLD)
 			m_TapPerfect++;
 		else if (_Progress >= TAP_GOOD_THRESHOLD)
@@ -152,11 +197,17 @@ public class ScoreData
 
 	public void RegisterTapFail()
 	{
+		m_Combo = 0;
+		
 		m_TapFail++;
 	}
 
 	public void RegisterDoubleSuccess(float _Progress)
 	{
+		m_Combo++;
+		
+		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		
 		if (_Progress >= DOUBLE_PERFECT_THRESHOLD)
 			m_DoublePerfect++;
 		else if (_Progress >= DOUBLE_GOOD_THRESHOLD)
@@ -167,6 +218,8 @@ public class ScoreData
 
 	public void RegisterDoubleFail()
 	{
+		m_Combo = 0;
+		
 		m_DoubleFail++;
 	}
 }
