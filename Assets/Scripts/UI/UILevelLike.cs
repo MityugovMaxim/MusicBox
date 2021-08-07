@@ -21,8 +21,6 @@ public class UILevelLike : UIEntity
 
 	public void Setup(string _LevelID)
 	{
-		Debug.LogError("---> SETUP LEVEL LIKE");
-		
 		m_LevelID = _LevelID;
 		
 		m_Liked = PlayerPrefs.GetInt($"like_{m_LevelID}", 0) > 0;

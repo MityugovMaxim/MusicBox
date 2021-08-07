@@ -238,8 +238,6 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 
 	protected override void OnHideStarted()
 	{
-		Debug.LogError("---> HIDE RESULT");
-		
 		if (m_LikeButton != null)
 			m_LikeButton.Execute();
 	}
