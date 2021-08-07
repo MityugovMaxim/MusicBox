@@ -13,6 +13,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UIScore                  m_Score;
+	[SerializeField] UILevelLike              m_LikeButton;
 	[SerializeField] UILevelModeButton        m_RestartButton;
 
 	SignalBus       m_SignalBus;
@@ -82,6 +83,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		m_Thumbnail.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_Score.Setup(m_LevelID);
+		m_LikeButton.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
 		
 		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
@@ -232,6 +234,12 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		
 		if (m_LevelProcessor != null)
 			m_LevelProcessor.Pause();
+	}
+
+	protected override void OnHideStarted()
+	{
+		if (m_LikeButton != null)
+			m_LikeButton.Execute();
 	}
 
 	protected override void OnHideFinished()

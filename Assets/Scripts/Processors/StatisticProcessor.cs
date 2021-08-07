@@ -82,4 +82,40 @@ public class StatisticProcessor : IInitializable, IDisposable
 			}
 		);
 	}
+
+	public void LogLevelLike(string _LevelID)
+	{
+		long      score    = m_ScoreProcessor.GetLastScore(_LevelID);
+		int       accuracy = m_ScoreProcessor.GetLastAccuracy(_LevelID);
+		ScoreRank rank     = m_ScoreProcessor.GetLastRank(_LevelID);
+		
+		Analytics.CustomEvent(
+			"level_like",
+			new Dictionary<string, object>()
+			{
+				{ "level_id", _LevelID },
+				{ "score", score },
+				{ "accuracy", accuracy },
+				{ "rank", rank.ToString() },
+			}
+		);
+	}
+
+	public void LogLevelDislike(string _LevelID)
+	{
+		long      score    = m_ScoreProcessor.GetLastScore(_LevelID);
+		int       accuracy = m_ScoreProcessor.GetLastAccuracy(_LevelID);
+		ScoreRank rank     = m_ScoreProcessor.GetLastRank(_LevelID);
+		
+		Analytics.CustomEvent(
+			"level_dislike",
+			new Dictionary<string, object>()
+			{
+				{ "level_id", _LevelID },
+				{ "score", score },
+				{ "accuracy", accuracy },
+				{ "rank", rank.ToString() },
+			}
+		);
+	}
 }
