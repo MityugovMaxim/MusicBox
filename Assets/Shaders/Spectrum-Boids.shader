@@ -71,7 +71,7 @@
 				value *= value;
 				
 				color += value * 0.1;
-				color = BACKGROUND_BY_ALPHA(color);
+				color = BACKGROUND_BY_RANGE(color, 0.2, 0.8);
 				color += highlight * 0.5;
 				
 				return color;

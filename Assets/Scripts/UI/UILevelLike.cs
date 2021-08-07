@@ -26,8 +26,10 @@ public class UILevelLike : UIEntity
 		m_Liked = PlayerPrefs.GetInt($"like_{m_LevelID}", 0) > 0;
 		m_State = m_Liked;
 		
-		m_LikeButton.gameObject.SetActive(!m_State);
-		m_DislikeButton.gameObject.SetActive(m_State);
+		if (m_LikeButton != null)
+			m_LikeButton.gameObject.SetActive(!m_State);
+		if (m_DislikeButton != null)
+			m_DislikeButton.gameObject.SetActive(m_State);
 	}
 
 	public void Execute()

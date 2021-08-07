@@ -95,9 +95,9 @@ Shader "UI/ColorScheme"
 				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
 				
 				#ifdef BACKGROUND_SCHEME
-				color.rgb *= BACKGROUND_BY_RANGE(color, 0, 0.8);
+				color.rgb *= BACKGROUND_BY_RANGE(color, 0.15, 0.8);
 				#else
-				color.rgb *= FOREGROUND_BY_RANGE(color, 0, 0.8);
+				color.rgb *= FOREGROUND_BY_RANGE(color, 0.15, 0.8);
 				#endif
 				
 				#ifdef UNITY_UI_CLIP_RECT
