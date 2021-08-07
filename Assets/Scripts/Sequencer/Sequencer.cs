@@ -198,7 +198,9 @@ public partial class Sequencer : MonoBehaviour
 			
 			Time = m_Length;
 			
-			m_Finished?.Invoke();
+			Action action = m_Finished;
+			m_Finished = null;
+			action?.Invoke();
 		}
 	}
 }
