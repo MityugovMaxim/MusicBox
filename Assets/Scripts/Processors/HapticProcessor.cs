@@ -15,6 +15,11 @@ public class HapticProcessor : IInitializable, IDisposable
 		m_Haptic    = _Haptic;
 	}
 
+	public void Process(Haptic.Type _HapticType)
+	{
+		m_Haptic.Process(_HapticType);
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<DoubleSuccessSignal>(ImpactHeavy);

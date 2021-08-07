@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
@@ -15,15 +16,20 @@ public class UIScore : UIEntity
 	[SerializeField]              TMP_Text    m_ScoreLabel;
 	[SerializeField]              UIScoreRank m_ScoreRank;
 
-	ScoreProcessor m_ScoreProcessor;
-	int            m_Accuracy;
-	long           m_Score;
-	Animator       m_Animator;
+	ScoreProcessor  m_ScoreProcessor;
+	HapticProcessor m_HapticProcessor;
+	int             m_Accuracy;
+	long            m_Score;
+	Animator        m_Animator;
 
 	[Inject]
-	public void Construct(ScoreProcessor _ScoreProcessor)
+	public void Construct(
+		ScoreProcessor  _ScoreProcessor,
+		HapticProcessor _HapticProcessor
+	)
 	{
-		m_ScoreProcessor = _ScoreProcessor;
+		m_ScoreProcessor  = _ScoreProcessor;
+		m_HapticProcessor = _HapticProcessor;
 	}
 
 	protected override void Awake()
@@ -66,6 +72,12 @@ public class UIScore : UIEntity
 	{
 		if (m_Animator != null)
 			m_Animator.SetTrigger(m_PlayParameterID);
+	}
+
+	[Preserve]
+	void Haptic(Haptic.Type _HapticType)
+	{
+		m_HapticProcessor.Process(_HapticType);
 	}
 
 	void ProcessScorePhase()

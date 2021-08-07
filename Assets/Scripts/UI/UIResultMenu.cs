@@ -213,6 +213,12 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		m_SocialProcessor.ShowLeaderboard(leaderboardID);
 	}
 
+	[Preserve]
+	public void Achievements()
+	{
+		m_SocialProcessor.ShowAchievements();
+	}
+
 	protected override void OnShowStarted()
 	{
 		if (m_Score != null)
@@ -226,5 +232,11 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		
 		if (m_LevelProcessor != null)
 			m_LevelProcessor.Pause();
+	}
+
+	protected override void OnHideFinished()
+	{
+		if (m_Score != null)
+			m_Score.Restore();
 	}
 }
