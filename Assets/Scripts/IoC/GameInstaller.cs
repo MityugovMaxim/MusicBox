@@ -30,6 +30,8 @@ public class GameInstaller : MonoInstaller
 		
 		InstallFactories();
 		
+		InstallAudioManager();
+		
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
 	}
 
@@ -104,5 +106,15 @@ public class GameInstaller : MonoInstaller
 		
 		Container.DeclareSignal<DoubleSuccessSignal>();
 		Container.DeclareSignal<DoubleFailSignal>();
+	}
+
+	void InstallAudioManager()
+	{
+		Container.BindInterfacesAndSelfTo<AudioManager>().FromNew().AsSingle();
+		Container.DeclareSignal<AudioPlaySignal>();
+		Container.DeclareSignal<AudioPauseSignal>();
+		Container.DeclareSignal<AudioNextTrackSignal>();
+		Container.DeclareSignal<AudioPreviousTrackSignal>();
+		Container.DeclareSignal<AudioSourceChangedSignal>();
 	}
 }

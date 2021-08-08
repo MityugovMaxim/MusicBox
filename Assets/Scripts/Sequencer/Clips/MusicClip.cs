@@ -1,12 +1,20 @@
-using JetBrains.Annotations;
 using UnityEngine;
 
 public class MusicClip : Clip
 {
-	[SerializeField] AudioClip m_AudioClip;
+	public override float MinTime
+	{
+		get => base.MinTime - AudioManager.Latency;
+		set => base.MinTime = value;
+	}
 
-	[SerializeField, UsedImplicitly] float m_MinOffset;
-	[SerializeField, UsedImplicitly] float m_MaxOffset;
+	public override float MaxTime
+	{
+		get => base.MaxTime - AudioManager.Latency;
+		set => base.MaxTime = value;
+	}
+
+	[SerializeField] AudioClip m_AudioClip;
 
 	AudioSource m_AudioSource;
 
@@ -22,24 +30,20 @@ public class MusicClip : Clip
 		if (!Sequencer.Playing || !Playing)
 			return;
 		
-		float time = Mathf.Clamp(GetLocalTime(_Time) + m_MinOffset, 0, m_AudioClip.length);
-		
 		m_AudioSource.clip = m_AudioClip;
 		
 		m_AudioSource.Play();
 		
-		m_AudioSource.time = time;
+		m_AudioSource.time = GetLocalTime(_Time);
 	}
 
 	protected override void OnUpdate(float _Time)
 	{
-		float time = Mathf.Clamp(GetLocalTime(_Time) + m_MinOffset, 0, m_AudioClip.length);
-		
 		if (!Sequencer.Playing && Playing)
 		{
 			m_AudioSource.Pause();
 			
-			m_AudioSource.time = time;
+			m_AudioSource.time = GetLocalTime(_Time);
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
@@ -47,7 +51,7 @@ public class MusicClip : Clip
 			
 			m_AudioSource.Play();
 			
-			m_AudioSource.time = time;
+			m_AudioSource.time = GetLocalTime(_Time);
 		}
 	}
 

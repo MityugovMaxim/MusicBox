@@ -5892,6 +5892,7 @@ MonoBehaviour:
   m_Blur: {fileID: 0}
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
+  m_PauseButton: {fileID: 369174027}
 --- !u!225 &992149138
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -10301,7 +10302,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 369174027}
-        m_MethodName: Pause
+        m_MethodName: Toggle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

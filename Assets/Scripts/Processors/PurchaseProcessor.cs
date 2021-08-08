@@ -65,7 +65,10 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 		
 		foreach (string productID in m_ProductIDs)
+		{
+			Debug.LogFormat("[PurchaseProcessor] Initialize product '{0}'", productID);
 			config.AddProduct(productID, ProductType.NonConsumable);
+		}
 		
 		UnityPurchasing.Initialize(this, config);
 	}

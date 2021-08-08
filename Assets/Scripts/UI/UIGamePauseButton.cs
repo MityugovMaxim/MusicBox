@@ -7,35 +7,15 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_ShowParameterID    = Animator.StringToHash("Show");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	SignalBus   m_SignalBus;
 	UIPauseMenu m_PauseMenu;
 
-	bool     m_Shown;
+	bool     m_Paused;
 	Animator m_Animator;
 
 	[Inject]
-	public void Construct(
-		SignalBus   _SignalBus,
-		UIPauseMenu _PauseMenu
-	)
+	public void Construct(UIPauseMenu _PauseMenu)
 	{
-		m_SignalBus = _SignalBus;
 		m_PauseMenu = _PauseMenu;
-		
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-	}
-
-	void RegisterLevelStart()
-	{
-		Restore();
-	}
-
-	void RegisterLevelRestart()
-	{
-		m_Shown = false;
-		m_Animator.ResetTrigger(m_RestoreParameterID);
-		m_Animator.SetBool(m_ShowParameterID, false);
 	}
 
 	protected override void Awake()
@@ -47,26 +27,38 @@ public class UIGamePauseButton : UIEntity
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 	}
 
-	public void Pause()
+	public void Restore()
 	{
-		m_Shown = !m_Shown;
-		
-		if (m_Shown)
-		{
-			m_PauseMenu.Pause();
-			m_Animator.SetBool(m_ShowParameterID, true);
-		}
-		else
-		{
-			m_PauseMenu.Resume();
-			m_Animator.SetBool(m_ShowParameterID, false);
-		}
-	}
-
-	void Restore()
-	{
-		m_Shown = false;
+		m_Paused = false;
 		m_Animator.SetBool(m_ShowParameterID, false);
 		m_Animator.SetTrigger(m_RestoreParameterID);
+	}
+
+	public void Resume()
+	{
+		if (!m_Paused)
+			return;
+		
+		m_Paused = false;
+		m_PauseMenu.Resume();
+		m_Animator.SetBool(m_ShowParameterID, false);
+	}
+
+	public void Pause()
+	{
+		if (m_Paused)
+			return;
+		
+		m_Paused = true;
+		m_PauseMenu.Pause();
+		m_Animator.SetBool(m_ShowParameterID, true);
+	}
+
+	public void Toggle()
+	{
+		if (m_Paused)
+			Resume();
+		else
+			Pause();
 	}
 }

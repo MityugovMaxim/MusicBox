@@ -39,16 +39,32 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
+		m_SignalBus.Subscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
+		m_SignalBus.Unsubscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
 	}
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
 		Hide(true);
+	}
+
+	void RegisterAudioNextTrack()
+	{
+		if (Shown)
+			Next();
+	}
+
+	void RegisterAudioPreviousTrack()
+	{
+		if (Shown)
+			Previous();
 	}
 
 	public void Setup(string _LevelID)
