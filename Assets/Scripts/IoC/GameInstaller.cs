@@ -4,14 +4,15 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] UIMainMenu    m_MainMenu;
-	[SerializeField] UIPauseMenu   m_PauseMenu;
-	[SerializeField] UIGameMenu    m_GameMenu;
-	[SerializeField] UIResultMenu  m_ResultMenu;
-	[SerializeField] UILevelMenu   m_LevelMenu;
-	[SerializeField] UILoadingMenu m_LoadingMenu;
-	[SerializeField] UIShopMenu    m_ShopMenu;
-	[SerializeField] UIProductMenu m_ProductMenu;
+	[SerializeField] UIMainMenu     m_MainMenu;
+	[SerializeField] UIPauseMenu    m_PauseMenu;
+	[SerializeField] UIGameMenu     m_GameMenu;
+	[SerializeField] UIResultMenu   m_ResultMenu;
+	[SerializeField] UILevelMenu    m_LevelMenu;
+	[SerializeField] UILoadingMenu  m_LoadingMenu;
+	[SerializeField] UIShopMenu     m_ShopMenu;
+	[SerializeField] UIProductMenu  m_ProductMenu;
+	[SerializeField] UITutorialMenu m_TutorialMenu;
 
 	[SerializeField] UIProgressBar m_ProgressBar;
 	[SerializeField] UITimer       m_Timer;
@@ -55,6 +56,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<UILoadingMenu>().FromInstance(m_LoadingMenu).AsSingle();
 		Container.BindInterfacesAndSelfTo<UIShopMenu>().FromInstance(m_ShopMenu).AsSingle();
 		Container.BindInterfacesAndSelfTo<UIProductMenu>().FromInstance(m_ProductMenu).AsSingle();
+		Container.BindInterfacesAndSelfTo<UITutorialMenu>().FromInstance(m_TutorialMenu).AsSingle();
 	}
 
 	void InstallFactories()

@@ -6,21 +6,7 @@ public class MusicClipDrawer : ClipDrawer
 {
 	AudioClip AudioClip => AudioClipProperty.objectReferenceValue as AudioClip;
 
-	float MinOffset
-	{
-		get => MinOffsetProperty.floatValue;
-		set => MinOffsetProperty.floatValue = value;
-	}
-
-	float MaxOffset
-	{
-		get => MaxOffsetProperty.floatValue;
-		set => MaxOffsetProperty.floatValue = value;
-	}
-
 	SerializedProperty AudioClipProperty { get; }
-	SerializedProperty MinOffsetProperty { get; }
-	SerializedProperty MaxOffsetProperty { get; }
 
 
 	float[] m_AudioData;
@@ -28,8 +14,6 @@ public class MusicClipDrawer : ClipDrawer
 	public MusicClipDrawer(Clip _Clip) : base(_Clip)
 	{
 		AudioClipProperty = ClipObject.FindProperty("m_AudioClip");
-		MinOffsetProperty = ClipObject.FindProperty("m_MinOffset");
-		MaxOffsetProperty = ClipObject.FindProperty("m_MaxOffset");
 	}
 
 	protected override void DrawBackground()
@@ -54,11 +38,9 @@ public class MusicClipDrawer : ClipDrawer
 		{
 			// Resize by left handle
 			
-			float length = Mathf.Clamp(_MaxTime - _MinTime, 0, duration - MaxOffset);
-			float delta  = _MinTime - MinTime;
+			float length = Mathf.Clamp(_MaxTime - _MinTime, 0, duration);
 			
-			MinOffset = Mathf.Max(0, MinOffset + delta);
-			MinTime   = _MaxTime - length;
+			MinTime = _MaxTime - length;
 			
 			ClipObject.ApplyModifiedProperties();
 			
@@ -69,11 +51,9 @@ public class MusicClipDrawer : ClipDrawer
 		{
 			// Resize by right handle
 			
-			float length = Mathf.Clamp(_MaxTime - _MinTime, 0, duration - MinOffset);
-			float delta = _MaxTime - MaxTime;
+			float length = Mathf.Clamp(_MaxTime - _MinTime, 0, duration);
 			
-			MaxOffset = Mathf.Max(0, MaxOffset - delta);
-			MaxTime   = _MinTime + length;
+			MaxTime = _MinTime + length;
 			
 			ClipObject.ApplyModifiedProperties();
 			
@@ -102,8 +82,8 @@ public class MusicClipDrawer : ClipDrawer
 		
 		Color color = new Color(1, 0.55f, 0, 1);
 		
-		float minLimit = MathUtility.Remap(MinTime - MinOffset, MinTime, MaxTime, _ClipRect.xMin, _ClipRect.xMax);
-		float maxLimit = MathUtility.Remap(MaxTime + MaxOffset, MinTime, MaxTime, _ClipRect.xMin, _ClipRect.xMax);
+		float minLimit = MathUtility.Remap(MinTime, MinTime, MaxTime, _ClipRect.xMin, _ClipRect.xMax);
+		float maxLimit = MathUtility.Remap(MaxTime, MinTime, MaxTime, _ClipRect.xMin, _ClipRect.xMax);
 		
 		float min = Mathf.InverseLerp(minLimit, maxLimit, _ViewRect.xMin);
 		float max = Mathf.InverseLerp(minLimit, maxLimit, _ViewRect.xMax);

@@ -6,6 +6,14 @@ using Zenject;
 
 public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHandler, IDragHandler, IDropHandler
 {
+	const string TUTORIAL_COUNT_KEY = "TUTORIAL";
+
+	static int TutorialCount
+	{
+		get => PlayerPrefs.GetInt(TUTORIAL_COUNT_KEY, 0);
+		set => PlayerPrefs.SetInt(TUTORIAL_COUNT_KEY, value);
+	}
+
 	[SerializeField] AnimationCurve           m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField] UILevelPreviewBackground m_Background;
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
@@ -18,6 +26,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	LevelProcessor m_LevelProcessor;
 	AdsProcessor   m_AdsProcessor;
 	UILoadingMenu  m_LoadingMenu;
+	UITutorialMenu m_TutorialMenu;
 	string         m_LevelID;
 	IEnumerator    m_RepositionRoutine;
 	AudioSource    m_AudioSource;
@@ -27,13 +36,15 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		SignalBus      _SignalBus,
 		LevelProcessor _LevelProcessor,
 		AdsProcessor   _AdsProcessor,
-		UILoadingMenu  _LoadingMenu
+		UILoadingMenu  _LoadingMenu,
+		UITutorialMenu _TutorialMenu 
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_LevelProcessor = _LevelProcessor;
 		m_AdsProcessor   = _AdsProcessor;
 		m_LoadingMenu    = _LoadingMenu;
+		m_TutorialMenu   = _TutorialMenu;
 	}
 
 	void IInitializable.Initialize()
@@ -109,6 +120,14 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		void PlayInternal()
 		{
 			m_LoadingMenu.Setup(m_LevelID);
+			
+			if (TutorialCount < 1)
+			{
+				TutorialCount++;
+				m_TutorialMenu.Show();
+				return;
+			}
+			
 			m_LoadingMenu.Show();
 		}
 		
