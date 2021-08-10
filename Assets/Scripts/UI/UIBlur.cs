@@ -13,7 +13,7 @@ public class UIBlur : MaskableGraphic
 		{
 			if (m_BlurTexture == null)
 			{
-				m_BlurTexture            = new RenderTexture(Screen.width >> 2, Screen.height >> 2, 0);
+				m_BlurTexture            = new RenderTexture(Screen.width >> 3, Screen.height >> 3, 0);
 				m_BlurTexture.filterMode = FilterMode.Bilinear;
 				m_BlurTexture.wrapMode   = TextureWrapMode.Clamp;
 			}
@@ -65,7 +65,7 @@ public class UIBlur : MaskableGraphic
 			camera.targetTexture = target;
 		}
 		
-		RenderTexture buffer = RenderTexture.GetTemporary(m_BlurTexture.width >> 2, m_BlurTexture.height >> 2);
+		RenderTexture buffer = RenderTexture.GetTemporary(m_BlurTexture.width, m_BlurTexture.height);
 		
 		for (int i = 0; i < 3; i++)
 		{
