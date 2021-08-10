@@ -25,8 +25,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
 	AdsProcessor   m_AdsProcessor;
-	UILoadingMenu  m_LoadingMenu;
-	UITutorialMenu m_TutorialMenu;
+	MenuProcessor  m_MenuProcessor;
 	string         m_LevelID;
 	IEnumerator    m_RepositionRoutine;
 	AudioSource    m_AudioSource;
@@ -36,15 +35,13 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		SignalBus      _SignalBus,
 		LevelProcessor _LevelProcessor,
 		AdsProcessor   _AdsProcessor,
-		UILoadingMenu  _LoadingMenu,
-		UITutorialMenu _TutorialMenu 
+		MenuProcessor  _MenuProcessor
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_LevelProcessor = _LevelProcessor;
 		m_AdsProcessor   = _AdsProcessor;
-		m_LoadingMenu    = _LoadingMenu;
-		m_TutorialMenu   = _TutorialMenu;
+		m_MenuProcessor  = _MenuProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -119,16 +116,20 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	{
 		void PlayInternal()
 		{
-			m_LoadingMenu.Setup(m_LevelID);
+			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
+			
+			if (loadingMenu != null)
+				loadingMenu.Setup(m_LevelID);
 			
 			if (TutorialCount < 1)
 			{
 				TutorialCount++;
-				m_TutorialMenu.Show();
+				m_MenuProcessor.Show(MenuType.TutorialMenu);
 				return;
 			}
 			
-			m_LoadingMenu.Show();
+			if (loadingMenu != null)
+				loadingMenu.Show();
 		}
 		
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);

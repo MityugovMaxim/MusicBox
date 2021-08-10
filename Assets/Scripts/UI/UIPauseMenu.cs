@@ -10,7 +10,7 @@ public class UIPauseMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
 
 	SignalBus      m_SignalBus;
-	UIMainMenu     m_MainMenu;
+	MenuProcessor  m_MenuProcessor;
 	LevelProcessor m_LevelProcessor;
 	AdsProcessor   m_AdsProcessor;
 
@@ -20,13 +20,13 @@ public class UIPauseMenu : UIMenu, IInitializable, IDisposable
 	[Inject]
 	public void Construct(
 		SignalBus      _SignalBus,
-		UIMainMenu     _MainMenu,
+		MenuProcessor  _MenuProcessor,
 		LevelProcessor _LevelProcessor,
 		AdsProcessor   _AdsProcessor
 	)
 	{
 		m_SignalBus      = _SignalBus;
-		m_MainMenu       = _MainMenu;
+		m_MenuProcessor  = _MenuProcessor;
 		m_LevelProcessor = _LevelProcessor;
 		m_AdsProcessor   = _AdsProcessor;
 	}
@@ -107,8 +107,9 @@ public class UIPauseMenu : UIMenu, IInitializable, IDisposable
 			
 			m_LevelProcessor.Remove();
 			
-			if (m_MainMenu != null)
-				m_MainMenu.Show();
+			m_MenuProcessor.Show(MenuType.MainMenu)
+				.ThenHide(MenuType.GameMenu, true)
+				.ThenHide(MenuType.PauseMenu, true);
 		}
 		
 		m_LeaveAdsCount++;

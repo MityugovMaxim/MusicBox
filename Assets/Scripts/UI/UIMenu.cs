@@ -1,10 +1,15 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Zenject;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class UIMenu : UIEntity
 {
+	[Preserve]
+	public class Factory : PlaceholderFactory<UIMenu, UIMenu> { }
+
 	public bool Shown { get; private set; }
 
 	protected float ShowDuration => m_ShowDuration;

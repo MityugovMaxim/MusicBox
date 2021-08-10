@@ -82,6 +82,9 @@ public class UISafeArea : UIBehaviour
 
 	void Resize()
 	{
+		if (Canvas == null)
+			return;
+		
 		RectTransform.anchoredPosition = Vector2.zero;
 		RectTransform.sizeDelta        = Vector2.zero;
 		RectTransform.offsetMin        = Vector2.zero;

@@ -4,16 +4,7 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] UIMainMenu     m_MainMenu;
-	[SerializeField] UIPauseMenu    m_PauseMenu;
-	[SerializeField] UIGameMenu     m_GameMenu;
-	[SerializeField] UIResultMenu   m_ResultMenu;
-	[SerializeField] UILevelMenu    m_LevelMenu;
-	[SerializeField] UILoadingMenu  m_LoadingMenu;
-	[SerializeField] UIShopMenu     m_ShopMenu;
-	[SerializeField] UIProductMenu  m_ProductMenu;
-	[SerializeField] UITutorialMenu m_TutorialMenu;
-
+	[SerializeField] Canvas        m_Canvas;
 	[SerializeField] UIProgressBar m_ProgressBar;
 	[SerializeField] UITimer       m_Timer;
 
@@ -23,9 +14,9 @@ public class GameInstaller : MonoInstaller
 	{
 		InstallSignals();
 		
-		InstallSampleReceivers();
+		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		
-		InstallMenus();
+		//InstallSampleReceivers();
 		
 		InstallProcessors();
 		
@@ -46,19 +37,6 @@ public class GameInstaller : MonoInstaller
 		Container.Bind<ISampleReceiver[]>().FromInstance(sampleReceivers).AsSingle();
 	}
 
-	void InstallMenus()
-	{
-		Container.BindInterfacesAndSelfTo<UIMainMenu>().FromInstance(m_MainMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIPauseMenu>().FromInstance(m_PauseMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIGameMenu>().FromInstance(m_GameMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIResultMenu>().FromInstance(m_ResultMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UILevelMenu>().FromInstance(m_LevelMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UILoadingMenu>().FromInstance(m_LoadingMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIShopMenu>().FromInstance(m_ShopMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIProductMenu>().FromInstance(m_ProductMenu).AsSingle();
-		Container.BindInterfacesAndSelfTo<UITutorialMenu>().FromInstance(m_TutorialMenu).AsSingle();
-	}
-
 	void InstallFactories()
 	{
 		Container.BindFactory<string, Action<Level>, ResourceRequest, Level.Factory>().FromFactory<AsyncPrefabResourceFactory<Level>>();
@@ -68,6 +46,8 @@ public class GameInstaller : MonoInstaller
 		Container.BindFactory<UIShopMenuItem, UIShopMenuItem, UIShopMenuItem.Factory>().FromFactory<PrefabFactory<UIShopMenuItem>>();
 		
 		Container.BindFactory<UIProductMenuItem, UIProductMenuItem, UIProductMenuItem.Factory>().FromFactory<PrefabFactory<UIProductMenuItem>>();
+		
+		Container.BindFactory<UIMenu, UIMenu, UIMenu.Factory>().FromFactory<PrefabFactory<UIMenu>>();
 	}
 
 	void InstallProcessors()
@@ -78,6 +58,7 @@ public class GameInstaller : MonoInstaller
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
 		#endif
 		
+		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<PurchaseProcessor>().FromNew().AsSingle();

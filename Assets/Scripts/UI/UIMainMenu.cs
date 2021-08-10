@@ -14,8 +14,8 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	SignalBus              m_SignalBus;
 	LevelProcessor         m_LevelProcessor;
 	SocialProcessor        m_SocialProcessor;
+	MenuProcessor          m_MenuProcessor;
 	UIMainMenuItem.Factory m_ItemFactory;
-	UIShopMenu             m_ShopMenu;
 
 	readonly List<UIMainMenuItem> m_Items = new List<UIMainMenuItem>();
 
@@ -26,15 +26,15 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		SignalBus              _SignalBus,
 		LevelProcessor         _LevelProcessor,
 		SocialProcessor        _SocialProcessor,
-		UIMainMenuItem.Factory _ItemFactory,
-		UIShopMenu             _ShopMenu
+		MenuProcessor          _MenuProcessor,
+		UIMainMenuItem.Factory _ItemFactory
 	)
 	{
 		m_SignalBus       = _SignalBus;
 		m_LevelProcessor  = _LevelProcessor;
 		m_SocialProcessor = _SocialProcessor;
+		m_MenuProcessor   = _MenuProcessor;
 		m_ItemFactory     = _ItemFactory;
-		m_ShopMenu        = _ShopMenu;
 	}
 
 	void IInitializable.Initialize()
@@ -69,8 +69,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 
 	public void Shop()
 	{
-		if (m_ShopMenu != null)
-			m_ShopMenu.Show();
+		m_MenuProcessor.Show(MenuType.ShopMenu);
 	}
 
 	public void Achievements()

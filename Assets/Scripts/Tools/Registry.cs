@@ -38,7 +38,7 @@ public abstract class Registry<T> : Registry, IEnumerable<T> where T : Scriptabl
 
 	public int Length => m_Registry.Count;
 
-	[SerializeField] List<T> m_Registry;
+	[SerializeField] List<T> m_Registry = new List<T>();
 
 	public IEnumerator<T> GetEnumerator()
 	{

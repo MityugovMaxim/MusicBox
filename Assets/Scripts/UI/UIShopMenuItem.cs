@@ -12,12 +12,12 @@ public class UIShopMenuItem : UIEntity, IPointerClickHandler
 
 	[SerializeField] UIProductPreviewThumbnail m_Thumbnail;
 
-	UIProductMenu m_ProductMenu;
+	MenuProcessor m_MenuProcessor;
 
 	[Inject]
-	public void Construct(UIProductMenu _ProductMenu)
+	public void Construct(MenuProcessor _MenuProcessor)
 	{
-		m_ProductMenu = _ProductMenu;
+		m_MenuProcessor = _MenuProcessor;
 	}
 
 	public void Setup(string _ProductID)
@@ -29,7 +29,12 @@ public class UIShopMenuItem : UIEntity, IPointerClickHandler
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		m_ProductMenu.Setup(ProductID);
-		m_ProductMenu.Show();
+		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>(MenuType.ProductMenu);
+		
+		if (productMenu == null)
+			return;
+		
+		productMenu.Setup(ProductID);
+		productMenu.Show();
 	}
 }

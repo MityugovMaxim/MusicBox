@@ -17,8 +17,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelModeButton        m_RestartButton;
 
 	SignalBus       m_SignalBus;
-	UIMainMenu      m_MainMenu;
-	UILevelMenu     m_LevelMenu;
+	MenuProcessor   m_MenuProcessor;
 	LevelProcessor  m_LevelProcessor;
 	ScoreProcessor  m_ScoreProcessor;
 	SocialProcessor m_SocialProcessor;
@@ -34,8 +33,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[Inject]
 	public void Construct(
 		SignalBus       _SignalBus,
-		UIMainMenu      _MainMenu,
-		UILevelMenu     _LevelMenu,
+		MenuProcessor   _MenuProcessor,
 		LevelProcessor  _LevelProcessor,
 		ScoreProcessor  _ScoreProcessor,
 		SocialProcessor _SocialProcessor,
@@ -43,8 +41,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	)
 	{
 		m_SignalBus       = _SignalBus;
-		m_MainMenu        = _MainMenu;
-		m_LevelMenu       = _LevelMenu;
+		m_MenuProcessor   = _MenuProcessor;
 		m_LevelProcessor  = _LevelProcessor;
 		m_ScoreProcessor  = _ScoreProcessor;
 		m_SocialProcessor = _SocialProcessor;
@@ -152,8 +149,7 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 			
 			m_LevelProcessor.Remove();
 			
-			if (m_MainMenu != null)
-				m_MainMenu.Show();
+			m_MenuProcessor.Show(MenuType.MainMenu);
 		}
 		
 		m_LeaveAdsCount++;
@@ -183,14 +179,14 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 			
 			m_LevelProcessor.Remove();
 			
-			if (m_MainMenu != null)
-				m_MainMenu.Show();
+			m_MenuProcessor.Show(MenuType.MainMenu);
 			
-			if (m_LevelMenu != null)
+			UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
+			if (levelMenu != null)
 			{
 				string levelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
-				m_LevelMenu.Setup(levelID);
-				m_LevelMenu.Show();
+				levelMenu.Setup(levelID);
+				levelMenu.Show();
 			}
 		}
 		

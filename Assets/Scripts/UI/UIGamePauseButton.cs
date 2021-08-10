@@ -7,15 +7,15 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_ShowParameterID    = Animator.StringToHash("Show");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	UIPauseMenu m_PauseMenu;
+	MenuProcessor m_MenuProcessor;
 
 	bool     m_Paused;
 	Animator m_Animator;
 
 	[Inject]
-	public void Construct(UIPauseMenu _PauseMenu)
+	public void Construct(MenuProcessor _MenuProcessor)
 	{
-		m_PauseMenu = _PauseMenu;
+		m_MenuProcessor = _MenuProcessor;
 	}
 
 	protected override void Awake()
@@ -40,7 +40,12 @@ public class UIGamePauseButton : UIEntity
 			return;
 		
 		m_Paused = false;
-		m_PauseMenu.Resume();
+		
+		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>(MenuType.PauseMenu);
+		
+		if (pauseMenu != null)
+			pauseMenu.Resume();
+		
 		m_Animator.SetBool(m_ShowParameterID, false);
 	}
 
@@ -50,7 +55,12 @@ public class UIGamePauseButton : UIEntity
 			return;
 		
 		m_Paused = true;
-		m_PauseMenu.Pause();
+		
+		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>(MenuType.PauseMenu);
+		
+		if (pauseMenu != null)
+			pauseMenu.Pause();
+		
 		m_Animator.SetBool(m_ShowParameterID, true);
 	}
 

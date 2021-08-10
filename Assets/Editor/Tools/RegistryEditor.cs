@@ -9,6 +9,7 @@ public class RegistryEditor : Editor
 {
 	bool            m_Initialized;
 	ReorderableList m_RegistryList;
+	Editor          m_EntryEditor;
 
 	void OnEnable()
 	{
@@ -30,6 +31,9 @@ public class RegistryEditor : Editor
 			m_RegistryList.DoLayoutList();
 		
 		serializedObject.ApplyModifiedProperties();
+		
+		if (m_EntryEditor != null)
+			m_EntryEditor.OnInspectorGUI();
 	}
 
 	void Initialize()
@@ -44,9 +48,9 @@ public class RegistryEditor : Editor
 		if (registry == null)
 			return;
 		
-		SerializedProperty levelInfosProperty = serializedObject.FindProperty("m_Registry");
+		SerializedProperty registryProperty = serializedObject.FindProperty("m_Registry");
 		
-		m_RegistryList = new ReorderableList(serializedObject, levelInfosProperty, true, true, true, true);
+		m_RegistryList = new ReorderableList(serializedObject, registryProperty, true, true, true, true);
 		
 		m_RegistryList.drawHeaderCallback += _Rect =>
 		{
@@ -57,25 +61,46 @@ public class RegistryEditor : Editor
 		{
 			Rect indexRect  = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
 			Rect toggleRect = new Rect(_Rect.x + 25, _Rect.y, 25, _Rect.height);
-			Rect levelRect  = new Rect(_Rect.x + 50, _Rect.y, _Rect.width - 50, _Rect.height);
+			Rect entryRect  = new Rect(_Rect.x + 50, _Rect.y, _Rect.width - 50, _Rect.height);
 			
 			EditorGUI.LabelField(indexRect, _Index.ToString());
 			
-			SerializedProperty levelInfoProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(_Index);
-			if (levelInfoProperty == null)
+			SerializedProperty entryProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(_Index);
+			if (entryProperty == null)
 				return;
 			
-			EditorGUI.PropertyField(levelRect, levelInfoProperty, GUIContent.none);
+			EditorGUI.PropertyField(entryRect, entryProperty, GUIContent.none);
 			
-			if (levelInfoProperty.objectReferenceValue == null)
+			if (entryProperty.objectReferenceValue == null)
 				return;
 			
-			using (SerializedObject levelInfoObject = new SerializedObject(levelInfoProperty.objectReferenceValue))
+			using (SerializedObject entryObject = new SerializedObject(entryProperty.objectReferenceValue))
 			{
-				SerializedProperty activeProperty = levelInfoObject.FindProperty("m_Active");
+				SerializedProperty activeProperty = entryObject.FindProperty("m_Active");
 				activeProperty.boolValue = EditorGUI.Toggle(toggleRect, activeProperty.boolValue);
-				levelInfoObject.ApplyModifiedProperties();
+				entryObject.ApplyModifiedProperties();
 			}
+		};
+		
+		m_RegistryList.onSelectCallback += _List =>
+		{
+			int index = _List.index;
+			
+			if (index < 0 || index >= _List.count)
+			{
+				m_EntryEditor = null;
+				return;
+			}
+			
+			SerializedProperty entryProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(index);
+			
+			if (entryProperty == null || entryProperty.objectReferenceValue == null)
+			{
+				m_EntryEditor = null;
+				return;
+			}
+			
+			m_EntryEditor = Editor.CreateEditor(entryProperty.objectReferenceValue);
 		};
 	}
 

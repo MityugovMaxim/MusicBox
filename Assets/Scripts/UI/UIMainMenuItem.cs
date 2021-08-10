@@ -13,12 +13,12 @@ public class UIMainMenuItem : UIEntity, IPointerClickHandler
 	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
 	[SerializeField] UIScoreRank             m_ScoreRank;
 
-	UILevelMenu m_LevelMenu;
+	MenuProcessor m_MenuProcessor;
 
 	[Inject]
-	public void Construct(UILevelMenu _LevelMenu)
+	public void Construct(MenuProcessor _MenuProcessor)
 	{
-		m_LevelMenu = _LevelMenu;
+		m_MenuProcessor = _MenuProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -31,7 +31,12 @@ public class UIMainMenuItem : UIEntity, IPointerClickHandler
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		m_LevelMenu.Setup(LevelID);
-		m_LevelMenu.Show();
+		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
+		
+		if (levelMenu == null)
+			return;
+		
+		levelMenu.Setup(LevelID);
+		levelMenu.Show();
 	}
 }

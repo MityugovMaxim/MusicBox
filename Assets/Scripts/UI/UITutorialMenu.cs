@@ -8,16 +8,16 @@ public class UITutorialMenu : UIMenu, IInitializable, IDisposable
 	static readonly int m_PlayParameterID = Animator.StringToHash("Play");
 
 	SignalBus     m_SignalBus;
-	UILoadingMenu m_LoadingMenu;
+	MenuProcessor m_MenuProcessor;
 
 	Animator       m_Animator;
 	StateBehaviour m_PlayState;
 
 	[Inject]
-	public void Construct(SignalBus _SignalBus, UILoadingMenu _LoadingMenu)
+	public void Construct(SignalBus _SignalBus, MenuProcessor _MenuProcessor)
 	{
-		m_SignalBus   = _SignalBus;
-		m_LoadingMenu = _LoadingMenu;
+		m_SignalBus     = _SignalBus;
+		m_MenuProcessor = _MenuProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -53,6 +53,6 @@ public class UITutorialMenu : UIMenu, IInitializable, IDisposable
 
 	void InvokePlayFinished()
 	{
-		m_LoadingMenu.Show();
+		m_MenuProcessor.Show(MenuType.LoadingMenu);
 	}
 }
