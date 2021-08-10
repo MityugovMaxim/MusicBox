@@ -13,10 +13,9 @@ public class Level : MonoBehaviour
 
 	[Inject]
 	public void Construct(
-		Sequencer             _Sequencer,
-		AudioProcessor        _AudioProcessor,
-		ColorProcessor        _ColorProcessor,
-		List<ISampleReceiver> _SampleReceivers
+		Sequencer      _Sequencer,
+		AudioProcessor _AudioProcessor,
+		ColorProcessor _ColorProcessor
 	)
 	{
 		m_Sequencer      = _Sequencer;
@@ -38,7 +37,7 @@ public class Level : MonoBehaviour
 		m_Sequencer.Initialize();
 	}
 
-	public void Play(Action _Finished = null)
+	public void Play(ISampleReceiver[] _SampleReceivers, Action _Finished = null)
 	{
 		if (m_Sequencer == null)
 		{
@@ -46,7 +45,7 @@ public class Level : MonoBehaviour
 			return;
 		}
 		
-		m_Sequencer.Play(_Finished);
+		m_Sequencer.Play(_SampleReceivers, _Finished);
 	}
 
 	public void Pause()

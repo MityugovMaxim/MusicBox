@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIResultMenu : UIMenu, IInitializable, IDisposable
+public class UIResultMenu : UIMenu
 {
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
@@ -16,7 +15,6 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UILevelLike              m_LikeButton;
 	[SerializeField] UILevelModeButton        m_RestartButton;
 
-	SignalBus       m_SignalBus;
 	MenuProcessor   m_MenuProcessor;
 	LevelProcessor  m_LevelProcessor;
 	ScoreProcessor  m_ScoreProcessor;
@@ -32,7 +30,6 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 
 	[Inject]
 	public void Construct(
-		SignalBus       _SignalBus,
 		MenuProcessor   _MenuProcessor,
 		LevelProcessor  _LevelProcessor,
 		ScoreProcessor  _ScoreProcessor,
@@ -40,7 +37,6 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		AdsProcessor    _AdsProcessor
 	)
 	{
-		m_SignalBus       = _SignalBus;
 		m_MenuProcessor   = _MenuProcessor;
 		m_LevelProcessor  = _LevelProcessor;
 		m_ScoreProcessor  = _ScoreProcessor;
@@ -48,28 +44,9 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		m_AdsProcessor    = _AdsProcessor;
 	}
 
-	void IInitializable.Initialize()
+	public void Setup(string _LevelID)
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		m_LevelID = _Signal.LevelID;
-		
-		Hide(true);
-	}
-
-	void RegisterLevelFinish(LevelFinishSignal _Signal)
-	{
-		m_LevelID = _Signal.LevelID;
+		m_LevelID = _LevelID;
 		
 		m_ScoreData = m_ScoreProcessor.ScoreData;
 		
@@ -91,11 +68,8 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		ScoreRank rank          = m_ScoreProcessor.GetBestRank(m_LevelID);
 		if (rank == ScoreRank.S)
 			m_SocialProcessor.CompleteAchievement(achievementID);
-		
-		Show();
 	}
 
-	[Preserve]
 	public void Restart()
 	{
 		void RestartInternal()
@@ -136,7 +110,6 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 		}
 	}
 
-	[Preserve]
 	public void Leave()
 	{
 		void LeaveInternal()
@@ -149,7 +122,10 @@ public class UIResultMenu : UIMenu, IInitializable, IDisposable
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu);
+			m_MenuProcessor.Show(MenuType.MainMenu)
+				.ThenHide(MenuType.ResultMenu, true)
+				.ThenHide(MenuType.GameMenu, true)
+				.ThenHide(MenuType.PauseMenu, true);
 		}
 		
 		m_LeaveAdsCount++;

@@ -5,52 +5,45 @@ using Zenject;
 public class UIGameMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIGamePauseButton m_PauseButton;
+	[SerializeField] UIGameProgress    m_Progress;
+	[SerializeField] UIGameTimer       m_Timer;
 
-	SignalBus m_SignalBus;
+	SignalBus      m_SignalBus;
+	LevelProcessor m_LevelProcessor;
 
 	[Inject]
-	public void Construct(SignalBus _SignalBus)
+	public void Construct(SignalBus _SignalBus, LevelProcessor _LevelProcessor)
 	{
-		m_SignalBus = _SignalBus;
+		m_SignalBus      = _SignalBus;
+		m_LevelProcessor = _LevelProcessor;
 	}
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelExitSignal>(RegisterLevelExit);
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 		m_SignalBus.Subscribe<AudioPlaySignal>(RegisterAudioPlaySignal);
 		m_SignalBus.Subscribe<AudioPauseSignal>(RegisterAudioPauseSignal);
+		
+		m_LevelProcessor.AddSampleReceiver(m_Progress);
+		m_LevelProcessor.AddSampleReceiver(m_Timer);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelExitSignal>(RegisterLevelExit);
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 		m_SignalBus.Unsubscribe<AudioPlaySignal>(RegisterAudioPlaySignal);
 		m_SignalBus.Unsubscribe<AudioPauseSignal>(RegisterAudioPauseSignal);
-	}
-
-	void RegisterLevelStart()
-	{
-		Show(true);
 		
-		if (m_PauseButton != null)
-			m_PauseButton.Restore();
+		m_LevelProcessor.RemoveSampleReceiver(m_Progress);
+		m_LevelProcessor.RemoveSampleReceiver(m_Timer);
 	}
 
 	void RegisterLevelRestart()
 	{
 		if (m_PauseButton != null)
 			m_PauseButton.Resume();
-	}
-
-	void RegisterLevelExit()
-	{
-		Hide();
 	}
 
 	void RegisterAudioSourceChanged()
@@ -87,5 +80,11 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		
 		if (m_PauseButton != null)
 			m_PauseButton.Pause();
+	}
+
+	protected override void OnHideFinished()
+	{
+		if (m_PauseButton != null)
+			m_PauseButton.Restore();
 	}
 }

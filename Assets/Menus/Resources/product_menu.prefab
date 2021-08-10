@@ -1346,6 +1346,8 @@ GameObject:
   - component: {fileID: 3337466256909181746}
   - component: {fileID: 3337466256909181756}
   - component: {fileID: 3337466256909181747}
+  - component: {fileID: 316932938910699099}
+  - component: {fileID: -4580667634940518332}
   m_Layer: 5
   m_Name: product_menu
   m_TagString: Untagged
@@ -1384,7 +1386,7 @@ CanvasGroup:
   m_GameObject: {fileID: 3337466256909181745}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 0
+  m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &3337466256909181747
@@ -1434,6 +1436,37 @@ MonoBehaviour:
   m_Label: {fileID: 3337466256473281527}
   m_Price: {fileID: 3337466256420036027}
   m_PreviewSource: {fileID: 3337466257697234886}
+--- !u!114 &316932938910699099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3337466256909181745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08eca9f7688a0a24685b89133b020c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: -4580667634940518332}
+  _installerPrefabs: []
+  _autoRun: 1
+  _kernel: {fileID: 0}
+--- !u!114 &-4580667634940518332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3337466256909181745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e393fd08b37040b9ba157ccad9a29405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Menu: {fileID: 3337466256909181747}
 --- !u!1 &3337466256979501377
 GameObject:
   m_ObjectHideFlags: 0

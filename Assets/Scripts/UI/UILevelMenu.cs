@@ -46,21 +46,14 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
 		m_SignalBus.Subscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Unsubscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
 		m_SignalBus.Unsubscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		Hide(true);
 	}
 
 	void RegisterAudioNextTrack()
@@ -116,20 +109,20 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	{
 		void PlayInternal()
 		{
-			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
-			
-			if (loadingMenu != null)
-				loadingMenu.Setup(m_LevelID);
-			
-			if (TutorialCount < 1)
+			if (TutorialCount >= 1)
 			{
-				TutorialCount++;
-				m_MenuProcessor.Show(MenuType.TutorialMenu);
-				return;
+				UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
+				if (loadingMenu != null)
+					loadingMenu.Setup(m_LevelID);
+				m_MenuProcessor.Show(MenuType.LoadingMenu);
 			}
-			
-			if (loadingMenu != null)
-				loadingMenu.Show();
+			else
+			{
+				UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>(MenuType.TutorialMenu);
+				if (tutorialMenu != null)
+					tutorialMenu.Setup(m_LevelID);
+				m_MenuProcessor.Show(MenuType.TutorialMenu);
+			}
 		}
 		
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);

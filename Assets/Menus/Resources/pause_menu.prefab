@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8826910917943886902}
   - component: {fileID: 8826910917943886896}
   - component: {fileID: 8826910917943886903}
+  - component: {fileID: -112934484600366884}
+  - component: {fileID: 4159650200586598253}
   m_Layer: 5
   m_Name: pause_menu
   m_TagString: Untagged
@@ -48,7 +50,7 @@ CanvasGroup:
   m_GameObject: {fileID: 8826910917943886901}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 0
+  m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &8826910917943886903
@@ -67,6 +69,37 @@ MonoBehaviour:
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
   m_Thumbnail: {fileID: 8826910918621551577}
+--- !u!114 &-112934484600366884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8826910917943886901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08eca9f7688a0a24685b89133b020c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: 4159650200586598253}
+  _installerPrefabs: []
+  _autoRun: 1
+  _kernel: {fileID: 0}
+--- !u!114 &4159650200586598253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8826910917943886901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e393fd08b37040b9ba157ccad9a29405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Menu: {fileID: 8826910917943886903}
 --- !u!1 &8826910917994712448
 GameObject:
   m_ObjectHideFlags: 0

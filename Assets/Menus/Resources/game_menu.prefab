@@ -537,7 +537,7 @@ GameObject:
   - component: {fileID: 9197421136765509107}
   - component: {fileID: 9197421136765509104}
   m_Layer: 5
-  m_Name: progress_bar
+  m_Name: progress
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -747,6 +747,8 @@ GameObject:
   - component: {fileID: 9197421137165010670}
   - component: {fileID: 9197421137165010668}
   - component: {fileID: 9197421137165010671}
+  - component: {fileID: 7511472467919612935}
+  - component: {fileID: 9217531617488757016}
   m_Layer: 5
   m_Name: game_menu
   m_TagString: Untagged
@@ -784,7 +786,7 @@ CanvasGroup:
   m_GameObject: {fileID: 9197421137165010673}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 0
+  m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &9197421137165010671
@@ -803,6 +805,38 @@ MonoBehaviour:
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
   m_PauseButton: {fileID: 9197421137917648501}
+  m_Progress: {fileID: 9197421136765509104}
+  m_Timer: {fileID: 9197421135833307180}
+--- !u!114 &7511472467919612935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9197421137165010673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08eca9f7688a0a24685b89133b020c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: 9217531617488757016}
+  _installerPrefabs: []
+  _autoRun: 1
+  _kernel: {fileID: 0}
+--- !u!114 &9217531617488757016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9197421137165010673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e393fd08b37040b9ba157ccad9a29405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &9197421137694972834
 GameObject:
   m_ObjectHideFlags: 0

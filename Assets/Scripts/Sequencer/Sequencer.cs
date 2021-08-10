@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using Zenject;
 
 #if UNITY_EDITOR
 public partial class Sequencer
@@ -102,10 +102,10 @@ public partial class Sequencer : MonoBehaviour
 
 	[SerializeField, HideInInspector] Track[] m_Tracks;
 
-	ISampleReceiver[] m_SampleReceivers;
 	Action            m_Finished;
 	int               m_Frame;
 	int               m_SampleFrame;
+	ISampleReceiver[] m_SampleReceivers;
 
 	void OnDisable()
 	{
@@ -127,15 +127,6 @@ public partial class Sequencer : MonoBehaviour
 		m_Frame++;
 	}
 
-	[Inject]
-	public void Construct(ISampleReceiver[] _SampleReceivers)
-	{
-		m_SampleReceivers = _SampleReceivers;
-		
-		foreach (ISampleReceiver sampleReceiver in m_SampleReceivers)
-			sampleReceiver.Sample(0, Length);
-	}
-
 	public void Initialize()
 	{
 		if (m_Tracks == null || m_Tracks.Length == 0)
@@ -145,13 +136,14 @@ public partial class Sequencer : MonoBehaviour
 			track.Initialize(this);
 	}
 
-	public void Play(Action _Finished = null)
+	public void Play(ISampleReceiver[] _SampleReceivers, Action _Finished = null)
 	{
 		Playing = true;
 		
-		m_Finished    = _Finished;
-		m_Frame       = 0;
-		m_SampleFrame = 0;
+		m_SampleReceivers = _SampleReceivers;
+		m_Finished        = _Finished;
+		m_Frame           = 0;
+		m_SampleFrame     = 0;
 		
 		Sample(Time);
 	}
@@ -185,7 +177,7 @@ public partial class Sequencer : MonoBehaviour
 		
 		if (m_SampleReceivers != null)
 		{
-			foreach (var sampleReceiver in m_SampleReceivers)
+			foreach (ISampleReceiver sampleReceiver in m_SampleReceivers)
 				sampleReceiver.Sample(Time, Length);
 		}
 		

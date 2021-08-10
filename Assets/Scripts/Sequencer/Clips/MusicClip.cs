@@ -34,7 +34,7 @@ public class MusicClip : Clip
 		
 		m_AudioSource.Play();
 		
-		m_AudioSource.time = GetLocalTime(_Time);
+		m_AudioSource.time = GetMusicTime(_Time);
 	}
 
 	protected override void OnUpdate(float _Time)
@@ -43,7 +43,7 @@ public class MusicClip : Clip
 		{
 			m_AudioSource.Pause();
 			
-			m_AudioSource.time = GetLocalTime(_Time);
+			m_AudioSource.time = GetMusicTime(_Time);
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
@@ -51,12 +51,17 @@ public class MusicClip : Clip
 			
 			m_AudioSource.Play();
 			
-			m_AudioSource.time = GetLocalTime(_Time);
+			m_AudioSource.time = GetMusicTime(_Time);
 		}
 	}
 
 	protected override void OnExit(float _Time)
 	{
 		m_AudioSource.Stop();
+	}
+
+	float GetMusicTime(float _Time)
+	{
+		return Mathf.Clamp(GetLocalTime(_Time), 0, m_AudioClip.length);
 	}
 }

@@ -19,6 +19,7 @@ public class LevelProcessor
 	readonly Dictionary<string, AudioClip> m_PreviewClips       = new Dictionary<string, AudioClip>();
 	readonly Dictionary<string, Sprite>    m_PreviewBackgrounds = new Dictionary<string, Sprite>();
 	readonly Dictionary<string, Sprite>    m_PreviewThumbnails  = new Dictionary<string, Sprite>();
+	readonly List<ISampleReceiver>         m_SampleReceivers    = new List<ISampleReceiver>();
 
 	[Inject]
 	public LevelProcessor(
@@ -335,7 +336,10 @@ public class LevelProcessor
 			return;
 		}
 		
-		m_Level.Play(() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID)));
+		m_Level.Play(
+			m_SampleReceivers.ToArray(),
+			() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID))
+		);
 		
 		m_SignalBus.Fire(new LevelPlaySignal(m_LevelID));
 	}
@@ -362,5 +366,15 @@ public class LevelProcessor
 		m_Level.Stop();
 		
 		m_SignalBus.Fire(new LevelRestartSignal(m_LevelID));
+	}
+
+	public void AddSampleReceiver(ISampleReceiver _SampleReceiver)
+	{
+		m_SampleReceivers.Add(_SampleReceiver);
+	}
+
+	public void RemoveSampleReceiver(ISampleReceiver _SampleReceiver)
+	{
+		m_SampleReceivers.Remove(_SampleReceiver);
 	}
 }

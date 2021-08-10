@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class UIProgressBar : UIEntity, ISampleReceiver
+public class UIGameProgress : UIEntity, ISampleReceiver
 {
 	[SerializeField, Range(0, 1)] float m_Progress;
 	[SerializeField, Range(0, 1)] float m_Min;

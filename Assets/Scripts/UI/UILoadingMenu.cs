@@ -1,25 +1,24 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using Zenject;
 
-public class UILoadingMenu : UIMenu, IInitializable, IDisposable
+public class UILoadingMenu : UIMenu
 {
 	[SerializeField] UILoader m_Loader;
 
-	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
+	MenuProcessor  m_MenuProcessor;
 
 	string m_LevelID;
 
 	[Inject]
 	public void Construct(
-		SignalBus      _SignalBus,
-		LevelProcessor _LevelProcessor
+		LevelProcessor _LevelProcessor,
+		MenuProcessor  _MenuProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
 		m_LevelProcessor = _LevelProcessor;
+		m_MenuProcessor  = _MenuProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -29,8 +28,6 @@ public class UILoadingMenu : UIMenu, IInitializable, IDisposable
 
 	protected override void OnShowStarted()
 	{
-		base.OnShowStarted();
-		
 		if (m_Loader != null)
 			m_Loader.Restore();
 	}
@@ -40,31 +37,21 @@ public class UILoadingMenu : UIMenu, IInitializable, IDisposable
 		if (m_Loader != null)
 			m_Loader.Play();
 		
+		m_MenuProcessor.Show(MenuType.GameMenu, true);
+		
 		if (m_LevelProcessor != null)
 			m_LevelProcessor.Create(m_LevelID);
 	}
 
-	void IInitializable.Initialize()
+	protected override void OnHideFinished()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_LevelProcessor.Play();
 	}
 
-	void IDisposable.Dispose()
+	protected override IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-	}
-
-	void RegisterLevelStart()
-	{
-		CloseAction = m_LevelProcessor.Play;
+		yield return new WaitForSeconds(1.0f);
 		
-		StartCoroutine(DelayRoutine(1.5f, () => Hide()));
-	}
-
-	static IEnumerator DelayRoutine(float _Delay, Action _Callback)
-	{
-		yield return new WaitForSeconds(_Delay);
-		
-		_Callback?.Invoke();
+		yield return base.HideAnimation(_CanvasGroup, _Duration);
 	}
 }

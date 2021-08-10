@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -39,20 +38,12 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		Recenter(_Signal.LevelID);
-		Hide(true);
 	}
 
 	void RegisterPurchase()
@@ -127,28 +118,28 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		}
 	}
 
-	void Recenter(string _LevelID)
-	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Level ID '{0}' is null or empty.", _LevelID);
-			return;
-		}
-		
-		UIMainMenuItem item = m_Items.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
-		
-		if (item == null)
-		{
-			Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Track with level ID '{0}' not found.", _LevelID);
-			return;
-		}
-		
-		Rect source = item.GetWorldRect();
-		Rect target = m_Scroll.content.GetWorldRect();
-		
-		float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);
-		
-		m_Scroll.StopMovement();
-		m_Scroll.verticalNormalizedPosition = position;
-	}
+	// void Recenter(string _LevelID)
+	// {
+	// 	if (string.IsNullOrEmpty(_LevelID))
+	// 	{
+	// 		Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Level ID '{0}' is null or empty.", _LevelID);
+	// 		return;
+	// 	}
+	// 	
+	// 	UIMainMenuItem item = m_Items.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
+	// 	
+	// 	if (item == null)
+	// 	{
+	// 		Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Track with level ID '{0}' not found.", _LevelID);
+	// 		return;
+	// 	}
+	// 	
+	// 	Rect source = item.GetWorldRect();
+	// 	Rect target = m_Scroll.content.GetWorldRect();
+	// 	
+	// 	float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);
+	// 	
+	// 	m_Scroll.StopMovement();
+	// 	m_Scroll.verticalNormalizedPosition = position;
+	// }
 }

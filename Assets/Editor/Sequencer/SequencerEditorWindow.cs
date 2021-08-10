@@ -169,7 +169,7 @@ public class SequencerEditorWindow : EditorWindow
 		if (!Sequencer.Playing && GUILayout.Button(">"))
 		{
 			Sequencer.Initialize();
-			Sequencer.Play();
+			Sequencer.Play(null);
 		}
 		else if (Sequencer.Playing && GUILayout.Button("||"))
 		{
@@ -428,7 +428,7 @@ public class SequencerEditorWindow : EditorWindow
 				time = Mathf.Max(time, 0);
 				
 				if (GUIUtility.hotControl == playControlID)
-					Sequencer.Play();
+					Sequencer.Play(null);
 				
 				Sequencer.Sample(time);
 				

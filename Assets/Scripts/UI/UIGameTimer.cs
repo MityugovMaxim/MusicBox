@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UITimer : UIEntity, IPointerDownHandler, ISampleReceiver
+public class UIGameTimer : UIEntity, IPointerDownHandler, ISampleReceiver
 {
 	public enum TimerMode
 	{

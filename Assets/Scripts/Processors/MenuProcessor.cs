@@ -70,18 +70,24 @@ public class MenuOperation
 	}
 }
 
-public class MenuProcessor : IInitializable
+public class MenuProcessor : IInitializable, IDisposable
 {
 	readonly Dictionary<MenuType, UIMenu>   m_MenuCache = new Dictionary<MenuType, UIMenu>();
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos = new Dictionary<MenuType, MenuInfo>();
 	readonly List<MenuType>                 m_MenuOrder = new List<MenuType>();
 
+	SignalBus      m_SignalBus;
 	Canvas         m_Canvas;
 	UIMenu.Factory m_MenuFactory;
 
 	[Inject]
-	public void Construct(Canvas _Canvas, UIMenu.Factory _MenuFactory)
+	public void Construct(
+		SignalBus      _SignalBus,
+		Canvas         _Canvas,
+		UIMenu.Factory _MenuFactory
+	)
 	{
+		m_SignalBus   = _SignalBus;
 		m_Canvas      = _Canvas;
 		m_MenuFactory = _MenuFactory;
 	}
@@ -102,7 +108,55 @@ public class MenuProcessor : IInitializable
 			}
 		}
 		
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
+		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		
 		Show(MenuType.MainMenu, true);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
+		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+	}
+
+	void RegisterLevelStart(LevelStartSignal _Signal)
+	{
+		UIPauseMenu pauseMenu = GetMenu<UIPauseMenu>(MenuType.PauseMenu);
+		if (pauseMenu != null)
+			pauseMenu.Setup(_Signal.LevelID);
+		
+		Hide(MenuType.MainMenu, true);
+		Hide(MenuType.LevelMenu, true);
+		Hide(MenuType.ResultMenu, true);
+		Hide(MenuType.TutorialMenu, true);
+		
+		Hide(MenuType.PauseMenu, true);
+		Show(MenuType.GameMenu, true);
+		
+		Hide(MenuType.LoadingMenu);
+	}
+
+	void RegisterLevelFinish(LevelFinishSignal _Signal)
+	{
+		UIResultMenu resultMenu = GetMenu<UIResultMenu>(MenuType.ResultMenu);
+		if (resultMenu != null)
+			resultMenu.Setup(_Signal.LevelID);
+		
+		Show(MenuType.ResultMenu);
+	}
+
+	void RegisterLevelRestart(LevelRestartSignal _Signal)
+	{
+		Hide(MenuType.MainMenu, true);
+		Hide(MenuType.LevelMenu, true);
+		Hide(MenuType.TutorialMenu, true);
+		
+		Show(MenuType.GameMenu, true);
+		
+		Hide(MenuType.ResultMenu);
 	}
 
 	public T GetMenu<T>(MenuType _MenuType) where T : UIMenu
@@ -157,9 +211,15 @@ public class MenuProcessor : IInitializable
 
 	public MenuOperation Hide(MenuType _MenuType, bool _Instant = false)
 	{
-		UIMenu menu = GetMenu<UIMenu>(_MenuType);
-		
 		MenuOperation menuOperation = new MenuOperation(this);
+		
+		if (!m_MenuCache.ContainsKey(_MenuType))
+		{
+			menuOperation.InvokeFinished();
+			return menuOperation;
+		}
+		
+		UIMenu menu = GetMenu<UIMenu>(_MenuType);
 		
 		menu.Hide(
 			_Instant,

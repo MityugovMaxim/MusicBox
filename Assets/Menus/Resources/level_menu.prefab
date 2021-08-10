@@ -818,6 +818,8 @@ GameObject:
   - component: {fileID: 5831854207038457427}
   - component: {fileID: 5831854207038457429}
   - component: {fileID: 5831854207038457428}
+  - component: {fileID: -7648091507480381022}
+  - component: {fileID: -4299017972226866741}
   m_Layer: 5
   m_Name: level_menu
   m_TagString: Untagged
@@ -856,7 +858,7 @@ CanvasGroup:
   m_GameObject: {fileID: 5831854207038457426}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 0
+  m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &5831854207038457428
@@ -904,6 +906,37 @@ MonoBehaviour:
   m_Label: {fileID: 5831854206236022644}
   m_PlayButton: {fileID: 5831854208238362966}
   m_PreviewSource: {fileID: 5831854207998519142}
+--- !u!114 &-7648091507480381022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5831854207038457426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08eca9f7688a0a24685b89133b020c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: -4299017972226866741}
+  _installerPrefabs: []
+  _autoRun: 1
+  _kernel: {fileID: 0}
+--- !u!114 &-4299017972226866741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5831854207038457426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e393fd08b37040b9ba157ccad9a29405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Menu: {fileID: 5831854207038457428}
 --- !u!1 &5831854207049056612
 GameObject:
   m_ObjectHideFlags: 0
@@ -2128,6 +2161,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb13c8e651b0e4c8c8f194b6080ec798, type: 3}
+--- !u!224 &850279036673619426 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6566851646305198540, guid: bb13c8e651b0e4c8c8f194b6080ec798,
+    type: 3}
+  m_PrefabInstance: {fileID: 5831854208010261550}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &8072302690717463056 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2371281576772593214, guid: bb13c8e651b0e4c8c8f194b6080ec798,
@@ -2140,9 +2179,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4d6fc99d6fe44d6bc8be400281f2d37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!224 &850279036673619426 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 6566851646305198540, guid: bb13c8e651b0e4c8c8f194b6080ec798,
-    type: 3}
-  m_PrefabInstance: {fileID: 5831854208010261550}
-  m_PrefabAsset: {fileID: 0}

@@ -1,15 +1,13 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
-public class UIPauseMenu : UIMenu, IInitializable, IDisposable
+public class UIPauseMenu : UIMenu
 {
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 
 	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
 
-	SignalBus      m_SignalBus;
 	MenuProcessor  m_MenuProcessor;
 	LevelProcessor m_LevelProcessor;
 	AdsProcessor   m_AdsProcessor;
@@ -19,33 +17,19 @@ public class UIPauseMenu : UIMenu, IInitializable, IDisposable
 
 	[Inject]
 	public void Construct(
-		SignalBus      _SignalBus,
 		MenuProcessor  _MenuProcessor,
 		LevelProcessor _LevelProcessor,
 		AdsProcessor   _AdsProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
 		m_MenuProcessor  = _MenuProcessor;
 		m_LevelProcessor = _LevelProcessor;
 		m_AdsProcessor   = _AdsProcessor;
 	}
 
-	void IInitializable.Initialize()
+	public void Setup(string _LevelID)
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		Hide(true);
-		
-		m_Thumbnail.Setup(_Signal.LevelID);
+		m_Thumbnail.Setup(_LevelID);
 	}
 
 	public void Pause()

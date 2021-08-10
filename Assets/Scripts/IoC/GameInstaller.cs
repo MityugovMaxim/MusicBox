@@ -4,19 +4,12 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] Canvas        m_Canvas;
-	[SerializeField] UIProgressBar m_ProgressBar;
-	[SerializeField] UITimer       m_Timer;
-
+	[SerializeField] Canvas      m_Canvas;
 	[SerializeField] ProductInfo m_NoAdsProduct;
 
 	public override void InstallBindings()
 	{
 		InstallSignals();
-		
-		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
-		
-		//InstallSampleReceivers();
 		
 		InstallProcessors();
 		
@@ -24,17 +17,8 @@ public class GameInstaller : MonoInstaller
 		
 		InstallAudioManager();
 		
+		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
-	}
-
-	void InstallSampleReceivers()
-	{
-		ISampleReceiver[] sampleReceivers =
-		{
-			m_ProgressBar,
-			m_Timer,
-		};
-		Container.Bind<ISampleReceiver[]>().FromInstance(sampleReceivers).AsSingle();
 	}
 
 	void InstallFactories()
