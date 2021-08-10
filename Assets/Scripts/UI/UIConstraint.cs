@@ -55,6 +55,13 @@ public class UIConstraint : UIEntity
 		Resolve();
 	}
 
+	protected override void OnTransformParentChanged()
+	{
+		base.OnTransformParentChanged();
+		
+		Resolve();
+	}
+
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
