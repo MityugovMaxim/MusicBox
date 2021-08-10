@@ -13,7 +13,8 @@ public class LevelInfoEditor : Editor
 	SerializedProperty AchievementIDProperty => m_AchievementIDProperty ?? (m_AchievementIDProperty = serializedObject.FindProperty("m_AchievementID"));
 	SerializedProperty ModeProperty          => m_ModeProperty ?? (m_ModeProperty = serializedObject.FindProperty("m_Mode"));
 	SerializedProperty LockedProperty        => m_LockedProperty ?? (m_LockedProperty = serializedObject.FindProperty("m_Locked"));
-	SerializedProperty EXPProperty           => m_EXPProperty ?? (m_EXPProperty = serializedObject.FindProperty("m_EXP"));
+	SerializedProperty ExpPayoutProperty     => m_ExpPayoutProperty ?? (m_ExpPayoutProperty = serializedObject.FindProperty("m_ExpPayout"));
+	SerializedProperty ExpRequiredProperty   => m_ExpRequiredProperty ?? (m_ExpRequiredProperty = serializedObject.FindProperty("m_ExpRequired"));
 
 	SerializedProperty m_TitleProperty;
 	SerializedProperty m_ArtistProperty;
@@ -22,7 +23,8 @@ public class LevelInfoEditor : Editor
 	SerializedProperty m_AchievementIDProperty;
 	SerializedProperty m_ModeProperty;
 	SerializedProperty m_LockedProperty;
-	SerializedProperty m_EXPProperty;
+	SerializedProperty m_ExpPayoutProperty;
+	SerializedProperty m_ExpRequiredProperty;
 
 	public override void OnInspectorGUI()
 	{
@@ -47,9 +49,10 @@ public class LevelInfoEditor : Editor
 		EditorGUILayout.PropertyField(AchievementIDProperty);
 		EditorGUILayout.PropertyField(ModeProperty);
 		
+		EditorGUILayout.PropertyField(ExpPayoutProperty);
 		EditorGUILayout.PropertyField(LockedProperty);
 		if (LockedProperty.boolValue)
-			EditorGUILayout.PropertyField(EXPProperty);
+			EditorGUILayout.PropertyField(ExpRequiredProperty);
 		
 		serializedObject.ApplyModifiedProperties();
 	}

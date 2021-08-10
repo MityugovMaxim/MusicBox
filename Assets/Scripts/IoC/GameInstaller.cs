@@ -49,6 +49,8 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<NotificationProcessor>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
@@ -62,6 +64,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<LevelRestartSignal>();
 		Container.DeclareSignal<LevelExitSignal>();
 		Container.DeclareSignal<LevelFinishSignal>();
+		Container.DeclareSignal<LevelUnlockSignal>();
 		
 		Container.DeclareSignal<HoldHitSignal>();
 		Container.DeclareSignal<HoldMissSignal>();

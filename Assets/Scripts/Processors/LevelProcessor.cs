@@ -12,6 +12,7 @@ public class LevelProcessor
 
 	readonly SignalBus                     m_SignalBus;
 	readonly PurchaseProcessor             m_PurchaseProcessor;
+	readonly ProgressProcessor             m_ProgressProcessor;
 	readonly Level.Factory                 m_LevelFactory;
 	readonly ProductInfo                   m_NoAdsProduct;
 	readonly List<string>                  m_LevelIDs           = new List<string>();
@@ -25,12 +26,14 @@ public class LevelProcessor
 	public LevelProcessor(
 		SignalBus         _SignalBus,
 		PurchaseProcessor _PurchaseProcessor,
+		ProgressProcessor _ProgressProcessor,
 		Level.Factory     _LevelFactory,
 		ProductInfo       _NoAdsProduct 
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
+		m_ProgressProcessor = _ProgressProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
 		
@@ -50,7 +53,10 @@ public class LevelProcessor
 
 	public string[] GetLevelIDs()
 	{
-		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID)).ToArray();
+		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID))
+			.OrderByDescending(m_ProgressProcessor.IsLevelUnlocked)
+			.ThenBy(m_ProgressProcessor.GetExpRequired)
+			.ToArray();
 	}
 
 	public bool Contains(string _LevelID)
@@ -60,19 +66,7 @@ public class LevelProcessor
 
 	public string GetArtist(string _LevelID)
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Get artist failed. Level ID is null or empty.");
-			return string.Empty;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Level with ID '{0}' not found.", _LevelID);
-			return string.Empty;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -85,19 +79,7 @@ public class LevelProcessor
 
 	public string GetTitle(string _LevelID)
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Get title failed. Level ID is null or empty.");
-			return string.Empty;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Level with ID '{0}' not found.", _LevelID);
-			return string.Empty;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -110,19 +92,7 @@ public class LevelProcessor
 
 	public string GetLeaderboardID(string _LevelID)
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Get leaderboard ID failed. Level ID is null or empty.");
-			return string.Empty;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get leaderboard ID failed. Level with ID '{0}' not found.", _LevelID);
-			return string.Empty;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -135,19 +105,7 @@ public class LevelProcessor
 
 	public string GetAchievementID(string _LevelID)
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Get achievement ID failed. Level ID is null or empty.");
-			return string.Empty;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get achievement ID failed. Level with ID '{0}' not found.", _LevelID);
-			return string.Empty;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -171,7 +129,7 @@ public class LevelProcessor
 			
 			string levelID = m_LevelIDs[j];
 			
-			if (!m_PurchaseProcessor.IsLevelPurchased(levelID))
+			if (!m_PurchaseProcessor.IsLevelPurchased(levelID) || m_ProgressProcessor.IsLevelLocked(levelID))
 				continue;
 			
 			return levelID;
@@ -193,7 +151,7 @@ public class LevelProcessor
 			
 			string levelID = m_LevelIDs[j];
 			
-			if (!m_PurchaseProcessor.IsLevelPurchased(levelID))
+			if (!m_PurchaseProcessor.IsLevelPurchased(levelID) || m_ProgressProcessor.IsLevelLocked(levelID))
 				continue;
 			
 			return levelID;
@@ -207,19 +165,7 @@ public class LevelProcessor
 		if (m_NoAdsProduct != null && m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return LevelMode.Free;
 		
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Get mode failed. Level ID is null or empty.");
-			return LevelMode.Free;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get mode failed. Level with ID '{0}' not found.", _LevelID);
-			return LevelMode.Free;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -274,19 +220,7 @@ public class LevelProcessor
 
 	public void Create(string _LevelID)
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[LevelProcessor] Create level failed. Level ID is null or empty.");
-			return;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Create level failed. Level with ID '{0}' not found.", _LevelID);
-			return;
-		}
-		
-		LevelInfo levelInfo = m_LevelInfos[_LevelID];
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
 		if (levelInfo == null)
 		{
@@ -376,5 +310,22 @@ public class LevelProcessor
 	public void RemoveSampleReceiver(ISampleReceiver _SampleReceiver)
 	{
 		m_SampleReceivers.Remove(_SampleReceiver);
+	}
+
+	LevelInfo GetLevelInfo(string _LevelID)
+	{
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogError("[ProgressProcessor] Get level info failed. Level ID is null or empty.");
+			return null;
+		}
+		
+		if (!m_LevelInfos.ContainsKey(_LevelID))
+		{
+			Debug.LogErrorFormat("[ProgressProcessor] Get level info failed. Level with ID '{0}' not found.", _LevelID);
+			return null;
+		}
+		
+		return m_LevelInfos[_LevelID];
 	}
 }

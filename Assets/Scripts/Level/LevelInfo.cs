@@ -10,7 +10,8 @@ public class LevelInfo : RegistryEntry
 	public string    AchievementID => m_AchievementID;
 	public LevelMode Mode          => m_Mode;
 	public bool      Locked        => m_Locked;
-	public int       EXP           => m_EXP;
+	public long      ExpPayout     => m_ExpPayout;
+	public long      ExpRequired   => m_ExpRequired;
 
 	[SerializeField, HideInInspector] string    m_Artist;
 	[SerializeField, HideInInspector] string    m_Title;
@@ -19,5 +20,6 @@ public class LevelInfo : RegistryEntry
 	[SerializeField, HideInInspector] string    m_AchievementID;
 	[SerializeField, HideInInspector] LevelMode m_Mode;
 	[SerializeField, HideInInspector] bool      m_Locked;
-	[SerializeField, HideInInspector] int       m_EXP;
+	[SerializeField, HideInInspector] long      m_ExpPayout;
+	[SerializeField, HideInInspector] long      m_ExpRequired;
 }

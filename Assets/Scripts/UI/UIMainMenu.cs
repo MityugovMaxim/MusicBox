@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIMainMenuItem m_Item;
 	[SerializeField] RectTransform  m_Container;
-	[SerializeField] ScrollRect     m_Scroll;
+	//[SerializeField] ScrollRect     m_Scroll;
 
 	SignalBus              m_SignalBus;
 	LevelProcessor         m_LevelProcessor;

@@ -41,11 +41,11 @@ public class MenuOperation
 	public MenuOperation ThenHide(MenuType _MenuType, bool _Instant = false)
 	{
 		MenuOperation menuOperation = new MenuOperation(m_MenuProcessor);
-			
+		
 		void Hide()
 		{
 			UIMenu menu = m_MenuProcessor.GetMenu<UIMenu>(_MenuType);
-				
+			
 			menu.Hide(
 				_Instant,
 				null,
@@ -76,12 +76,12 @@ public class MenuProcessor : IInitializable, IDisposable
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos = new Dictionary<MenuType, MenuInfo>();
 	readonly List<MenuType>                 m_MenuOrder = new List<MenuType>();
 
-	SignalBus      m_SignalBus;
-	Canvas         m_Canvas;
-	UIMenu.Factory m_MenuFactory;
+	readonly SignalBus      m_SignalBus;
+	readonly Canvas         m_Canvas;
+	readonly UIMenu.Factory m_MenuFactory;
 
 	[Inject]
-	public void Construct(
+	public MenuProcessor(
 		SignalBus      _SignalBus,
 		Canvas         _Canvas,
 		UIMenu.Factory _MenuFactory
@@ -232,10 +232,8 @@ public class MenuProcessor : IInitializable, IDisposable
 
 	void Reorder()
 	{
-		for (var i = m_MenuOrder.Count - 1; i >= 0; i--)
+		foreach (MenuType menuType in m_MenuOrder)
 		{
-			MenuType menuType = m_MenuOrder[i];
-			
 			if (!m_MenuCache.ContainsKey(menuType))
 				continue;
 			
@@ -244,7 +242,7 @@ public class MenuProcessor : IInitializable, IDisposable
 			if (menu == null)
 				continue;
 			
-			menu.RectTransform.SetAsLastSibling();
+			menu.RectTransform.SetAsFirstSibling();
 		}
 	}
 }

@@ -11,9 +11,10 @@ public class UIMainMenuItem : UIEntity, IPointerClickHandler
 	public string LevelID { get; private set; }
 
 	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
+	[SerializeField] UILevelProgress         m_LevelProgress;
 	[SerializeField] UIScoreRank             m_ScoreRank;
 
-	MenuProcessor m_MenuProcessor;
+	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
 	public void Construct(MenuProcessor _MenuProcessor)
@@ -26,6 +27,7 @@ public class UIMainMenuItem : UIEntity, IPointerClickHandler
 		LevelID = _LevelID;
 		
 		m_Thumbnail.Setup(LevelID);
+		m_LevelProgress.Setup(LevelID);
 		m_ScoreRank.Setup(LevelID);
 	}
 

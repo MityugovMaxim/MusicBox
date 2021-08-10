@@ -20,28 +20,32 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	[SerializeField] UIScoreRank              m_ScoreRank;
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UILevelModeButton        m_PlayButton;
+	[SerializeField] UILevelProgress          m_Progress;
 	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
-	SignalBus      m_SignalBus;
-	LevelProcessor m_LevelProcessor;
-	AdsProcessor   m_AdsProcessor;
-	MenuProcessor  m_MenuProcessor;
-	string         m_LevelID;
-	IEnumerator    m_RepositionRoutine;
-	AudioSource    m_AudioSource;
+	SignalBus         m_SignalBus;
+	LevelProcessor    m_LevelProcessor;
+	AdsProcessor      m_AdsProcessor;
+	MenuProcessor     m_MenuProcessor;
+	ProgressProcessor m_ProgressProcessor;
+	string            m_LevelID;
+	IEnumerator       m_RepositionRoutine;
+	AudioSource       m_AudioSource;
 
 	[Inject]
 	public void Construct(
-		SignalBus      _SignalBus,
-		LevelProcessor _LevelProcessor,
-		AdsProcessor   _AdsProcessor,
-		MenuProcessor  _MenuProcessor
+		SignalBus         _SignalBus,
+		LevelProcessor    _LevelProcessor,
+		AdsProcessor      _AdsProcessor,
+		MenuProcessor     _MenuProcessor,
+		ProgressProcessor _ProgressProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_LevelProcessor = _LevelProcessor;
-		m_AdsProcessor   = _AdsProcessor;
-		m_MenuProcessor  = _MenuProcessor;
+		m_SignalBus         = _SignalBus;
+		m_LevelProcessor    = _LevelProcessor;
+		m_AdsProcessor      = _AdsProcessor;
+		m_MenuProcessor     = _MenuProcessor;
+		m_ProgressProcessor = _ProgressProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -70,58 +74,44 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 
 	public void Setup(string _LevelID)
 	{
-		m_LevelID = _LevelID;
-		
-		m_Background.Setup(m_LevelID, true);
-		m_Thumbnail.Setup(m_LevelID);
-		m_ScoreRank.Setup(m_LevelID);
-		m_Label.Setup(m_LevelID);
-		m_PlayButton.Setup(m_LevelID);
+		Select(_LevelID);
 	}
 
 	public void Next()
 	{
-		m_LevelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
+		string levelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
 		
-		m_Background.Setup(m_LevelID);
-		m_Thumbnail.Setup(m_LevelID);
-		m_ScoreRank.Setup(m_LevelID);
-		m_Label.Setup(m_LevelID);
-		m_PlayButton.Setup(m_LevelID);
-		
-		m_PreviewSource.Play(m_LevelID);
+		Select(levelID);
 	}
 
 	public void Previous()
 	{
-		m_LevelID = m_LevelProcessor.GetPreviousLevelID(m_LevelID);
+		string levelID = m_LevelProcessor.GetPreviousLevelID(m_LevelID);
 		
-		m_Background.Setup(m_LevelID);
-		m_Thumbnail.Setup(m_LevelID);
-		m_ScoreRank.Setup(m_LevelID);
-		m_Label.Setup(m_LevelID);
-		m_PlayButton.Setup(m_LevelID);
-		
-		m_PreviewSource.Play(m_LevelID);
+		Select(levelID);
 	}
 
 	public void Play()
 	{
+		if (m_ProgressProcessor.IsLevelLocked(m_LevelID))
+			return;
+		
 		void PlayInternal()
 		{
-			if (TutorialCount >= 1)
+			if (TutorialCount < 1)
+			{
+				TutorialCount++;
+				UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>(MenuType.TutorialMenu);
+				if (tutorialMenu != null)
+					tutorialMenu.Setup(m_LevelID);
+				m_MenuProcessor.Show(MenuType.TutorialMenu);
+			}
+			else
 			{
 				UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
 				if (loadingMenu != null)
 					loadingMenu.Setup(m_LevelID);
 				m_MenuProcessor.Show(MenuType.LoadingMenu);
-			}
-			else
-			{
-				UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>(MenuType.TutorialMenu);
-				if (tutorialMenu != null)
-					tutorialMenu.Setup(m_LevelID);
-				m_MenuProcessor.Show(MenuType.TutorialMenu);
 			}
 		}
 		
@@ -143,6 +133,21 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	protected override void OnHideStarted()
 	{
 		m_PreviewSource.Stop();
+	}
+
+	void Select(string _LevelID)
+	{
+		m_LevelID = _LevelID;
+		
+		m_Background.Setup(m_LevelID, !Shown);
+		m_Thumbnail.Setup(m_LevelID);
+		m_ScoreRank.Setup(m_LevelID);
+		m_Label.Setup(m_LevelID);
+		m_Progress.Setup(m_LevelID);
+		m_PlayButton.Setup(m_LevelID);
+		
+		if (Shown)
+			m_PreviewSource.Play(m_LevelID);
 	}
 
 	void Expand()
