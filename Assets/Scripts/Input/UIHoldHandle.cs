@@ -81,7 +81,10 @@ public class UIHoldHandle : UIHandle
 			MinProgress = _Phase;
 			MaxProgress = _Phase;
 			
-			if (!m_Miss && !m_Indicator.RectTransform.Intersects(RectTransform))
+			Vector2 position = m_Indicator.GetMinPosition();
+			Rect    rect     = GetWorldRect();
+			
+			if (!m_Miss && !rect.Contains(position))
 			{
 				m_Miss = true;
 				
@@ -112,7 +115,10 @@ public class UIHoldHandle : UIHandle
 		m_Hold      = false;
 		m_Processed = true;
 		
-		if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
+		Vector2 position = m_Indicator.GetMaxPosition();
+		Rect    rect     = GetWorldRect();
+		
+		if (rect.Contains(position))
 			ProcessSuccess();
 		else
 			ProcessFail();
@@ -149,18 +155,24 @@ public class UIHoldHandle : UIHandle
 
 	void ProcessMiss()
 	{
+		Debug.LogError("---> MISS");
+		
 		if (m_Indicator != null)
 			m_Indicator.Miss(MinProgress, MaxProgress);
 	}
 
 	void ProcessSuccess()
 	{
+		Debug.LogError("---> SUCCESS");
+		
 		if (m_Indicator != null)
 			m_Indicator.Success(MinProgress, MaxProgress);
 	}
 
 	void ProcessFail()
 	{
+		Debug.LogError("---> FAIL");
+		
 		if (m_Indicator != null)
 			m_Indicator.Fail(MinProgress, MaxProgress);
 	}

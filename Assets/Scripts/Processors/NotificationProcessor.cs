@@ -63,14 +63,17 @@ public class NotificationProcessor : IInitializable, IDisposable
 			$"{m_LevelProcessor.GetArtist(_Signal.LevelID)}\n{m_LevelProcessor.GetTitle(_Signal.LevelID)}",
 			() =>
 			{
+				m_LevelProcessor.Remove();
+				
 				UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
 				if (levelMenu != null)
 					levelMenu.Setup(_Signal.LevelID);
-				m_MenuProcessor.Show(MenuType.MainMenu);
-				m_MenuProcessor.Show(MenuType.LevelMenu)
+				
+				m_MenuProcessor.Show(MenuType.MainMenu)
 					.ThenHide(MenuType.ResultMenu, true)
 					.ThenHide(MenuType.GameMenu, true)
 					.ThenHide(MenuType.PauseMenu, true);
+				m_MenuProcessor.Show(MenuType.LevelMenu);
 			}
 		);
 		

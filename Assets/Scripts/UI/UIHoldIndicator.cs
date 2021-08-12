@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -129,7 +130,16 @@ public class UIHoldIndicator : UIIndicator
 		Animator.Update(0);
 	}
 
-	[Preserve]
+	public Vector2 GetMinPosition()
+	{
+		return RectTransform.TransformPoint(m_Spline.First().Position);
+	}
+
+	public Vector2 GetMaxPosition()
+	{
+		return RectTransform.TransformPoint(m_Spline.Last().Position);
+	}
+
 	public void Success(float _MinProgress, float _MaxProgress)
 	{
 		SignalBus.Fire(new HoldSuccessSignal(_MinProgress, _MaxProgress));
@@ -140,7 +150,6 @@ public class UIHoldIndicator : UIIndicator
 		Animator.SetBool(m_HoldParameterID, false);
 	}
 
-	[Preserve]
 	public void Fail(float _MinProgress, float _MaxProgress)
 	{
 		SignalBus.Fire(new HoldFailSignal(_MinProgress, _MaxProgress));
@@ -149,7 +158,6 @@ public class UIHoldIndicator : UIIndicator
 		Animator.SetBool(m_HoldParameterID, false);
 	}
 
-	[Preserve]
 	public void Hit(float _MinProgress, float _MaxProgress)
 	{
 		SignalBus.Fire(new HoldHitSignal(_MinProgress, _MaxProgress));
@@ -159,7 +167,6 @@ public class UIHoldIndicator : UIIndicator
 		Animator.SetBool(m_HoldParameterID, true);
 	}
 
-	[Preserve]
 	public void Miss(float _MinProgress, float _MaxProgress)
 	{
 		SignalBus.Fire(new HoldMissSignal(_MinProgress, _MaxProgress));

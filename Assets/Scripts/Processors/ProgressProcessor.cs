@@ -64,7 +64,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 		SaveExpProgress();
 	}
 
-	public long GetExpPayout(string _LevelID, ScoreRank _Rank)
+	public long GetExpPayout(string _LevelID, ScoreRank _Rank = ScoreRank.C)
 	{
 		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		

@@ -21,6 +21,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UILevelModeButton        m_PlayButton;
 	[SerializeField] UILevelProgress          m_Progress;
+	[SerializeField] UIProgressLabel          m_Payout;
 	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
 	SignalBus         m_SignalBus;
@@ -145,6 +146,9 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Label.Setup(m_LevelID);
 		m_Progress.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
+		
+		m_Payout.gameObject.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID));
+		m_Payout.Progress = m_ProgressProcessor.GetExpPayout(m_LevelID);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);

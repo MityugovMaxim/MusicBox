@@ -155,15 +155,15 @@ public class UIResultMenu : UIMenu
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu);
-			
 			UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
 			if (levelMenu != null)
-			{
-				string levelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
-				levelMenu.Setup(levelID);
-				levelMenu.Show();
-			}
+				levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
+			
+			m_MenuProcessor.Show(MenuType.MainMenu)
+				.ThenHide(MenuType.ResultMenu, true)
+				.ThenHide(MenuType.GameMenu, true)
+				.ThenHide(MenuType.PauseMenu, true);
+			m_MenuProcessor.Show(MenuType.LevelMenu);
 		}
 		
 		m_NextAdsCount++;
