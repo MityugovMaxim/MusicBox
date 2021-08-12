@@ -13,25 +13,32 @@ public class UIScore : UIEntity
 
 	[SerializeField, Range(0, 1)] float       m_AccuracyPhase;
 	[SerializeField, Range(0, 1)] float       m_ScorePhase;
+	[SerializeField, Range(0, 1)] float       m_ExpPayoutPhase;
 	[SerializeField]              TMP_Text    m_AccuracyLabel;
 	[SerializeField]              TMP_Text    m_ScoreLabel;
+	[SerializeField]              UIExpLabel  m_ExpPayoutLabel;
 	[SerializeField]              UIScoreRank m_ScoreRank;
 
-	ScoreProcessor  m_ScoreProcessor;
-	HapticProcessor m_HapticProcessor;
-	string          m_LevelID;
-	int             m_Accuracy;
-	long            m_Score;
-	Animator        m_Animator;
+	ScoreProcessor    m_ScoreProcessor;
+	ProgressProcessor m_ProgressProcessor;
+	HapticProcessor   m_HapticProcessor;
+	string            m_LevelID;
+	int               m_Accuracy;
+	long              m_Score;
+	long              m_ExpPayout;
+	int               m_ExpMultiplier;
+	Animator          m_Animator;
 
 	[Inject]
 	public void Construct(
-		ScoreProcessor  _ScoreProcessor,
-		HapticProcessor _HapticProcessor
+		ScoreProcessor    _ScoreProcessor,
+		ProgressProcessor _ProgressProcessor,
+		HapticProcessor   _HapticProcessor
 	)
 	{
-		m_ScoreProcessor  = _ScoreProcessor;
-		m_HapticProcessor = _HapticProcessor;
+		m_ScoreProcessor    = _ScoreProcessor;
+		m_ProgressProcessor = _ProgressProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 	}
 
 	protected override void Awake()
@@ -50,13 +57,17 @@ public class UIScore : UIEntity
 		ProcessScorePhase();
 		
 		ProcessAccuracyPhase();
+		
+		ProcessPayoutPhase();
 	}
 
 	public void Setup(string _LevelID)
 	{
-		m_LevelID  = _LevelID;
-		m_Accuracy = m_ScoreProcessor.GetLastAccuracy(m_LevelID);
-		m_Score    = m_ScoreProcessor.GetLastScore(m_LevelID);
+		m_LevelID       = _LevelID;
+		m_Accuracy      = m_ScoreProcessor.GetLastAccuracy(m_LevelID);
+		m_Score         = m_ScoreProcessor.GetLastScore(m_LevelID);
+		m_ExpPayout     = m_ProgressProcessor.GetExpPayout(m_LevelID);
+		m_ExpMultiplier = m_ProgressProcessor.GetExpMultiplier(m_ScoreProcessor.GetLastRank(m_LevelID));
 		
 		if (m_ScoreRank != null)
 			m_ScoreRank.Setup(_LevelID);
@@ -101,5 +112,14 @@ public class UIScore : UIEntity
 	{
 		if (m_AccuracyLabel != null)
 			m_AccuracyLabel.text = Mathf.RoundToInt(m_Accuracy * m_AccuracyPhase).ToString();
+	}
+
+	void ProcessPayoutPhase()
+	{
+		if (m_ExpPayoutLabel != null)
+		{
+			m_ExpPayoutLabel.Exp        = (long)Math.Round(m_ExpPayout * m_ExpPayoutPhase);
+			m_ExpPayoutLabel.Multiplier = m_ExpMultiplier;
+		}
 	}
 }

@@ -155,24 +155,18 @@ public class UIHoldHandle : UIHandle
 
 	void ProcessMiss()
 	{
-		Debug.LogError("---> MISS");
-		
 		if (m_Indicator != null)
 			m_Indicator.Miss(MinProgress, MaxProgress);
 	}
 
 	void ProcessSuccess()
 	{
-		Debug.LogError("---> SUCCESS");
-		
 		if (m_Indicator != null)
 			m_Indicator.Success(MinProgress, MaxProgress);
 	}
 
 	void ProcessFail()
 	{
-		Debug.LogError("---> FAIL");
-		
 		if (m_Indicator != null)
 			m_Indicator.Fail(MinProgress, MaxProgress);
 	}

@@ -17,8 +17,8 @@ fixed4 _ForegroundSecondaryColor;
 
 fixed4 colorByRange(const fixed4 _Color, const fixed _Min, const fixed _Max, const fixed4 _Source, const fixed4 _Target)
 {
-	const fixed value = (_Color.a - _Min) / (_Max - _Min);
-	fixed4 color = lerp(_Source, _Target, value);
+	const fixed phase = (_Color.a - _Min) / (_Max - _Min);
+	fixed4 color = lerp(_Source, _Target, phase);
 	color.a *= _Color.a;
 	return color;
 }

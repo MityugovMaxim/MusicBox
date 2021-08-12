@@ -31,9 +31,6 @@ public class ScoreData
 	const int   A_RANK                    = 85;
 	const int   B_RANK                    = 50;
 	const int   C_RANK                    = 5;
-	const int   X4_COMBO                  = 25;
-	const int   X3_COMBO                  = 15;
-	const int   X2_COMBO                  = 10;
 
 	public long Score => m_Score;
 
@@ -117,21 +114,6 @@ public class ScoreData
 		}
 	}
 
-	int Multiplier
-	{
-		get
-		{
-			if (m_Combo >= X4_COMBO)
-				return 4;
-			else if (m_Combo >= X3_COMBO)
-				return 3;
-			else if (m_Combo >= X2_COMBO)
-				return 2;
-			else
-				return 1;
-		}
-	}
-
 	[SerializeField] int m_HoldSuccess;
 	[SerializeField] int m_HoldFail;
 	[SerializeField] int m_HoldHit;
@@ -149,22 +131,16 @@ public class ScoreData
 	[SerializeField] float m_HoldFailScore;
 	[SerializeField] long  m_Score;
 
-	int m_Combo;
-
-	public void RegisterHoldSuccess(float _Progress)
+	public void RegisterHoldSuccess(float _Progress, int _Multiplier)
 	{
-		m_Combo++;
-		
-		m_Score            += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		m_Score            += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * _Multiplier);
 		m_HoldSuccessScore += _Progress;
 		m_HoldSuccess++;
 	}
 
-	public void RegisterHoldFail(float _Progress)
+	public void RegisterHoldFail(float _Progress, int _Multiplier)
 	{
-		m_Combo = 0;
-		
-		m_Score         += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		m_Score         += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * _Multiplier);
 		m_HoldFailScore += _Progress;
 		m_HoldFail++;
 	}
@@ -176,16 +152,12 @@ public class ScoreData
 
 	public void RegisterHoldMiss()
 	{
-		m_Combo = 0;
-		
 		m_HoldMiss++;
 	}
 
-	public void RegisterTapSuccess(float _Progress)
+	public void RegisterTapSuccess(float _Progress, int _Multiplier)
 	{
-		m_Combo++;
-		
-		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * _Multiplier);
 		
 		if (_Progress >= TAP_PERFECT_THRESHOLD)
 			m_TapPerfect++;
@@ -197,16 +169,12 @@ public class ScoreData
 
 	public void RegisterTapFail()
 	{
-		m_Combo = 0;
-		
 		m_TapFail++;
 	}
 
-	public void RegisterDoubleSuccess(float _Progress)
+	public void RegisterDoubleSuccess(float _Progress, int _Multiplier)
 	{
-		m_Combo++;
-		
-		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * Multiplier);
+		m_Score += (long)(_Progress * HOLD_SUCCESS_MULTIPLIER * _Multiplier);
 		
 		if (_Progress >= DOUBLE_PERFECT_THRESHOLD)
 			m_DoublePerfect++;
@@ -218,8 +186,6 @@ public class ScoreData
 
 	public void RegisterDoubleFail()
 	{
-		m_Combo = 0;
-		
 		m_DoubleFail++;
 	}
 }

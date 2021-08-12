@@ -65,6 +65,8 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<LevelExitSignal>();
 		Container.DeclareSignal<LevelFinishSignal>();
 		Container.DeclareSignal<LevelUnlockSignal>();
+		Container.DeclareSignal<LevelScoreSignal>();
+		Container.DeclareSignal<LevelComboSignal>();
 		
 		Container.DeclareSignal<HoldHitSignal>();
 		Container.DeclareSignal<HoldMissSignal>();

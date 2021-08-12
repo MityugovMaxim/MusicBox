@@ -7,17 +7,91 @@ using Zenject;
 [Preserve]
 public class ScoreProcessor : IInitializable, IDisposable
 {
+	const int X4_COMBO = 60;
+	const int X3_COMBO = 30;
+	const int X2_COMBO = 15;
+
 	public ScoreData ScoreData { get; private set; }
+
+	int Multiplier
+	{
+		get
+		{
+			if (Combo >= X4_COMBO)
+				return 4;
+			else if (Combo >= X3_COMBO)
+				return 3;
+			else if (Combo >= X2_COMBO)
+				return 2;
+			else
+				return 1;
+		}
+	}
+
+	int Combo
+	{
+		get => m_Combo;
+		set
+		{
+			if (m_Combo == value)
+				return;
+			
+			int sourceMultiplier = Multiplier;
+			
+			m_Combo = value;
+			
+			int targetMultiplier = Multiplier;
+			
+			if (sourceMultiplier != targetMultiplier)
+				m_SignalBus.Fire(new LevelComboSignal(targetMultiplier));
+		}
+	}
 
 	readonly SignalBus m_SignalBus;
 
 	readonly Dictionary<string, ScoreData> m_LastScore = new Dictionary<string, ScoreData>();
 	readonly Dictionary<string, ScoreData> m_BestScore = new Dictionary<string, ScoreData>();
 
+	int m_Combo;
+
 	[Inject]
 	public ScoreProcessor(SignalBus _SignalBus)
 	{
 		m_SignalBus = _SignalBus;
+	}
+
+	void IInitializable.Initialize()
+	{
+		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		
+		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
+		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Subscribe<HoldHitSignal>(RegisterHoldHit);
+		m_SignalBus.Subscribe<HoldMissSignal>(RegisterHoldMiss);
+		
+		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterTapSuccess);
+		m_SignalBus.Subscribe<TapFailSignal>(RegisterTapFail);
+		
+		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
+		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterDoubleFail);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
+		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+		
+		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
+		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHoldHit);
+		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterHoldMiss);
+		
+		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterTapSuccess);
+		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterTapFail);
+		
+		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
+		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
 	}
 
 	public int GetLastAccuracy(string _LevelID)
@@ -204,85 +278,85 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void RegisterLevelStart()
 	{
+		m_Combo = 0;
+		
 		ScoreData = new ScoreData();
 	}
 
 	void RegisterLevelRestart()
 	{
+		m_Combo = 0;
+		
 		ScoreData = new ScoreData();
 	}
 
 	void RegisterHoldSuccess(HoldSuccessSignal _Signal)
 	{
-		ScoreData.RegisterHoldSuccess(_Signal.Progress);
+		Combo++;
+		
+		ScoreData.RegisterHoldSuccess(_Signal.Progress, Multiplier);
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterHoldFail(HoldFailSignal _Signal)
 	{
-		ScoreData.RegisterHoldFail(_Signal.Progress);
+		Combo = 0;
+		
+		ScoreData.RegisterHoldFail(_Signal.Progress, Multiplier);
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterHoldHit(HoldHitSignal _Signal)
 	{
 		ScoreData.RegisterHoldHit();
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterHoldMiss(HoldMissSignal _Signal)
 	{
+		Combo = 0;
+		
 		ScoreData.RegisterHoldMiss();
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterTapSuccess(TapSuccessSignal _Signal)
 	{
-		ScoreData.RegisterTapSuccess(_Signal.Progress);
+		Combo++;
+		
+		ScoreData.RegisterTapSuccess(_Signal.Progress, Multiplier);
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterTapFail(TapFailSignal _Signal)
 	{
+		Combo = 0;
+		
 		ScoreData.RegisterTapFail();
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterDoubleSuccess(DoubleSuccessSignal _Signal)
 	{
-		ScoreData.RegisterDoubleSuccess(_Signal.Progress);
+		Combo++;
+		
+		ScoreData.RegisterDoubleSuccess(_Signal.Progress, Multiplier);
+		
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 
 	void RegisterDoubleFail(DoubleFailSignal _Signal)
 	{
+		Combo = 0;
+		
 		ScoreData.RegisterDoubleFail();
-	}
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
 		
-		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
-		m_SignalBus.Subscribe<HoldHitSignal>(RegisterHoldHit);
-		m_SignalBus.Subscribe<HoldMissSignal>(RegisterHoldMiss);
-		
-		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Subscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterDoubleFail);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
-		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHoldHit);
-		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterHoldMiss);
-		
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
+		m_SignalBus.Fire(new LevelScoreSignal(ScoreData.Score));
 	}
 }

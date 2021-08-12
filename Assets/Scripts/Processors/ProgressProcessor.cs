@@ -50,7 +50,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 	void RegisterLevelFinish(LevelFinishSignal _Signal)
 	{
 		ScoreData scoreData   = m_ScoreProcessor.ScoreData;
-		long      expPayout   = GetExpPayout(_Signal.LevelID, scoreData.Rank);
+		long      expPayout   = GetExpPayout(_Signal.LevelID) * GetExpMultiplier(scoreData.Rank);
 		long      expProgress = ExpProgress + expPayout;
 		
 		foreach (LevelInfo levelInfo in m_LevelInfos.Values)
@@ -64,7 +64,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 		SaveExpProgress();
 	}
 
-	public long GetExpPayout(string _LevelID, ScoreRank _Rank = ScoreRank.C)
+	public long GetExpPayout(string _LevelID)
 	{
 		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
@@ -74,18 +74,21 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return 0;
 		}
 		
-		long payout = levelInfo.ExpPayout;
-		
+		return levelInfo.ExpPayout;
+	}
+
+	public int GetExpMultiplier(ScoreRank _Rank)
+	{
 		switch (_Rank)
 		{
 			case ScoreRank.S:
-				return payout * 5;
+				return 5;
 			case ScoreRank.A:
-				return payout * 3;
+				return 3;
 			case ScoreRank.B:
-				return payout * 2;
+				return 2;
 			case ScoreRank.C:
-				return payout;
+				return 1;
 			default:
 				return 0;
 		}

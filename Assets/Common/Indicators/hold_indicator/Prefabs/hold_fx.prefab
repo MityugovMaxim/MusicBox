@@ -81,7 +81,7 @@ RectTransform:
   m_GameObject: {fileID: 7364554309942758021}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8062915896567000096}
   m_RootOrder: 2
@@ -166,7 +166,7 @@ ParticleSystem:
       m_RotationOrder: 4
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
-  scalingMode: 1
+  scalingMode: 0
   randomSeed: 0
   InitialModule:
     serializedVersion: 3
@@ -4898,7 +4898,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_IsTrail: 0
-  m_IgnoreCanvasScaler: 1
+  m_IgnoreCanvasScaler: 0
   m_Scale: 100
   m_Scale3D: {x: 1, y: 1, z: 1}
   m_AnimatableProperties: []
@@ -4934,7 +4934,7 @@ RectTransform:
   m_GameObject: {fileID: 7937494925554339083}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8062915896567000096}
   m_RootOrder: 0
@@ -5019,7 +5019,7 @@ ParticleSystem:
       m_RotationOrder: 4
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
-  scalingMode: 1
+  scalingMode: 0
   randomSeed: 0
   InitialModule:
     serializedVersion: 3
@@ -5196,8 +5196,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 50
-      minScalar: 30
+      scalar: 20
+      minScalar: 10
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7484,7 +7484,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 3
       scalar: 1
-      minScalar: 0.5
+      minScalar: 0.2
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7537,7 +7537,7 @@ ParticleSystem:
     inWorldSpace: 0
     multiplyDragByParticleSize: 1
     multiplyDragByParticleVelocity: 1
-    dampen: 0.5
+    dampen: 0.2
     drag:
       serializedVersion: 2
       minMaxState: 0
@@ -9679,7 +9679,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8896eb5e98f32457caae68e9b6ec3cbc, type: 2}
+  - {fileID: 2100000, guid: 89c6af5557d5d4ff98f1404930c2932d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9751,7 +9751,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_IsTrail: 0
-  m_IgnoreCanvasScaler: 1
+  m_IgnoreCanvasScaler: 0
   m_Scale: 100
   m_Scale3D: {x: 1, y: 1, z: 1}
   m_AnimatableProperties: []
@@ -9787,7 +9787,7 @@ RectTransform:
   m_GameObject: {fileID: 8277689942928383068}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8062915896567000096}
   m_RootOrder: 1
@@ -9872,7 +9872,7 @@ ParticleSystem:
       m_RotationOrder: 4
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
-  scalingMode: 1
+  scalingMode: 0
   randomSeed: 0
   InitialModule:
     serializedVersion: 3
@@ -10049,8 +10049,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 600
-      minScalar: 100
+      scalar: 300
+      minScalar: 150
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -14604,7 +14604,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_IsTrail: 0
-  m_IgnoreCanvasScaler: 1
+  m_IgnoreCanvasScaler: 0
   m_Scale: 100
   m_Scale3D: {x: 1, y: 1, z: 1}
   m_AnimatableProperties: []

@@ -17,8 +17,6 @@ public partial class Sequencer
 		set => m_MaxTime = value;
 	}
 
-	public float BPM => m_BPM;
-
 	public float TracksWidth
 	{
 		get => m_TracksWidth;
@@ -35,8 +33,6 @@ public partial class Sequencer
 	[SerializeField, HideInInspector] float m_MaxTime        = 60;
 	[SerializeField, HideInInspector] float m_TracksWidth    = 120;
 	[SerializeField, HideInInspector] float m_ScrollPosition = 0;
-
-	[SerializeField] float m_BPM = 90;
 
 	[Obsolete]
 	[ContextMenu("Normalize")]
@@ -86,6 +82,8 @@ public partial class Sequencer : MonoBehaviour
 		private set => m_Time = value;
 	}
 
+	public float BPM => m_BPM;
+
 	public bool Playing { get; private set; }
 
 	public Track[] Tracks => m_Tracks;
@@ -98,6 +96,7 @@ public partial class Sequencer : MonoBehaviour
 
 	[SerializeField] float m_Time;
 	[SerializeField] float m_Length;
+	[SerializeField] float m_BPM = 90;
 
 	[SerializeField, HideInInspector] Track[] m_Tracks;
 

@@ -2,17 +2,17 @@ using System;
 using TMPro;
 using UnityEngine;
 
-public class UIProgressLabel : UIEntity
+public class UIExpLabel : UIEntity
 {
-	public long Progress
+	public long Exp
 	{
-		get => m_Progress;
+		get => m_Exp;
 		set
 		{
-			if (m_Progress == value)
+			if (m_Exp == value)
 				return;
 			
-			m_Progress = value;
+			m_Exp = value;
 			
 			ProcessProgress();
 		}
@@ -32,11 +32,11 @@ public class UIProgressLabel : UIEntity
 		}
 	}
 
-	const string PROGRESS_ICON = "progress_icon";
+	const string EXP_ICON = "exp_icon";
 
 	[SerializeField] TMP_Text m_Label;
 	[SerializeField] bool     m_Sign;
-	[SerializeField] long     m_Progress;
+	[SerializeField] long     m_Exp;
 	[SerializeField] int      m_Multiplier = 1;
 
 	#if UNITY_EDITOR
@@ -50,9 +50,9 @@ public class UIProgressLabel : UIEntity
 
 	void ProcessProgress()
 	{
-		string sign       = m_Sign ? Progress >= 0 ? "+" : "-" : string.Empty;
+		string sign       = m_Sign ? Exp >= 0 ? "+" : "-" : string.Empty;
 		string multiplier = m_Multiplier >= 2 ? $" ×{Multiplier}" : string.Empty;
 		
-		m_Label.text = $"{sign}{Math.Abs(Progress)}<sprite name=\"{PROGRESS_ICON}\">{multiplier}";
+		m_Label.text = $"{sign}{Math.Abs(Exp)}<sprite name=\"{EXP_ICON}\">{multiplier}";
 	}
 }

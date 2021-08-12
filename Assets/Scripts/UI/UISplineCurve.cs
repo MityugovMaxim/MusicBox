@@ -58,6 +58,8 @@ public class UISplineCurve : MaskableGraphic
 	[SerializeField] RectTransform m_MinCap;
 	[SerializeField] RectTransform m_MaxCap;
 	[SerializeField] float         m_Size;
+	[SerializeField] float         m_Offset;
+	[SerializeField] float         m_Scale;
 
 	[NonSerialized] UISpline m_SplineCache;
 
@@ -244,13 +246,13 @@ public class UISplineCurve : MaskableGraphic
 		UIVertex left = new UIVertex();
 		left.position = _Point.Position + _Point.Normal * size;
 		left.color    = color;
-		left.uv0      = new Vector2(_UV.xMin, _UV.y + _UV.height * _Phase);
+		left.uv0      = new Vector2(_UV.xMin, _UV.y + _UV.height * _Phase * m_Scale + m_Offset);
 		left.tangent  = _UV.ToVector();
 		
 		UIVertex right = new UIVertex();
 		right.position = _Point.Position - _Point.Normal * size;
 		right.color    = color;
-		right.uv0      = new Vector2(_UV.xMax, _UV.y + _UV.height * _Phase);
+		right.uv0      = new Vector2(_UV.xMax, _UV.y + _UV.height * _Phase * m_Scale + m_Offset);
 		right.tangent  = _UV.ToVector();
 		
 		m_Vertices.Add(right);

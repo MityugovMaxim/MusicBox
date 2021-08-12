@@ -1,4 +1,4 @@
-Shader "UI/ColorScheme"
+Shader "UI/ColorScheme/Additive"
 {
 	Properties
 	{
@@ -40,7 +40,7 @@ Shader "UI/ColorScheme"
 		Lighting Off
 		ZWrite Off
 		ZTest [unity_GUIZTestMode]
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend SrcAlpha One
 		ColorMask [_ColorMask]
 
 		Pass
@@ -109,7 +109,7 @@ Shader "UI/ColorScheme"
 				clip (color.a - 0.001);
 				#endif
 				
-				return color;
+				return color * _Power;
 			}
 			ENDCG
 		}

@@ -14,6 +14,10 @@ public class LevelInstaller : MonoInstaller
 	[SerializeField] UITapFX           m_TapFX;
 	[SerializeField] UIDoubleFX        m_DoubleFX;
 	[SerializeField] UIHoldFX          m_HoldFX;
+	[SerializeField] UIBeatTrack       m_BeatTrack;
+	[SerializeField] UIScoreLabel      m_ScoreLabel;
+	[SerializeField] UIComboLabel      m_ComboLabel;
+	[SerializeField] UIComboMultiplier m_ComboMultiplier;
 
 	public override void InstallBindings()
 	{
@@ -21,6 +25,10 @@ public class LevelInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<AudioProcessor>().FromInstance(m_AudioProcessor).AsSingle();
 		Container.BindInterfacesAndSelfTo<FXProcessor>().FromInstance(m_FXProcessor).AsSingle();
 		Container.BindInterfacesAndSelfTo<ColorProcessor>().FromInstance(m_ColorProcessor).AsSingle();
+		Container.BindInterfacesTo<UIBeatTrack>().FromInstance(m_BeatTrack).AsSingle();
+		Container.BindInterfacesTo<UIScoreLabel>().FromInstance(m_ScoreLabel).AsSingle();
+		Container.BindInterfacesTo<UIComboLabel>().FromInstance(m_ComboLabel).AsSingle();
+		Container.BindInterfacesTo<UIComboMultiplier>().FromInstance(m_ComboMultiplier).AsSingle();
 		
 		Container.BindInterfacesAndSelfTo<UIInputZone>().FromInstance(m_InputZone).AsSingle();
 		Container.Bind<UIInputReceiver>().FromInstance(m_InputReceiver).AsSingle();
