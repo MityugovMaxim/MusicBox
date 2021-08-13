@@ -48,9 +48,8 @@ public class UIComboLabel : UIEntity, IInitializable, IDisposable
 
 	void SetMultiplier(int _Multiplier)
 	{
-		m_Multiplier = _Multiplier;
+		m_Multiplier = Mathf.Max(1, _Multiplier);
 		
-		m_Label.gameObject.SetActive(m_Multiplier > 1);
 		m_Label.text = $"×{m_Multiplier}";
 	}
 }
