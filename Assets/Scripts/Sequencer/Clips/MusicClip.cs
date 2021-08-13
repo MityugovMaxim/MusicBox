@@ -22,15 +22,14 @@ public class MusicClip : Clip
 	{
 		base.Initialize(_Sequencer);
 		
-		m_AudioSource = _AudioSource;
+		m_AudioSource      = _AudioSource;
+		m_AudioSource.clip = m_AudioClip;
 	}
 
 	protected override void OnEnter(float _Time)
 	{
 		if (!Sequencer.Playing || !Playing)
 			return;
-		
-		m_AudioSource.clip = m_AudioClip;
 		
 		m_AudioSource.Play();
 		
@@ -47,8 +46,6 @@ public class MusicClip : Clip
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
-			m_AudioSource.clip = m_AudioClip;
-			
 			m_AudioSource.Play();
 			
 			m_AudioSource.time = GetMusicTime(_Time);
