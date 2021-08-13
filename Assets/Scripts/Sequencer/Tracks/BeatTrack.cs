@@ -28,7 +28,7 @@ public partial class BeatTrack : Track
 		
 		Track = GetReference<UIBeatTrack>(m_Track);
 		
-		m_BeatThreshold = 60.0f * m_Frequency / Sequencer.BPM;
+		m_BeatThreshold = 60.0f / Mathf.Max(1, m_Frequency) / Sequencer.BPM;
 	}
 
 	public override void Sample(float _MinTime, float _MaxTime)

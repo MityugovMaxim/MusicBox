@@ -10,6 +10,8 @@ public class UIComboMultiplier : UIEntity, IInitializable, IDisposable
 	static readonly int m_X3ParameterID      = Animator.StringToHash("X3");
 	static readonly int m_X4ParameterID      = Animator.StringToHash("X4");
 
+	[SerializeField] UISpline[] m_Splines;
+
 	SignalBus m_SignalBus;
 
 	Animator m_Animator;
@@ -18,6 +20,9 @@ public class UIComboMultiplier : UIEntity, IInitializable, IDisposable
 	public void Construct(SignalBus _SignalBus)
 	{
 		m_SignalBus = _SignalBus;
+		
+		foreach (UISpline spline in m_Splines)
+			spline.Rebuild();
 	}
 
 	void IInitializable.Initialize()
