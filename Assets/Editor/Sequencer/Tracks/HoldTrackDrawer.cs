@@ -29,6 +29,20 @@ public class HoldTrackDrawer : TrackDrawer
 			TrackUtility.AddClip(Track, clip, Time, 0.2f);
 		}
 		
+		if (Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic)
+		{
+			Event.current.Use();
+			
+			HoldClip clip = ScriptableObject.CreateInstance<HoldClip>();
+			
+			clip.name = "Hold Clip";
+			clip.Curve.Add(new HoldCurve.Key(0, 0, Vector2.zero, Vector2.zero));
+			clip.Curve.Add(new HoldCurve.Key(1, 0, Vector2.zero, Vector2.zero));
+			clip.Curve.Reposition();
+			
+			TrackUtility.AddClip(Track, clip, Time, 0.2f);
+		}
+		
 		EditorGUILayout.EndHorizontal();
 		
 		EditorGUILayout.PropertyField(TrackProperty, GUIContent.none);

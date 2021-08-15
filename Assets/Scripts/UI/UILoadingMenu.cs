@@ -37,6 +37,7 @@ public class UILoadingMenu : UIMenu
 		if (m_Loader != null)
 			m_Loader.Play();
 		
+		m_MenuProcessor.Hide(MenuType.NotificationMenu, true);
 		m_MenuProcessor.Show(MenuType.GameMenu, true);
 		
 		if (m_LevelProcessor != null)

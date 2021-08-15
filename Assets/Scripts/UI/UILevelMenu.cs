@@ -29,9 +29,11 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	AdsProcessor      m_AdsProcessor;
 	MenuProcessor     m_MenuProcessor;
 	ProgressProcessor m_ProgressProcessor;
-	string            m_LevelID;
-	IEnumerator       m_RepositionRoutine;
-	AudioSource       m_AudioSource;
+	HapticProcessor   m_HapticProcessor;
+
+	string      m_LevelID;
+	IEnumerator m_RepositionRoutine;
+	AudioSource m_AudioSource;
 
 	[Inject]
 	public void Construct(
@@ -39,7 +41,8 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		LevelProcessor    _LevelProcessor,
 		AdsProcessor      _AdsProcessor,
 		MenuProcessor     _MenuProcessor,
-		ProgressProcessor _ProgressProcessor
+		ProgressProcessor _ProgressProcessor,
+		HapticProcessor   _HapticProcessor
 	)
 	{
 		m_SignalBus         = _SignalBus;
@@ -47,6 +50,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_AdsProcessor      = _AdsProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -119,6 +123,8 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
 		
 		m_PreviewSource.Stop();
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		if (levelMode == LevelMode.Ads)
 			m_AdsProcessor.ShowRewarded(PlayInternal, () => Setup(m_LevelID));

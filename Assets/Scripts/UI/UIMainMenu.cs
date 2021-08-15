@@ -7,12 +7,14 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIMainMenuItem m_Item;
 	[SerializeField] RectTransform  m_Container;
+	[SerializeField] UIProductPromo m_ProductPromo;
 	//[SerializeField] ScrollRect     m_Scroll;
 
 	SignalBus              m_SignalBus;
 	LevelProcessor         m_LevelProcessor;
 	SocialProcessor        m_SocialProcessor;
 	MenuProcessor          m_MenuProcessor;
+	ConfigProcessor        m_ConfigProcessor;
 	UIMainMenuItem.Factory m_ItemFactory;
 
 	readonly List<UIMainMenuItem> m_Items = new List<UIMainMenuItem>();
@@ -25,6 +27,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		LevelProcessor         _LevelProcessor,
 		SocialProcessor        _SocialProcessor,
 		MenuProcessor          _MenuProcessor,
+		ConfigProcessor        _ConfigProcessor,
 		UIMainMenuItem.Factory _ItemFactory
 	)
 	{
@@ -32,22 +35,32 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_LevelProcessor  = _LevelProcessor;
 		m_SocialProcessor = _SocialProcessor;
 		m_MenuProcessor   = _MenuProcessor;
+		m_ConfigProcessor = _ConfigProcessor;
 		m_ItemFactory     = _ItemFactory;
 	}
 
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
+		m_SignalBus.Subscribe<ConfigSignal>(RegisterConfig);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
+		m_SignalBus.Unsubscribe<ConfigSignal>(RegisterConfig);
 	}
 
 	void RegisterPurchase()
 	{
 		Refresh();
+		
+		m_ProductPromo.Setup(m_ConfigProcessor.PromoProductID);
+	}
+
+	void RegisterConfig()
+	{
+		m_ProductPromo.Setup(m_ConfigProcessor.PromoProductID);
 	}
 
 	protected override void Awake()
@@ -70,6 +83,8 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 
 	protected override void OnShowStarted()
 	{
+		m_MenuProcessor.Show(MenuType.NotificationMenu);
+		
 		Refresh();
 	}
 

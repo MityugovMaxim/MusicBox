@@ -1,34 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using Zenject;
-using Random = UnityEngine.Random;
 
 public class PurchaseProcessor : IInitializable, IStoreListener
 {
 	const string PURCHASES_KEY = "PURCHASES";
-	const string HASH_KEY      = "PURCHASES_HASH";
-	const string SECRET_KEY    = "PURCHASES_SECRET";
-
-	[SuppressMessage("ReSharper", "StringLiteralTypo")]
-	static readonly string[] m_Secret =
-	{
-		"9Swtr24jaf",
-		"7shFhj*ef3",
-		"Vy;*Sjflq)",
-		"mvkPS94M#*",
-		"l7AHvm0J*@",
-	};
 
 	public bool Initialized => m_Controller != null && m_Extensions != null;
 
+	public event Action<bool> OnInitialize
+	{
+		add
+		{
+			if (m_Resolved)
+				value?.Invoke(Initialized);
+			else
+				m_OnInitialize += value;
+		}
+		remove => m_OnInitialize -= value;
+	}
+
+	bool               m_Resolved;
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
+
+	Action<bool> m_OnInitialize;
 
 	readonly SignalBus                          m_SignalBus;
 	readonly List<string>                       m_ProductIDs         = new List<string>();
@@ -36,6 +36,7 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 	readonly Dictionary<string, Sprite>         m_PreviewThumbnails  = new Dictionary<string, Sprite>();
 	readonly Dictionary<string, Sprite>         m_PreviewBackgrounds = new Dictionary<string, Sprite>();
 	readonly Dictionary<string, Action<string>> m_Success            = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Canceled           = new Dictionary<string, Action<string>>();
 	readonly Dictionary<string, Action<string>> m_Failed             = new Dictionary<string, Action<string>>();
 	readonly HashSet<string>                    m_Purchases          = new HashSet<string>();
 
@@ -62,6 +63,13 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	void IInitializable.Initialize()
 	{
+		Reload();
+	}
+
+	public void Reload()
+	{
+		m_Resolved = false;
+		
 		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 		
 		foreach (string productID in m_ProductIDs)
@@ -162,44 +170,32 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	public string[] GetLevelIDs(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[PurchaseProcessor] Get level IDs failed. Product ID is null or empty.");
-			return new string[0];
-		}
-		
-		if (!m_ProductInfos.ContainsKey(_ProductID))
-		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get level IDs failed. Product info not found for product with ID '{0}'.", _ProductID);
-			return new string[0];
-		}
-		
-		ProductInfo productInfo = m_ProductInfos[_ProductID];
+		ProductInfo productInfo = GetProductInfo(_ProductID);
 		
 		if (productInfo == null)
 		{
 			Debug.LogErrorFormat("[PurchaseProcessor] Get level IDs failed. Product info is null for product with ID '{0}'", _ProductID);
-			return new string[0];
+			return Array.Empty<string>();
 		}
 		
 		if (productInfo.LevelInfos == null || productInfo.LevelInfos.Length == 0)
-			return new string[0];
+			return Array.Empty<string>();
 		
 		return productInfo.LevelInfos.Select(_LevelInfo => _LevelInfo.ID).ToArray();
 	}
 
 	public Sprite GetPreviewBackground(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[PurchaseProcessor] Get preview background failed. Product ID is null or empty.");
-			return null;
-		}
-		
 		if (m_PreviewBackgrounds.ContainsKey(_ProductID) && m_PreviewBackgrounds[_ProductID] != null)
 			return m_PreviewBackgrounds[_ProductID];
 		
 		Sprite previewThumbnail = GetPreviewThumbnail(_ProductID);
+		
+		if (previewThumbnail == null)
+		{
+			Debug.LogErrorFormat("[PurchaseProcessor] Get preview background failed. Thumbnail is null for product with ID '{0}'.", _ProductID);
+			return null;
+		}
 		
 		Sprite previewBackground = BlurUtility.Blur(previewThumbnail, 0.8f, 5);
 		
@@ -210,18 +206,24 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	public Sprite GetPreviewThumbnail(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[PurchaseProcessor] Get preview thumbnail failed. Product ID is null or empty.");
-			return null;
-		}
-		
 		if (m_PreviewThumbnails.ContainsKey(_ProductID) && m_PreviewThumbnails[_ProductID] != null)
 			return m_PreviewThumbnails[_ProductID];
 		
-		string path = $"{_ProductID}/preview_thumbnail";
+		ProductInfo productInfo = GetProductInfo(_ProductID);
 		
-		Sprite previewThumbnail = Resources.Load<Sprite>(path);
+		if (productInfo == null)
+		{
+			Debug.LogErrorFormat("[PurchaseProcessor] Get preview thumbnail failed. Product info is null for product with ID '{0}'.", _ProductID);
+			return null;
+		}
+		
+		if (string.IsNullOrEmpty(productInfo.Thumbnail))
+		{
+			Debug.LogErrorFormat("[PurchaseProcessor] Get preview thumbnail failed. Thumbnail is null for product with ID '{0}'.", _ProductID);
+			return null;
+		}
+		
+		Sprite previewThumbnail = Resources.Load<Sprite>(productInfo.Thumbnail);
 		
 		m_PreviewThumbnails[_ProductID] = previewThumbnail;
 		
@@ -282,10 +284,44 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 			return "-";
 		}
 		
-		return product.metadata.localizedPriceString;
+		return TryGetPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, out string localizedPriceString)
+			? localizedPriceString
+			: product.metadata.localizedPriceString;
 	}
 
-	public void Purchase(string _ProductID, Action<string> _Success = null, Action<string> _Failed = null)
+	static bool TryGetPrice(decimal _Price, string _CurrencyCode, out string _PriceString)
+	{
+		RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
+			.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
+			.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
+			.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
+		
+		if (regionInfo == null)
+		{
+			_PriceString = null;
+			return false;
+		}
+		
+		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
+		numberFormatInfo.CurrencySymbol = regionInfo.CurrencySymbol;
+		
+		if (_CurrencyCode == "RUB" || _CurrencyCode == "JPY" || _CurrencyCode == "IDR" || _CurrencyCode == "INR")
+		{
+			if (_Price - decimal.Truncate(_Price) < 0.001M)
+				numberFormatInfo.CurrencyDecimalDigits = 0;
+		}
+		
+		_PriceString = string.Format(numberFormatInfo, "{0:C}", _Price);
+		
+		return true;
+	}
+
+	public void Purchase(
+		string         _ProductID,
+		Action<string> _Success  = null,
+		Action<string> _Canceled = null,
+		Action<string> _Failed   = null
+	)
 	{
 		if (string.IsNullOrEmpty(_ProductID))
 		{
@@ -317,8 +353,9 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 			return;
 		}
 		
-		m_Success[_ProductID] = _Success;
-		m_Failed[_ProductID]  = _Failed;
+		m_Success[_ProductID]  = _Success;
+		m_Canceled[_ProductID] = _Canceled;
+		m_Failed[_ProductID]   = _Failed;
 		
 		m_Controller.InitiatePurchase(product);
 	}
@@ -374,11 +411,23 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		m_Extensions = _Extensions;
 		
 		UpdatePurchases();
+		
+		m_Resolved = true;
+		
+		Action<bool> action = m_OnInitialize;
+		m_OnInitialize = null;
+		action?.Invoke(true);
 	}
 
 	void IStoreListener.OnInitializeFailed(InitializationFailureReason _Reason)
 	{
 		Debug.LogErrorFormat("[PurchaseProcessor] Initialize failed. Reason: {0}.", _Reason);
+		
+		m_Resolved = true;
+		
+		Action<bool> action = m_OnInitialize;
+		m_OnInitialize = null;
+		action?.Invoke(false);
 	}
 
 	PurchaseProcessingResult IStoreListener.ProcessPurchase(PurchaseEventArgs _Event)
@@ -387,13 +436,14 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		
 		Debug.LogFormat("[PurchaseProcessor] Purchase complete. Product ID: '{0}'.", productID);
 		
+		InvokePurchaseSuccess(productID);
+		
+		if (!m_Purchases.Contains(productID))
+			m_SignalBus.Fire(new PurchaseSignal(productID));
+		
 		m_Purchases.Add(productID);
 		
 		SavePurchases();
-		
-		InvokePurchaseSuccess(productID);
-		
-		m_SignalBus.Fire(new PurchaseSignal(productID));
 		
 		return PurchaseProcessingResult.Complete;
 	}
@@ -404,57 +454,20 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		
 		Debug.LogErrorFormat("[PurchaseProcessor] Purchase failed. Product ID: '{0}'. Reason: {1}.", productID, _Reason);
 		
-		InvokePurchaseFailed(productID);
-	}
-
-	public static string GetHash(string _Value)
-	{
-		byte[] bytes = Encoding.UTF8.GetBytes(_Value);
-		
-		MD5CryptoServiceProvider hashProvider = new MD5CryptoServiceProvider();
-		
-		byte[] hashBytes = hashProvider.ComputeHash(bytes);
-		
-		StringBuilder hash = new StringBuilder();
-		foreach (byte hashByte in hashBytes)
-			hash.Append(Convert.ToString(hashByte, 16).PadLeft(2, '0'));
-		return hash.ToString().PadLeft(32, '0');
+		if (_Reason == PurchaseFailureReason.UserCancelled)
+			InvokePurchaseCancelled(productID);
+		else
+			InvokePurchaseFailed(productID);
 	}
 
 	void LoadPurchases()
 	{
 		m_Purchases.Clear();
 		
-		string data = PlayerPrefs.GetString(PURCHASES_KEY, string.Empty);
+		string data = SecurePrefs.Load(PURCHASES_KEY, string.Empty);
 		
 		if (string.IsNullOrEmpty(data))
 			return;
-		
-		int secret = PlayerPrefs.GetInt(SECRET_KEY, -1);
-		
-		if (secret < 0 || secret >= m_Secret.Length)
-		{
-			Debug.LogError("[PurchaseProcessor] Load purchases failed. Invalid secret key.");
-			return;
-		}
-		
-		string hash = PlayerPrefs.GetString(HASH_KEY, string.Empty);
-		
-		if (string.IsNullOrEmpty(hash))
-		{
-			Debug.LogError("[PurchaseProcessor] Load purchases failed. Invalid hash.");
-			return;
-		}
-		
-		string key = m_Secret[secret];
-		
-		if (hash != GetHash($"{secret}_{key}_{data}"))
-		{
-			Debug.LogError("[PurchaseProcessor] Load purchases failed. Hash mismatch.");
-			return;
-		}
-		
-		Debug.LogFormat("[PurchaseProcessor] Purchases loaded. Hash: {0} Secret: {1}", hash, key);
 		
 		string[] purchases = data.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
 		
@@ -467,14 +480,9 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	void SavePurchases()
 	{
-		string data   = string.Join(";", m_Purchases.ToArray());
-		int    secret = Random.Range(0, m_Secret.Length);
-		string key    = m_Secret[secret];
-		string hash   = GetHash($"{secret}_{key}_{data}");
+		string data = string.Join(";", m_Purchases.ToArray());
 		
-		PlayerPrefs.SetString(PURCHASES_KEY, data);
-		PlayerPrefs.SetInt(SECRET_KEY, secret);
-		PlayerPrefs.SetString(HASH_KEY, hash);
+		SecurePrefs.Save(PURCHASES_KEY, data);
 	}
 
 	void UpdatePurchases()
@@ -520,11 +528,30 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		if (!m_Success.ContainsKey(_ProductID))
 			return;
 		
+		if (m_Canceled.ContainsKey(_ProductID))
+			m_Canceled.Remove(_ProductID);
+		
 		if (m_Failed.ContainsKey(_ProductID))
 			m_Failed.Remove(_ProductID);
 		
 		Action<string> action = m_Success[_ProductID];
 		m_Success.Remove(_ProductID);
+		action?.Invoke(_ProductID);
+	}
+
+	void InvokePurchaseCancelled(string _ProductID)
+	{
+		if (!m_Canceled.ContainsKey(_ProductID))
+			return;
+		
+		if (m_Success.ContainsKey(_ProductID))
+			m_Success.Remove(_ProductID);
+		
+		if (m_Failed.ContainsKey(_ProductID))
+			m_Failed.Remove(_ProductID);
+		
+		Action<string> action = m_Canceled[_ProductID];
+		m_Canceled.Remove(_ProductID);
 		action?.Invoke(_ProductID);
 	}
 
@@ -536,8 +563,28 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		if (m_Success.ContainsKey(_ProductID))
 			m_Success.Remove(_ProductID);
 		
+		if (m_Canceled.ContainsKey(_ProductID))
+			m_Canceled.Remove(_ProductID);
+		
 		Action<string> action = m_Failed[_ProductID];
 		m_Failed.Remove(_ProductID);
 		action?.Invoke(_ProductID);
+	}
+
+	ProductInfo GetProductInfo(string _ProductID)
+	{
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Debug.LogError("[PurchaseProcessor] Get product info failed. Product ID is null or empty.");
+			return null;
+		}
+		
+		if (!m_ProductInfos.ContainsKey(_ProductID))
+		{
+			Debug.LogErrorFormat("[PurchaseProcessor] Get product info failed. Product info not found for product with ID '{0}'.", _ProductID);
+			return null;
+		}
+		
+		return m_ProductInfos[_ProductID];
 	}
 }

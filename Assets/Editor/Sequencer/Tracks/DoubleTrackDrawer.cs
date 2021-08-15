@@ -26,6 +26,17 @@ public class DoubleTrackDrawer : TrackDrawer
 			TrackUtility.AddClip(Track, clip, Time);
 		}
 		
+		if (Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic)
+		{
+			Event.current.Use();
+			
+			DoubleClip clip = ScriptableObject.CreateInstance<DoubleClip>();
+			
+			clip.name = "Double Clip";
+			
+			TrackUtility.AddClip(Track, clip, Time);
+		}
+		
 		EditorGUILayout.EndHorizontal();
 		
 		EditorGUILayout.PropertyField(TrackProperty, GUIContent.none);

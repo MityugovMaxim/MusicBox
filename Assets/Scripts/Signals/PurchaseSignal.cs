@@ -1,9 +1,9 @@
 public class PurchaseSignal
 {
-	public string PurchaseID { get; }
+	public string ProductID { get; }
 
-	public PurchaseSignal(string _PurchaseID)
+	public PurchaseSignal(string _ProductID)
 	{
-		PurchaseID = _PurchaseID;
+		ProductID = _ProductID;
 	}
 }

@@ -8,15 +8,20 @@ public class UILevelLike : UIEntity
 	[SerializeField] Button m_DislikeButton;
 
 	StatisticProcessor m_StatisticProcessor;
+	HapticProcessor    m_HapticProcessor;
 
 	bool   m_State;
 	bool   m_Liked;
 	string m_LevelID;
 
 	[Inject]
-	public void Construct(StatisticProcessor _StatisticProcessor)
+	public void Construct(
+		StatisticProcessor _StatisticProcessor,
+		HapticProcessor    _HapticProcessor
+	)
 	{
 		m_StatisticProcessor = _StatisticProcessor;
+		m_HapticProcessor    = _HapticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -54,6 +59,8 @@ public class UILevelLike : UIEntity
 		
 		m_Liked = true;
 		
+		m_HapticProcessor.Process(Haptic.Type.ImpactHeavy);
+		
 		m_LikeButton.gameObject.SetActive(false);
 		m_DislikeButton.gameObject.SetActive(true);
 	}
@@ -64,6 +71,8 @@ public class UILevelLike : UIEntity
 			return;
 		
 		m_Liked = false;
+		
+		m_HapticProcessor.Process(Haptic.Type.Warning);
 		
 		m_LikeButton.gameObject.SetActive(true);
 		m_DislikeButton.gameObject.SetActive(false);

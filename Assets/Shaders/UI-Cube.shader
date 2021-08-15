@@ -7,6 +7,7 @@ Shader "UI/Cube"
 		_NormalTex ("Normal Texture", 2D) = "black" {}
 		_ReflectionTex ("Reflection Texture", 2D) = "black" {}
 		_Refraction ("Refraction", Float) = 0.5
+		_Strength ("Strength", Float) = 1
 		
 		[Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 		[HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
@@ -79,6 +80,7 @@ Shader "UI/Cube"
 			fixed4 _Color;
 			fixed4 _TextureSampleAdd;
 			half _Refraction;
+			half _Strength;
 			half _AngleY;
 			half _AngleX;
 
@@ -105,7 +107,7 @@ Shader "UI/Cube"
 				const fixed4 reflection = tex2D(_ReflectionTex, IN.screen - offset);
 				
 				fixed4 color = (tex2D(_MainTex, IN.uv) + _TextureSampleAdd) * IN.color;
-				color.rgb += color.rgb * reflection.rgb * reflection.rgb * normal.a * 60;
+				color.rgb += color.rgb * reflection.rgb * reflection.rgb * normal.a * 60 * _Strength;
 				
 				#ifdef UNITY_UI_CLIP_RECT
 				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);

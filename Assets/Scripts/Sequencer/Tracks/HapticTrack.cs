@@ -12,13 +12,19 @@ public partial class HapticTrack
 [CreateAssetMenu(fileName = "Haptic Track", menuName = "Tracks/Haptic Track")]
 public partial class HapticTrack : Track<HapticClip>
 {
-	[Inject] Haptic m_Haptic;
+	HapticProcessor m_HapticProcessor;
+
+	[Inject]
+	public void Construct(HapticProcessor _HapticProcessor)
+	{
+		m_HapticProcessor = _HapticProcessor;
+	}
 
 	public override void Initialize(Sequencer _Sequencer)
 	{
 		base.Initialize(_Sequencer);
 		
 		foreach (HapticClip clip in Clips)
-			clip.Initialize(Sequencer, m_Haptic);
+			clip.Initialize(Sequencer, m_HapticProcessor);
 	}
 }

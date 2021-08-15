@@ -3,9 +3,11 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Level Info", menuName = "Registry/Level Info")]
 public class LevelInfo : RegistryEntry
 {
-	public string    Title         => m_Title;
 	public string    Artist        => m_Artist;
+	public string    Title         => m_Title;
 	public string    ID            => m_ID;
+	public string    Thumbnail     => m_Thumbnail;
+	public string    Clip          => m_Clip;
 	public string    LeaderboardID => m_LeaderboardID;
 	public string    AchievementID => m_AchievementID;
 	public LevelMode Mode          => m_Mode;
@@ -22,4 +24,7 @@ public class LevelInfo : RegistryEntry
 	[SerializeField, HideInInspector] bool      m_Locked;
 	[SerializeField, HideInInspector] long      m_ExpPayout;
 	[SerializeField, HideInInspector] long      m_ExpRequired;
+
+	[SerializeField, Path(typeof(Sprite)), HideInInspector]    string m_Thumbnail;
+	[SerializeField, Path(typeof(AudioClip)), HideInInspector] string m_Clip;
 }

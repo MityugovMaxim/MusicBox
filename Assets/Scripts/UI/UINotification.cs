@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Animator))]
-public class UINotification : UIEntity, IPointerClickHandler
+public class UINotification : UIEntity, IPointerClickHandler, IEndDragHandler
 {
 	static readonly int m_ShowParameterID = Animator.StringToHash("Show");
 	static readonly int m_HideParameterID = Animator.StringToHash("Hide");
@@ -65,6 +65,17 @@ public class UINotification : UIEntity, IPointerClickHandler
 		Action action = m_Action;
 		m_Action = null;
 		action?.Invoke();
+		
+		m_Animator.ResetTrigger(m_ShowParameterID);
+		m_Animator.SetTrigger(m_HideParameterID);
+	}
+
+	public void OnEndDrag(PointerEventData _EventData)
+	{
+		if (_EventData.delta.y > 0)
+			return;
+		
+		m_Action = null;
 		
 		m_Animator.ResetTrigger(m_ShowParameterID);
 		m_Animator.SetTrigger(m_HideParameterID);

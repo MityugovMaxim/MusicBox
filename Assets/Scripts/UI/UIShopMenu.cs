@@ -11,14 +11,15 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] RectTransform  m_Container;
 	[SerializeField] CanvasGroup    m_ItemsGroup;
 	[SerializeField] CanvasGroup    m_LoaderGroup;
+	[SerializeField] CanvasGroup    m_ErrorGroup;
 
 	SignalBus              m_SignalBus;
 	PurchaseProcessor      m_PurchaseProcessor;
 	UIShopMenuItem.Factory m_ItemFactory;
 
-	IEnumerator m_WaitRoutine;
 	IEnumerator m_ItemsRoutine;
 	IEnumerator m_LoaderRoutine;
+	IEnumerator m_ErrorRoutine;
 	string[]    m_ProductIDs;
 
 	readonly List<UIShopMenuItem> m_Items = new List<UIShopMenuItem>();
@@ -60,6 +61,39 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		m_PurchaseProcessor.RestorePurchases();
 	}
 
+	public void Reload()
+	{
+		DisableItems(false);
+		DisableError(false);
+		EnableLoader(false);
+		m_Loader.Restore();
+		m_Loader.Play();
+		
+		void OnInitialize(bool _Success)
+		{
+			if (_Success)
+			{
+				Refresh();
+				EnableItems(false);
+			}
+			else
+			{
+				EnableError(false);
+			}
+			
+			DisableLoader(false);
+		}
+		
+		void ReloadInternal()
+		{
+			m_PurchaseProcessor.Reload();
+			
+			m_PurchaseProcessor.OnInitialize += OnInitialize;
+		}
+		
+		StartCoroutine(DelayRoutine(2.5f, ReloadInternal));
+	}
+
 	protected override void OnShowStarted()
 	{
 		if (m_PurchaseProcessor == null)
@@ -69,27 +103,38 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		{
 			Refresh();
 			DisableLoader(true);
+			DisableError(true);
 			EnableItems(true);
 			return;
 		}
 		
 		DisableItems(true);
+		DisableError(true);
 		EnableLoader(true);
 		m_Loader.Restore();
 		m_Loader.Play();
 		
-		if (m_WaitRoutine != null)
-			StopCoroutine(m_WaitRoutine);
-		
-		m_WaitRoutine = WaitRoutine(
-			() => m_PurchaseProcessor.Initialized,
-			() =>
+		void OnInitialize(bool _Success)
+		{
+			if (_Success)
 			{
 				Refresh();
 				EnableItems(false);
-				DisableLoader(false);
 			}
-		);
+			else
+			{
+				EnableError(false);
+			}
+			
+			DisableLoader(false);
+		}
+		
+		void OnShowStartedInternal()
+		{
+			m_PurchaseProcessor.OnInitialize += OnInitialize;
+		}
+		
+		StartCoroutine(DelayRoutine(0.75f, OnShowStartedInternal));
 	}
 
 	void Refresh()
@@ -213,11 +258,42 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		}
 	}
 
-	static IEnumerator WaitRoutine(Func<bool> _Predicate, Action _Callback)
+	void DisableError(bool _Instant)
 	{
-		yield return new WaitUntil(_Predicate);
+		if (m_ErrorRoutine != null)
+			StopCoroutine(m_ErrorRoutine);
 		
-		_Callback?.Invoke();
+		if (!_Instant && gameObject.activeInHierarchy)
+		{
+			m_ErrorRoutine = DisableGroupRoutine(m_ErrorGroup, 0.3f);
+			
+			StartCoroutine(m_ErrorRoutine);
+		}
+		else
+		{
+			m_ErrorGroup.alpha          = 0;
+			m_ErrorGroup.interactable   = false;
+			m_ErrorGroup.blocksRaycasts = false;
+		}
+	}
+
+	void EnableError(bool _Instant)
+	{
+		if (m_ErrorRoutine != null)
+			StopCoroutine(m_ErrorRoutine);
+		
+		if (!_Instant && gameObject.activeInHierarchy)
+		{
+			m_ErrorRoutine = EnableGroupRoutine(m_ErrorGroup, 0.3f);
+			
+			StartCoroutine(m_ErrorRoutine);
+		}
+		else
+		{
+			m_ErrorGroup.alpha          = 1;
+			m_ErrorGroup.interactable   = true;
+			m_ErrorGroup.blocksRaycasts = true;
+		}
 	}
 
 	static IEnumerator DisableGroupRoutine(CanvasGroup _CanvasGroup, float _Duration)
@@ -272,5 +348,13 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		}
 		
 		_CanvasGroup.alpha = target;
+	}
+
+	static IEnumerator DelayRoutine(float _Delay, Action _Callback)
+	{
+		if (_Delay > float.Epsilon)
+			yield return new WaitForSeconds(_Delay);
+		
+		_Callback?.Invoke();
 	}
 }

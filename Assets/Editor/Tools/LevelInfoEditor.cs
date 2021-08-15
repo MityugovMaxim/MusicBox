@@ -9,6 +9,8 @@ public class LevelInfoEditor : Editor
 	SerializedProperty TitleProperty         => m_TitleProperty ?? (m_TitleProperty = serializedObject.FindProperty("m_Title"));
 	SerializedProperty ArtistProperty        => m_ArtistProperty ?? (m_ArtistProperty = serializedObject.FindProperty("m_Artist"));
 	SerializedProperty IDProperty            => m_IDProperty ?? (m_IDProperty = serializedObject.FindProperty("m_ID"));
+	SerializedProperty ThumbnailProperty     => m_ThumbnailProperty ?? (m_ThumbnailProperty = serializedObject.FindProperty("m_Thumbnail"));
+	SerializedProperty ClipProperty          => m_ClipProperty ?? (m_ClipProperty = serializedObject.FindProperty("m_Clip"));
 	SerializedProperty LeaderboardIDProperty => m_LeaderboardIDProperty ?? (m_LeaderboardIDProperty = serializedObject.FindProperty("m_LeaderboardID"));
 	SerializedProperty AchievementIDProperty => m_AchievementIDProperty ?? (m_AchievementIDProperty = serializedObject.FindProperty("m_AchievementID"));
 	SerializedProperty ModeProperty          => m_ModeProperty ?? (m_ModeProperty = serializedObject.FindProperty("m_Mode"));
@@ -19,6 +21,8 @@ public class LevelInfoEditor : Editor
 	SerializedProperty m_TitleProperty;
 	SerializedProperty m_ArtistProperty;
 	SerializedProperty m_IDProperty;
+	SerializedProperty m_ThumbnailProperty;
+	SerializedProperty m_ClipProperty;
 	SerializedProperty m_LeaderboardIDProperty;
 	SerializedProperty m_AchievementIDProperty;
 	SerializedProperty m_ModeProperty;
@@ -45,6 +49,8 @@ public class LevelInfoEditor : Editor
 		}
 		
 		EditorGUILayout.PropertyField(IDProperty);
+		EditorGUILayout.PropertyField(ThumbnailProperty);
+		EditorGUILayout.PropertyField(ClipProperty);
 		EditorGUILayout.PropertyField(LeaderboardIDProperty);
 		EditorGUILayout.PropertyField(AchievementIDProperty);
 		EditorGUILayout.PropertyField(ModeProperty);

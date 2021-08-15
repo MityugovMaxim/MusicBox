@@ -22,12 +22,15 @@ public class UIScore : UIEntity
 	ScoreProcessor    m_ScoreProcessor;
 	ProgressProcessor m_ProgressProcessor;
 	HapticProcessor   m_HapticProcessor;
-	string            m_LevelID;
-	int               m_Accuracy;
-	long              m_Score;
-	long              m_ExpPayout;
-	int               m_ExpMultiplier;
-	Animator          m_Animator;
+
+	string           m_LevelID;
+	int              m_Accuracy;
+	long             m_Score;
+	long             m_ExpPayout;
+	int              m_ExpMultiplier;
+	Animator         m_Animator;
+	StateBehaviour[] m_PlayStates;
+	Action           m_Finished;
 
 	[Inject]
 	public void Construct(
@@ -39,15 +42,17 @@ public class UIScore : UIEntity
 		m_ScoreProcessor    = _ScoreProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
 		m_HapticProcessor   = _HapticProcessor;
-	}
-
-	protected override void Awake()
-	{
-		base.Awake();
 		
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
+		
+		m_PlayStates = StateBehaviour.GetBehaviours(m_Animator, "play");
+		if (m_PlayStates != null)
+		{
+			foreach (StateBehaviour state in m_PlayStates)
+				state.OnComplete += InvokeFinished;
+		}
 	}
 
 	protected override void OnDidApplyAnimationProperties()
@@ -83,10 +88,14 @@ public class UIScore : UIEntity
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
-	public void Play()
+	public void Play(Action _Finished = null)
 	{
 		if (m_Animator == null)
 			return;
+		
+		InvokeFinished();
+		
+		m_Finished = _Finished;
 		
 		ScoreRank rank = m_ScoreProcessor.GetLastRank(m_LevelID);
 		
@@ -121,5 +130,12 @@ public class UIScore : UIEntity
 			m_ExpPayoutLabel.Exp        = (long)Math.Round(m_ExpPayout * m_ExpPayoutPhase);
 			m_ExpPayoutLabel.Multiplier = m_ExpMultiplier;
 		}
+	}
+
+	void InvokeFinished()
+	{
+		Action action = m_Finished;
+		m_Finished = null;
+		action?.Invoke();
 	}
 }

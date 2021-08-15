@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -9,6 +11,8 @@ public class GameInstaller : MonoInstaller
 
 	public override void InstallBindings()
 	{
+		InstallCulture();
+		
 		InstallSignals();
 		
 		InstallProcessors();
@@ -19,6 +23,23 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
+	}
+
+	void InstallCulture()
+	{
+		SystemLanguage language = Application.systemLanguage;
+		
+		CultureInfo cultureInfo = CultureInfo
+			.GetCultures(CultureTypes.AllCultures)
+			.FirstOrDefault(_CultureInfo => _CultureInfo.EnglishName.Equals(language.ToString()));
+		
+		if (cultureInfo == null)
+			return;
+		
+		cultureInfo = CultureInfo.CreateSpecificCulture(cultureInfo.TwoLetterISOLanguageName);
+		
+		CultureInfo.CurrentCulture   = cultureInfo;
+		CultureInfo.CurrentUICulture = cultureInfo;
 	}
 
 	void InstallFactories()
@@ -36,8 +57,6 @@ public class GameInstaller : MonoInstaller
 
 	void InstallProcessors()
 	{
-		Container.Bind<Haptic>().FromMethod(Haptic.Create);
-		
 		#if UNITY_IOS
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
 		#endif
@@ -51,6 +70,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<NotificationProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ConfigProcessor>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
@@ -58,6 +78,7 @@ public class GameInstaller : MonoInstaller
 		SignalBusInstaller.Install(Container);
 		
 		Container.DeclareSignal<PurchaseSignal>();
+		Container.DeclareSignal<ConfigSignal>();
 		
 		Container.DeclareSignal<LevelStartSignal>();
 		Container.DeclareSignal<LevelPlaySignal>();

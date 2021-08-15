@@ -50,7 +50,7 @@ CanvasGroup:
   m_GameObject: {fileID: 8826910917943886901}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 1
+  m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &8826910917943886903
@@ -99,7 +99,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e393fd08b37040b9ba157ccad9a29405, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Menu: {fileID: 8826910917943886903}
 --- !u!1 &8826910917994712448
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,8 +150,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_AccuracyPhase: 0
   m_ScorePhase: 0
+  m_ExpPayoutPhase: 0
   m_AccuracyLabel: {fileID: 0}
   m_ScoreLabel: {fileID: 0}
+  m_ExpPayoutLabel: {fileID: 0}
   m_ScoreRank: {fileID: 0}
 --- !u!95 &8826910917994712450
 Animator:

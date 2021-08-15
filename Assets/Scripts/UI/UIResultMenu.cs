@@ -20,6 +20,7 @@ public class UIResultMenu : UIMenu
 	ScoreProcessor  m_ScoreProcessor;
 	SocialProcessor m_SocialProcessor;
 	AdsProcessor    m_AdsProcessor;
+	HapticProcessor m_HapticProcessor;
 
 	string    m_LevelID;
 	ScoreData m_ScoreData;
@@ -34,7 +35,8 @@ public class UIResultMenu : UIMenu
 		LevelProcessor  _LevelProcessor,
 		ScoreProcessor  _ScoreProcessor,
 		SocialProcessor _SocialProcessor,
-		AdsProcessor    _AdsProcessor
+		AdsProcessor    _AdsProcessor,
+		HapticProcessor _HapticProcessor
 	)
 	{
 		m_MenuProcessor   = _MenuProcessor;
@@ -42,6 +44,7 @@ public class UIResultMenu : UIMenu
 		m_ScoreProcessor  = _ScoreProcessor;
 		m_SocialProcessor = _SocialProcessor;
 		m_AdsProcessor    = _AdsProcessor;
+		m_HapticProcessor = _HapticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -83,6 +86,8 @@ public class UIResultMenu : UIMenu
 			m_LevelProcessor.Restart();
 			
 			CloseAction = m_LevelProcessor.Play;
+			
+			m_MenuProcessor.Hide(MenuType.NotificationMenu);
 			
 			Hide();
 		}
@@ -166,6 +171,8 @@ public class UIResultMenu : UIMenu
 			m_MenuProcessor.Show(MenuType.LevelMenu);
 		}
 		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		m_NextAdsCount++;
 		
 		if (m_NextAdsCount >= NEXT_ADS_COUNT)
@@ -202,7 +209,7 @@ public class UIResultMenu : UIMenu
 	protected override void OnShowFinished()
 	{
 		if (m_Score != null)
-			m_Score.Play();
+			m_Score.Play(() => m_MenuProcessor.Show(MenuType.NotificationMenu));
 		
 		if (m_LevelProcessor != null)
 			m_LevelProcessor.Pause();

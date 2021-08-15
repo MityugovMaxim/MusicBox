@@ -9,10 +9,10 @@ public class HapticProcessor : IInitializable, IDisposable
 	Haptic    m_Haptic;
 
 	[Inject]
-	public void Construct(SignalBus _SignalBus, Haptic _Haptic)
+	public void Construct(SignalBus _SignalBus)
 	{
 		m_SignalBus = _SignalBus;
-		m_Haptic    = _Haptic;
+		m_Haptic    = Haptic.Create();
 	}
 
 	public void Process(Haptic.Type _HapticType)

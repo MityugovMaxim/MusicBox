@@ -45,7 +45,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 			return;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, true);
+		Advertisement.Initialize(GameID, TestMode, false);
 		Advertisement.AddListener(this);
 		Advertisement.Load(InterstitialID);
 		Advertisement.Load(RewardedID);

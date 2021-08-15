@@ -21,9 +21,12 @@ public class UIProductMenu : UIMenu, IInitializable, IDisposable, IPointerDownHa
 	SignalBus                 m_SignalBus;
 	PurchaseProcessor         m_PurchaseProcessor;
 	LevelProcessor            m_LevelProcessor;
+	MenuProcessor             m_MenuProcessor;
+	HapticProcessor           m_HapticProcessor;
 	UIProductMenuItem.Factory m_ItemFactory;
-	string                    m_ProductID;
-	IEnumerator               m_RepositionRoutine;
+
+	string      m_ProductID;
+	IEnumerator m_RepositionRoutine;
 
 	readonly List<UIProductMenuItem> m_Items = new List<UIProductMenuItem>();
 
@@ -32,12 +35,16 @@ public class UIProductMenu : UIMenu, IInitializable, IDisposable, IPointerDownHa
 		SignalBus                 _SignalBus,
 		PurchaseProcessor         _PurchaseProcessor,
 		LevelProcessor            _LevelProcessor,
+		MenuProcessor             _MenuProcessor,
+		HapticProcessor           _HapticProcessor,
 		UIProductMenuItem.Factory _ItemFactory
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
 		m_LevelProcessor    = _LevelProcessor;
+		m_MenuProcessor     = _MenuProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 		m_ItemFactory       = _ItemFactory;
 	}
 
@@ -98,9 +105,18 @@ public class UIProductMenu : UIMenu, IInitializable, IDisposable, IPointerDownHa
 
 	public void Purchase()
 	{
-		m_PurchaseProcessor.Purchase(m_ProductID);
+		m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		m_PurchaseProcessor.Purchase(
+			m_ProductID,
+			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu),
+			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu),
+			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu)
+		);
 		
 		m_PreviewSource.Stop();
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		foreach (UIProductMenuItem item in m_Items)
 			item.Stop();

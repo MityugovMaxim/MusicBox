@@ -181,9 +181,21 @@ public class LevelProcessor
 		if (m_PreviewClips.ContainsKey(_LevelID) && m_PreviewClips[_LevelID] != null)
 			return m_PreviewClips[_LevelID];
 		
-		string path = $"{_LevelID}/preview_clip";
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
-		AudioClip previewClip = Resources.Load<AudioClip>(path);
+		if (levelInfo == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get preview clip failed. Level info not found for level with ID '{0}'.", _LevelID);
+			return null;
+		}
+		
+		if (string.IsNullOrEmpty(levelInfo.Clip))
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get preview clip failed. Clip is null for level with ID '{0}'.", _LevelID);
+			return null;
+		}
+		
+		AudioClip previewClip = Resources.Load<AudioClip>(levelInfo.Clip);
 		
 		m_PreviewClips[_LevelID] = previewClip;
 		
@@ -197,6 +209,12 @@ public class LevelProcessor
 		
 		Sprite previewThumbnail = GetPreviewThumbnail(_LevelID);
 		
+		if (previewThumbnail == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get preview background failed. Preview thumbnail is null for level with ID '{0}'.", _LevelID);
+			return null;
+		}
+		
 		Sprite previewBackground = BlurUtility.Blur(previewThumbnail, 0.5f, 8);
 		
 		m_PreviewBackgrounds[_LevelID] = previewBackground;
@@ -209,9 +227,21 @@ public class LevelProcessor
 		if (m_PreviewThumbnails.ContainsKey(_LevelID) && m_PreviewThumbnails[_LevelID] != null)
 			return m_PreviewThumbnails[_LevelID];
 		
-		string path = $"{_LevelID}/preview_thumbnail";
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
 		
-		Sprite previewThumbnail = Resources.Load<Sprite>(path);
+		if (levelInfo == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get preview thumbnail failed. Level info not found for level with ID '{0}'.", _LevelID);
+			return null;
+		}
+		
+		if (string.IsNullOrEmpty(levelInfo.Thumbnail))
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get preview thumbnail failed. Thumbnail is null for level with ID '{0}'.", _LevelID);
+			return null;
+		}
+		
+		Sprite previewThumbnail = Resources.Load<Sprite>(levelInfo.Thumbnail);
 		
 		m_PreviewThumbnails[_LevelID] = previewThumbnail;
 		
