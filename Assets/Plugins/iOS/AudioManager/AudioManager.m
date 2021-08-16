@@ -52,6 +52,18 @@ float GetOutputLatency()
     return AVAudioSession.sharedInstance.outputLatency;
 }
 
+void EnableAudio()
+{
+    UnityUpdateMuteState(0);
+    UnitySetAudioSessionActive(1);
+}
+
+void DisableAudio()
+{
+    UnityUpdateMuteState(1);
+    UnitySetAudioSessionActive(0);
+}
+
 void UnregisterRemoteCommands()
 {
     [m_RouteObserver remove];

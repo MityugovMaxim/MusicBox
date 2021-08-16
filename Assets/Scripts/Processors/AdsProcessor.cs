@@ -3,15 +3,9 @@ using UnityEngine;
 using UnityEngine.Advertisements;
 using Zenject;
 
-public abstract class AdsProcessor : IInitializable, IUnityAdsListener
+public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationListener, IUnityAdsListener
 {
-	static bool TestMode
-	{
-		get
-		{
-			return true;
-		}
-	}
+	static bool TestMode => true;
 
 	protected abstract string GameID         { get; }
 	protected abstract string InterstitialID { get; }
@@ -45,10 +39,8 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 			return;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, false);
+		Advertisement.Initialize(GameID, TestMode, true, this);
 		Advertisement.AddListener(this);
-		Advertisement.Load(InterstitialID);
-		Advertisement.Load(RewardedID);
 	}
 
 	public void ShowInterstitial(Action _Finished = null)
@@ -122,9 +114,22 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 		Advertisement.Show(RewardedID);
 	}
 
+	void IUnityAdsInitializationListener.OnInitializationComplete()
+	{
+		Debug.LogError("[AdsProcessor] Ads initialized.");
+		
+		Advertisement.Load(InterstitialID);
+		Advertisement.Load(RewardedID);
+	}
+
+	void IUnityAdsInitializationListener.OnInitializationFailed(UnityAdsInitializationError _Error, string _Message)
+	{
+		Debug.LogErrorFormat("[AdsProcessor] Ads initialization failed. Error: {0} Message: {1}.", _Error, _Message);
+	}
+
 	void IUnityAdsListener.OnUnityAdsReady(string _PlacementID)
 	{
-		Debug.LogFormat("[AdsProcessor] Ads ready. Placement: {0}.", _PlacementID);
+		Debug.LogFormat("[AdsProcessor] Ads placement ready. Placement: {0}.", _PlacementID);
 		
 		if (_PlacementID == InterstitialID)
 			m_InterstitialLoaded = true;
@@ -134,7 +139,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	void IUnityAdsListener.OnUnityAdsDidError(string _Message)
 	{
-		Debug.LogErrorFormat("[AdsProcessor] Ads initialization failed. {0}.", _Message);
+		Debug.LogErrorFormat("[AdsProcessor] Ads placement error. {0}.", _Message);
 	}
 
 	void IUnityAdsListener.OnUnityAdsDidStart(string _PlacementID)
@@ -167,6 +172,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	void InvokeRewardedSuccess()
 	{
+		m_RewardedFailed = null;
 		Action action = m_RewardedSuccess;
 		m_RewardedSuccess = null;
 		action?.Invoke();
@@ -174,6 +180,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsListener
 
 	void InvokeRewardedFailed()
 	{
+		m_RewardedSuccess = null;
 		Action action = m_RewardedFailed;
 		m_RewardedFailed = null;
 		action?.Invoke();

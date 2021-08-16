@@ -28,6 +28,12 @@ public class AudioManager : IInitializable
 		RemoteCommandHandler _PreviousTrackHandler,
 		RemoteCommandHandler _SourceChangedHandler
 	);
+
+	[DllImport("__Internal")]
+	static extern void EnableAudio();
+
+	[DllImport("__Internal")]
+	static extern void DisableAudio();
 	#endif
 
 	public static float Latency { get; private set; }
@@ -40,6 +46,16 @@ public class AudioManager : IInitializable
 		m_SignalBus = _SignalBus;
 		
 		Latency = GetLatency();
+	}
+
+	public static void SetAudioActive(bool _Value)
+	{
+		#if UNITY_IOS && !UNITY_EDITOR
+		if (_Value)
+			EnableAudio();
+		else
+			DisableAudio();
+		#endif
 	}
 
 	void IInitializable.Initialize()
