@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Zenject;
 
-public class FXProcessor : UIEntity
+public class FXProcessor : UIEntity, IInitializable
 {
 	UIInputZone     m_InputZone;
 	UITapFX.Pool    m_TapFXPool;
@@ -22,6 +22,11 @@ public class FXProcessor : UIEntity
 		m_TapFXPool    = _TapFXPool;
 		m_DoubleFXPool = _DoubleFXPool;
 		m_HoldFXPool   = _HoldFXPool;
+	}
+
+	void IInitializable.Initialize()
+	{
+		Prewarm();
 	}
 
 	public void TapFX(Rect _Rect)
@@ -67,6 +72,18 @@ public class FXProcessor : UIEntity
 		);
 		
 		StartCoroutine(delayRoutine);
+	}
+
+	void Prewarm()
+	{
+		UITapFX tapFX = m_TapFXPool.Spawn();
+		m_TapFXPool.Despawn(tapFX);
+		
+		UIDoubleFX doubleFX = m_DoubleFXPool.Spawn();
+		m_DoubleFXPool.Despawn(doubleFX);
+		
+		UIHoldFX holdFX = m_HoldFXPool.Spawn();
+		m_HoldFXPool.Despawn(holdFX);
 	}
 
 	static IEnumerator DelayRoutine(float _Delay, Action _Callback)

@@ -54,13 +54,11 @@ float GetOutputLatency()
 
 void EnableAudio()
 {
-    UnityUpdateMuteState(0);
     UnitySetAudioSessionActive(1);
 }
 
 void DisableAudio()
 {
-    UnityUpdateMuteState(1);
     UnitySetAudioSessionActive(0);
 }
 

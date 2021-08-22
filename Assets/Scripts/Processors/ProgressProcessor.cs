@@ -49,9 +49,16 @@ public class ProgressProcessor : IInitializable, IDisposable
 
 	void RegisterLevelFinish(LevelFinishSignal _Signal)
 	{
-		ScoreData scoreData   = m_ScoreProcessor.ScoreData;
-		long      expPayout   = GetExpPayout(_Signal.LevelID) * GetExpMultiplier(scoreData.Rank);
-		long      expProgress = ExpProgress + expPayout;
+		ScoreData scoreData = m_ScoreProcessor.ScoreData;
+		
+		long expPayout   = GetExpPayout(_Signal.LevelID);
+		long expProgress = ExpProgress;
+		
+		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
+		{
+			if (rank != ScoreRank.None && rank <= scoreData.Rank)
+				expProgress += expPayout * GetExpMultiplier(scoreData.Rank);
+		}
 		
 		foreach (LevelInfo levelInfo in m_LevelInfos.Values)
 		{
@@ -77,16 +84,29 @@ public class ProgressProcessor : IInitializable, IDisposable
 		return levelInfo.ExpPayout;
 	}
 
+	public long GetExpPayout(string _LevelID, ScoreRank _Rank)
+	{
+		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		
+		if (levelInfo == null)
+		{
+			Debug.LogErrorFormat("[ProgressProcessor] Get exp payout failed. Level info for ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelInfo.ExpPayout * GetExpMultiplier(_Rank);
+	}
+
 	public int GetExpMultiplier(ScoreRank _Rank)
 	{
 		switch (_Rank)
 		{
 			case ScoreRank.S:
-				return 5;
-			case ScoreRank.A:
 				return 3;
-			case ScoreRank.B:
+			case ScoreRank.A:
 				return 2;
+			case ScoreRank.B:
+				return 1;
 			case ScoreRank.C:
 				return 1;
 			default:

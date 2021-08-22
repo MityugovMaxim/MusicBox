@@ -5,7 +5,6 @@
 		_MainTex ("Sprite Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
 		
-		[Toggle(BACKGROUND_SCHEME)] _UseBackgroundScheme ("Use Background Scheme", Float) = 0
 		[HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
 		[HideInInspector] _Stencil ("Stencil ID", Float) = 0
 		[HideInInspector] _StencilOp ("Stencil Operation", Float) = 0
@@ -53,8 +52,6 @@
 			#include "UnityCG.cginc"
 			#include "UnityUI.cginc"
 
-			#pragma multi_compile_local _ BACKGROUND_SCHEME
-
 			struct vertData
 			{
 				float4 vertex : POSITION;
@@ -93,12 +90,6 @@
 				fixed4 color = tex2D(_MainTex, IN.uv) * IN.color;
 				
 				color.a *= UnityGet2DClipping(IN.position.xy, _ClipRect);
-				
-				#ifdef BACKGROUND_SCHEME
-				color *= BACKGROUND_BY_LUMINANCE(color);
-				#else
-				color *= FOREGROUND_BY_LUMINANCE(color);
-				#endif
 				
 				#ifdef UNITY_UI_ALPHACLIP
 				clip (color.a - 0.01);

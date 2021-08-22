@@ -7,12 +7,12 @@ public class StateBehaviour : StateMachineBehaviour
 {
 	public static StateBehaviour GetBehaviour(Animator _Animator, string _ID)
 	{
-		return _Animator != null ? _Animator.GetBehaviours<StateBehaviour>().FirstOrDefault(_State => string.Equals(_State.m_ID, _ID, StringComparison.CurrentCultureIgnoreCase)) : null;
+		return _Animator != null ? _Animator.GetBehaviours<StateBehaviour>().FirstOrDefault(_State => string.Equals(_State.m_ID, _ID, StringComparison.InvariantCultureIgnoreCase)) : null;
 	}
 
 	public static StateBehaviour[] GetBehaviours(Animator _Animator, string _ID)
 	{
-		return _Animator != null ? _Animator.GetBehaviours<StateBehaviour>().Where(_State => string.Equals(_State.m_ID, _ID, StringComparison.CurrentCultureIgnoreCase)).ToArray() : null;
+		return _Animator != null ? _Animator.GetBehaviours<StateBehaviour>().Where(_State => string.Equals(_State.m_ID, _ID, StringComparison.InvariantCultureIgnoreCase)).ToArray() : null;
 	}
 
 	public event Action OnEnter;

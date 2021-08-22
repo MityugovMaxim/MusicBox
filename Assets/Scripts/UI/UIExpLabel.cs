@@ -18,26 +18,11 @@ public class UIExpLabel : UIEntity
 		}
 	}
 
-	public int Multiplier
-	{
-		get => m_Multiplier;
-		set
-		{
-			if (m_Multiplier == value)
-				return;
-			
-			m_Multiplier = value;
-			
-			ProcessProgress();
-		}
-	}
-
 	const string EXP_ICON = "exp_icon";
 
 	[SerializeField] TMP_Text m_Label;
 	[SerializeField] bool     m_Sign;
 	[SerializeField] long     m_Exp;
-	[SerializeField] int      m_Multiplier = 1;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -50,9 +35,8 @@ public class UIExpLabel : UIEntity
 
 	void ProcessProgress()
 	{
-		string sign       = m_Sign ? Exp >= 0 ? "+" : "-" : string.Empty;
-		string multiplier = m_Multiplier >= 2 ? $" ×{Multiplier}" : string.Empty;
+		string sign = m_Sign ? Exp >= 0 ? "+" : "-" : string.Empty;
 		
-		m_Label.text = $"{sign}{Math.Abs(Exp)}<sprite name=\"{EXP_ICON}\">{multiplier}";
+		m_Label.text = $"{sign}{Math.Abs(Exp)}<sprite name=\"{EXP_ICON}\">";
 	}
 }

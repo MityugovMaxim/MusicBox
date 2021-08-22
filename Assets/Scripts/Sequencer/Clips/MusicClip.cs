@@ -22,8 +22,6 @@ public class MusicClip : Clip
 	{
 		base.Initialize(_Sequencer);
 		
-		AudioManager.SetAudioActive(true);
-		
 		m_AudioSource      = _AudioSource;
 		m_AudioSource.clip = m_AudioClip;
 		
@@ -35,7 +33,6 @@ public class MusicClip : Clip
 		if (!Sequencer.Playing || !Playing)
 			return;
 		
-		AudioManager.SetAudioActive(true);
 		m_AudioSource.Play();
 		
 		m_AudioSource.time = GetMusicTime(_Time);
@@ -51,7 +48,6 @@ public class MusicClip : Clip
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
-			AudioManager.SetAudioActive(true);
 			m_AudioSource.Play();
 			
 			m_AudioSource.time = GetMusicTime(_Time);

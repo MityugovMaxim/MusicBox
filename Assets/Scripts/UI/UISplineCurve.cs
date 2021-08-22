@@ -69,6 +69,17 @@ public class UISplineCurve : MaskableGraphic
 
 	#region engine methods
 
+	[ContextMenu("Cache")]
+	void Cache()
+	{
+		UISplineCurveCached curve = GetComponentInChildren<UISplineCurveCached>();
+		
+		if (curve == null)
+			return;
+		
+		curve.Cache(m_Vertices);
+	}
+
 	protected override void Awake()
 	{
 		base.Awake();

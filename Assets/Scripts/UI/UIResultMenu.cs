@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.iOS;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -7,6 +8,7 @@ public class UIResultMenu : UIMenu
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 	const int NEXT_ADS_COUNT    = 2;
+	const int RATE_US_COUNT     = 2;
 
 	[SerializeField] UILevelPreviewBackground m_Background;
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
@@ -28,6 +30,7 @@ public class UIResultMenu : UIMenu
 	int m_RestartAdsCount;
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
+	int m_RateUsCount;
 
 	[Inject]
 	public void Construct(
@@ -208,8 +211,22 @@ public class UIResultMenu : UIMenu
 
 	protected override void OnShowFinished()
 	{
+		void ScoreFinished()
+		{
+			m_MenuProcessor.Show(MenuType.NotificationMenu);
+			
+			if (m_RateUsCount >= RATE_US_COUNT)
+			{
+				m_RateUsCount = 0;
+				
+				Device.RequestStoreReview();
+			}
+		}
+		
 		if (m_Score != null)
-			m_Score.Play(() => m_MenuProcessor.Show(MenuType.NotificationMenu));
+			m_Score.Play(ScoreFinished);
+		else
+			ScoreFinished();
 		
 		if (m_LevelProcessor != null)
 			m_LevelProcessor.Pause();

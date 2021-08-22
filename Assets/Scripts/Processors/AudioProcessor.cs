@@ -1,28 +1,35 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Scripting;
 using Zenject;
 
 public class AudioProcessor : MonoBehaviour, IInitializable, IDisposable
 {
-	[SerializeField] AudioMixerSnapshot m_HitSnapshot;
-	[SerializeField] AudioMixerSnapshot m_MissSnapshot;
+	[SerializeField, Preserve] AudioMixerSnapshot m_HitSnapshot;
+	[SerializeField, Preserve] AudioMixerSnapshot m_MissSnapshot;
 
 	SignalBus m_SignalBus;
 
 	public void Restore()
 	{
+		#if !UNITY_EDITOR
 		m_HitSnapshot.TransitionTo(0);
+		#endif
 	}
 
 	void RegisterHit()
 	{
+		#if !UNITY_EDITOR
 		m_HitSnapshot.TransitionTo(0.1f);
+		#endif
 	}
 
 	void RegisterMiss()
 	{
+		#if !UNITY_EDITOR
 		m_MissSnapshot.TransitionTo(0.1f);
+		#endif
 	}
 
 	[Inject]

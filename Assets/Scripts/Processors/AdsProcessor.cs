@@ -116,7 +116,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	void IUnityAdsInitializationListener.OnInitializationComplete()
 	{
-		Debug.LogError("[AdsProcessor] Ads initialized.");
+		Debug.Log("[AdsProcessor] Ads initialized.");
 		
 		Advertisement.Load(InterstitialID);
 		Advertisement.Load(RewardedID);
@@ -149,7 +149,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	void IUnityAdsListener.OnUnityAdsDidFinish(string _PlacementID, ShowResult _Result)
 	{
-		Debug.LogFormat("[AdsProcessor] Ads finished. Placement: {0}.", _PlacementID);
+		Debug.LogFormat("[AdsProcessor] Ads finished. Placement: {0} Result: {1}.", _PlacementID, _Result);
 		
 		if (_PlacementID == RewardedID)
 		{
@@ -158,8 +158,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 				case ShowResult.Finished:
 					InvokeRewardedSuccess();
 					break;
-				case ShowResult.Failed:
-				case ShowResult.Skipped:
+				default:
 					InvokeRewardedFailed();
 					break;
 			}
@@ -172,16 +171,16 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	void InvokeRewardedSuccess()
 	{
-		m_RewardedFailed = null;
 		Action action = m_RewardedSuccess;
+		m_RewardedFailed = null;
 		m_RewardedSuccess = null;
 		action?.Invoke();
 	}
 
 	void InvokeRewardedFailed()
 	{
-		m_RewardedSuccess = null;
 		Action action = m_RewardedFailed;
+		m_RewardedSuccess = null;
 		m_RewardedFailed = null;
 		action?.Invoke();
 	}
