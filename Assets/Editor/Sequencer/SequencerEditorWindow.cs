@@ -440,6 +440,29 @@ public class SequencerEditorWindow : EditorWindow
 				
 				break;
 			}
+
+			case EventType.KeyDown:
+			{
+				if (Event.current.keyCode == KeyCode.LeftArrow)
+				{
+					Event.current.Use();
+					
+					float time = Sequencer.Time - 15.0f / BPM;
+					
+					Sequencer.Sample(time);
+				}
+				
+				if (Event.current.keyCode == KeyCode.RightArrow)
+				{
+					Event.current.Use();
+					
+					float time = Sequencer.Time + 15.0f / BPM;
+					
+					Sequencer.Sample(time);
+				}
+				
+				break;
+			}
 		}
 	}
 
