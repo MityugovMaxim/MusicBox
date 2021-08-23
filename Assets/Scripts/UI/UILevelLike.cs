@@ -59,7 +59,7 @@ public class UILevelLike : UIEntity
 		
 		m_Liked = true;
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactHeavy);
+		m_HapticProcessor.Process(Haptic.Type.Success);
 		
 		m_LikeButton.gameObject.SetActive(false);
 		m_DislikeButton.gameObject.SetActive(true);

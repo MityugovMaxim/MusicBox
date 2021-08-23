@@ -12,14 +12,13 @@ GameObject:
   - component: {fileID: 4776018513601945047}
   - component: {fileID: 1211850847837249507}
   - component: {fileID: 1661782263907437444}
-  - component: {fileID: 7523473371978443679}
   m_Layer: 0
   m_Name: sparks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3633549356545582862
 RectTransform:
   m_ObjectHideFlags: 0
@@ -175,8 +174,8 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 1000
-      minScalar: 700
+      scalar: 700
+      minScalar: 500
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -749,9 +748,9 @@ ParticleSystem:
     m_TextureColorAffectsParticles: 1
     m_TextureAlphaAffectsParticles: 1
     m_TextureBilinearFiltering: 0
-    randomDirectionAmount: 0.3
+    randomDirectionAmount: 0
     sphericalDirectionAmount: 0
-    randomPositionAmount: 100
+    randomPositionAmount: 50
     radius:
       value: 20
       mode: 0
@@ -4763,7 +4762,7 @@ ParticleSystemRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371994729390492405}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -4826,33 +4825,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371994729390492405}
   m_CullTransparentMesh: 0
---- !u!114 &7523473371978443679
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 371994729390492405}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16f0b0b6d0b7542bfbd20a3e05b04ff1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_IsTrail: 0
-  m_IgnoreCanvasScaler: 0
-  m_Scale: 100
-  m_Scale3D: {x: 1, y: 1, z: 1}
-  m_AnimatableProperties: []
-  m_Particles:
-  - {fileID: 4776018513601945047}
-  m_ShrinkByMaterial: 0
 --- !u!1 &2353075601442492743
 GameObject:
   m_ObjectHideFlags: 0
@@ -5518,13 +5490,15 @@ GameObject:
   m_Component:
   - component: {fileID: 1599977761232602129}
   - component: {fileID: 1723105692503022237}
+  - component: {fileID: 110791416295922642}
+  - component: {fileID: 8466336523145677515}
   m_Layer: 5
   m_Name: fx
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1599977761232602129
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5534,7 +5508,7 @@ RectTransform:
   m_GameObject: {fileID: 4193023959690877548}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 3633549356545582862}
   - {fileID: 5402081309623906721}
@@ -5558,6 +5532,42 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!222 &110791416295922642
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4193023959690877548}
+  m_CullTransparentMesh: 0
+--- !u!114 &8466336523145677515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4193023959690877548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16f0b0b6d0b7542bfbd20a3e05b04ff1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_IsTrail: 0
+  m_IgnoreCanvasScaler: 0
+  m_Scale: 100
+  m_Scale3D: {x: 1, y: 1, z: 1}
+  m_AnimatableProperties: []
+  m_Particles:
+  - {fileID: 4776018513601945047}
+  - {fileID: 663290583119977620}
+  m_ShrinkByMaterial: 0
 --- !u!1 &5395422449397907365
 GameObject:
   m_ObjectHideFlags: 0
@@ -5644,14 +5654,13 @@ GameObject:
   - component: {fileID: 663290583119977620}
   - component: {fileID: 8010327979281086310}
   - component: {fileID: 7002889738873404752}
-  - component: {fileID: 7702938691175599888}
   m_Layer: 0
   m_Name: glow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5402081309623906721
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5923,8 +5932,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 600
-      minScalar: 400
+      scalar: 650
+      minScalar: 450
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -10337,7 +10346,7 @@ ParticleSystemRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8175010417832320051}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -10400,33 +10409,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8175010417832320051}
   m_CullTransparentMesh: 0
---- !u!114 &7702938691175599888
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8175010417832320051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16f0b0b6d0b7542bfbd20a3e05b04ff1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_IsTrail: 0
-  m_IgnoreCanvasScaler: 0
-  m_Scale: 100
-  m_Scale3D: {x: 1, y: 1, z: 1}
-  m_AnimatableProperties: []
-  m_Particles:
-  - {fileID: 663290583119977620}
-  m_ShrinkByMaterial: 0
 --- !u!1 &8946076136239350802
 GameObject:
   m_ObjectHideFlags: 0
