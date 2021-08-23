@@ -101,8 +101,6 @@ public partial class Sequencer : MonoBehaviour
 	[SerializeField, HideInInspector] Track[] m_Tracks;
 
 	Action            m_Finished;
-	int               m_Frame;
-	int               m_SampleFrame;
 	ISampleReceiver[] m_SampleReceivers;
 
 	void OnDisable()
@@ -115,14 +113,8 @@ public partial class Sequencer : MonoBehaviour
 
 	void LateUpdate()
 	{
-		if (Playing && m_SampleFrame != m_Frame)
-		{
-			m_SampleFrame = m_Frame;
-			
+		if (Playing)
 			Sample(m_Time + UnityEngine.Time.deltaTime);
-		}
-		
-		m_Frame++;
 	}
 
 	public void Initialize()
@@ -140,8 +132,6 @@ public partial class Sequencer : MonoBehaviour
 		
 		m_SampleReceivers = _SampleReceivers;
 		m_Finished        = _Finished;
-		m_Frame           = 0;
-		m_SampleFrame     = 0;
 		
 		Sample(Time);
 	}
@@ -150,18 +140,12 @@ public partial class Sequencer : MonoBehaviour
 	{
 		Playing = false;
 		
-		m_Frame       = 0;
-		m_SampleFrame = 0;
-		
 		Sample(Time);
 	}
 
 	public void Stop()
 	{
 		Playing = false;
-		
-		m_Frame       = 0;
-		m_SampleFrame = 0;
 		
 		Sample(0);
 	}
