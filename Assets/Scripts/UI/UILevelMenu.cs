@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Zenject;
@@ -21,7 +23,11 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 	[SerializeField] UILevelPreviewLabel      m_Label;
 	[SerializeField] UILevelModeButton        m_PlayButton;
 	[SerializeField] UILevelProgress          m_Progress;
-	[SerializeField] UIExpLabel               m_ExpPayout;
+	[SerializeField] GameObject               m_ExpPayout;
+	[SerializeField] UIExpLabel               m_RankSExpPayout;
+	[SerializeField] UIExpLabel               m_RankAExpPayout;
+	[SerializeField] UIExpLabel               m_RankBExpPayout;
+	[SerializeField] UIExpLabel               m_RankCExpPayout;
 	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
 	SignalBus         m_SignalBus;
@@ -153,8 +159,12 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Progress.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
 		
-		m_ExpPayout.gameObject.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID));
-		m_ExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID);
+		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID));
+		
+		m_RankSExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.S);
+		m_RankAExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.A);
+		m_RankBExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.B);
+		m_RankCExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.C);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);

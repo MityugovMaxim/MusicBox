@@ -97,6 +97,19 @@ public class ProgressProcessor : IInitializable, IDisposable
 		return levelInfo.ExpPayout * GetExpMultiplier(_Rank);
 	}
 
+	public long[] GetExpPayouts(string _LevelID)
+	{
+		List<long> expPayouts = new List<long>();
+		
+		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
+		{
+			if (rank != ScoreRank.None)
+				expPayouts.Add(GetExpPayout(_LevelID, rank));
+		}
+		
+		return expPayouts.ToArray();
+	}
+
 	public int GetExpMultiplier(ScoreRank _Rank)
 	{
 		switch (_Rank)
