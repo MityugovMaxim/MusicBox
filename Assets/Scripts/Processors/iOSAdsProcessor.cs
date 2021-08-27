@@ -1,5 +1,6 @@
-using UnityEngine.Scripting;
 #if UNITY_IOS
+using UnityEngine.Scripting;
+
 [Preserve]
 public class iOSAdsProcessor : AdsProcessor
 {

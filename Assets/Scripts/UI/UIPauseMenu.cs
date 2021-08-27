@@ -71,7 +71,18 @@ public class UIPauseMenu : UIMenu
 		{
 			m_RestartAdsCount = 0;
 			
-			m_AdsProcessor.ShowInterstitial(RestartInternal);
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowInterstitialAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					RestartInternal();
+				}
+			);
 		}
 		else
 		{
@@ -102,7 +113,18 @@ public class UIPauseMenu : UIMenu
 		{
 			m_LeaveAdsCount = 0;
 			
-			m_AdsProcessor.ShowInterstitial(LeaveInternal);
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowInterstitialAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					LeaveInternal();
+				}
+			);
 		}
 		else
 		{

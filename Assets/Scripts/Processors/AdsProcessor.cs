@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Advertisements;
 using Zenject;
@@ -17,6 +18,8 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	bool m_InterstitialLoaded;
 	bool m_RewardedLoaded;
 
+	Action m_OnInterstitialLoaded;
+	Action m_OnRewardedLoaded;
 	Action m_InterstitialFinished;
 	Action m_RewardedSuccess;
 	Action m_RewardedFailed;
@@ -30,6 +33,11 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	void IInitializable.Initialize()
 	{
+		Reload();
+	}
+
+	public void Reload()
+	{
 		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return;
 		
@@ -39,7 +47,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			return;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, true, this);
+		Advertisement.Initialize(GameID, TestMode, false, this);
 		Advertisement.AddListener(this);
 	}
 
@@ -114,6 +122,38 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		Advertisement.Show(RewardedID);
 	}
 
+	public void ShowInterstitialAsync(
+		MonoBehaviour _Context,
+		float         _Timeout  = 10,
+		Action        _Finished = null
+	)
+	{
+		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		{
+			_Finished?.Invoke();
+			return;
+		}
+		
+		_Context.StartCoroutine(ShowInterstitialRoutine(_Timeout, _Finished));
+	}
+
+	public void ShowRewardedAsync(
+		MonoBehaviour _Context,
+		float         _Timeout = 15,
+		Action        _Success = null,
+		Action        _Failed  = null,
+		Action        _Cancel  = null
+	)
+	{
+		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		{
+			_Success?.Invoke();
+			return;
+		}
+		
+		_Context.StartCoroutine(ShowRewardedRoutine(_Timeout, _Success, _Failed, _Cancel));
+	}
+
 	void IUnityAdsInitializationListener.OnInitializationComplete()
 	{
 		Debug.Log("[AdsProcessor] Ads initialized.");
@@ -159,14 +199,61 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 					InvokeRewardedSuccess();
 					break;
 				default:
+					Debug.LogError("[AdsProcessor] Placement state: " + Advertisement.GetPlacementState(_PlacementID));
 					InvokeRewardedFailed();
 					break;
 			}
 		}
 		else if (_PlacementID == InterstitialID)
 		{
+			if (_Result != ShowResult.Finished)
+				Debug.LogError("[AdsProcessor] Placement state: " + Advertisement.GetPlacementState(_PlacementID));
 			InvokeInterstitialFinished();
 		}
+	}
+
+	IEnumerator ShowInterstitialRoutine(float _Timeout, Action _Finished)
+	{
+		float time = 0;
+		
+		yield return new WaitForSeconds(0.5f);
+		
+		while (time < _Timeout)
+		{
+			if (Advertisement.isInitialized && m_InterstitialLoaded)
+			{
+				ShowInterstitial(_Finished);
+				yield break;
+			}
+			
+			time += Time.deltaTime;
+			
+			yield return null;
+		}
+		
+		_Finished?.Invoke();
+	}
+
+	IEnumerator ShowRewardedRoutine(float _Timeout, Action _Success, Action _Failed, Action _Cancel)
+	{
+		float time = 0;
+		
+		yield return new WaitForSeconds(0.5f);
+		
+		while (time < _Timeout)
+		{
+			if (Advertisement.isInitialized && m_RewardedLoaded)
+			{
+				ShowRewarded(_Success, _Failed);
+				yield break;
+			}
+			
+			time += Time.deltaTime;
+			
+			yield return null;
+		}
+		
+		_Cancel?.Invoke();
 	}
 
 	void InvokeRewardedSuccess()

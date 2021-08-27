@@ -131,9 +131,36 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		if (levelMode == LevelMode.Ads)
-			m_AdsProcessor.ShowRewarded(PlayInternal, () => Setup(m_LevelID));
+		{
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowRewardedAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					PlayInternal();
+				},
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					Setup(m_LevelID);
+				},
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+					
+					Setup(m_LevelID);
+				}
+			);
+		}
 		else
+		{
 			PlayInternal();
+		}
 	}
 
 	protected override void OnShowFinished()

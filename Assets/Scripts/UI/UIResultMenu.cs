@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.iOS;
 using UnityEngine.Scripting;
 using Zenject;
+using Debug = UnityEngine.Debug;
 
 public class UIResultMenu : UIMenu
 {
@@ -99,7 +100,20 @@ public class UIResultMenu : UIMenu
 		
 		if (levelMode == LevelMode.Ads)
 		{
-			m_AdsProcessor.ShowRewarded(RestartInternal);
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowRewardedAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					RestartInternal();
+				},
+				() => m_MenuProcessor.Hide(MenuType.ProcessingMenu, true),
+				() => m_MenuProcessor.Hide(MenuType.ProcessingMenu)
+			);
 		}
 		else
 		{
@@ -109,7 +123,18 @@ public class UIResultMenu : UIMenu
 			{
 				m_RestartAdsCount = 0;
 				
-				m_AdsProcessor.ShowInterstitial(RestartInternal);
+				m_MenuProcessor.Show(MenuType.ProcessingMenu);
+				
+				m_AdsProcessor.ShowInterstitialAsync(
+					this,
+					15,
+					() =>
+					{
+						m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+						
+						RestartInternal();
+					}
+				);
 			}
 			else
 			{
@@ -142,7 +167,18 @@ public class UIResultMenu : UIMenu
 		{
 			m_LeaveAdsCount = 0;
 			
-			m_AdsProcessor.ShowInterstitial(LeaveInternal);
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowInterstitialAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					LeaveInternal();
+				}
+			);
 		}
 		else
 		{
@@ -182,7 +218,18 @@ public class UIResultMenu : UIMenu
 		{
 			m_NextAdsCount = 0;
 			
-			m_AdsProcessor.ShowInterstitial(NextInternal);
+			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			m_AdsProcessor.ShowInterstitialAsync(
+				this,
+				15,
+				() =>
+				{
+					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
+					
+					NextInternal();
+				}
+			);
 		}
 		else
 		{
