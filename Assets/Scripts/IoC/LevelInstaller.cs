@@ -28,32 +28,32 @@ public class LevelInstaller : MonoInstaller
 		Container.Bind<UIInputReceiver>().FromInstance(m_InputReceiver).AsSingle();
 		
 		Container.BindMemoryPool<UITapIndicator, UITapIndicator.Pool>()
-			.WithInitialSize(4)
+			.WithInitialSize(6)
 			.FromComponentInNewPrefab(m_TapIndicator)
 			.UnderTransformGroup("[UITapIndicator] Pool");
 		
 		Container.BindMemoryPool<UIDoubleIndicator, UIDoubleIndicator.Pool>()
-			.WithInitialSize(2)
+			.WithInitialSize(4)
 			.FromComponentInNewPrefab(m_DoubleIndicator)
 			.UnderTransformGroup("[UIDoubleIndicator] Pool");
 		
 		Container.BindMemoryPool<UIHoldIndicator, UIHoldIndicator.Pool>()
-			.WithInitialSize(2)
+			.WithInitialSize(4)
 			.FromComponentInNewPrefab(m_HoldIndicator)
 			.UnderTransformGroup("[UIHoldIndicator] Pool");
 		
 		Container.BindMemoryPool<UITapFX, UITapFX.Pool>()
-			.WithInitialSize(2)
+			.WithInitialSize(6)
 			.FromComponentInNewPrefab(m_TapFX)
 			.UnderTransformGroup("[UITapFX] Pool");
 		
 		Container.BindMemoryPool<UIDoubleFX, UIDoubleFX.Pool>()
-			.WithInitialSize(1)
+			.WithInitialSize(4)
 			.FromComponentInNewPrefab(m_DoubleFX)
 			.UnderTransformGroup("[UIDoubleFX] Pool");
 		
 		Container.BindMemoryPool<UIHoldFX, UIHoldFX.Pool>()
-			.WithInitialSize(1)
+			.WithInitialSize(4)
 			.FromComponentInNewPrefab(m_HoldFX)
 			.UnderTransformGroup("[UIHoldFX] Pool");
 	}
