@@ -6,7 +6,14 @@ using Zenject;
 
 public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationListener, IUnityAdsListener
 {
-	static bool TestMode => true;
+	static bool TestMode
+	{
+		#if DEVELOPMENT_BUILD
+		get => true;
+		#else
+		get => false;
+		#endif
+	}
 
 	protected abstract string GameID         { get; }
 	protected abstract string InterstitialID { get; }
@@ -47,7 +54,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			return;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, false, this);
+		Advertisement.Initialize(GameID, TestMode, true, this);
 		Advertisement.AddListener(this);
 	}
 
@@ -124,7 +131,6 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowInterstitialAsync(
 		MonoBehaviour _Context,
-		float         _Timeout  = 10,
 		Action        _Finished = null
 	)
 	{
@@ -134,12 +140,11 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			return;
 		}
 		
-		_Context.StartCoroutine(ShowInterstitialRoutine(_Timeout, _Finished));
+		_Context.StartCoroutine(ShowInterstitialRoutine(_Finished));
 	}
 
 	public void ShowRewardedAsync(
 		MonoBehaviour _Context,
-		float         _Timeout = 15,
 		Action        _Success = null,
 		Action        _Failed  = null,
 		Action        _Cancel  = null
@@ -151,15 +156,12 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			return;
 		}
 		
-		_Context.StartCoroutine(ShowRewardedRoutine(_Timeout, _Success, _Failed, _Cancel));
+		_Context.StartCoroutine(ShowRewardedRoutine(_Success, _Failed, _Cancel));
 	}
 
 	void IUnityAdsInitializationListener.OnInitializationComplete()
 	{
 		Debug.Log("[AdsProcessor] Ads initialized.");
-		
-		Advertisement.Load(InterstitialID);
-		Advertisement.Load(RewardedID);
 	}
 
 	void IUnityAdsInitializationListener.OnInitializationFailed(UnityAdsInitializationError _Error, string _Message)
@@ -180,6 +182,8 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	void IUnityAdsListener.OnUnityAdsDidError(string _Message)
 	{
 		Debug.LogErrorFormat("[AdsProcessor] Ads placement error. {0}.", _Message);
+		
+		Reload();
 	}
 
 	void IUnityAdsListener.OnUnityAdsDidStart(string _PlacementID)
@@ -212,13 +216,19 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		}
 	}
 
-	IEnumerator ShowInterstitialRoutine(float _Timeout, Action _Finished)
+	IEnumerator ShowInterstitialRoutine(Action _Finished)
 	{
+		const float timeout = 30;
+		
 		float time = 0;
+		
+		m_InterstitialLoaded = false;
+		
+		Advertisement.Load(InterstitialID);
 		
 		yield return new WaitForSeconds(0.5f);
 		
-		while (time < _Timeout)
+		while (time < timeout)
 		{
 			if (Advertisement.isInitialized && m_InterstitialLoaded)
 			{
@@ -231,16 +241,24 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			yield return null;
 		}
 		
+		Reload();
+		
 		_Finished?.Invoke();
 	}
 
-	IEnumerator ShowRewardedRoutine(float _Timeout, Action _Success, Action _Failed, Action _Cancel)
+	IEnumerator ShowRewardedRoutine(Action _Success, Action _Failed, Action _Cancel)
 	{
+		const float timeout = 30;
+		
 		float time = 0;
+		
+		m_RewardedLoaded = false;
+		
+		Advertisement.Load(RewardedID);
 		
 		yield return new WaitForSeconds(0.5f);
 		
-		while (time < _Timeout)
+		while (time < timeout)
 		{
 			if (Advertisement.isInitialized && m_RewardedLoaded)
 			{
@@ -252,6 +270,8 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 			
 			yield return null;
 		}
+		
+		Reload();
 		
 		_Cancel?.Invoke();
 	}
