@@ -1,12 +1,11 @@
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UITapIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<UITapIndicator>
+	public class Pool : FXPool<UITapIndicator>
 	{
 		protected override void Reinitialize(UITapIndicator _Item)
 		{
