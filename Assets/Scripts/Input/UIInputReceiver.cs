@@ -97,7 +97,10 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			
 			if (handle.Select(area) && SelectHandle(handle, pointerID))
+			{
 				handle.TouchDown(pointerID, area);
+				break;
+			}
 		}
 		
 		_EventData.Use();
@@ -141,10 +144,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			rect.y + rect.height * 0.5f
 		);
 		
-		Vector2 size = new Vector2(
-			EventSystem.current.pixelDragThreshold,
-			rect.height
-		);
+		Vector2 size = new Vector2(0, rect.height);
 		
 		return new Rect(position - size * 0.5f, size);
 	}
