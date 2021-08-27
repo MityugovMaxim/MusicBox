@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class UITapHandle : UIHandle
 {
+	protected override bool Processed => m_Processed;
+
 	bool           m_Interactable;
 	bool           m_Processed;
 	UITapIndicator m_Indicator;

@@ -4,6 +4,8 @@ public class UIDoubleHandle : UIHandle
 {
 	const int MIN_COUNT = 2;
 
+	protected override bool Processed => m_Processed;
+
 	UIDoubleIndicator m_Indicator;
 	bool              m_Interactable;
 	bool              m_Processed;

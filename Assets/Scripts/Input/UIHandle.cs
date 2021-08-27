@@ -2,8 +2,13 @@ using UnityEngine;
 
 public abstract class UIHandle : UIEntity
 {
+	protected abstract bool Processed { get; }
+
 	public bool Select(Rect _Rect)
 	{
+		if (Processed)
+			return false;
+		
 		Rect area = RectTransform.InverseTransformRect(_Rect);
 		Rect rect = RectTransform.rect;
 		

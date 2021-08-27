@@ -245,14 +245,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	bool DeselectHandle(UIHandle _Handle, int _PointerID)
 	{
-		if (!m_Selection.ContainsKey(_Handle))
+		if (!m_Selection.ContainsKey(_Handle) || !m_Selection[_Handle].Contains(_PointerID))
 			return false;
-		
-		if (!m_Selection[_Handle].Contains(_PointerID))
-		{
-			Debug.LogError($"[UIInputReceiver] Deselect handle failed. Handle '{_Handle.name}' is not selected by pointer '{_PointerID}'", _Handle.gameObject);
-			return false;
-		}
 		
 		m_Selection[_Handle].Remove(_PointerID);
 		

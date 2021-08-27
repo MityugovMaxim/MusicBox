@@ -11,6 +11,8 @@ public class UIHoldHandle : UIHandle
 
 	public float MaxProgress { get; private set; }
 
+	protected override bool Processed => m_Processed;
+
 	[SerializeField] RectTransform m_Marker;
 	[SerializeField] RectOffset    m_Margin;
 
