@@ -136,7 +136,6 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 			
 			m_AdsProcessor.ShowRewardedAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);

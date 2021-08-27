@@ -104,7 +104,6 @@ public class UIResultMenu : UIMenu
 			
 			m_AdsProcessor.ShowRewardedAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
@@ -127,7 +126,6 @@ public class UIResultMenu : UIMenu
 				
 				m_AdsProcessor.ShowInterstitialAsync(
 					this,
-					15,
 					() =>
 					{
 						m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
@@ -171,7 +169,6 @@ public class UIResultMenu : UIMenu
 			
 			m_AdsProcessor.ShowInterstitialAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
@@ -222,7 +219,6 @@ public class UIResultMenu : UIMenu
 			
 			m_AdsProcessor.ShowInterstitialAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);

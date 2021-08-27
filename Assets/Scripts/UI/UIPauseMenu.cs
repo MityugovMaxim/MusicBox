@@ -75,7 +75,6 @@ public class UIPauseMenu : UIMenu
 			
 			m_AdsProcessor.ShowInterstitialAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
@@ -117,7 +116,6 @@ public class UIPauseMenu : UIMenu
 			
 			m_AdsProcessor.ShowInterstitialAsync(
 				this,
-				15,
 				() =>
 				{
 					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
