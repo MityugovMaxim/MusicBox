@@ -1,5 +1,19 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-3652163522212282800
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
+  m_Name: Double Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 18.75
+  m_MaxTime: 18.75
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17,11 +31,28 @@ MonoBehaviour:
   m_Expanded: 0
   m_Offset: 0
   m_Clips:
+  - {fileID: -3652163522212282800}
   - {fileID: 1206696531486260438}
   - {fileID: 2307414753073550862}
+  - {fileID: 4707504733842071115}
+  - {fileID: 234276377301394314}
   - {fileID: 7854427931472976113}
   - {fileID: 8317700112424423374}
   m_Track: game_canvas/tracks/tracks_area/double_track
+--- !u!114 &234276377301394314
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
+  m_Name: Double Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 25
+  m_MaxTime: 25
 --- !u!114 &1206696531486260438
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -34,8 +65,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
   m_Name: Double Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 10
-  m_MaxTime: 10
+  m_MinTime: 20
+  m_MaxTime: 20
 --- !u!114 &2307414753073550862
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,8 +79,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
   m_Name: Double Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 11.333334
-  m_MaxTime: 11.333334
+  m_MinTime: 21.25
+  m_MaxTime: 21.25
+--- !u!114 &4707504733842071115
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
+  m_Name: Double Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 23.75
+  m_MaxTime: 23.75
 --- !u!114 &7854427931472976113
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -62,8 +107,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
   m_Name: Double Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 12.666667
-  m_MaxTime: 12.666667
+  m_MinTime: 27.5
+  m_MaxTime: 27.5
 --- !u!114 &8317700112424423374
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -76,5 +121,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3d4b023e9cf4c15a4b3ca3e9d9140ad, type: 3}
   m_Name: Double Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 14
-  m_MaxTime: 14
+  m_MinTime: 28.75
+  m_MaxTime: 28.75

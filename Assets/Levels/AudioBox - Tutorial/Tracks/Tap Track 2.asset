@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8420695036462500600
+--- !u!114 &-4027640375233348097
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
   m_Name: Tap Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 5.3333335
-  m_MaxTime: 5.3333335
+  m_MinTime: 8.125
+  m_MaxTime: 8.125
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31,10 +31,12 @@ MonoBehaviour:
   m_Expanded: 0
   m_Offset: 0
   m_Clips:
-  - {fileID: 7264815045079925784}
-  - {fileID: -8420695036462500600}
+  - {fileID: 661399861772661377}
+  - {fileID: 3529764231782041320}
+  - {fileID: -4027640375233348097}
+  - {fileID: 4490240556975288332}
   m_Track: game_canvas/tracks/tracks_area/tap_track_2
---- !u!114 &7264815045079925784
+--- !u!114 &661399861772661377
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,5 +48,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
   m_Name: Tap Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 2.6666667
-  m_MaxTime: 2.6666667
+  m_MinTime: 3.125
+  m_MaxTime: 3.125
+--- !u!114 &3529764231782041320
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
+  m_Name: Tap Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 4.0625
+  m_MaxTime: 4.0625
+--- !u!114 &4490240556975288332
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
+  m_Name: Tap Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 9.0625
+  m_MaxTime: 9.0625
