@@ -7,7 +7,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
 	const string TUTORIAL_COUNT_KEY = "TUTORIAL_COUNT";
 
-	public int TutorialCount
+	static int TutorialCount
 	{
 		get => PlayerPrefs.GetInt(TUTORIAL_COUNT_KEY, 0);
 		set => PlayerPrefs.SetInt(TUTORIAL_COUNT_KEY, value);
