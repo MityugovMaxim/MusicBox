@@ -36,24 +36,16 @@ public class AudioManager : IInitializable
 	static extern void DisableAudio();
 	#endif
 
-	public static float Latency => m_DSPLatency + m_NativeLatency;
+	public static float Latency { get; private set; }
 
 	static SignalBus m_SignalBus;
-
-	static float m_DSPLatency;
-	static float m_NativeLatency;
 
 	[Inject]
 	public AudioManager(SignalBus _SignalBus)
 	{
 		m_SignalBus = _SignalBus;
 		
-		AudioConfiguration configuration = AudioSettings.GetConfiguration();
-		
-		m_DSPLatency    = (float)configuration.dspBufferSize / AudioSettings.outputSampleRate;
-		m_NativeLatency = GetLatency();
-		
-		Debug.LogFormat("[AudioManager] Detected DSP buffer latency: {0} ms.", m_DSPLatency);
+		Latency = GetLatency();
 	}
 
 	public static void SetAudioActive(bool _Value)
@@ -82,7 +74,11 @@ public class AudioManager : IInitializable
 	static float GetLatency()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		float latency = GetInputLatency() + GetOutputLatency();
+		AudioConfiguration configuration = AudioSettings.GetConfiguration();
+		
+		float dspLatency    = (float)configuration.dspBufferSize / AudioSettings.outputSampleRate;
+		float nativeLatency = GetInputLatency() + GetOutputLatency();
+		float latency       = dspLatency + nativeLatency;
 		if (latency > 0)
 			Debug.LogFormat("[AudioManager] Detected native {0}ms latency.", latency);
 		return latency;
@@ -118,7 +114,7 @@ public class AudioManager : IInitializable
 	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
 	static void SourceChangedHandler()
 	{
-		m_NativeLatency = GetLatency();
+		Latency = GetLatency();
 		
 		m_SignalBus.Fire(new AudioSourceChangedSignal());
 	}
