@@ -44,12 +44,12 @@ RouteObserver* m_RouteObserver;
 
 float GetInputLatency()
 {
-    return AVAudioSession.sharedInstance.inputLatency;
+    return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.inputLatency;
 }
 
 float GetOutputLatency()
 {
-    return AVAudioSession.sharedInstance.outputLatency;
+    return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.outputLatency;
 }
 
 void EnableAudio()
