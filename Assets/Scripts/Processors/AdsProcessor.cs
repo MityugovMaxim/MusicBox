@@ -195,6 +195,8 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	{
 		Debug.LogFormat("[AdsProcessor] Ads finished. Placement: {0} Result: {1}.", _PlacementID, _Result);
 		
+		AudioManager.SetAudioActive(true);
+		
 		if (_PlacementID == RewardedID)
 		{
 			switch (_Result)
