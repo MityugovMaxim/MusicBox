@@ -45,6 +45,11 @@ public class AudioManager : IInitializable
 	{
 		m_SignalBus = _SignalBus;
 		
+		AudioConfiguration configuration = AudioSettings.GetConfiguration();
+		
+		Debug.LogFormat("[AudioManager] DSP buffer size: {0} samples.", configuration.dspBufferSize);
+		Debug.LogFormat("[AudioManager] DSP buffer latency: {0} ms.", (float)configuration.dspBufferSize / AudioSettings.outputSampleRate);
+		
 		Latency = GetLatency();
 	}
 
