@@ -54,11 +54,15 @@ float GetOutputLatency()
 
 void EnableAudio()
 {
+    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    
     UnitySetAudioSessionActive(1);
 }
 
 void DisableAudio()
 {
+    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    
     UnitySetAudioSessionActive(0);
 }
 
@@ -75,6 +79,8 @@ void RegisterRemoteCommands(
     CommandHandler _SourceChanged
 )
 {
+    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    
     m_RouteObserver = [[RouteObserver new] init:_SourceChanged];
     
     MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
