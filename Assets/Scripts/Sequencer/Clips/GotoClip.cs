@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class GotoClip : Clip
 {
 	GotoResolver m_Resolver;
