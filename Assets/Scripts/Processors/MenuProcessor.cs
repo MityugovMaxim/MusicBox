@@ -131,11 +131,13 @@ public class MenuProcessor : IInitializable, IDisposable
 		Hide(MenuType.MainMenu, true);
 		Hide(MenuType.LevelMenu, true);
 		Hide(MenuType.ResultMenu, true);
-		Hide(MenuType.TutorialMenu, true);
-		
 		Hide(MenuType.PauseMenu, true);
-		Show(MenuType.GameMenu, true);
 		
+		UIGameMenu gameMenu = GetMenu<UIGameMenu>(MenuType.GameMenu);
+		if (gameMenu != null)
+			gameMenu.Setup(_Signal.LevelID);
+		
+		Show(MenuType.GameMenu, true);
 		Hide(MenuType.LoadingMenu);
 	}
 
@@ -152,10 +154,8 @@ public class MenuProcessor : IInitializable, IDisposable
 	{
 		Hide(MenuType.MainMenu, true);
 		Hide(MenuType.LevelMenu, true);
-		Hide(MenuType.TutorialMenu, true);
 		
 		Show(MenuType.GameMenu, true);
-		
 		Hide(MenuType.ResultMenu);
 	}
 

@@ -24,14 +24,14 @@ public partial class Track
 		set => m_Expanded = value;
 	}
 
-	public char Mnemonic => m_Mnemonic;
+	public string Mnemonic => m_Mnemonic;
 
 	protected virtual float MinHeight => 30;
 	protected virtual float MaxHeight => 200;
 
-	[SerializeField]                  char  m_Mnemonic;
-	[SerializeField, HideInInspector] float m_Height;
-	[SerializeField, HideInInspector] bool  m_Expanded = true;
+	[SerializeField]                  string m_Mnemonic;
+	[SerializeField, HideInInspector] float  m_Height;
+	[SerializeField, HideInInspector] bool   m_Expanded = true;
 
 	public virtual void DropPerform(float _Time, Object[] _Objects) { }
 
@@ -153,11 +153,7 @@ public partial class Track<T> : Track where T : Clip
 		float time = _MaxTime;
 		
 		if (_MinTime > _MaxTime)
-		{
-			float buffer = _MinTime;
-			_MinTime = _MaxTime;
-			_MaxTime = buffer;
-		}
+			(_MinTime, _MaxTime) = (_MaxTime, _MinTime);
 		
 		m_Buffer.Clear();
 		

@@ -26,7 +26,7 @@ public class TapTrackDrawer : TrackDrawer
 			TrackUtility.AddClip(Track, clip, Time);
 		}
 		
-		if (Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic)
+		if (!string.IsNullOrEmpty(Track.Mnemonic) && Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic[0])
 		{
 			Event.current.Use();
 			

@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8201128021214470723
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
+  m_Name: Tap Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 4.666667
+  m_MaxTime: 4.666667
+--- !u!114 &-5784118061474290866
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
+  m_Name: Tap Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 5.666667
+  m_MaxTime: 5.666667
+--- !u!114 &-886520588373981752
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c4e9ebc9fe6b442598b155403bafe5b, type: 3}
+  m_Name: Tap Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 3
+  m_MaxTime: 3
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06145c2e07e1743c0939cf7f2e532c29, type: 3}
+  m_Name: Tap Track 3
+  m_EditorClassIdentifier: 
+  m_Mnemonic: 3
+  m_Height: 0
+  m_Expanded: 0
+  m_Offset: 0
+  m_Clips:
+  - {fileID: -886520588373981752}
+  - {fileID: -8201128021214470723}
+  - {fileID: -5784118061474290866}
+  m_Track: game_canvas/tracks/tracks_area/tap_track_3

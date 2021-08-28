@@ -7,6 +7,8 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UIGamePauseButton m_PauseButton;
 	[SerializeField] UIGameProgress    m_Progress;
 	[SerializeField] UIGameTimer       m_Timer;
+	[SerializeField] UITrackInfo       m_TrackInfo;
+	[SerializeField] LevelInfo         m_TutorialInfo;
 
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
@@ -80,6 +82,20 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		
 		if (m_PauseButton != null)
 			m_PauseButton.Pause();
+	}
+
+	public void Setup(string _LevelID)
+	{
+		bool tutorial = m_TutorialInfo != null && m_TutorialInfo.ID == _LevelID;
+		
+		if (m_Progress != null)
+			m_Progress.gameObject.SetActive(!tutorial);
+		
+		if (m_Timer != null)
+			m_Timer.gameObject.SetActive(!tutorial);
+		
+		if (m_TrackInfo != null)
+			m_TrackInfo.gameObject.SetActive(!tutorial);
 	}
 
 	protected override void OnHideFinished()

@@ -150,25 +150,33 @@ public partial class Sequencer : MonoBehaviour
 		Sample(0);
 	}
 
+	public void Goto(float _Time)
+	{
+		Time = _Time;
+	}
+
 	public void Sample(float _Time)
 	{
-		foreach (Track track in m_Tracks)
-			track.Sample(Time, _Time);
+		float minTime = Time;
+		float maxTime = _Time;
 		
 		Time = _Time;
+		
+		foreach (Track track in m_Tracks)
+			track.Sample(minTime, maxTime);
 		
 		if (m_SampleReceivers != null)
 		{
 			foreach (ISampleReceiver sampleReceiver in m_SampleReceivers)
-				sampleReceiver.Sample(Time, Length);
+				sampleReceiver.Sample(maxTime, Length);
 		}
 		
-		if (Time >= m_Length)
+		if (maxTime >= m_Length)
 		{
 			Playing = false;
 			
 			foreach (Track track in m_Tracks)
-				track.Sample(Time, m_Length);
+				track.Sample(maxTime, m_Length);
 			
 			Time = m_Length;
 			

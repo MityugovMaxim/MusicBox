@@ -29,7 +29,7 @@ public class HoldTrackDrawer : TrackDrawer
 			TrackUtility.AddClip(Track, clip, Time, 0.2f);
 		}
 		
-		if (Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic)
+		if (!string.IsNullOrEmpty(Track.Mnemonic) && Event.current.type == EventType.KeyDown && Event.current.character == Track.Mnemonic[0])
 		{
 			Event.current.Use();
 			

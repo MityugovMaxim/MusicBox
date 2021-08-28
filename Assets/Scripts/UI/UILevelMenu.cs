@@ -6,14 +6,6 @@ using Zenject;
 
 public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHandler, IDragHandler, IDropHandler
 {
-	const string TUTORIAL_COUNT_KEY = "TUTORIAL";
-
-	static int TutorialCount
-	{
-		get => PlayerPrefs.GetInt(TUTORIAL_COUNT_KEY, 0);
-		set => PlayerPrefs.SetInt(TUTORIAL_COUNT_KEY, value);
-	}
-
 	[SerializeField] AnimationCurve           m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField] UILevelPreviewBackground m_Background;
 	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
@@ -107,21 +99,10 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		
 		void PlayInternal()
 		{
-			if (TutorialCount < 1)
-			{
-				TutorialCount++;
-				UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>(MenuType.TutorialMenu);
-				if (tutorialMenu != null)
-					tutorialMenu.Setup(m_LevelID);
-				m_MenuProcessor.Show(MenuType.TutorialMenu);
-			}
-			else
-			{
-				UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
-				if (loadingMenu != null)
-					loadingMenu.Setup(m_LevelID);
-				m_MenuProcessor.Show(MenuType.LoadingMenu);
-			}
+			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
+			if (loadingMenu != null)
+				loadingMenu.Setup(m_LevelID);
+			m_MenuProcessor.Show(MenuType.LoadingMenu);
 		}
 		
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
@@ -183,7 +164,7 @@ public class UILevelMenu : UIMenu, IInitializable, IDisposable, IPointerDownHand
 		m_Progress.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
 		
-		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID));
+		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID) && m_ProgressProcessor.GetExpPayout(m_LevelID) > 0);
 		
 		m_RankSExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.S);
 		m_RankAExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.A);

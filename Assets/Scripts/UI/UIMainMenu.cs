@@ -5,9 +5,19 @@ using Zenject;
 
 public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
+	const string TUTORIAL_COUNT_KEY = "TUTORIAL_COUNT";
+
+	public int TutorialCount
+	{
+		get => PlayerPrefs.GetInt(TUTORIAL_COUNT_KEY, 0);
+		set => PlayerPrefs.SetInt(TUTORIAL_COUNT_KEY, value);
+	}
+
 	[SerializeField] UIMainMenuItem m_Item;
 	[SerializeField] RectTransform  m_Container;
 	[SerializeField] UIProductPromo m_ProductPromo;
+	[SerializeField] LevelInfo      m_TutorialInfo;
+
 	//[SerializeField] ScrollRect     m_Scroll;
 
 	SignalBus              m_SignalBus;
@@ -86,6 +96,15 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_MenuProcessor.Show(MenuType.NotificationMenu);
 		
 		Refresh();
+		
+		if (m_TutorialInfo != null && TutorialCount < 1)
+		{
+			TutorialCount++;
+			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
+			if (loadingMenu != null)
+				loadingMenu.Setup(m_TutorialInfo.ID);
+			m_MenuProcessor.Show(MenuType.LoadingMenu, true);
+		}
 	}
 
 	void Refresh()

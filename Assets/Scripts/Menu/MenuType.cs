@@ -8,7 +8,6 @@ public enum MenuType
 	GameMenu         = 5,
 	PauseMenu        = 6,
 	ResultMenu       = 7,
-	TutorialMenu     = 8,
-	ProcessingMenu   = 9,
-	NotificationMenu = 10,
+	ProcessingMenu   = 8,
+	NotificationMenu = 9,
 }

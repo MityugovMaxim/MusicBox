@@ -38,6 +38,11 @@ public class UILoadingMenu : UIMenu
 			m_Loader.Play();
 		
 		m_MenuProcessor.Hide(MenuType.NotificationMenu, true);
+		
+		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>(MenuType.GameMenu);
+		if (gameMenu != null)
+			gameMenu.Setup(m_LevelID);
+		
 		m_MenuProcessor.Show(MenuType.GameMenu, true);
 		
 		if (m_LevelProcessor != null)
