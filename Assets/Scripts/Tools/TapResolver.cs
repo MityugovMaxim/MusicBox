@@ -8,8 +8,7 @@ public class TapResolver : GotoResolver, IInitializable, IDisposable
 
 	SignalBus m_SignalBus;
 
-	bool m_Shown;
-	int  m_TapCount;
+	int m_TapCount;
 
 	[Inject]
 	public void Construct(SignalBus _SignalBus)
