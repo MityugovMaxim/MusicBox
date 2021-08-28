@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-3435281893092047413
+--- !u!114 &-1405040501024154409
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12,24 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 361319651fc64f5fbdb23dc2595cf75a, type: 3}
   m_Name: Music Clip
   m_EditorClassIdentifier: 
-  m_MinTime: 31.789843
+  m_MinTime: 31.78984
   m_MaxTime: 57.053154
   m_AudioClip: {fileID: 8300000, guid: 31ffe3bee59994f319eeb49023519029, type: 3}
---- !u!114 &-2321181412623321176
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 361319651fc64f5fbdb23dc2595cf75a, type: 3}
-  m_Name: Music Clip
-  m_EditorClassIdentifier: 
-  m_MinTime: 0
-  m_MaxTime: 0
-  m_AudioClip: {fileID: 8300000, guid: 208dcb71627c34f82881b30596da58d4, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40,12 +25,44 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 116598962ee14a9aac028260660f29da, type: 3}
-  m_Name: Music Hold Track
+  m_Name: Music Track
   m_EditorClassIdentifier: 
   m_Mnemonic: 
   m_Height: 0
   m_Expanded: 1
   m_Offset: 0
   m_Clips:
-  - {fileID: -3435281893092047413}
-  m_AudioSource: music_hold
+  - {fileID: 4285792060892614662}
+  - {fileID: 7231334871015905229}
+  - {fileID: -1405040501024154409}
+  m_AudioSource: music
+--- !u!114 &4285792060892614662
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 361319651fc64f5fbdb23dc2595cf75a, type: 3}
+  m_Name: Music Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 0.95482516
+  m_MaxTime: 13.97916
+  m_AudioClip: {fileID: 8300000, guid: 208dcb71627c34f82881b30596da58d4, type: 3}
+--- !u!114 &7231334871015905229
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 361319651fc64f5fbdb23dc2595cf75a, type: 3}
+  m_Name: Music Clip
+  m_EditorClassIdentifier: 
+  m_MinTime: 16.53941
+  m_MaxTime: 29.56374
+  m_AudioClip: {fileID: 8300000, guid: 208dcb71627c34f82881b30596da58d4, type: 3}

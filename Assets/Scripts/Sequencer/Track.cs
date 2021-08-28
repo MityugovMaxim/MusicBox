@@ -152,15 +152,25 @@ public partial class Track<T> : Track where T : Clip
 		
 		float time = _MaxTime;
 		
-		if (_MinTime > _MaxTime)
+		bool reverse = _MinTime > _MaxTime;
+		
+		if (reverse)
 			(_MinTime, _MaxTime) = (_MaxTime, _MinTime);
 		
 		m_Buffer.Clear();
 		
 		FindClips(m_Buffer, _MinTime, _MaxTime);
 		
-		foreach (T clip in m_Buffer)
-			clip.Sample(time);
+		if (reverse)
+		{
+			for (int i = m_Buffer.Count - 1; i >= 0; i--)
+				m_Buffer[i].Sample(time);
+		}
+		else
+		{
+			foreach (T clip in m_Buffer)
+				clip.Sample(time);
+		}
 	}
 
 	public void FindClips(List<T> _Clips, float _MinTime, float _MaxTime)

@@ -9,19 +9,24 @@ public class UIScore : UIEntity
 {
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RankParameterID    = Animator.StringToHash("Rank");
+	static readonly int m_FastParameterID    = Animator.StringToHash("Fast");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	[SerializeField, Range(0, 1)] float m_AccuracyPhase;
 	[SerializeField, Range(0, 1)] float m_ScorePhase;
 	[SerializeField, Range(0, 1)] float m_ExpPayoutPhase;
 
-	[SerializeField] TMP_Text   m_AccuracyLabel;
-	[SerializeField] TMP_Text   m_ScoreLabel;
-	[SerializeField] UIExpLabel m_ExpPayoutLabel;
-	[SerializeField] UIExpLabel m_RankSPayoutLabel;
-	[SerializeField] UIExpLabel m_RankAPayoutLabel;
-	[SerializeField] UIExpLabel m_RankBPayoutLabel;
-	[SerializeField] UIExpLabel m_RankCPayoutLabel;
+	[SerializeField] TMP_Text      m_AccuracyLabel;
+	[SerializeField] TMP_Text      m_ScoreLabel;
+	[SerializeField] UIExpLabel    m_ExpPayoutLabel;
+	[SerializeField] UIExpLabel    m_RankSPayoutLabel;
+	[SerializeField] UIExpLabel    m_RankAPayoutLabel;
+	[SerializeField] UIExpLabel    m_RankBPayoutLabel;
+	[SerializeField] UIExpLabel    m_RankCPayoutLabel;
+	[SerializeField] RectTransform m_RankSIcon;
+	[SerializeField] RectTransform m_RankAIcon;
+	[SerializeField] RectTransform m_RankBIcon;
+	[SerializeField] RectTransform m_RankCIcon;
 
 	ScoreProcessor    m_ScoreProcessor;
 	ProgressProcessor m_ProgressProcessor;
@@ -93,6 +98,27 @@ public class UIScore : UIEntity
 		m_RankAPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.A);
 		m_RankBPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.B);
 		m_RankCPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.C);
+		
+		m_RankCIcon.SetAsLastSibling();
+		m_RankBIcon.SetAsLastSibling();
+		m_RankAIcon.SetAsLastSibling();
+		m_RankSIcon.SetAsLastSibling();
+		
+		switch (m_Rank)
+		{
+			case ScoreRank.S:
+				m_RankSIcon.SetAsLastSibling();
+				break;
+			case ScoreRank.A:
+				m_RankAIcon.SetAsLastSibling();
+				break;
+			case ScoreRank.B:
+				m_RankBIcon.SetAsLastSibling();
+				break;
+			case ScoreRank.C:
+				m_RankCIcon.SetAsLastSibling();
+				break;
+		}
 	}
 
 	public void Restore()
@@ -101,6 +127,7 @@ public class UIScore : UIEntity
 			return;
 		
 		m_Animator.ResetTrigger(m_PlayParameterID);
+		m_Animator.SetBool(m_FastParameterID, false);
 		m_Animator.SetInteger(m_RankParameterID, 0);
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
@@ -114,6 +141,7 @@ public class UIScore : UIEntity
 		
 		ScoreRank rank = m_ScoreProcessor.GetLastRank(m_LevelID);
 		
+		m_Animator.SetBool(m_FastParameterID, m_ExpPayout == 0);
 		m_Animator.SetInteger(m_RankParameterID, (int)rank);
 		m_Animator.SetTrigger(m_PlayParameterID);
 	}

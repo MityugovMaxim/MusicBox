@@ -23,6 +23,7 @@ public class UIExpLabel : UIEntity
 	[SerializeField] TMP_Text m_Label;
 	[SerializeField] bool     m_Sign;
 	[SerializeField] long     m_Exp;
+	[SerializeField] bool     m_HideZeroExp;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -38,5 +39,7 @@ public class UIExpLabel : UIEntity
 		string sign = m_Sign ? Exp >= 0 ? "+" : "-" : string.Empty;
 		
 		m_Label.text = $"{sign}{Math.Abs(Exp)}<sprite name=\"{EXP_ICON}\">";
+		
+		m_Label.gameObject.SetActive(!m_HideZeroExp || Exp != 0);
 	}
 }
