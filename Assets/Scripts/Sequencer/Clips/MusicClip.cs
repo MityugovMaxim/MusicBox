@@ -2,18 +2,6 @@ using UnityEngine;
 
 public class MusicClip : Clip
 {
-	#if UNITY_EDITOR
-	const float DSP_TIME_OFFSET = 0;
-	#else
-	const float DSP_TIME_OFFSET = 1;
-	#endif
-
-	public override float MinTime
-	{
-		get => base.MinTime - DSP_TIME_OFFSET;
-		set => base.MinTime = value;
-	}
-
 	[SerializeField] AudioClip m_AudioClip;
 
 	AudioSource m_AudioSource;
@@ -34,15 +22,11 @@ public class MusicClip : Clip
 		if (!Sequencer.Playing || !Playing)
 			return;
 		
-		m_AudioSource.clip = m_AudioClip;
-		#if UNITY_EDITOR
-		m_AudioSource.Play();
-		#else
-		m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
-		#endif
 		AudioManager.SetAudioActive(true);
 		
+		m_AudioSource.clip = m_AudioClip;
 		m_AudioSource.time = GetMusicTime(_Time);
+		m_AudioSource.PlayScheduled(AudioSettings.dspTime + MusicTrack.DSP_TIME_OFFSET);
 	}
 
 	protected override void OnUpdate(float _Time)
@@ -55,15 +39,11 @@ public class MusicClip : Clip
 		}
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
-			m_AudioSource.clip = m_AudioClip;
-			#if UNITY_EDITOR
-			m_AudioSource.Play();
-			#else
-			m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
-			#endif
 			AudioManager.SetAudioActive(true);
 			
+			m_AudioSource.clip = m_AudioClip;
 			m_AudioSource.time = GetMusicTime(_Time);
+			m_AudioSource.PlayScheduled(AudioSettings.dspTime + MusicTrack.DSP_TIME_OFFSET);
 		}
 	}
 
@@ -74,8 +54,6 @@ public class MusicClip : Clip
 
 	float GetMusicTime(float _Time)
 	{
-		float time = _Time - (MinTime + DSP_TIME_OFFSET);
-		
-		return Mathf.Clamp(time, 0, m_AudioClip.length);
+		return Mathf.Clamp(GetLocalTime(_Time), 0, m_AudioClip.length);
 	}
 }

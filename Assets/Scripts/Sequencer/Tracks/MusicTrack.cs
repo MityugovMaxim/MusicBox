@@ -47,7 +47,9 @@ public partial class MusicTrack
 [CreateAssetMenu(fileName = "Music Track", menuName = "Tracks/Music Track")]
 public partial class MusicTrack : Track<MusicClip>
 {
-	protected override float Offset => 0;
+	public const float DSP_TIME_OFFSET = 1;
+
+	protected override float Offset => -DSP_TIME_OFFSET;
 
 	[SerializeField, Reference(typeof(AudioSource))] string m_AudioSource;
 
