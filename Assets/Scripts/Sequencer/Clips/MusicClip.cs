@@ -2,9 +2,11 @@ using UnityEngine;
 
 public class MusicClip : Clip
 {
+	const float DSP_TIME_OFFSET = 1;
+
 	public override float MinTime
 	{
-		get => base.MinTime - AudioManager.Latency;
+		get => base.MinTime - AudioManager.Latency - DSP_TIME_OFFSET;
 		set => base.MinTime = value;
 	}
 
@@ -35,7 +37,7 @@ public class MusicClip : Clip
 			return;
 		
 		m_AudioSource.clip = m_AudioClip;
-		m_AudioSource.Play();
+		m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
 		AudioManager.SetAudioActive(true);
 		
 		m_AudioSource.time = GetMusicTime(_Time);
@@ -52,7 +54,7 @@ public class MusicClip : Clip
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
 			m_AudioSource.clip = m_AudioClip;
-			m_AudioSource.Play();
+			m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
 			AudioManager.SetAudioActive(true);
 			
 			m_AudioSource.time = GetMusicTime(_Time);
@@ -66,6 +68,8 @@ public class MusicClip : Clip
 
 	float GetMusicTime(float _Time)
 	{
-		return Mathf.Clamp(GetLocalTime(_Time), 0, m_AudioClip.length);
+		float time = _Time - (MinTime + DSP_TIME_OFFSET);
+		
+		return Mathf.Clamp(time, 0, m_AudioClip.length);
 	}
 }

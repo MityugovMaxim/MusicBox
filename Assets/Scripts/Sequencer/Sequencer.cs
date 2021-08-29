@@ -103,6 +103,9 @@ public partial class Sequencer : MonoBehaviour
 	Action            m_Finished;
 	ISampleReceiver[] m_SampleReceivers;
 
+	double m_PlayTime;
+	double m_PauseTime;
+
 	void OnDisable()
 	{
 		if (!Application.isPlaying)
@@ -114,7 +117,7 @@ public partial class Sequencer : MonoBehaviour
 	void LateUpdate()
 	{
 		if (Playing)
-			Sample(m_Time + UnityEngine.Time.deltaTime);
+			Sample((float)(AudioSettings.dspTime - m_PlayTime));
 	}
 
 	public void Initialize()
@@ -132,6 +135,7 @@ public partial class Sequencer : MonoBehaviour
 		
 		m_SampleReceivers = _SampleReceivers;
 		m_Finished        = _Finished;
+		m_PlayTime        = AudioSettings.dspTime - (m_PauseTime - m_PlayTime);
 		
 		Sample(Time);
 	}
@@ -140,12 +144,17 @@ public partial class Sequencer : MonoBehaviour
 	{
 		Playing = false;
 		
+		m_PauseTime = AudioSettings.dspTime;
+		
 		Sample(Time);
 	}
 
 	public void Stop()
 	{
 		Playing = false;
+		
+		m_PlayTime  = 0;
+		m_PauseTime = 0;
 		
 		Sample(0);
 	}
