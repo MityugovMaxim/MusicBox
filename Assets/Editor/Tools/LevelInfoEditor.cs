@@ -63,22 +63,22 @@ public class LevelInfoEditor : Editor
 		serializedObject.ApplyModifiedProperties();
 	}
 
-	static string GetID(string _Artist, string _Title)
+	public static string GetID(string _Artist, string _Title)
 	{
 		return GetData(_Artist, _Title);
 	}
 
-	static string GetLeaderboardID(string _Title)
+	public static string GetLeaderboardID(string _Title)
 	{
 		return GetData(_Title);
 	}
 
-	static string GetAchievementID(string _Title)
+	public static string GetAchievementID(string _Title)
 	{
 		return GetData(_Title, "s_rank");
 	}
 
-	static string GetData(params string[] _Text)
+	public static string GetData(params string[] _Text)
 	{
 		List<string> words = new List<string>();
 		foreach (string text in _Text)
