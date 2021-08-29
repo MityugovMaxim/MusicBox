@@ -271,6 +271,8 @@ public class LevelProcessor
 				m_Level   = _Level;
 				m_LevelID = levelInfo.ID;
 				
+				m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
+				
 				m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
 			}
 		);
@@ -300,10 +302,7 @@ public class LevelProcessor
 			return;
 		}
 		
-		m_Level.Play(
-			m_SampleReceivers.ToArray(),
-			() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID))
-		);
+		m_Level.Play(() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID)));
 		
 		m_SignalBus.Fire(new LevelPlaySignal(m_LevelID));
 	}

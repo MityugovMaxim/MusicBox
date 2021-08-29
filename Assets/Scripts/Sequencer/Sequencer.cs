@@ -126,12 +126,25 @@ public partial class Sequencer : MonoBehaviour
 			track.Initialize(this);
 	}
 
-	public void Play(ISampleReceiver[] _SampleReceivers, Action _Finished = null)
+	public void RegisterSampleReceivers(ISampleReceiver[] _SampleReceivers)
+	{
+		m_SampleReceivers = _SampleReceivers;
+		
+		if (m_SampleReceivers != null)
+		{
+			foreach (ISampleReceiver sampleReceiver in m_SampleReceivers)
+			{
+				if (sampleReceiver != null)
+					sampleReceiver.Sample(0, Length);
+			}
+		}
+	}
+
+	public void Play(Action _Finished = null)
 	{
 		Playing = true;
 		
-		m_SampleReceivers = _SampleReceivers;
-		m_Finished        = _Finished;
+		m_Finished = _Finished;
 		
 		Sample(Time);
 	}

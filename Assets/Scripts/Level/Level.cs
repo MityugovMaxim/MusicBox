@@ -36,7 +36,12 @@ public class Level : MonoBehaviour
 		m_Sequencer.Initialize();
 	}
 
-	public void Play(ISampleReceiver[] _SampleReceivers, Action _Finished = null)
+	public void RegisterSampleReceivers(ISampleReceiver[] _SampleReceivers)
+	{
+		m_Sequencer.RegisterSampleReceivers(_SampleReceivers);
+	}
+
+	public void Play(Action _Finished = null)
 	{
 		if (m_Sequencer == null)
 		{
@@ -44,7 +49,7 @@ public class Level : MonoBehaviour
 			return;
 		}
 		
-		m_Sequencer.Play(_SampleReceivers, _Finished);
+		m_Sequencer.Play(_Finished);
 	}
 
 	public void Pause()

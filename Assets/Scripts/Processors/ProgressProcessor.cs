@@ -5,6 +5,19 @@ using Zenject;
 
 public class ProgressProcessor : IInitializable, IDisposable
 {
+	#if UNITY_EDITOR
+	[UnityEditor.MenuItem("Cheats/+1000 Exp")]
+	public static void Add1000Exp()
+	{
+		string data = PlayerPrefs.GetString(EXP_PROGRESS_KEY, string.Empty);
+		PlayerPrefs.SetString(
+			EXP_PROGRESS_KEY,
+			long.TryParse(data, out long expProgress)
+				? (expProgress + 1000).ToString()
+				: 1000.ToString());
+	}
+	#endif
+
 	const string EXP_PROGRESS_KEY = "EXP_PROGRESS";
 
 	public long ExpProgress { get; private set; }
