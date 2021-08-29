@@ -47,6 +47,8 @@ public partial class MusicTrack
 [CreateAssetMenu(fileName = "Music Track", menuName = "Tracks/Music Track")]
 public partial class MusicTrack : Track<MusicClip>
 {
+	protected override float Offset => 0;
+
 	[SerializeField, Reference(typeof(AudioSource))] string m_AudioSource;
 
 	public override void Initialize(Sequencer _Sequencer)

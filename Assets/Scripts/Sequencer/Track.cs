@@ -43,6 +43,8 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 {
 	public Sequencer Sequencer { get; private set; }
 
+	protected abstract float Offset { get; }
+
 	public virtual void Initialize(Sequencer _Sequencer)
 	{
 		Sequencer = _Sequencer;
@@ -138,17 +140,18 @@ public partial class Track<T>
 
 public partial class Track<T> : Track where T : Clip
 {
+	protected override float Offset => AudioManager.Latency;
+
 	protected List<T> Clips => m_Clips;
 
-	[SerializeField] float   m_Offset;
 	[SerializeField] List<T> m_Clips = new List<T>();
 
 	readonly List<T> m_Buffer = new List<T>();
 
 	public override void Sample(float _MinTime, float _MaxTime)
 	{
-		_MinTime += m_Offset;
-		_MaxTime += m_Offset;
+		_MinTime -= Offset;
+		_MaxTime -= Offset;
 		
 		float time = _MaxTime;
 		

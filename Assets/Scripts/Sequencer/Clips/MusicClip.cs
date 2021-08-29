@@ -2,18 +2,16 @@ using UnityEngine;
 
 public class MusicClip : Clip
 {
+	#if UNITY_EDITOR
+	const float DSP_TIME_OFFSET = 0;
+	#else
 	const float DSP_TIME_OFFSET = 1;
+	#endif
 
 	public override float MinTime
 	{
-		get => base.MinTime - AudioManager.Latency - DSP_TIME_OFFSET;
+		get => base.MinTime - DSP_TIME_OFFSET;
 		set => base.MinTime = value;
-	}
-
-	public override float MaxTime
-	{
-		get => base.MaxTime - AudioManager.Latency;
-		set => base.MaxTime = value;
 	}
 
 	[SerializeField] AudioClip m_AudioClip;
@@ -37,7 +35,11 @@ public class MusicClip : Clip
 			return;
 		
 		m_AudioSource.clip = m_AudioClip;
+		#if UNITY_EDITOR
+		m_AudioSource.Play();
+		#else
 		m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
+		#endif
 		AudioManager.SetAudioActive(true);
 		
 		m_AudioSource.time = GetMusicTime(_Time);
@@ -54,7 +56,11 @@ public class MusicClip : Clip
 		else if (Sequencer.Playing && Playing && !m_AudioSource.isPlaying && _Time < MaxTime)
 		{
 			m_AudioSource.clip = m_AudioClip;
+			#if UNITY_EDITOR
+			m_AudioSource.Play();
+			#else
 			m_AudioSource.PlayScheduled(AudioSettings.dspTime + DSP_TIME_OFFSET);
+			#endif
 			AudioManager.SetAudioActive(true);
 			
 			m_AudioSource.time = GetMusicTime(_Time);
