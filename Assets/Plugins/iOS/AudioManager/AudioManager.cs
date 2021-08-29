@@ -1,4 +1,6 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using Zenject;
@@ -28,6 +30,9 @@ public class AudioManager : IInitializable
 		RemoteCommandHandler _PreviousTrackHandler,
 		RemoteCommandHandler _SourceChangedHandler
 	);
+
+	[DllImport("_Internal")]
+	static extern void UnregisterRemoteCommands();
 
 	[DllImport("__Internal")]
 	static extern void EnableAudio();

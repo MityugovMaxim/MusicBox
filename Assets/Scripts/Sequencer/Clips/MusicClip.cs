@@ -25,6 +25,8 @@ public class MusicClip : Clip
 		m_AudioSource = _AudioSource;
 		
 		m_AudioClip.LoadAudioData();
+		
+		AudioManager.SetAudioActive(true);
 	}
 
 	protected override void OnEnter(float _Time)
@@ -34,6 +36,7 @@ public class MusicClip : Clip
 		
 		m_AudioSource.clip = m_AudioClip;
 		m_AudioSource.Play();
+		AudioManager.SetAudioActive(true);
 		
 		m_AudioSource.time = GetMusicTime(_Time);
 	}
@@ -50,6 +53,7 @@ public class MusicClip : Clip
 		{
 			m_AudioSource.clip = m_AudioClip;
 			m_AudioSource.Play();
+			AudioManager.SetAudioActive(true);
 			
 			m_AudioSource.time = GetMusicTime(_Time);
 		}

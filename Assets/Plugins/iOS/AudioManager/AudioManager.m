@@ -54,16 +54,18 @@ float GetOutputLatency()
 
 void EnableAudio()
 {
+    [AVAudioSession.sharedInstance setActive:YES error:nil];
     [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
     
-    UnitySetAudioSessionActive(1);
+    UnityUpdateMuteState(0);
 }
 
 void DisableAudio()
 {
-    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [AVAudioSession.sharedInstance setActive:NO error:nil];
     
-    UnitySetAudioSessionActive(0);
+    UnityUpdateMuteState(1);
 }
 
 void UnregisterRemoteCommands()
@@ -80,6 +82,7 @@ void RegisterRemoteCommands(
 )
 {
     [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
     
     m_RouteObserver = [[RouteObserver new] init:_SourceChanged];
     
@@ -105,7 +108,7 @@ void RegisterRemoteCommands(
     
     [commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
      {
-        _PauseHandler();
+        _PreviousTrackHandler();
         return MPRemoteCommandHandlerStatusSuccess;
     }];
 }
