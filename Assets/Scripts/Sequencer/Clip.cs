@@ -1,22 +1,26 @@
+using System;
 using UnityEngine;
 
 public abstract class Clip : ScriptableObject
 {
 	public Sequencer Sequencer { get; private set; }
 
-	public virtual float MinTime
+	public float MinTime
 	{
 		get => m_MinTime;
 		set => m_MinTime = value;
 	}
 
-	public virtual float MaxTime
+	public float MaxTime
 	{
 		get => m_MaxTime;
 		set => m_MaxTime = value;
 	}
 
-	public bool Playing { get; private set; }
+	public virtual float MinOffset => 0;
+	public virtual float MaxOffset => 0;
+
+	protected bool Playing { get; private set; }
 
 	[SerializeField] float m_MinTime;
 	[SerializeField] float m_MaxTime;
@@ -28,7 +32,10 @@ public abstract class Clip : ScriptableObject
 
 	public void Sample(float _Time)
 	{
-		if ((_Time >= MinTime || _Time < MaxTime) && !Playing)
+		float minTime = MinTime + MinOffset;
+		float maxTime = MaxTime + MaxOffset;
+		
+		if ((_Time >= minTime || _Time < maxTime) && !Playing)
 		{
 			Playing = true;
 			OnEnter(_Time);
@@ -37,7 +44,7 @@ public abstract class Clip : ScriptableObject
 		if (Playing)
 			OnUpdate(_Time);
 		
-		if ((_Time < MinTime || _Time >= MaxTime) && Playing)
+		if ((_Time < minTime || _Time >= maxTime) && Playing)
 		{
 			Playing = false;
 			OnExit(_Time);

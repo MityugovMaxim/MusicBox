@@ -190,7 +190,7 @@ public partial class Track<T> : Track where T : Clip
 		{
 			T clip = m_Clips[minIndex - 1];
 			
-			if (_MinTime > clip.MaxTime || _MaxTime < clip.MinTime)
+			if (_MinTime > clip.MaxTime + clip.MaxOffset || _MaxTime < clip.MinTime + clip.MinOffset)
 				break;
 			
 			minIndex--;
@@ -201,7 +201,7 @@ public partial class Track<T> : Track where T : Clip
 		{
 			T clip = m_Clips[maxIndex + 1];
 			
-			if (_MinTime > clip.MaxTime || _MaxTime < clip.MinTime)
+			if (_MinTime > clip.MaxTime + clip.MaxOffset || _MaxTime < clip.MinTime + clip.MinOffset)
 				break;
 			
 			maxIndex++;
@@ -226,9 +226,9 @@ public partial class Track<T> : Track where T : Clip
 			
 			T clip = m_Clips[k];
 			
-			if (_MinTime > clip.MaxTime)
+			if (_MinTime > clip.MaxTime + clip.MaxOffset)
 				i = k + 1;
-			else if (_MaxTime < clip.MinTime)
+			else if (_MaxTime < clip.MinTime + clip.MinOffset)
 				j = k - 1;
 			else
 				return k;

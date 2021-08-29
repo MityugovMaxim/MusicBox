@@ -108,7 +108,7 @@ public partial class Sequencer : MonoBehaviour
 		if (!Application.isPlaying)
 			return;
 		
-		Pause();
+		Sample(float.MinValue);
 	}
 
 	void LateUpdate()
