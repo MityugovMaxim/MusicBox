@@ -24,7 +24,11 @@ public partial class Track
 		set => m_Expanded = value;
 	}
 
-	public string Mnemonic => m_Mnemonic;
+	public string Mnemonic
+	{
+		get => m_Mnemonic;
+		set => m_Mnemonic = value;
+	}
 
 	protected virtual float MinHeight => 30;
 	protected virtual float MaxHeight => 200;
