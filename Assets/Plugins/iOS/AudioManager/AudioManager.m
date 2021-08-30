@@ -51,6 +51,9 @@ NSString*      m_OutputUID;
         m_OutputCount = outputCount;
         m_OutputUID   = outputUID;
         
+        [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+        [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
+        
         m_Callback();
     }
 }
