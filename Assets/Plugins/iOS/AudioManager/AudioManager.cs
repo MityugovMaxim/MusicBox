@@ -82,7 +82,7 @@ public class AudioManager : IInitializable
 		AudioConfiguration configuration = AudioSettings.GetConfiguration();
 		
 		float dspLatency    = (float)configuration.dspBufferSize / AudioSettings.outputSampleRate;
-		float nativeLatency = GetInputLatency() + GetOutputLatency();
+		float nativeLatency = GetOutputLatency();
 		float latency       = dspLatency + nativeLatency;
 		if (latency > 0)
 			Debug.LogFormat("[AudioManager] Detected {0}ms latency.", latency);
