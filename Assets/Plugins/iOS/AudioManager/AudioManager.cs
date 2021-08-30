@@ -79,11 +79,7 @@ public class AudioManager : IInitializable
 	static float GetLatency()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		AudioConfiguration configuration = AudioSettings.GetConfiguration();
-		
-		float dspLatency    = (float)configuration.dspBufferSize / AudioSettings.outputSampleRate;
-		float nativeLatency = GetOutputLatency();
-		float latency       = dspLatency + nativeLatency;
+		float latency = GetOutputLatency();
 		if (latency > 0)
 			Debug.LogFormat("[AudioManager] Detected {0}ms latency.", latency);
 		return latency;
