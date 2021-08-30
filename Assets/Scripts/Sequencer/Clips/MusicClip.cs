@@ -7,6 +7,8 @@ public class MusicClip : Clip
 	[SerializeField] AudioClip m_AudioClip;
 
 	AudioSource m_AudioSource;
+	bool        m_Paused;
+	float       m_Latency;
 
 	public override float MinOffset => -DSP_TIME_OFFSET;
 
@@ -17,8 +19,6 @@ public class MusicClip : Clip
 		m_AudioSource = _AudioSource;
 		
 		m_AudioClip.LoadAudioData();
-		
-		AudioManager.SetAudioActive(true);
 	}
 
 	protected override void OnEnter(float _Time)
@@ -26,39 +26,51 @@ public class MusicClip : Clip
 		if (!Sequencer.Playing || !Playing)
 			return;
 		
-		AudioManager.SetAudioActive(true);
+		m_Paused  = false;
+		m_Latency = AudioManager.Latency;
 		
 		if (m_AudioSource.clip != m_AudioClip)
 			m_AudioSource.clip = m_AudioClip;
 		
-		if (_Time < MinTime)
-			m_AudioSource.PlayScheduled(AudioSettings.dspTime + MinTime - _Time);
+		if (MinTime > _Time)
+		{
+			double delta = (double)MinTime - _Time;
+			
+			m_AudioSource.PlayScheduled(AudioSettings.dspTime + delta - m_Latency);
+		}
 		else
+		{
 			m_AudioSource.Play();
+		}
 		
 		m_AudioSource.time = GetMusicTime(_Time);
 	}
 
 	protected override void OnUpdate(float _Time)
 	{
-		if (!Sequencer.Playing)
+		if (!Sequencer.Playing && !m_Paused)
 		{
+			m_Paused = true;
 			m_AudioSource.Pause();
 		}
-		else if (Sequencer.Playing && !m_AudioSource.isPlaying && _Time >= MinTime && _Time < MaxTime)
+		
+		if (Sequencer.Playing && m_Paused)
 		{
-			AudioManager.SetAudioActive(true);
-			
-			if (m_AudioSource.clip != m_AudioClip)
-				m_AudioSource.clip = m_AudioClip;
-			
+			m_Paused = false;
 			m_AudioSource.UnPause();
-			m_AudioSource.time = GetMusicTime(_Time);
+		}
+		
+		if (!Mathf.Approximately(m_Latency, AudioManager.Latency))
+		{
+			m_AudioSource.time += AudioManager.Latency - m_Latency;
+			m_Latency          =  AudioManager.Latency;
 		}
 	}
 
 	protected override void OnExit(float _Time)
 	{
+		m_Paused = false;
+		
 		m_AudioSource.Stop();
 	}
 

@@ -10,6 +10,8 @@ typedef void (*CommandHandler)();
 @implementation RouteObserver
 
 CommandHandler m_Callback;
+NSUInteger     m_OutputCount;
+NSString*      m_OutputUID;
 
 - (void) remove
 {
@@ -24,6 +26,9 @@ CommandHandler m_Callback;
         return nil;
     
     m_Callback = callback;
+    
+    m_OutputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
+    m_OutputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
         selector:@selector(routeChangedHandler:)
@@ -36,7 +41,18 @@ CommandHandler m_Callback;
 - (void) routeChangedHandler:(NSNotification *) notification
 {
     if ([[notification name] isEqualToString:AVAudioSessionRouteChangeNotification])
+    {
+        NSUInteger outputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
+        NSString*  outputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+        
+        if (m_OutputCount == outputCount && [m_OutputUID isEqualToString:outputUID])
+            return;
+        
+        m_OutputCount = outputCount;
+        m_OutputUID   = outputUID;
+        
         m_Callback();
+    }
 }
 @end
 
@@ -58,14 +74,14 @@ void EnableAudio()
     [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
     [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
     
-    UnityUpdateMuteState(0);
+    UnitySetAudioSessionActive(true);
 }
 
 void DisableAudio()
 {
     [AVAudioSession.sharedInstance setActive:NO error:nil];
     
-    UnityUpdateMuteState(1);
+    UnitySetAudioSessionActive(false);
 }
 
 void UnregisterRemoteCommands()
