@@ -71,6 +71,29 @@ float GetOutputLatency()
     return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.outputLatency;
 }
 
+char* GetOutputName()
+{
+    return AVAudioSession.sharedInstance.currentRoute.outputs[0].portName;
+}
+
+char* GetOutputUID()
+{
+    return AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+}
+
+bool IsOutputWireless()
+{
+    NSString* portType = AVAudioSession.sharedInstance.currentRoute.outputs[0].portType;
+    
+    if ([portType isEqualToString: AVAudioSessionPortBluetoothLE])
+        return true;
+    
+    if ([portType isEqualToString: AVAudioSessionPortBluetoothA2DP])
+        return true;
+    
+    return false;
+}
+
 void EnableAudio()
 {
     [AVAudioSession.sharedInstance setActive:YES error:nil];

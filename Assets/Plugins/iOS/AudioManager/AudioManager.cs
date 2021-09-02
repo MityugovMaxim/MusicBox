@@ -39,6 +39,15 @@ public class AudioManager : IInitializable
 
 	[DllImport("__Internal")]
 	static extern void DisableAudio();
+
+	[DllImport("__Internal")]
+	static extern void GetOutputName();
+
+	[DllImport("__Internal")]
+	static extern void GetOutputUID();
+
+	[DllImport("__Internal")]
+	static extern void IsOutputWireless();
 	#endif
 
 	public static float Latency { get; private set; }
@@ -53,16 +62,6 @@ public class AudioManager : IInitializable
 		Latency = GetLatency();
 	}
 
-	public static void SetAudioActive(bool _Value)
-	{
-		#if UNITY_IOS && !UNITY_EDITOR
-		if (_Value)
-			EnableAudio();
-		else
-			DisableAudio();
-		#endif
-	}
-
 	void IInitializable.Initialize()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
@@ -73,6 +72,43 @@ public class AudioManager : IInitializable
 			PreviousTrackHandler,
 			SourceChangedHandler
 		);
+		#endif
+	}
+
+	public static void SetAudioActive(bool _Value)
+	{
+		#if UNITY_IOS && !UNITY_EDITOR
+		if (_Value)
+			EnableAudio();
+		else
+			DisableAudio();
+		#endif
+	}
+
+	public static string GetAudioOutputName()
+	{
+		#if UNITY_IOS && !UNITY_EDITOR
+		return GetOutputName();
+		#else
+		return "Default speakers";
+		#endif
+	}
+
+	public static string GetAudioOutputUID()
+	{
+		#if UNITY_IOS && !UNITY_EDITOR
+		return GetOutputUID();
+		#else
+		return string.Empty;
+		#endif
+	}
+
+	public static bool IsAudioOutputWireless()
+	{
+		#if UNITY_IOS && !UNITY_EDITOR
+		return IsOutputWireless();
+		#else
+		return false;
 		#endif
 	}
 
