@@ -7,13 +7,15 @@ public class UIPauseMenu : UIMenu
 	const int LEAVE_ADS_COUNT   = 3;
 
 	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
+	[SerializeField] UIHapticState           m_HapticState;
 
 	MenuProcessor  m_MenuProcessor;
 	LevelProcessor m_LevelProcessor;
 	AdsProcessor   m_AdsProcessor;
 
-	int m_RestartAdsCount;
-	int m_LeaveAdsCount;
+	string m_LevelID;
+	int    m_RestartAdsCount;
+	int    m_LeaveAdsCount;
 
 	[Inject]
 	public void Construct(
@@ -29,7 +31,11 @@ public class UIPauseMenu : UIMenu
 
 	public void Setup(string _LevelID)
 	{
-		m_Thumbnail.Setup(_LevelID);
+		m_LevelID = _LevelID;
+		
+		m_Thumbnail.Setup(m_LevelID);
+		
+		m_HapticState.Setup();
 	}
 
 	public void Pause()
@@ -128,5 +134,21 @@ public class UIPauseMenu : UIMenu
 		{
 			LeaveInternal();
 		}
+	}
+
+	public void Latency()
+	{
+		UILatencyMenu latencyMenu = m_MenuProcessor.GetMenu<UILatencyMenu>(MenuType.LatencyMenu);
+		
+		if (latencyMenu != null)
+			latencyMenu.Setup(m_LevelID);
+		
+		m_MenuProcessor.Show(MenuType.LatencyMenu);
+	}
+
+	protected override void OnHideStarted()
+	{
+		if (m_HapticState != null)
+			m_HapticState.Execute();
 	}
 }

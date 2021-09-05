@@ -41,25 +41,31 @@ public class AudioManager : IInitializable
 	static extern void DisableAudio();
 
 	[DllImport("__Internal")]
-	static extern void GetOutputName();
+	static extern string GetOutputName();
 
 	[DllImport("__Internal")]
-	static extern void GetOutputUID();
+	static extern string GetOutputUID();
 
 	[DllImport("__Internal")]
-	static extern void IsOutputWireless();
+	static extern bool IsOutputWireless();
 	#endif
 
-	public static float Latency { get; private set; }
+	const string MANUAL_LATENCY_KEY = "MANUAL_LATENCY";
+
+	public static float Latency => m_HardwareLatency + m_ManualLatency;
 
 	static SignalBus m_SignalBus;
+
+	static float m_HardwareLatency;
+	static float m_ManualLatency;
 
 	[Inject]
 	public AudioManager(SignalBus _SignalBus)
 	{
 		m_SignalBus = _SignalBus;
 		
-		Latency = GetLatency();
+		m_HardwareLatency = GetHardwareLatency();
+		m_ManualLatency   = GetManualLatency();
 	}
 
 	void IInitializable.Initialize()
@@ -112,7 +118,21 @@ public class AudioManager : IInitializable
 		#endif
 	}
 
-	static float GetLatency()
+	public static float GetManualLatency()
+	{
+		string key = MANUAL_LATENCY_KEY + GetAudioOutputUID();
+		
+		return PlayerPrefs.GetFloat(key, 0);
+	}
+
+	public static void SetManualLatency(float _ManualLatency)
+	{
+		string key = MANUAL_LATENCY_KEY + GetAudioOutputUID();
+		
+		PlayerPrefs.SetFloat(key, _ManualLatency);
+	}
+
+	public static float GetHardwareLatency()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
 		float latency = GetOutputLatency();
@@ -151,7 +171,8 @@ public class AudioManager : IInitializable
 	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
 	static void SourceChangedHandler()
 	{
-		Latency = GetLatency();
+		m_HardwareLatency = GetHardwareLatency();
+		m_ManualLatency   = GetManualLatency();
 		
 		m_SignalBus.Fire(new AudioSourceChangedSignal());
 	}

@@ -1,10 +1,21 @@
 using System;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
 public class HapticProcessor : IInitializable, IDisposable
 {
+	const string HAPTIC_ENABLED_KEY = "HAPTIC_ENABLED";
+
+	public bool HapticSupported => m_Haptic.SupportsHaptic;
+
+	public bool HapticEnabled
+	{
+		get => PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 0) > 0;
+		set => PlayerPrefs.SetInt(HAPTIC_ENABLED_KEY, value ? 1 : 0);
+	}
+
 	SignalBus m_SignalBus;
 	Haptic    m_Haptic;
 

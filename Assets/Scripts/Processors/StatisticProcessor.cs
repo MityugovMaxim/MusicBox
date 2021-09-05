@@ -118,4 +118,14 @@ public class StatisticProcessor : IInitializable, IDisposable
 			}
 		);
 	}
+
+	public void LogHapticEnable()
+	{
+		Analytics.CustomEvent("haptic_enable");
+	}
+
+	public void LogHapticDisable()
+	{
+		Analytics.CustomEvent("haptic_disable");
+	}
 }

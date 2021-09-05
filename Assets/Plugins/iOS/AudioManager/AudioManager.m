@@ -2,6 +2,9 @@
 #import <AVKit/AVKit.h>
 #import <MediaPlayer/MediaPlayer.h>
 
+#define MakeStringCopy( _x_ ) ( _x_ != NULL && [_x_ isKindOfClass:[NSString class]] ) ? strdup( [_x_ UTF8String] ) : NULL
+#define GetStringParam( _x_ ) ( _x_ != NULL ) ? [NSString stringWithUTF8String:_x_] : [NSString stringWithUTF8String:""]
+
 typedef void (*CommandHandler)();
 
 @interface RouteObserver : NSObject
@@ -15,47 +18,47 @@ NSString*      m_OutputUID;
 
 - (void) remove
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (id) init:(CommandHandler) callback
 {
-    self = [super init];
-    
-    if (!self)
-        return nil;
-    
-    m_Callback = callback;
-    
-    m_OutputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
-    m_OutputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+	self = [super init];
+	
+	if (!self)
+		return nil;
+	
+	m_Callback = callback;
+	
+	m_OutputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
+	m_OutputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-        selector:@selector(routeChangedHandler:)
-        name:AVAudioSessionRouteChangeNotification
-        object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+		selector:@selector(routeChangedHandler:)
+		name:AVAudioSessionRouteChangeNotification
+		object:nil];
 
-    return self;
+	return self;
 }
 
 - (void) routeChangedHandler:(NSNotification *) notification
 {
-    if ([[notification name] isEqualToString:AVAudioSessionRouteChangeNotification])
-    {
-        NSUInteger outputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
-        NSString*  outputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
-        
-        if (m_OutputCount == outputCount && [m_OutputUID isEqualToString:outputUID])
-            return;
-        
-        m_OutputCount = outputCount;
-        m_OutputUID   = outputUID;
-        
-        [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
-        [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
-        
-        m_Callback();
-    }
+	if ([[notification name] isEqualToString:AVAudioSessionRouteChangeNotification])
+	{
+		NSUInteger outputCount = AVAudioSession.sharedInstance.currentRoute.outputs.count;
+		NSString*  outputUID   = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+		
+		if (m_OutputCount == outputCount && [m_OutputUID isEqualToString:outputUID])
+			return;
+		
+		m_OutputCount = outputCount;
+		m_OutputUID   = outputUID;
+		
+		[AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+		[AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
+		
+		m_Callback();
+	}
 }
 @end
 
@@ -63,94 +66,98 @@ RouteObserver* m_RouteObserver;
 
 float GetInputLatency()
 {
-    return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.inputLatency;
+	return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.inputLatency;
 }
 
 float GetOutputLatency()
 {
-    return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.outputLatency;
+	return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.outputLatency;
 }
 
-char* GetOutputName()
+const char* GetOutputName()
 {
-    return AVAudioSession.sharedInstance.currentRoute.outputs[0].portName;
+	NSString* portName = AVAudioSession.sharedInstance.currentRoute.outputs[0].portName;
+	
+	return MakeStringCopy(portName);
 }
 
-char* GetOutputUID()
+const char* GetOutputUID()
 {
-    return AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+	NSString* portUID = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
+	
+	return MakeStringCopy(portUID);
 }
 
 bool IsOutputWireless()
 {
-    NSString* portType = AVAudioSession.sharedInstance.currentRoute.outputs[0].portType;
-    
-    if ([portType isEqualToString: AVAudioSessionPortBluetoothLE])
-        return true;
-    
-    if ([portType isEqualToString: AVAudioSessionPortBluetoothA2DP])
-        return true;
-    
-    return false;
+	NSString* portType = AVAudioSession.sharedInstance.currentRoute.outputs[0].portType;
+	
+	if ([portType isEqualToString: AVAudioSessionPortBluetoothLE])
+		return true;
+	
+	if ([portType isEqualToString: AVAudioSessionPortBluetoothA2DP])
+		return true;
+	
+	return false;
 }
 
 void EnableAudio()
 {
-    [AVAudioSession.sharedInstance setActive:YES error:nil];
-    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
-    [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
-    
-    UnitySetAudioSessionActive(true);
+	[AVAudioSession.sharedInstance setActive:YES error:nil];
+	[AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+	[AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
+	
+	UnitySetAudioSessionActive(true);
 }
 
 void DisableAudio()
 {
-    [AVAudioSession.sharedInstance setActive:NO error:nil];
-    
-    UnitySetAudioSessionActive(false);
+	[AVAudioSession.sharedInstance setActive:NO error:nil];
+	
+	UnitySetAudioSessionActive(false);
 }
 
 void UnregisterRemoteCommands()
 {
-    [m_RouteObserver remove];
+	[m_RouteObserver remove];
 }
 
 void RegisterRemoteCommands(
-    CommandHandler _PlayHandler,
-    CommandHandler _PauseHandler,
-    CommandHandler _NextTrackHandler,
-    CommandHandler _PreviousTrackHandler,
-    CommandHandler _SourceChanged
+	CommandHandler _PlayHandler,
+	CommandHandler _PauseHandler,
+	CommandHandler _NextTrackHandler,
+	CommandHandler _PreviousTrackHandler,
+	CommandHandler _SourceChanged
 )
 {
-    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
-    [AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
-    
-    m_RouteObserver = [[RouteObserver new] init:_SourceChanged];
-    
-    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-
-    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-     {
-        _PlayHandler();
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    
-    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-     {
-        _PauseHandler();
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    
-    [commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-     {
-        _NextTrackHandler();
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    
-    [commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-     {
-        _PreviousTrackHandler();
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
+	[AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback error:nil];
+	[AVAudioSession.sharedInstance setMode:AVAudioSessionModeMoviePlayback error:nil];
+	
+	m_RouteObserver = [[RouteObserver new] init:_SourceChanged];
+	
+	MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+	
+	[commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
+	 {
+		_PlayHandler();
+		return MPRemoteCommandHandlerStatusSuccess;
+	}];
+	
+	[commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
+	 {
+		_PauseHandler();
+		return MPRemoteCommandHandlerStatusSuccess;
+	}];
+	
+	[commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
+	 {
+		_NextTrackHandler();
+		return MPRemoteCommandHandlerStatusSuccess;
+	}];
+	
+	[commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
+	 {
+		_PreviousTrackHandler();
+		return MPRemoteCommandHandlerStatusSuccess;
+	}];
 }

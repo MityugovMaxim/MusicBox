@@ -14,6 +14,8 @@ public abstract class Haptic
 		ImpactHeavy  = 7,
 	}
 
+	public abstract bool SupportsHaptic { get; }
+
 	SignalBus m_SignalBus;
 
 	public static Haptic Create()

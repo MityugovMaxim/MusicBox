@@ -4,6 +4,7 @@ using UnityEngine.Scripting;
 using Zenject;
 using Debug = UnityEngine.Debug;
 
+
 public class UIResultMenu : UIMenu
 {
 	const int RESTART_ADS_COUNT = 2;
