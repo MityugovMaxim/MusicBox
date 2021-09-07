@@ -10,24 +10,28 @@ public class UIProductPreviewBackground : UIEntity
 	[SerializeField] float          m_Duration = 0.4f;
 	[SerializeField] AnimationCurve m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-	PurchaseProcessor m_PurchaseProcessor;
+	StorageProcessor m_StorageProcessor;
 
 	readonly Queue<Image> m_BackgroundPool = new Queue<Image>();
 
 	[Inject]
-	public void Construct(PurchaseProcessor _PurchaseProcessor)
+	public void Construct(StorageProcessor _StorageProcessor)
 	{
-		m_PurchaseProcessor = _PurchaseProcessor;
+		m_StorageProcessor = _StorageProcessor;
 	}
 
 	public void Setup(string _ProductID, bool _Instant = false)
 	{
-		Sprite previewBackground = m_PurchaseProcessor.GetPreviewBackground(_ProductID);
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-			StartCoroutine(BackgroundRoutine(m_Background, previewBackground));
-		else
-			m_Background.sprite = previewBackground;
+		m_StorageProcessor.LoadProductBackground(
+			_ProductID,
+			_Background =>
+			{
+				if (!_Instant && gameObject.activeInHierarchy)
+					StartCoroutine(BackgroundRoutine(m_Background, _Background));
+				else
+					m_Background.sprite = _Background;
+			}
+		);
 	}
 
 	Image CreateBackground()

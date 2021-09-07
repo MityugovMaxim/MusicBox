@@ -17,13 +17,13 @@ public class AudioManager : IInitializable
 
 	#if UNITY_IOS && !UNITY_EDITOR
 	[DllImport("__Internal")]
-	static extern float GetInputLatency();
+	static extern float AudioManager_GetInputLatency();
 
 	[DllImport("__Internal")]
-	static extern float GetOutputLatency();
+	static extern float AudioManager_GetOutputLatency();
 
 	[DllImport("__Internal")]
-	static extern void RegisterRemoteCommands(
+	static extern void AudioManager_RegisterRemoteCommands(
 		RemoteCommandHandler _PlayHandler,
 		RemoteCommandHandler _PauseHandler,
 		RemoteCommandHandler _NextTrackHandler,
@@ -32,22 +32,22 @@ public class AudioManager : IInitializable
 	);
 
 	[DllImport("_Internal")]
-	static extern void UnregisterRemoteCommands();
+	static extern void AudioManager_UnregisterRemoteCommands();
 
 	[DllImport("__Internal")]
-	static extern void EnableAudio();
+	static extern void AudioManager_EnableAudio();
 
 	[DllImport("__Internal")]
-	static extern void DisableAudio();
+	static extern void AudioManager_DisableAudio();
 
 	[DllImport("__Internal")]
-	static extern string GetOutputName();
+	static extern string AudioManager_GetOutputName();
 
 	[DllImport("__Internal")]
-	static extern string GetOutputUID();
+	static extern string AudioManager_GetOutputUID();
 
 	[DllImport("__Internal")]
-	static extern bool IsOutputWireless();
+	static extern bool AudioManager_IsOutputWireless();
 	#endif
 
 	const string MANUAL_LATENCY_KEY = "MANUAL_LATENCY";
@@ -71,7 +71,7 @@ public class AudioManager : IInitializable
 	void IInitializable.Initialize()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		RegisterRemoteCommands(
+		AudioManager_RegisterRemoteCommands(
 			PlayHandler,
 			PauseHandler,
 			NextTrackHandler,
@@ -85,16 +85,16 @@ public class AudioManager : IInitializable
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
 		if (_Value)
-			EnableAudio();
+			AudioManager_EnableAudio();
 		else
-			DisableAudio();
+			AudioManager_DisableAudio();
 		#endif
 	}
 
 	public static string GetAudioOutputName()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		return GetOutputName();
+		return AudioManager_GetOutputName();
 		#else
 		return "Default speakers";
 		#endif
@@ -103,7 +103,7 @@ public class AudioManager : IInitializable
 	public static string GetAudioOutputUID()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		return GetOutputUID();
+		return AudioManager_GetOutputUID();
 		#else
 		return string.Empty;
 		#endif
@@ -112,7 +112,7 @@ public class AudioManager : IInitializable
 	public static bool IsAudioOutputWireless()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		return IsOutputWireless();
+		return AudioManager_IsOutputWireless();
 		#else
 		return false;
 		#endif
@@ -127,6 +127,8 @@ public class AudioManager : IInitializable
 
 	public static void SetManualLatency(float _ManualLatency)
 	{
+		m_ManualLatency = _ManualLatency;
+		
 		string key = MANUAL_LATENCY_KEY + GetAudioOutputUID();
 		
 		PlayerPrefs.SetFloat(key, _ManualLatency);
@@ -135,7 +137,7 @@ public class AudioManager : IInitializable
 	public static float GetHardwareLatency()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		float latency = GetOutputLatency();
+		float latency = AudioManager_GetOutputLatency();
 		if (latency > 0)
 			Debug.LogFormat("[AudioManager] Detected {0}ms latency.", latency);
 		return latency;

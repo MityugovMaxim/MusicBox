@@ -34,7 +34,7 @@ public abstract class Clip : ScriptableObject
 		float minTime = MinTime + MinOffset;
 		float maxTime = MaxTime + MaxOffset;
 		
-		if ((_Time >= minTime || _Time < maxTime) && !Playing)
+		if ((_Time >= minTime || _Time < maxTime) && Sequencer.Playing && !Playing)
 		{
 			Playing = true;
 			OnEnter(_Time);

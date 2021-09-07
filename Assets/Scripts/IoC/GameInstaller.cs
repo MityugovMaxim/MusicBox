@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Coffee.UIExtensions;
 using UnityEngine;
 using Zenject;
 
@@ -23,6 +24,8 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
+		
+		UIParticle.Warmup(16);
 	}
 
 	void InstallCulture()
@@ -61,7 +64,9 @@ public class GameInstaller : MonoInstaller
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
 		#endif
 		
-		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNewComponentOnNewGameObject().AsSingle();
+		Container.BindInterfacesAndSelfTo<MessageProcessor>().FromNew().AsSingle();
+		
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<PurchaseProcessor>().FromNew().AsSingle();
@@ -71,6 +76,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<NotificationProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ConfigProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()

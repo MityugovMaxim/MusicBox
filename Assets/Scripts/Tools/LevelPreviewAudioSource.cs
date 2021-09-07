@@ -8,9 +8,11 @@ public class LevelPreviewAudioSource : MonoBehaviour
 	[SerializeField] float m_Volume             = 0.7f;
 	[SerializeField] float m_TransitionDuration = 0.5f;
 
-	LevelProcessor m_LevelProcessor;
+	StorageProcessor m_StorageProcessor;
 
+	string      m_LevelID;
 	AudioSource m_AudioSource;
+	AudioClip   m_AudioClip;
 
 	IEnumerator m_AudioRoutine;
 
@@ -20,22 +22,33 @@ public class LevelPreviewAudioSource : MonoBehaviour
 	}
 
 	[Inject]
-	public void Construct(LevelProcessor _LevelProcessor)
+	public void Construct(StorageProcessor _StorageProcessor)
 	{
-		m_LevelProcessor = _LevelProcessor;
+		m_StorageProcessor = _StorageProcessor;
 	}
 
 	public void Play(string _LevelID)
 	{
+		m_LevelID = _LevelID;
+		
 		if (m_AudioSource == null)
 			return;
-		
-		AudioClip previewClip = m_LevelProcessor.GetPreviewClip(_LevelID);
 		
 		if (m_AudioRoutine != null)
 			StopCoroutine(m_AudioRoutine);
 		
-		m_AudioRoutine = PlayRoutine(m_AudioSource, previewClip, m_Volume, m_TransitionDuration);
+		m_AudioClip = null;
+		
+		m_StorageProcessor.LoadPreview(
+			_LevelID,
+			_Preview =>
+			{
+				if (m_LevelID == _LevelID)
+					m_AudioClip = _Preview;
+			}
+		);
+		
+		m_AudioRoutine = PlayRoutine(m_AudioSource, m_Volume, m_TransitionDuration);
 		
 		StartCoroutine(m_AudioRoutine);
 	}
@@ -45,6 +58,8 @@ public class LevelPreviewAudioSource : MonoBehaviour
 		if (m_AudioSource == null)
 			return;
 		
+		m_AudioClip = null;
+		
 		if (m_AudioRoutine != null)
 			StopCoroutine(m_AudioRoutine);
 		
@@ -53,7 +68,7 @@ public class LevelPreviewAudioSource : MonoBehaviour
 		StartCoroutine(m_AudioRoutine);
 	}
 
-	static IEnumerator PlayRoutine(AudioSource _AudioSource, AudioClip _AudioClip, float _Volume, float _Duration)
+	IEnumerator PlayRoutine(AudioSource _AudioSource, float _Volume, float _Duration)
 	{
 		if (_AudioSource == null)
 			yield break;
@@ -76,7 +91,17 @@ public class LevelPreviewAudioSource : MonoBehaviour
 		
 		_AudioSource.volume = target;
 		_AudioSource.Stop();
-		_AudioSource.clip = _AudioClip;
+		
+		if (m_AudioClip == null)
+			yield return new WaitWhile(() => m_AudioClip == null);
+		
+		if (m_AudioClip.loadState == AudioDataLoadState.Unloaded)
+			m_AudioClip.LoadAudioData();
+		
+		yield return new WaitUntil(() => m_AudioClip.loadState == AudioDataLoadState.Loaded);
+		
+		_AudioSource.clip = m_AudioClip;
+		_AudioSource.mute = false;
 		_AudioSource.Play();
 		
 		source = _AudioSource.volume;
@@ -95,7 +120,7 @@ public class LevelPreviewAudioSource : MonoBehaviour
 		_AudioSource.volume = target;
 	}
 
-	static IEnumerator StopRoutine(AudioSource _AudioSource, float _Duration)
+	IEnumerator StopRoutine(AudioSource _AudioSource, float _Duration)
 	{
 		if (_AudioSource == null)
 			yield break;

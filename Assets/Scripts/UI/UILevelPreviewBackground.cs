@@ -10,24 +10,28 @@ public class UILevelPreviewBackground : UIEntity
 	[SerializeField] float          m_Duration = 0.4f;
 	[SerializeField] AnimationCurve m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-	LevelProcessor m_LevelProcessor;
+	StorageProcessor m_StorageProcessor;
 
 	readonly Queue<Image> m_BackgroundPool = new Queue<Image>();
 
 	[Inject]
-	public void Construct(LevelProcessor _LevelProcessor)
+	public void Construct(StorageProcessor _StorageProcessor)
 	{
-		m_LevelProcessor = _LevelProcessor;
+		m_StorageProcessor = _StorageProcessor;
 	}
 
 	public void Setup(string _LevelID, bool _Instant = false)
 	{
-		Sprite previewBackground = m_LevelProcessor.GetPreviewBackground(_LevelID);
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-			StartCoroutine(BackgroundRoutine(m_Background, previewBackground));
-		else
-			m_Background.sprite = previewBackground;
+		m_StorageProcessor.LoadLevelBackground(
+			_LevelID,
+			_Background =>
+			{
+				if (!_Instant && gameObject.activeInHierarchy)
+					StartCoroutine(BackgroundRoutine(m_Background, _Background));
+				else
+					m_Background.sprite = _Background;
+			}
+		);
 	}
 
 	Image CreateBackground()

@@ -195,8 +195,6 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	{
 		Debug.LogFormat("[AdsProcessor] Ads finished. Placement: {0} Result: {1}.", _PlacementID, _Result);
 		
-		AudioManager.SetAudioActive(true);
-		
 		if (_PlacementID == RewardedID)
 		{
 			switch (_Result)
@@ -234,7 +232,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		{
 			if (Advertisement.isInitialized && m_InterstitialLoaded)
 			{
-				ShowInterstitial(_Finished);
+				yield return WaitInterstitialRoutine(_Finished);
 				yield break;
 			}
 			
@@ -244,6 +242,23 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		}
 		
 		Reload();
+		
+		_Finished?.Invoke();
+	}
+
+	IEnumerator WaitInterstitialRoutine(Action _Finished)
+	{
+		bool finished = false;
+		
+		ShowInterstitial(() => finished = true);
+		
+		yield return new WaitUntil(() => finished);
+		
+		yield return null;
+		
+		AudioManager.SetAudioActive(true);
+		
+		yield return null;
 		
 		_Finished?.Invoke();
 	}
@@ -264,7 +279,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		{
 			if (Advertisement.isInitialized && m_RewardedLoaded)
 			{
-				ShowRewarded(_Success, _Failed);
+				yield return WaitRewardedRoutine(_Success, _Failed);
 				yield break;
 			}
 			
@@ -276,6 +291,28 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		Reload();
 		
 		_Cancel?.Invoke();
+	}
+
+	IEnumerator WaitRewardedRoutine(Action _Success, Action _Failed)
+	{
+		bool success = false;
+		bool failed  = false;
+		
+		ShowRewarded(() => success = true, () => failed = true);
+		
+		yield return new WaitUntil(() => success || failed);
+		
+		yield return null;
+		
+		AudioManager.SetAudioActive(true);
+		
+		yield return null;
+		
+		if (success)
+			_Success?.Invoke();
+		
+		if (failed)
+			_Failed?.Invoke();
 	}
 
 	void InvokeRewardedSuccess()

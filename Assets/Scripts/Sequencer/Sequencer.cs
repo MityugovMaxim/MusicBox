@@ -160,6 +160,7 @@ public partial class Sequencer : MonoBehaviour
 	{
 		Playing = false;
 		
+		Sample(float.MinValue);
 		Sample(0);
 	}
 

@@ -224,8 +224,7 @@ AudioSource:
   m_GameObject: {fileID: 4957382470430192316}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 24300002, guid: 5e7f2ffc7f95640eda25b93669687598,
-    type: 2}
+  OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 185213d73374e45339e798db181d4d0e, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -968,8 +967,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  m_HeadphonesIcon: {fileID: 0}
-  m_SpeakerIcon: {fileID: 0}
+  m_Background: {fileID: 5831854207878934382}
   m_OutputNameLabel: {fileID: 5831854207049056614}
   m_ManualLatencyLabel: {fileID: 1327738165919363802}
   m_AudioSource: {fileID: 2584555566710210300}
@@ -1042,10 +1040,10 @@ RectTransform:
   m_Father: {fileID: 5831854206236022643}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 66.22934}
-  m_SizeDelta: {x: 560, y: 40}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5831854207049056615
 CanvasRenderer:
@@ -1117,9 +1115,9 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_firstOverflowCharacterIndex: 0
   m_linkedTextComponent: {fileID: 0}
   m_isLinkedTextComponent: 0

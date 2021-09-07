@@ -15,12 +15,9 @@ public class LevelProcessor
 	readonly ProgressProcessor             m_ProgressProcessor;
 	readonly Level.Factory                 m_LevelFactory;
 	readonly ProductInfo                   m_NoAdsProduct;
-	readonly List<string>                  m_LevelIDs           = new List<string>();
-	readonly Dictionary<string, LevelInfo> m_LevelInfos         = new Dictionary<string, LevelInfo>();
-	readonly Dictionary<string, AudioClip> m_PreviewClips       = new Dictionary<string, AudioClip>();
-	readonly Dictionary<string, Sprite>    m_PreviewBackgrounds = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Sprite>    m_PreviewThumbnails  = new Dictionary<string, Sprite>();
-	readonly List<ISampleReceiver>         m_SampleReceivers    = new List<ISampleReceiver>();
+	readonly List<string>                  m_LevelIDs        = new List<string>();
+	readonly Dictionary<string, LevelInfo> m_LevelInfos      = new Dictionary<string, LevelInfo>();
+	readonly List<ISampleReceiver>         m_SampleReceivers = new List<ISampleReceiver>();
 
 	[Inject]
 	public LevelProcessor(
@@ -174,78 +171,6 @@ public class LevelProcessor
 		}
 		
 		return levelInfo.Mode;
-	}
-
-	public AudioClip GetPreviewClip(string _LevelID)
-	{
-		if (m_PreviewClips.ContainsKey(_LevelID) && m_PreviewClips[_LevelID] != null)
-			return m_PreviewClips[_LevelID];
-		
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get preview clip failed. Level info not found for level with ID '{0}'.", _LevelID);
-			return null;
-		}
-		
-		if (string.IsNullOrEmpty(levelInfo.Clip))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get preview clip failed. Clip is null for level with ID '{0}'.", _LevelID);
-			return null;
-		}
-		
-		AudioClip previewClip = Resources.Load<AudioClip>(levelInfo.Clip);
-		
-		m_PreviewClips[_LevelID] = previewClip;
-		
-		return previewClip;
-	}
-
-	public Sprite GetPreviewBackground(string _LevelID)
-	{
-		if (m_PreviewBackgrounds.ContainsKey(_LevelID) && m_PreviewBackgrounds[_LevelID] != null)
-			return m_PreviewBackgrounds[_LevelID];
-		
-		Sprite previewThumbnail = GetPreviewThumbnail(_LevelID);
-		
-		if (previewThumbnail == null)
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get preview background failed. Preview thumbnail is null for level with ID '{0}'.", _LevelID);
-			return null;
-		}
-		
-		Sprite previewBackground = BlurUtility.Blur(previewThumbnail, 0.5f, 8);
-		
-		m_PreviewBackgrounds[_LevelID] = previewBackground;
-		
-		return previewBackground;
-	}
-
-	public Sprite GetPreviewThumbnail(string _LevelID)
-	{
-		if (m_PreviewThumbnails.ContainsKey(_LevelID) && m_PreviewThumbnails[_LevelID] != null)
-			return m_PreviewThumbnails[_LevelID];
-		
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get preview thumbnail failed. Level info not found for level with ID '{0}'.", _LevelID);
-			return null;
-		}
-		
-		if (string.IsNullOrEmpty(levelInfo.Thumbnail))
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get preview thumbnail failed. Thumbnail is null for level with ID '{0}'.", _LevelID);
-			return null;
-		}
-		
-		Sprite previewThumbnail = Resources.Load<Sprite>(levelInfo.Thumbnail);
-		
-		m_PreviewThumbnails[_LevelID] = previewThumbnail;
-		
-		return previewThumbnail;
 	}
 
 	public void Create(string _LevelID)

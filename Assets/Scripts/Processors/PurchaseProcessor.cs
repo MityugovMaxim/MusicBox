@@ -31,14 +31,12 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 	Action<bool> m_OnInitialize;
 
 	readonly SignalBus                          m_SignalBus;
-	readonly List<string>                       m_ProductIDs         = new List<string>();
-	readonly Dictionary<string, ProductInfo>    m_ProductInfos       = new Dictionary<string, ProductInfo>();
-	readonly Dictionary<string, Sprite>         m_PreviewThumbnails  = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Sprite>         m_PreviewBackgrounds = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Action<string>> m_Success            = new Dictionary<string, Action<string>>();
-	readonly Dictionary<string, Action<string>> m_Canceled           = new Dictionary<string, Action<string>>();
-	readonly Dictionary<string, Action<string>> m_Failed             = new Dictionary<string, Action<string>>();
-	readonly HashSet<string>                    m_Purchases          = new HashSet<string>();
+	readonly List<string>                       m_ProductIDs   = new List<string>();
+	readonly Dictionary<string, ProductInfo>    m_ProductInfos = new Dictionary<string, ProductInfo>();
+	readonly Dictionary<string, Action<string>> m_Success      = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Canceled     = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Failed       = new Dictionary<string, Action<string>>();
+	readonly HashSet<string>                    m_Purchases    = new HashSet<string>();
 
 	[Inject]
 	public PurchaseProcessor(SignalBus _SignalBus)
@@ -182,52 +180,6 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 			return Array.Empty<string>();
 		
 		return productInfo.LevelInfos.Select(_LevelInfo => _LevelInfo.ID).ToArray();
-	}
-
-	public Sprite GetPreviewBackground(string _ProductID)
-	{
-		if (m_PreviewBackgrounds.ContainsKey(_ProductID) && m_PreviewBackgrounds[_ProductID] != null)
-			return m_PreviewBackgrounds[_ProductID];
-		
-		Sprite previewThumbnail = GetPreviewThumbnail(_ProductID);
-		
-		if (previewThumbnail == null)
-		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get preview background failed. Thumbnail is null for product with ID '{0}'.", _ProductID);
-			return null;
-		}
-		
-		Sprite previewBackground = BlurUtility.Blur(previewThumbnail, 0.8f, 5);
-		
-		m_PreviewBackgrounds[_ProductID] = previewBackground;
-		
-		return previewBackground;
-	}
-
-	public Sprite GetPreviewThumbnail(string _ProductID)
-	{
-		if (m_PreviewThumbnails.ContainsKey(_ProductID) && m_PreviewThumbnails[_ProductID] != null)
-			return m_PreviewThumbnails[_ProductID];
-		
-		ProductInfo productInfo = GetProductInfo(_ProductID);
-		
-		if (productInfo == null)
-		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get preview thumbnail failed. Product info is null for product with ID '{0}'.", _ProductID);
-			return null;
-		}
-		
-		if (string.IsNullOrEmpty(productInfo.Thumbnail))
-		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get preview thumbnail failed. Thumbnail is null for product with ID '{0}'.", _ProductID);
-			return null;
-		}
-		
-		Sprite previewThumbnail = Resources.Load<Sprite>(productInfo.Thumbnail);
-		
-		m_PreviewThumbnails[_ProductID] = previewThumbnail;
-		
-		return previewThumbnail;
 	}
 
 	public string GetTitle(string _ProductID)

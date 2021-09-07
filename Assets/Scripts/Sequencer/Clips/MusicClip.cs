@@ -23,9 +23,6 @@ public class MusicClip : Clip
 
 	protected override void OnEnter(float _Time)
 	{
-		if (!Sequencer.Playing || !Playing)
-			return;
-		
 		m_Paused  = false;
 		m_Latency = AudioManager.Latency;
 		

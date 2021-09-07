@@ -12,23 +12,34 @@ public class HapticProcessor : IInitializable, IDisposable
 
 	public bool HapticEnabled
 	{
-		get => PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 0) > 0;
-		set => PlayerPrefs.SetInt(HAPTIC_ENABLED_KEY, value ? 1 : 0);
+		get => m_HapticEnabled;
+		set
+		{
+			if (m_HapticEnabled == value)
+				return;
+			
+			m_HapticEnabled = value;
+			
+			PlayerPrefs.SetInt(HAPTIC_ENABLED_KEY, m_HapticEnabled ? 1 : 0);
+		}
 	}
 
 	SignalBus m_SignalBus;
 	Haptic    m_Haptic;
+	bool      m_HapticEnabled;
 
 	[Inject]
 	public void Construct(SignalBus _SignalBus)
 	{
-		m_SignalBus = _SignalBus;
-		m_Haptic    = Haptic.Create();
+		m_SignalBus     = _SignalBus;
+		m_Haptic        = Haptic.Create();
+		m_HapticEnabled = PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 1) > 0;
 	}
 
 	public void Process(Haptic.Type _HapticType)
 	{
-		m_Haptic.Process(_HapticType);
+		if (m_HapticEnabled)
+			m_Haptic.Process(_HapticType);
 	}
 
 	void IInitializable.Initialize()
@@ -49,16 +60,16 @@ public class HapticProcessor : IInitializable, IDisposable
 
 	void ImpactHeavy()
 	{
-		m_Haptic.Process(Haptic.Type.ImpactHeavy);
+		Process(Haptic.Type.ImpactHeavy);
 	}
 
 	void ImpactMedium()
 	{
-		m_Haptic.Process(Haptic.Type.ImpactMedium);
+		Process(Haptic.Type.ImpactMedium);
 	}
 
 	void ImpactLight()
 	{
-		m_Haptic.Process(Haptic.Type.ImpactLight);
+		Process(Haptic.Type.ImpactLight);
 	}
 }

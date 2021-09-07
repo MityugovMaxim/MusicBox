@@ -63,7 +63,7 @@ public class NotificationProcessor : IInitializable, IDisposable
 	void RegisterLevelUnlock(LevelUnlockSignal _Signal)
 	{
 		NotificationInfo notificationInfo = new NotificationInfo(
-			m_LevelProcessor.GetPreviewThumbnail(_Signal.LevelID),
+			null, // TODO: Remove
 			"Level unlocked",
 			$"{m_LevelProcessor.GetArtist(_Signal.LevelID)}\n{m_LevelProcessor.GetTitle(_Signal.LevelID)}",
 			() =>
@@ -90,7 +90,7 @@ public class NotificationProcessor : IInitializable, IDisposable
 	void RegisterPurchase(PurchaseSignal _Signal)
 	{
 		NotificationInfo notificationInfo = new NotificationInfo(
-			m_PurchaseProcessor.GetPreviewThumbnail(_Signal.ProductID),
+			null,
 			"Purchase complete",
 			m_PurchaseProcessor.GetTitle(_Signal.ProductID),
 			() =>
