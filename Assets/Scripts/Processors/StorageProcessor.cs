@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Firebase.Storage;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -20,6 +19,7 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 	StorageReference m_ThumbnailsReference;
 	StorageReference m_PreviewsReference;
 	StorageReference m_SoundsReference;
+	StorageReference m_LevelsReference;
 
 	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
 	readonly Dictionary<string, Action<Sprite>>    m_ProductActions = new Dictionary<string, Action<Sprite>>();
@@ -34,6 +34,7 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		m_ThumbnailsReference = reference.Child("Thumbnails");
 		m_PreviewsReference   = reference.Child("Previews");
 		m_SoundsReference     = reference.Child("Sounds");
+		m_LevelsReference     = reference.Child("Levels");
 	}
 
 	void IDisposable.Dispose()
@@ -99,11 +100,9 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		string key = $"{_LevelID}_preview";
 		
-		Task<StorageMetadata> metadata = reference.GetMetadataAsync();
+		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		await metadata;
-		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Result.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
 		{
 			m_PreviewActions.Remove(_LevelID);
 			return;
@@ -113,7 +112,7 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		await reference.GetFileAsync(url);
 		
-		PlayerPrefs.SetString(key, metadata.Result.Md5Hash);
+		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
 		LoadAudioClip(
 			url,
@@ -192,11 +191,9 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		string key = $"{_LevelID}_level_thumbnail";
 		
-		Task<StorageMetadata> metadata = reference.GetMetadataAsync();
+		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		await metadata;
-		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Result.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
 		{
 			m_LevelActions.Remove(_LevelID);
 			return;
@@ -206,7 +203,7 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		await reference.GetFileAsync(url);
 		
-		PlayerPrefs.SetString(key, metadata.Result.Md5Hash);
+		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
 		LoadSprite(
 			url,
@@ -285,11 +282,9 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		string key = $"{_ProductID}_product_thumbnail";
 		
-		Task<StorageMetadata> metadata = reference.GetMetadataAsync();
+		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		await metadata;
-		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Result.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
 		{
 			m_ProductActions.Remove(_ProductID);
 			return;
@@ -299,7 +294,7 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		await reference.GetFileAsync(url);
 		
-		PlayerPrefs.SetString(key, metadata.Result.Md5Hash);
+		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
 		LoadSprite(
 			url,

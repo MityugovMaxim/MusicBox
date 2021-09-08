@@ -88,7 +88,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	public void Achievements()
 	{
 		if (m_SocialProcessor != null)
-			m_SocialProcessor.ShowAchievements();
+			m_SocialProcessor.AttachGoogleID();//.ShowAchievements();
 	}
 
 	protected override void OnShowStarted()
