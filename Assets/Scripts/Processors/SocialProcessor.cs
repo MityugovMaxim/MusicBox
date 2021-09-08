@@ -12,13 +12,23 @@ public class SocialProcessor : IInitializable
 	void IInitializable.Initialize()
 	{
 		GameCenterPlatform.ShowDefaultAchievementCompletionBanner(true);
+	}
+
+	public void AttachGameCenter()
+	{
 		Social.localUser.Authenticate(
 			(_Success, _Error) =>
 			{
 				if (_Success)
-					Debug.LogFormat("[SocialProcessor] Authenticate success. User ID: {0}. User name: {1}.", Social.localUser.id, Social.localUser.userName);
+				{
+					Debug.LogFormat("[SocialManager] Login with Apple ID success. Player ID: {0}.", Social.localUser.id);
+					
+					GameCenterAuth();
+				}
 				else
-					Debug.LogErrorFormat("[SocialProcessor] Authenticate failed. Error: {0}.", _Error);
+				{
+					Debug.LogErrorFormat("[SocialManager] Login with Game Center failed. Error: {0}.", _Error);
+				}
 			}
 		);
 	}
@@ -57,46 +67,6 @@ public class SocialProcessor : IInitializable
 				Debug.LogErrorFormat("[SocialManager] Login with Apple ID failed. Error: {0}.", _Error);
 			}
 		);
-	}
-
-	static async void AppleAuth(string _Token, string _Nonce)
-	{
-		Credential credential = OAuthProvider.GetCredential("apple.com", _Token, _Nonce, null);
-		
-		if (!credential.IsValid())
-		{
-			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Apple sign in credential invalid.");
-			return;
-		}
-		
-		FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-		
-		FirebaseUser user = await auth.SignInWithCredentialAsync(credential);
-		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with Apple ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
-	}
-
-	static async void GoogleAuth(string _IDToken, string _AccessToken)
-	{
-		Credential credential = GoogleAuthProvider.GetCredential(_IDToken, _AccessToken);
-		
-		if (!credential.IsValid())
-		{
-			Debug.LogError("[SocialProcessor] Login with Google ID failed. Apple sign in credential invalid.");
-			return;
-		}
-		
-		FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-		
-		FirebaseUser user = await auth.SignInWithCredentialAsync(credential);
-		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with Google ID failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with Google ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
 	}
 
 	public void ShowAchievements()
@@ -152,5 +122,77 @@ public class SocialProcessor : IInitializable
 					Debug.LogErrorFormat("[SocialProcessor] Progress achievement failed. Achievement: '{0}'. Progress: {1}.", _AchievementID, _Progress);
 			}
 		);
+	}
+
+	static async void GameCenterAuth()
+	{
+		Credential credential = await GameCenterAuthProvider.GetCredentialAsync();
+		
+		if (!credential.IsValid())
+		{
+			Debug.LogError("[SocialProcessor] Login with Game Center failed. Game Center credential invalid.");
+			return;
+		}
+		
+		FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+		
+		FirebaseUser account = auth.CurrentUser;
+		
+		FirebaseUser user = account != null
+			? await account.LinkWithCredentialAsync(credential)
+			: await auth.SignInWithCredentialAsync(credential);
+		
+		if (user == null)
+			Debug.LogError("[SocialProcessor] Login with Game Center failed. Unknown error.");
+		else
+			Debug.LogFormat("[SocialProcessor] Login with Game Center success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
+	}
+
+	static async void AppleAuth(string _Token, string _Nonce)
+	{
+		Credential credential = OAuthProvider.GetCredential("apple.com", _Token, _Nonce, null);
+		
+		if (!credential.IsValid())
+		{
+			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Apple sign in credential invalid.");
+			return;
+		}
+		
+		FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+		
+		FirebaseUser account = auth.CurrentUser;
+		
+		FirebaseUser user = account != null
+			? await account.LinkWithCredentialAsync(credential)
+			: await auth.SignInWithCredentialAsync(credential);
+		
+		if (user == null)
+			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Unknown error.");
+		else
+			Debug.LogFormat("[SocialProcessor] Login with Apple ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
+	}
+
+	static async void GoogleAuth(string _IDToken, string _AccessToken)
+	{
+		Credential credential = GoogleAuthProvider.GetCredential(_IDToken, _AccessToken);
+		
+		if (!credential.IsValid())
+		{
+			Debug.LogError("[SocialProcessor] Login with Google ID failed. Apple sign in credential invalid.");
+			return;
+		}
+		
+		FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+		
+		FirebaseUser account = auth.CurrentUser;
+		
+		FirebaseUser user = account != null
+			? await account.LinkWithCredentialAsync(credential)
+			: await auth.SignInWithCredentialAsync(credential);
+		
+		if (user == null)
+			Debug.LogError("[SocialProcessor] Login with Google ID failed. Unknown error.");
+		else
+			Debug.LogFormat("[SocialProcessor] Login with Google ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
 	}
 }

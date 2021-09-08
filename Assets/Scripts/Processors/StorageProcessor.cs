@@ -18,8 +18,8 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 	FirebaseStorage  m_Storage;
 	StorageReference m_ThumbnailsReference;
 	StorageReference m_PreviewsReference;
-	StorageReference m_SoundsReference;
-	StorageReference m_LevelsReference;
+	//StorageReference m_SoundsReference;
+	//StorageReference m_LevelsReference;
 
 	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
 	readonly Dictionary<string, Action<Sprite>>    m_ProductActions = new Dictionary<string, Action<Sprite>>();
@@ -33,8 +33,8 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		m_ThumbnailsReference = reference.Child("Thumbnails");
 		m_PreviewsReference   = reference.Child("Previews");
-		m_SoundsReference     = reference.Child("Sounds");
-		m_LevelsReference     = reference.Child("Levels");
+		//m_SoundsReference     = reference.Child("Sounds");
+		//m_LevelsReference     = reference.Child("Levels");
 	}
 
 	void IDisposable.Dispose()

@@ -96,7 +96,7 @@ extern "C"
         else
         {
             if (_Failed != nil)
-                _Failed("Sign in with Apple not supported")
+                _Failed("Sign in with Apple not supported");
         }
     }
 }
