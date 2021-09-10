@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.PauseMenu)]
 public class UIPauseMenu : UIMenu
 {
 	const int RESTART_ADS_COUNT = 2;
@@ -107,9 +109,13 @@ public class UIPauseMenu : UIMenu
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu)
-				.ThenHide(MenuType.GameMenu, true)
-				.ThenHide(MenuType.PauseMenu, true);
+			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
+				_Task =>
+				{
+					m_MenuProcessor.Hide(MenuType.GameMenu, true);
+					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+				}
+			);
 		}
 		
 		m_LeaveAdsCount++;

@@ -47,16 +47,14 @@ public class StatisticProcessor : IInitializable, IDisposable
 
 	void RegisterLevelFinish(LevelFinishSignal _Signal)
 	{
-		ScoreData scoreData = m_ScoreProcessor.ScoreData;
-		
 		Analytics.CustomEvent(
 			"level_finish",
 			new Dictionary<string, object>()
 			{
 				{ "level_id", _Signal.LevelID },
-				{ "score", scoreData.Score },
-				{ "accuracy", scoreData.Accuracy },
-				{ "rank", scoreData.Rank.ToString() },
+				{ "accuracy", m_ScoreProcessor.Accuracy },
+				{ "score", m_ScoreProcessor.Score },
+				{ "rank", m_ScoreProcessor.Rank.ToString() },
 			}
 		);
 	}
@@ -85,36 +83,30 @@ public class StatisticProcessor : IInitializable, IDisposable
 
 	public void LogLevelLike(string _LevelID)
 	{
-		long      score    = m_ScoreProcessor.GetLastScore(_LevelID);
-		int       accuracy = m_ScoreProcessor.GetLastAccuracy(_LevelID);
-		ScoreRank rank     = m_ScoreProcessor.GetLastRank(_LevelID);
-		
 		Analytics.CustomEvent(
 			"level_like",
 			new Dictionary<string, object>()
 			{
 				{ "level_id", _LevelID },
-				{ "score", score },
-				{ "accuracy", accuracy },
-				{ "rank", rank.ToString() },
+				{ "accuracy", m_ScoreProcessor.Accuracy },
+				{ "score", m_ScoreProcessor.Score },
+				{ "rank", m_ScoreProcessor.Rank.ToString() },
+				{ "is_record", m_ScoreProcessor.IsRecord },
 			}
 		);
 	}
 
 	public void LogLevelDislike(string _LevelID)
 	{
-		long      score    = m_ScoreProcessor.GetLastScore(_LevelID);
-		int       accuracy = m_ScoreProcessor.GetLastAccuracy(_LevelID);
-		ScoreRank rank     = m_ScoreProcessor.GetLastRank(_LevelID);
-		
 		Analytics.CustomEvent(
 			"level_dislike",
 			new Dictionary<string, object>()
 			{
 				{ "level_id", _LevelID },
-				{ "score", score },
-				{ "accuracy", accuracy },
-				{ "rank", rank.ToString() },
+				{ "accuracy", m_ScoreProcessor.Accuracy },
+				{ "score", m_ScoreProcessor.Score },
+				{ "rank", m_ScoreProcessor.Rank.ToString() },
+				{ "is_record", m_ScoreProcessor.IsRecord },
 			}
 		);
 	}

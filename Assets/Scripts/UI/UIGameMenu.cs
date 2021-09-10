@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.GameMenu)]
 public class UIGameMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIGamePauseButton m_PauseButton;

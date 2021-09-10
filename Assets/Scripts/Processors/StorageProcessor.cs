@@ -1,13 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Firebase.Storage;
 using UnityEngine;
-using UnityEngine.Networking;
+using UnityEngine.Scripting;
 using Zenject;
 
-public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
+[Preserve]
+public class StorageProcessor : IInitializable, IDisposable
 {
 	readonly Dictionary<string, Sprite>    m_LevelThumbnails    = new Dictionary<string, Sprite>();
 	readonly Dictionary<string, Sprite>    m_LevelBackgrounds   = new Dictionary<string, Sprite>();
@@ -18,8 +18,6 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 	FirebaseStorage  m_Storage;
 	StorageReference m_ThumbnailsReference;
 	StorageReference m_PreviewsReference;
-	//StorageReference m_SoundsReference;
-	//StorageReference m_LevelsReference;
 
 	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
 	readonly Dictionary<string, Action<Sprite>>    m_ProductActions = new Dictionary<string, Action<Sprite>>();
@@ -29,12 +27,10 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 	{
 		m_Storage = FirebaseStorage.DefaultInstance;
 		
-		StorageReference reference = m_Storage.GetReferenceFromUrl("gs://audiobox-76b0e.appspot.com");
+		StorageReference reference = m_Storage.RootReference;
 		
 		m_ThumbnailsReference = reference.Child("Thumbnails");
 		m_PreviewsReference   = reference.Child("Previews");
-		//m_SoundsReference     = reference.Child("Sounds");
-		//m_LevelsReference     = reference.Child("Levels");
 	}
 
 	void IDisposable.Dispose()
@@ -77,25 +73,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		if (File.Exists(path))
 		{
-			LoadAudioClip(
-				url,
-				_Preview =>
-				{
-					m_Previews[_LevelID] = _Preview;
-					
-					if (m_PreviewActions.ContainsKey(_LevelID))
-					{
-						Action<AudioClip> action = m_PreviewActions[_LevelID];
-						m_PreviewActions.Remove(_LevelID);
-						action?.Invoke(_Preview);
-					}
-				},
-				() =>
-				{
-					if (m_PreviewActions.ContainsKey(_LevelID))
-						m_PreviewActions.Remove(_LevelID);
-				}
-			);
+			m_Previews[_LevelID] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS);
+			
+			if (m_PreviewActions.ContainsKey(_LevelID))
+			{
+				Action<AudioClip> action = m_PreviewActions[_LevelID];
+				m_PreviewActions.Remove(_LevelID);
+				action?.Invoke(m_Previews[_LevelID]);
+			}
 		}
 		
 		string key = $"{_LevelID}_preview";
@@ -114,25 +99,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
-		LoadAudioClip(
-			url,
-			_Preview =>
-			{
-				m_Previews[_LevelID] = _Preview;
-				
-				if (m_PreviewActions.ContainsKey(_LevelID))
-				{
-					Action<AudioClip> action = m_PreviewActions[_LevelID];
-					m_PreviewActions.Remove(_LevelID);
-					action?.Invoke(_Preview);
-				}
-			},
-			() =>
-			{
-				if (m_PreviewActions.ContainsKey(_LevelID))
-					m_PreviewActions.Remove(_LevelID);
-			}
-		);
+		m_Previews[_LevelID] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS);
+		
+		if (m_PreviewActions.ContainsKey(_LevelID))
+		{
+			Action<AudioClip> action = m_PreviewActions[_LevelID];
+			m_PreviewActions.Remove(_LevelID);
+			action?.Invoke(m_Previews[_LevelID]);
+		}
 	}
 
 	public async void LoadLevelThumbnail(string _LevelID, Action<Sprite> _Complete)
@@ -168,25 +142,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		if (File.Exists(path))
 		{
-			LoadSprite(
-				url,
-				_Thumbnail =>
-				{
-					m_LevelThumbnails[_LevelID] = _Thumbnail;
-					
-					if (m_LevelActions.ContainsKey(_LevelID))
-					{
-						Action<Sprite> action = m_LevelActions[_LevelID];
-						m_LevelActions.Remove(_LevelID);
-						action?.Invoke(_Thumbnail);
-					}
-				},
-				() =>
-				{
-					if (m_LevelActions.ContainsKey(_LevelID))
-						m_LevelActions.Remove(_LevelID);
-				}
-			);
+			m_LevelThumbnails[_LevelID] = await WebRequest.LoadSprite(url);
+			
+			if (m_LevelActions.ContainsKey(_LevelID))
+			{
+				Action<Sprite> action = m_LevelActions[_LevelID];
+				m_LevelActions.Remove(_LevelID);
+				action?.Invoke(m_LevelThumbnails[_LevelID]);
+			}
 		}
 		
 		string key = $"{_LevelID}_level_thumbnail";
@@ -205,25 +168,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
-		LoadSprite(
-			url,
-			_Thumbnail =>
-			{
-				m_LevelThumbnails[_LevelID] = _Thumbnail;
-				
-				if (m_LevelActions.ContainsKey(_LevelID))
-				{
-					Action<Sprite> action = m_LevelActions[_LevelID];
-					m_LevelActions.Remove(_LevelID);
-					action?.Invoke(_Thumbnail);
-				}
-			},
-			() =>
-			{
-				if (m_LevelActions.ContainsKey(_LevelID))
-					m_LevelActions.Remove(_LevelID);
-			}
-		);
+		m_LevelThumbnails[_LevelID] = await WebRequest.LoadSprite(url);
+		
+		if (m_LevelActions.ContainsKey(_LevelID))
+		{
+			Action<Sprite> action = m_LevelActions[_LevelID];
+			m_LevelActions.Remove(_LevelID);
+			action?.Invoke(m_LevelThumbnails[_LevelID]);
+		}
 	}
 
 	public async void LoadProductThumbnail(string _ProductID, Action<Sprite> _Complete)
@@ -259,25 +211,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		if (File.Exists(path))
 		{
-			LoadSprite(
-				url,
-				_Thumbnail =>
-				{
-					m_ProductThumbnails[_ProductID] = _Thumbnail;
-					
-					if (m_ProductActions.ContainsKey(_ProductID))
-					{
-						Action<Sprite> action = m_ProductActions[_ProductID];
-						m_ProductActions.Remove(_ProductID);
-						action?.Invoke(_Thumbnail);
-					}
-				},
-				() =>
-				{
-					if (m_ProductActions.ContainsKey(_ProductID))
-						m_ProductActions.Remove(_ProductID);
-				}
-			);
+			m_ProductThumbnails[_ProductID] = await WebRequest.LoadSprite(url);
+			
+			if (m_ProductActions.ContainsKey(_ProductID))
+			{
+				Action<Sprite> action = m_ProductActions[_ProductID];
+				m_ProductActions.Remove(_ProductID);
+				action?.Invoke(m_ProductThumbnails[_ProductID]);
+			}
 		}
 		
 		string key = $"{_ProductID}_product_thumbnail";
@@ -296,25 +237,14 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 		
 		PlayerPrefs.SetString(key, metadata.Md5Hash);
 		
-		LoadSprite(
-			url,
-			_Thumbnail =>
-			{
-				m_ProductThumbnails[_ProductID] = _Thumbnail;
-				
-				if (m_ProductActions.ContainsKey(_ProductID))
-				{
-					Action<Sprite> action = m_ProductActions[_ProductID];
-					m_ProductActions.Remove(_ProductID);
-					action?.Invoke(_Thumbnail);
-				}
-			},
-			() =>
-			{
-				if (m_ProductActions.ContainsKey(_ProductID))
-					m_ProductActions.Remove(_ProductID);
-			}
-		);
+		m_ProductThumbnails[_ProductID] = await WebRequest.LoadSprite(url);
+		
+		if (m_ProductActions.ContainsKey(_ProductID))
+		{
+			Action<Sprite> action = m_ProductActions[_ProductID];
+			m_ProductActions.Remove(_ProductID);
+			action?.Invoke(m_ProductThumbnails[_ProductID]);
+		}
 	}
 
 	public void LoadLevelBackground(string _LevelID, Action<Sprite> _Complete)
@@ -371,125 +301,5 @@ public class StorageProcessor : MonoBehaviour, IInitializable, IDisposable
 				_Complete?.Invoke(background);
 			}
 		);
-	}
-
-	void LoadSprite(string _URL, Action<Sprite> _Success, Action _Failed)
-	{
-		StartCoroutine(LoadSpriteRoutine(_URL, _Success, _Failed));
-	}
-
-	void LoadAudioClip(string _URL, Action<AudioClip> _Success, Action _Failed)
-	{
-		StartCoroutine(LoadAudioClipRoutine(_URL, _Success, _Failed));
-	}
-
-	static IEnumerator LoadSpriteRoutine(string _URL, Action<Sprite> _Success, Action _Failed)
-	{
-		using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(_URL, true))
-		{
-			yield return request.SendWebRequest();
-			
-			if (request.isHttpError)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load sprite failed. URL: {0}. Http error: {1}.", _URL, request.error);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (request.isNetworkError)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load sprite failed. URL: {0}. Network error: {1}.", _URL, request.error);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (!request.isDone)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load sprite failed. URL: {0}. Unknown error.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			DownloadHandlerTexture handler = request.downloadHandler as DownloadHandlerTexture;
-			
-			if (handler == null)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load sprite failed. URL: {0}. Audio clip handler is null.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (handler.texture == null)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load sprite failed. URL: {0}. Audio clip is null.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			Sprite sprite = Sprite.Create(
-				handler.texture,
-				new Rect(0, 0, handler.texture.width, handler.texture.height),
-				new Vector2(0.5f, 0.5f),
-				1
-			);
-			
-			sprite.name = Path.GetFileNameWithoutExtension(_URL);
-			
-			_Success?.Invoke(sprite);
-		}
-	}
-
-	static IEnumerator LoadAudioClipRoutine(string _URL, Action<AudioClip> _Success, Action _Failed)
-	{
-		using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(_URL, AudioType.OGGVORBIS))
-		{
-			DownloadHandlerAudioClip handler = request.downloadHandler as DownloadHandlerAudioClip;
-			
-			if (handler == null)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load audio clip failed. URL: {0}. Audio clip handler is null.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			handler.compressed  = true;
-			handler.streamAudio = false;
-			
-			yield return request.SendWebRequest();
-			
-			if (request.isHttpError)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load audio clip failed. URL: {0}. Http error: {1}.", _URL, request.error);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (request.isNetworkError)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load audio clip failed. URL: {0}. Network error: {1}.", _URL, request.error);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (!request.isDone)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load audio clip failed. URL: {0}. Unknown error.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			if (handler.audioClip == null)
-			{
-				Debug.LogErrorFormat("[StorageProcessor] Load audio clip failed. URL: {0}. Audio clip is null.", _URL);
-				_Failed?.Invoke();
-				yield break;
-			}
-			
-			AudioClip audioClip = handler.audioClip;
-			
-			audioClip.name = Path.GetFileNameWithoutExtension(_URL);
-			
-			_Success?.Invoke(audioClip);
-		}
 	}
 }

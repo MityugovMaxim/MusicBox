@@ -41,7 +41,7 @@ public class UIGamePauseButton : UIEntity
 		
 		m_Paused = false;
 		
-		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>(MenuType.PauseMenu);
+		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
 		
 		if (pauseMenu != null)
 			pauseMenu.Resume();
@@ -56,7 +56,7 @@ public class UIGamePauseButton : UIEntity
 		
 		m_Paused = true;
 		
-		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>(MenuType.PauseMenu);
+		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
 		
 		if (pauseMenu != null)
 			pauseMenu.Pause();

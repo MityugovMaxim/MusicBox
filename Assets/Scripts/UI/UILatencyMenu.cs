@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
+[Menu(MenuType.LatencyMenu)]
 public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 {
 	const int MANUAL_LATENCY_STEP = 25;

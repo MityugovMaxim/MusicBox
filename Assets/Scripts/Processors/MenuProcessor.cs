@@ -1,74 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
-
-public class MenuOperation
-{
-	readonly MenuProcessor m_MenuProcessor;
-
-	bool   m_Resolved;
-	Action m_Finished;
-
-	public MenuOperation(MenuProcessor _MenuProcessor)
-	{
-		m_MenuProcessor = _MenuProcessor;
-	}
-
-	public MenuOperation ThenShow(MenuType _MenuType, bool _Instant = false)
-	{
-		MenuOperation menuOperation = new MenuOperation(m_MenuProcessor);
-		
-		void Show()
-		{
-			UIMenu menu = m_MenuProcessor.GetMenu<UIMenu>(_MenuType);
-			
-			menu.Show(
-				_Instant,
-				null,
-				menuOperation.InvokeFinished
-			);
-		}
-		
-		if (m_Resolved)
-			Show();
-		else
-			m_Finished = Show;
-		
-		return menuOperation;
-	}
-
-	public MenuOperation ThenHide(MenuType _MenuType, bool _Instant = false)
-	{
-		MenuOperation menuOperation = new MenuOperation(m_MenuProcessor);
-		
-		void Hide()
-		{
-			UIMenu menu = m_MenuProcessor.GetMenu<UIMenu>(_MenuType);
-			
-			menu.Hide(
-				_Instant,
-				null,
-				menuOperation.InvokeFinished
-			);
-		}
-		
-		if (m_Resolved)
-			Hide();
-		else
-			m_Finished = Hide;
-		
-		return menuOperation;
-	}
-
-	public void InvokeFinished()
-	{
-		m_Resolved = true;
-		Action action = m_Finished;
-		m_Finished = null;
-		action?.Invoke();
-	}
-}
 
 public class MenuProcessor : IInitializable, IDisposable
 {
@@ -159,6 +93,17 @@ public class MenuProcessor : IInitializable, IDisposable
 		Hide(MenuType.ResultMenu);
 	}
 
+	public T GetMenu<T>() where T : UIMenu
+	{
+		if (!MenuPrebuild.TryGetMenuType<T>(out MenuType menuType))
+		{
+			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu type '{0}' not found.", typeof(T).Name);
+			return null;
+		}
+		
+		return GetMenu<T>(menuType);
+	}
+
 	public T GetMenu<T>(MenuType _MenuType) where T : UIMenu
 	{
 		if (m_MenuCache.ContainsKey(_MenuType) && m_MenuCache[_MenuType] is T menuCache)
@@ -194,40 +139,64 @@ public class MenuProcessor : IInitializable, IDisposable
 		return menu;
 	}
 
-	public MenuOperation Show(MenuType _MenuType, bool _Instant = false)
+	public Task<UIMenu> Show(MenuType _MenuType, bool _Instant = false)
 	{
 		UIMenu menu = GetMenu<UIMenu>(_MenuType);
 		
-		MenuOperation menuOperation = new MenuOperation(this);
+		TaskCompletionSource<UIMenu> completionSource = new TaskCompletionSource<UIMenu>();
 		
 		menu.Show(
 			_Instant,
 			null,
-			menuOperation.InvokeFinished
+			() => completionSource.SetResult(menu)
 		);
 		
-		return menuOperation;
+		return completionSource.Task;
 	}
 
-	public MenuOperation Hide(MenuType _MenuType, bool _Instant = false)
+	public Task<UIMenu> Hide(MenuType _MenuType, bool _Instant = false)
 	{
-		MenuOperation menuOperation = new MenuOperation(this);
-		
-		if (!m_MenuCache.ContainsKey(_MenuType))
-		{
-			menuOperation.InvokeFinished();
-			return menuOperation;
-		}
-		
 		UIMenu menu = GetMenu<UIMenu>(_MenuType);
+		
+		TaskCompletionSource<UIMenu> completionSource = new TaskCompletionSource<UIMenu>();
 		
 		menu.Hide(
 			_Instant,
 			null,
-			menuOperation.InvokeFinished
+			() => completionSource.SetResult(menu)
 		);
 		
-		return menuOperation;
+		return completionSource.Task;
+	}
+
+	public Task<T> Show<T>(bool _Instant = false) where T : UIMenu
+	{
+		T menu = GetMenu<T>();
+		
+		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
+		
+		menu.Show(
+			_Instant,
+			null,
+			() => completionSource.SetResult(menu)
+		);
+		
+		return completionSource.Task;
+	}
+	
+	public Task<T> Hide<T>(bool _Instant = false) where T : UIMenu
+	{
+		T menu = GetMenu<T>();
+		
+		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
+		
+		menu.Hide(
+			_Instant,
+			null,
+			() => completionSource.SetResult(menu)
+		);
+		
+		return completionSource.Task;
 	}
 
 	void Reorder()

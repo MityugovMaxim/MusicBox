@@ -62,15 +62,13 @@ public class ProgressProcessor : IInitializable, IDisposable
 
 	void RegisterLevelFinish(LevelFinishSignal _Signal)
 	{
-		ScoreData scoreData = m_ScoreProcessor.ScoreData;
-		
 		long expPayout   = GetExpPayout(_Signal.LevelID);
 		long expProgress = ExpProgress;
 		
 		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
 		{
-			if (rank != ScoreRank.None && rank <= scoreData.Rank)
-				expProgress += expPayout * GetExpMultiplier(scoreData.Rank);
+			if (rank != ScoreRank.None && rank <= m_ScoreProcessor.Rank)
+				expProgress += expPayout * GetExpMultiplier(m_ScoreProcessor.Rank);
 		}
 		
 		foreach (LevelInfo levelInfo in m_LevelInfos.Values)

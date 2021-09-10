@@ -3,22 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.MainMenu)]
 public class UIMainMenu : UIMenu, IInitializable, IDisposable
 {
-	const string TUTORIAL_COUNT_KEY = "TUTORIAL_COUNT";
-
-	static int TutorialCount
-	{
-		get => PlayerPrefs.GetInt(TUTORIAL_COUNT_KEY, 0);
-		set => PlayerPrefs.SetInt(TUTORIAL_COUNT_KEY, value);
-	}
-
 	[SerializeField] UIMainMenuItem m_Item;
 	[SerializeField] RectTransform  m_Container;
 	[SerializeField] UIProductPromo m_ProductPromo;
-	[SerializeField] LevelInfo      m_TutorialInfo;
-
-	//[SerializeField] ScrollRect     m_Scroll;
 
 	SignalBus              m_SignalBus;
 	LevelProcessor         m_LevelProcessor;
@@ -29,7 +19,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 
 	readonly List<UIMainMenuItem> m_Items = new List<UIMainMenuItem>();
 
-	string[] m_LevelIDs;
+	List<string> m_LevelIDs;
 
 	[Inject]
 	public void Construct(
@@ -49,16 +39,43 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_ItemFactory     = _ItemFactory;
 	}
 
+	public void Shop()
+	{
+		m_MenuProcessor.Show(MenuType.ShopMenu);
+	}
+
+	public void Achievements()
+	{
+		if (m_SocialProcessor != null)
+			m_SocialProcessor.ShowAchievements();
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
 		m_SignalBus.Subscribe<ConfigSignal>(RegisterConfig);
+		m_SignalBus.Subscribe<LevelDataUpdateSignal>(RegisterLevelDataUpdate);
+		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
 		m_SignalBus.Unsubscribe<ConfigSignal>(RegisterConfig);
+		m_SignalBus.Unsubscribe<LevelDataUpdateSignal>(RegisterLevelDataUpdate);
+		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+	}
+
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		Show(true);
+	}
+
+	protected override void OnShowStarted()
+	{
+		Refresh();
 	}
 
 	void RegisterPurchase()
@@ -73,38 +90,14 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_ProductPromo.Setup(m_ConfigProcessor.PromoProductID);
 	}
 
-	protected override void Awake()
+	void RegisterLevelDataUpdate()
 	{
-		base.Awake();
-		
-		Show(true);
-	}
-
-	public void Shop()
-	{
-		m_MenuProcessor.Show(MenuType.ShopMenu);
-	}
-
-	public void Achievements()
-	{
-		if (m_SocialProcessor != null)
-			m_SocialProcessor.AttachGameCenter();//.ShowAchievements();
-	}
-
-	protected override void OnShowStarted()
-	{
-		m_MenuProcessor.Show(MenuType.NotificationMenu);
-		
 		Refresh();
-		
-		if (m_TutorialInfo != null && TutorialCount < 1)
-		{
-			TutorialCount++;
-			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
-			if (loadingMenu != null)
-				loadingMenu.Setup(m_TutorialInfo.ID);
-			m_MenuProcessor.Show(MenuType.LoadingMenu, true);
-		}
+	}
+
+	void RegisterScoreDataUpdate()
+	{
+		Refresh();
 	}
 
 	void Refresh()
@@ -114,7 +107,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		
 		m_LevelIDs = m_LevelProcessor.GetLevelIDs();
 		
-		int delta = m_LevelIDs.Length - m_Items.Count;
+		int delta = m_LevelIDs.Count - m_Items.Count;
 		int count = Mathf.Abs(delta);
 		
 		if (delta > 0)
@@ -140,7 +133,7 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		foreach (UIMainMenuItem item in m_Items)
 			item.gameObject.SetActive(false);
 		
-		for (var i = 0; i < m_LevelIDs.Length; i++)
+		for (var i = 0; i < m_LevelIDs.Count; i++)
 		{
 			UIMainMenuItem item    = m_Items[i];
 			string         levelID = m_LevelIDs[i];
@@ -150,29 +143,4 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 			item.gameObject.SetActive(true);
 		}
 	}
-
-	// void Recenter(string _LevelID)
-	// {
-	// 	if (string.IsNullOrEmpty(_LevelID))
-	// 	{
-	// 		Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Level ID '{0}' is null or empty.", _LevelID);
-	// 		return;
-	// 	}
-	// 	
-	// 	UIMainMenuItem item = m_Items.FirstOrDefault(_Track => _Track.gameObject.activeInHierarchy && _Track.LevelID == _LevelID);
-	// 	
-	// 	if (item == null)
-	// 	{
-	// 		Debug.LogErrorFormat("[UIMainMenu] Recenter failed. Track with level ID '{0}' not found.", _LevelID);
-	// 		return;
-	// 	}
-	// 	
-	// 	Rect source = item.GetWorldRect();
-	// 	Rect target = m_Scroll.content.GetWorldRect();
-	// 	
-	// 	float position = MathUtility.Remap01(source.yMin, target.yMin, target.yMax - source.height);
-	// 	
-	// 	m_Scroll.StopMovement();
-	// 	m_Scroll.verticalNormalizedPosition = position;
-	// }
 }

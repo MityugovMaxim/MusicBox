@@ -9,6 +9,5 @@ public enum MenuType
 	PauseMenu        = 6,
 	ResultMenu       = 7,
 	ProcessingMenu   = 8,
-	NotificationMenu = 9,
-	LatencyMenu      = 10,
+	LatencyMenu      = 9,
 }

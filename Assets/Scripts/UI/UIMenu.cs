@@ -4,6 +4,16 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
+public class MenuAttribute : Attribute
+{
+	public MenuType MenuType { get; }
+
+	public MenuAttribute(MenuType _MenuType)
+	{
+		MenuType = _MenuType;
+	}
+}
+
 [RequireComponent(typeof(CanvasGroup))]
 public class UIMenu : UIEntity
 {

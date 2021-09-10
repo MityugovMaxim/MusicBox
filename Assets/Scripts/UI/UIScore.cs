@@ -83,9 +83,9 @@ public class UIScore : UIEntity
 	public void Setup(string _LevelID)
 	{
 		m_LevelID  = _LevelID;
-		m_Rank     = m_ScoreProcessor.GetLastRank(m_LevelID);
-		m_Accuracy = m_ScoreProcessor.GetLastAccuracy(m_LevelID);
-		m_Score    = m_ScoreProcessor.GetLastScore(m_LevelID);
+		m_Accuracy = m_ScoreProcessor.Accuracy;
+		m_Score    = m_ScoreProcessor.Score;
+		m_Rank     = m_ScoreProcessor.Rank;
 		
 		m_ExpPayout = 0;
 		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
@@ -139,10 +139,8 @@ public class UIScore : UIEntity
 		
 		m_Finished = _Finished;
 		
-		ScoreRank rank = m_ScoreProcessor.GetLastRank(m_LevelID);
-		
 		m_Animator.SetBool(m_FastParameterID, m_ExpPayout == 0);
-		m_Animator.SetInteger(m_RankParameterID, (int)rank);
+		m_Animator.SetInteger(m_RankParameterID, (int)m_Rank);
 		m_Animator.SetTrigger(m_PlayParameterID);
 	}
 

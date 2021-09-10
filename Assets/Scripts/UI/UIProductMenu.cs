@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.ProductMenu)]
 public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIProductMenuItem          m_Item;

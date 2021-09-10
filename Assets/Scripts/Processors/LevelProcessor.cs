@@ -1,23 +1,34 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class LevelProcessor
+public class LevelDataUpdateSignal { }
+
+[Preserve]
+public class LevelProcessor : IInitializable, IDisposable
 {
+	public bool Initialized { get; private set; }
+
 	Level  m_Level;
 	string m_LevelID;
 
-	readonly SignalBus                     m_SignalBus;
-	readonly PurchaseProcessor             m_PurchaseProcessor;
-	readonly ProgressProcessor             m_ProgressProcessor;
-	readonly Level.Factory                 m_LevelFactory;
-	readonly ProductInfo                   m_NoAdsProduct;
-	readonly List<string>                  m_LevelIDs        = new List<string>();
-	readonly Dictionary<string, LevelInfo> m_LevelInfos      = new Dictionary<string, LevelInfo>();
-	readonly List<ISampleReceiver>         m_SampleReceivers = new List<ISampleReceiver>();
+	readonly SignalBus         m_SignalBus;
+	readonly PurchaseProcessor m_PurchaseProcessor;
+	readonly ProgressProcessor m_ProgressProcessor;
+	readonly Level.Factory     m_LevelFactory;
+	readonly ProductInfo       m_NoAdsProduct;
+
+	readonly List<string>                      m_LevelIDs        = new List<string>();
+	readonly Dictionary<string, LevelSnapshot> m_LevelSnapshots  = new Dictionary<string, LevelSnapshot>();
+	readonly List<ISampleReceiver>             m_SampleReceivers = new List<ISampleReceiver>();
+
+	DatabaseReference m_LevelsData;
 
 	[Inject]
 	public LevelProcessor(
@@ -33,128 +44,109 @@ public class LevelProcessor
 		m_ProgressProcessor = _ProgressProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
-		
-		LevelRegistry levelRegistry = Registry.Load<LevelRegistry>("level_registry");
-		if (levelRegistry != null)
-		{
-			foreach (LevelInfo levelInfo in levelRegistry)
-			{
-				if (levelInfo == null || !levelInfo.Active)
-					continue;
-				
-				m_LevelIDs.Add(levelInfo.ID);
-				m_LevelInfos[levelInfo.ID] = levelInfo;
-			}
-		}
 	}
 
-	public string[] GetLevelIDs()
+	public List<string> GetLevelIDs()
 	{
 		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID))
 			.OrderByDescending(m_ProgressProcessor.IsLevelUnlocked)
 			.ThenBy(m_ProgressProcessor.GetExpRequired)
-			.ToArray();
+			.ToList();
 	}
 
 	public bool Contains(string _LevelID)
 	{
-		return m_LevelInfos.ContainsKey(_LevelID);
+		return m_LevelSnapshots.ContainsKey(_LevelID);
 	}
 
 	public string GetArtist(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Level info with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelInfo.Artist;
+		return levelSnapshot.Artist;
 	}
 
 	public string GetTitle(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Level info with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelInfo.Title;
+		return levelSnapshot.Title;
 	}
 
 	public string GetLeaderboardID(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get leaderboard ID failed. Level info with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelInfo.LeaderboardID;
+		// TODO: Remove
+		//return levelSnapshot.LeaderboardID;
+		return string.Empty;
 	}
 
 	public string GetAchievementID(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get achievement ID failed. Level info with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelInfo.AchievementID;
+		// TODO: Remove
+		// return levelSnapshot.AchievementID;
+		return string.Empty;
 	}
 
 	public string GetNextLevelID(string _LevelID)
 	{
-		int index = m_LevelIDs.IndexOf(_LevelID);
+		List<string> levelIDs = GetLevelIDs();
+		
+		if (levelIDs == null || levelIDs.Count == 0)
+			return _LevelID;
+		
+		int index = levelIDs.IndexOf(_LevelID);
 		
 		if (index < 0)
 			return _LevelID;
 		
-		for (int i = 1; i <= m_LevelIDs.Count; i++)
-		{
-			int j = MathUtility.Repeat(index + i, m_LevelIDs.Count);
-			
-			string levelID = m_LevelIDs[j];
-			
-			if (!m_PurchaseProcessor.IsLevelPurchased(levelID) || m_ProgressProcessor.IsLevelLocked(levelID))
-				continue;
-			
-			return levelID;
-		}
+		index = MathUtility.Repeat(index + 1, levelIDs.Count);
 		
-		return _LevelID;
+		return levelIDs[index];
 	}
 
 	public string GetPreviousLevelID(string _LevelID)
 	{
-		int index = m_LevelIDs.IndexOf(_LevelID);
+		List<string> levelIDs = GetLevelIDs();
+		
+		if (levelIDs == null || levelIDs.Count == 0)
+			return _LevelID;
+		
+		int index = levelIDs.IndexOf(_LevelID);
 		
 		if (index < 0)
 			return _LevelID;
 		
-		for (int i = 1; i <= m_LevelIDs.Count; i++)
-		{
-			int j = MathUtility.Repeat(index - i, m_LevelIDs.Count);
-			
-			string levelID = m_LevelIDs[j];
-			
-			if (!m_PurchaseProcessor.IsLevelPurchased(levelID) || m_ProgressProcessor.IsLevelLocked(levelID))
-				continue;
-			
-			return levelID;
-		}
+		index = MathUtility.Repeat(index - 1, levelIDs.Count);
 		
-		return _LevelID;
+		return levelIDs[index];
 	}
 
 	public LevelMode GetLevelMode(string _LevelID)
@@ -162,22 +154,22 @@ public class LevelProcessor
 		if (m_NoAdsProduct != null && m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return LevelMode.Free;
 		
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get mode failed. Level info with ID '{0}' is null.", _LevelID);
 			return LevelMode.Free;
 		}
 		
-		return levelInfo.Mode;
+		return levelSnapshot.Mode;
 	}
 
 	public void Create(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelInfo == null)
+		if (levelSnapshot == null)
 		{
 			Debug.LogError("[LevelProvider] Create level failed. Level info is null.");
 			return;
@@ -190,11 +182,11 @@ public class LevelProcessor
 		}
 		
 		m_LevelFactory.Create(
-			$"{levelInfo.ID}/level",
+			$"{_LevelID}/level",
 			_Level =>
 			{
 				m_Level   = _Level;
-				m_LevelID = levelInfo.ID;
+				m_LevelID = _LevelID;
 				
 				m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
 				
@@ -266,7 +258,53 @@ public class LevelProcessor
 		m_SampleReceivers.Remove(_SampleReceiver);
 	}
 
-	LevelInfo GetLevelInfo(string _LevelID)
+	async void IInitializable.Initialize()
+	{
+		m_LevelsData = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
+		
+		await LoadLevels();
+		
+		m_LevelsData.ChildChanged += OnLevelsUpdate;
+		
+		Initialized = true;
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_LevelsData.ChildChanged -= OnLevelsUpdate;
+		
+		Initialized = false;
+	}
+
+	async void OnLevelsUpdate(object _Sender, EventArgs _Args)
+	{
+		await LoadLevels();
+		
+		m_SignalBus.Fire<LevelDataUpdateSignal>();
+	}
+
+	async Task LoadLevels()
+	{
+		DataSnapshot levelsSnapshot = await m_LevelsData.GetValueAsync();
+		
+		m_LevelIDs.Clear();
+		m_LevelSnapshots.Clear();
+		
+		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
+		{
+			string levelID = levelSnapshot.Key;
+			LevelSnapshot level = new LevelSnapshot(
+				levelSnapshot.Child("title").GetString(),
+				levelSnapshot.Child("artist").GetString(),
+				levelSnapshot.Child("mode").GetEnum<LevelMode>()
+			);
+			
+			m_LevelIDs.Add(levelID);
+			m_LevelSnapshots[levelID] = level;
+		}
+	}
+
+	LevelSnapshot GetLevelSnapshot(string _LevelID)
 	{
 		if (string.IsNullOrEmpty(_LevelID))
 		{
@@ -274,12 +312,12 @@ public class LevelProcessor
 			return null;
 		}
 		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
+		if (!m_LevelSnapshots.ContainsKey(_LevelID))
 		{
 			Debug.LogErrorFormat("[ProgressProcessor] Get level info failed. Level with ID '{0}' not found.", _LevelID);
 			return null;
 		}
 		
-		return m_LevelInfos[_LevelID];
+		return m_LevelSnapshots[_LevelID];
 	}
 }

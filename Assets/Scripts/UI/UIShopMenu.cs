@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.ShopMenu)]
 public class UIShopMenu : UIMenu, IInitializable, IDisposable
 {
 	[SerializeField] UIShopMenuItem m_Item;

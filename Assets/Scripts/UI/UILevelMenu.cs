@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.LevelMenu)]
 public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 {
 	[SerializeField] UILevelPreviewBackground m_Background;
@@ -49,12 +50,14 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	{
 		m_SignalBus.Subscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
 		m_SignalBus.Subscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
+		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
 		m_SignalBus.Unsubscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
+		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	void RegisterAudioNextTrack()
@@ -67,6 +70,12 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	{
 		if (Shown)
 			Previous();
+	}
+
+	void RegisterScoreDataUpdate()
+	{
+		if (Shown)
+			Select(m_LevelID);
 	}
 
 	public void Setup(string _LevelID)
@@ -95,7 +104,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		void PlayInternal()
 		{
-			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>(MenuType.LoadingMenu);
+			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
 			if (loadingMenu != null)
 				loadingMenu.Setup(m_LevelID);
 			m_MenuProcessor.Show(MenuType.LoadingMenu);

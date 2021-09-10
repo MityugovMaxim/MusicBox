@@ -3,13 +3,6 @@ using Zenject;
 
 public class UIScoreRank : UIEntity
 {
-	public enum ScoreType
-	{
-		Last = 0,
-		Best = 1,
-	}
-
-	[SerializeField] ScoreType  m_ScoreType;
 	[SerializeField] GameObject m_RankS;
 	[SerializeField] GameObject m_RankA;
 	[SerializeField] GameObject m_RankB;
@@ -26,9 +19,7 @@ public class UIScoreRank : UIEntity
 
 	public void Setup(string _LevelID)
 	{
-		ScoreRank rank = m_ScoreType == ScoreType.Last
-			? m_ScoreProcessor.GetLastRank(_LevelID)
-			: m_ScoreProcessor.GetBestRank(_LevelID);
+		ScoreRank rank = m_ScoreProcessor.GetRank(_LevelID);
 		
 		m_RankS.SetActive(false);
 		m_RankA.SetActive(false);

@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using Zenject;
 
+[Menu(MenuType.LoadingMenu)]
 public class UILoadingMenu : UIMenu
 {
 	[SerializeField] UILoader m_Loader;
@@ -37,9 +38,7 @@ public class UILoadingMenu : UIMenu
 		if (m_Loader != null)
 			m_Loader.Play();
 		
-		m_MenuProcessor.Hide(MenuType.NotificationMenu, true);
-		
-		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>(MenuType.GameMenu);
+		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
 		if (gameMenu != null)
 			gameMenu.Setup(m_LevelID);
 		

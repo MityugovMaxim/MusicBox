@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 using Zenject;
 using Debug = UnityEngine.Debug;
 
-
+[Menu(MenuType.ResultMenu)]
 public class UIResultMenu : UIMenu
 {
 	const int RESTART_ADS_COUNT = 2;
@@ -21,13 +21,11 @@ public class UIResultMenu : UIMenu
 
 	MenuProcessor   m_MenuProcessor;
 	LevelProcessor  m_LevelProcessor;
-	ScoreProcessor  m_ScoreProcessor;
 	SocialProcessor m_SocialProcessor;
 	AdsProcessor    m_AdsProcessor;
 	HapticProcessor m_HapticProcessor;
 
-	string    m_LevelID;
-	ScoreData m_ScoreData;
+	string m_LevelID;
 
 	int m_RestartAdsCount;
 	int m_LeaveAdsCount;
@@ -38,7 +36,6 @@ public class UIResultMenu : UIMenu
 	public void Construct(
 		MenuProcessor   _MenuProcessor,
 		LevelProcessor  _LevelProcessor,
-		ScoreProcessor  _ScoreProcessor,
 		SocialProcessor _SocialProcessor,
 		AdsProcessor    _AdsProcessor,
 		HapticProcessor _HapticProcessor
@@ -46,7 +43,6 @@ public class UIResultMenu : UIMenu
 	{
 		m_MenuProcessor   = _MenuProcessor;
 		m_LevelProcessor  = _LevelProcessor;
-		m_ScoreProcessor  = _ScoreProcessor;
 		m_SocialProcessor = _SocialProcessor;
 		m_AdsProcessor    = _AdsProcessor;
 		m_HapticProcessor = _HapticProcessor;
@@ -56,26 +52,12 @@ public class UIResultMenu : UIMenu
 	{
 		m_LevelID = _LevelID;
 		
-		m_ScoreData = m_ScoreProcessor.ScoreData;
-		
-		m_ScoreProcessor.SaveLastScore(m_LevelID, m_ScoreData);
-		m_ScoreProcessor.SaveBestScore(m_LevelID, m_ScoreData);
-		
 		m_Background.Setup(m_LevelID, true);
 		m_Thumbnail.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_Score.Setup(m_LevelID);
 		m_LikeButton.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
-		
-		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
-		long   score         = m_ScoreProcessor.GetBestScore(m_LevelID);
-		m_SocialProcessor.ReportScore(leaderboardID, score);
-		
-		string    achievementID = m_LevelProcessor.GetAchievementID(m_LevelID);
-		ScoreRank rank          = m_ScoreProcessor.GetBestRank(m_LevelID);
-		if (rank == ScoreRank.S)
-			m_SocialProcessor.CompleteAchievement(achievementID);
 	}
 
 	public void Restart()
@@ -91,8 +73,6 @@ public class UIResultMenu : UIMenu
 			m_LevelProcessor.Restart();
 			
 			CloseAction = m_LevelProcessor.Play;
-			
-			m_MenuProcessor.Hide(MenuType.NotificationMenu);
 			
 			Hide();
 		}
@@ -154,10 +134,14 @@ public class UIResultMenu : UIMenu
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu)
-				.ThenHide(MenuType.ResultMenu, true)
-				.ThenHide(MenuType.GameMenu, true)
-				.ThenHide(MenuType.PauseMenu, true);
+			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
+				_Task =>
+				{
+					m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+					m_MenuProcessor.Hide(MenuType.GameMenu, true);
+					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+				}
+			);
 		}
 		
 		m_LeaveAdsCount++;
@@ -201,11 +185,15 @@ public class UIResultMenu : UIMenu
 			if (levelMenu != null)
 				levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
 			
-			m_MenuProcessor.Show(MenuType.MainMenu)
-				.ThenHide(MenuType.ResultMenu, true)
-				.ThenHide(MenuType.GameMenu, true)
-				.ThenHide(MenuType.PauseMenu, true);
 			m_MenuProcessor.Show(MenuType.LevelMenu);
+			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
+				_Task =>
+				{
+					m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+					m_MenuProcessor.Hide(MenuType.GameMenu, true);
+					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+				}
+			);
 		}
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
@@ -257,8 +245,6 @@ public class UIResultMenu : UIMenu
 	{
 		void ScoreFinished()
 		{
-			m_MenuProcessor.Show(MenuType.NotificationMenu);
-			
 			if (m_RateUsCount >= RATE_US_COUNT)
 			{
 				m_RateUsCount = 0;
