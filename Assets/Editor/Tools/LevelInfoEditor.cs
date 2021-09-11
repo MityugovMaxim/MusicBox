@@ -1,7 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Firebase.Database;
 using UnityEditor;
+using UnityEngine;
+
+public class ProductInfoEditor : Editor
+{
+	
+}
 
 [CustomEditor(typeof(LevelInfo))]
 public class LevelInfoEditor : Editor
@@ -17,6 +24,8 @@ public class LevelInfoEditor : Editor
 	SerializedProperty LockedProperty        => m_LockedProperty ?? (m_LockedProperty = serializedObject.FindProperty("m_Locked"));
 	SerializedProperty ExpPayoutProperty     => m_ExpPayoutProperty ?? (m_ExpPayoutProperty = serializedObject.FindProperty("m_ExpPayout"));
 	SerializedProperty ExpRequiredProperty   => m_ExpRequiredProperty ?? (m_ExpRequiredProperty = serializedObject.FindProperty("m_ExpRequired"));
+
+	static string m_Config;
 
 	SerializedProperty m_TitleProperty;
 	SerializedProperty m_ArtistProperty;
@@ -60,6 +69,9 @@ public class LevelInfoEditor : Editor
 		if (LockedProperty.boolValue)
 			EditorGUILayout.PropertyField(ExpRequiredProperty);
 		
+		if (GUILayout.Button("Upload"))
+			Upload();
+		
 		serializedObject.ApplyModifiedProperties();
 	}
 
@@ -96,5 +108,34 @@ public class LevelInfoEditor : Editor
 			}
 		}
 		return string.Join("_", words.ToArray());
+	}
+
+	async void Upload()
+	{
+		await FirebaseAdmin.Login();
+		
+		DatabaseReference levels   = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
+		string            levelID  = IDProperty.stringValue;
+		IDictionary<string, object> data = new Dictionary<string, object>()
+		{
+			{ "artist", ArtistProperty.stringValue },
+			{ "title", TitleProperty.stringValue },
+			{ "mode", ModeProperty.intValue },
+			{ "locked", LockedProperty.boolValue },
+			{ "payout", ExpPayoutProperty.longValue },
+			{ "price", ExpRequiredProperty.longValue },
+		};
+		try
+		{
+			await levels.Child(levelID).SetValueAsync(data);
+			
+			Debug.LogFormat("[LevelInfo] Upload level success. Level ID: {0}.", levelID);
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+		}
+		
+		FirebaseAdmin.Logout();
 	}
 }

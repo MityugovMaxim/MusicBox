@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Firebase.Database;
 
 public static class DataSnapshotExtension
@@ -13,6 +15,11 @@ public static class DataSnapshotExtension
 		return int.Parse(_DataSnapshot.GetRawJsonValue());
 	}
 
+	public static bool GetBool(this DataSnapshot _DataSnapshot)
+	{
+		return (bool)_DataSnapshot.Value;
+	}
+
 	public static long GetLong(this DataSnapshot _DataSnapshot)
 	{
 		return (long)_DataSnapshot.Value;
@@ -21,5 +28,13 @@ public static class DataSnapshotExtension
 	public static T GetEnum<T>(this DataSnapshot _DataSnapshot) where T : Enum
 	{
 		return (T)Enum.Parse(typeof(T), _DataSnapshot.GetRawJsonValue());
+	}
+
+	public static List<string> GetChildKeys(this DataSnapshot _DataSnapshot)
+	{
+		return _DataSnapshot.Children
+			.Where(_Entry => _Entry.GetBool())
+			.Select(_Entry => _Entry.Key)
+			.ToList();
 	}
 }

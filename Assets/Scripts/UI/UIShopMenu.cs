@@ -87,7 +87,7 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		
 		void ReloadInternal()
 		{
-			m_PurchaseProcessor.Reload();
+			m_PurchaseProcessor.LoadStore();
 			
 			m_PurchaseProcessor.OnInitialize += OnInitialize;
 		}

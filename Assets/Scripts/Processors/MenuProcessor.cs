@@ -46,7 +46,7 @@ public class MenuProcessor : IInitializable, IDisposable
 		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
 		
-		Show(MenuType.MainMenu, true);
+		Show(MenuType.LoginMenu, true);
 	}
 
 	void IDisposable.Dispose()
@@ -148,7 +148,7 @@ public class MenuProcessor : IInitializable, IDisposable
 		menu.Show(
 			_Instant,
 			null,
-			() => completionSource.SetResult(menu)
+			() => completionSource.TrySetResult(menu)
 		);
 		
 		return completionSource.Task;
@@ -163,7 +163,7 @@ public class MenuProcessor : IInitializable, IDisposable
 		menu.Hide(
 			_Instant,
 			null,
-			() => completionSource.SetResult(menu)
+			() => completionSource.TrySetResult(menu)
 		);
 		
 		return completionSource.Task;

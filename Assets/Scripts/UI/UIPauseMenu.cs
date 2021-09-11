@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.PauseMenu)]
@@ -99,7 +98,7 @@ public class UIPauseMenu : UIMenu
 
 	public void Leave()
 	{
-		void LeaveInternal()
+		async void LeaveInternal()
 		{
 			if (m_LevelProcessor == null)
 			{
@@ -109,13 +108,9 @@ public class UIPauseMenu : UIMenu
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
-				_Task =>
-				{
-					m_MenuProcessor.Hide(MenuType.GameMenu, true);
-					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-				}
-			);
+			await m_MenuProcessor.Show(MenuType.MainMenu);
+			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		}
 		
 		m_LeaveAdsCount++;

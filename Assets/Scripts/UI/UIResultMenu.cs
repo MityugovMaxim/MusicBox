@@ -21,7 +21,6 @@ public class UIResultMenu : UIMenu
 
 	MenuProcessor   m_MenuProcessor;
 	LevelProcessor  m_LevelProcessor;
-	SocialProcessor m_SocialProcessor;
 	AdsProcessor    m_AdsProcessor;
 	HapticProcessor m_HapticProcessor;
 
@@ -43,7 +42,6 @@ public class UIResultMenu : UIMenu
 	{
 		m_MenuProcessor   = _MenuProcessor;
 		m_LevelProcessor  = _LevelProcessor;
-		m_SocialProcessor = _SocialProcessor;
 		m_AdsProcessor    = _AdsProcessor;
 		m_HapticProcessor = _HapticProcessor;
 	}
@@ -124,7 +122,7 @@ public class UIResultMenu : UIMenu
 
 	public void Leave()
 	{
-		void LeaveInternal()
+		async void LeaveInternal()
 		{
 			if (m_LevelProcessor == null)
 			{
@@ -134,14 +132,10 @@ public class UIResultMenu : UIMenu
 			
 			m_LevelProcessor.Remove();
 			
-			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
-				_Task =>
-				{
-					m_MenuProcessor.Hide(MenuType.ResultMenu, true);
-					m_MenuProcessor.Hide(MenuType.GameMenu, true);
-					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-				}
-			);
+			await m_MenuProcessor.Show(MenuType.MainMenu);
+			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		}
 		
 		m_LeaveAdsCount++;
@@ -171,7 +165,7 @@ public class UIResultMenu : UIMenu
 	[Preserve]
 	public void Next()
 	{
-		void NextInternal()
+		async void NextInternal()
 		{
 			if (m_LevelProcessor == null)
 			{
@@ -185,15 +179,11 @@ public class UIResultMenu : UIMenu
 			if (levelMenu != null)
 				levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
 			
-			m_MenuProcessor.Show(MenuType.LevelMenu);
-			m_MenuProcessor.Show(MenuType.MainMenu).ContinueWith(
-				_Task =>
-				{
-					m_MenuProcessor.Hide(MenuType.ResultMenu, true);
-					m_MenuProcessor.Hide(MenuType.GameMenu, true);
-					m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-				}
-			);
+			await m_MenuProcessor.Show(MenuType.LevelMenu);
+			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		}
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
@@ -220,19 +210,6 @@ public class UIResultMenu : UIMenu
 		{
 			NextInternal();
 		}
-	}
-
-	[Preserve]
-	public void Leaderboard()
-	{
-		string leaderboardID = m_LevelProcessor.GetLeaderboardID(m_LevelID);
-		m_SocialProcessor.ShowLeaderboard(leaderboardID);
-	}
-
-	[Preserve]
-	public void Achievements()
-	{
-		m_SocialProcessor.ShowAchievements();
 	}
 
 	protected override void OnShowStarted()

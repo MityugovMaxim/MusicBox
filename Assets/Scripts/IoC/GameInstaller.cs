@@ -64,15 +64,14 @@ public class GameInstaller : MonoInstaller
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
 		#endif
 		
-		Container.BindInterfacesAndSelfTo<DataProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<PurchaseProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<MessageProcessor>().FromNew().AsSingle();
 		
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<PurchaseProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ConfigProcessor>().FromNew().AsSingle();
@@ -91,6 +90,8 @@ public class GameInstaller : MonoInstaller
 		
 		Container.DeclareSignal<LevelDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<ProductDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<PurchaseDataUpdateSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<LevelStartSignal>();
 		Container.DeclareSignal<LevelPlaySignal>();

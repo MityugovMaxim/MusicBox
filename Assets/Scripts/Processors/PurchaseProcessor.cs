@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
+using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using Zenject;
 
-public class PurchaseProcessor : IInitializable, IStoreListener
-{
-	const string PURCHASES_KEY = "PURCHASES";
+public class ProductDataUpdateSignal { }
 
+public class PurchaseDataUpdateSignal { }
+
+public class PurchaseProcessor : IStoreListener
+{
 	public bool Initialized => m_Controller != null && m_Extensions != null;
 
 	public event Action<bool> OnInitialize
@@ -30,41 +34,51 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	Action<bool> m_OnInitialize;
 
-	readonly SignalBus                          m_SignalBus;
-	readonly List<string>                       m_ProductIDs   = new List<string>();
-	readonly Dictionary<string, ProductInfo>    m_ProductInfos = new Dictionary<string, ProductInfo>();
-	readonly Dictionary<string, Action<string>> m_Success      = new Dictionary<string, Action<string>>();
-	readonly Dictionary<string, Action<string>> m_Canceled     = new Dictionary<string, Action<string>>();
-	readonly Dictionary<string, Action<string>> m_Failed       = new Dictionary<string, Action<string>>();
-	readonly HashSet<string>                    m_Purchases    = new HashSet<string>();
+	readonly SignalBus       m_SignalBus;
+	readonly SocialProcessor m_SocialProcessor;
+
+	readonly List<string>                        m_ProductIDs        = new List<string>();
+	readonly List<PurchaseSnapshot>              m_PurchaseSnapshots = new List<PurchaseSnapshot>();
+	readonly Dictionary<string, ProductSnapshot> m_ProductSnapshots  = new Dictionary<string, ProductSnapshot>();
+
+	readonly Dictionary<string, Action<string>> m_Success  = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Canceled = new Dictionary<string, Action<string>>();
+	readonly Dictionary<string, Action<string>> m_Failed   = new Dictionary<string, Action<string>>();
+
+	DatabaseReference m_ProductsData;
+	DatabaseReference m_PurchasesData;
 
 	[Inject]
-	public PurchaseProcessor(SignalBus _SignalBus)
+	public PurchaseProcessor(
+		SignalBus       _SignalBus,
+		SocialProcessor _SocialProcessor
+	)
 	{
-		m_SignalBus = _SignalBus;
-		
-		ProductRegistry productRegistry = Registry.Load<ProductRegistry>("product_registry");
-		if (productRegistry != null)
-		{
-			foreach (ProductInfo productInfo in productRegistry)
-			{
-				if (productInfo == null || !productInfo.Active)
-					continue;
-				
-				m_ProductIDs.Add(productInfo.ID);
-				m_ProductInfos[productInfo.ID] = productInfo;
-			}
-		}
-		
-		LoadPurchases();
+		m_SignalBus       = _SignalBus;
+		m_SocialProcessor = _SocialProcessor;
 	}
 
-	void IInitializable.Initialize()
+	public async Task LoadProducts()
 	{
-		Reload();
+		if (m_ProductsData == null)
+			m_ProductsData = FirebaseDatabase.DefaultInstance.RootReference.Child("products");
+		
+		await FetchProducts();
+		
+		m_ProductsData.ValueChanged += OnProductsUpdate;
 	}
 
-	public void Reload()
+	public async Task LoadPurchases()
+	{
+		if (m_PurchasesData == null)
+			m_PurchasesData = FirebaseDatabase.DefaultInstance.RootReference.Child("purchases").Child(m_SocialProcessor.UserID);
+		
+		await FetchPurchases();
+		
+		m_PurchasesData.ValueChanged += OnPurchasesUpdate;
+	}
+
+	public void LoadStore()
 	{
 		m_Resolved = false;
 		
@@ -81,40 +95,49 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	public bool IsProductPurchased(string _ProductID)
 	{
-		if (m_Purchases.Contains(_ProductID))
-			return true;
-		
-		if (!Initialized)
+		foreach (PurchaseSnapshot purchaseSnapshot in m_PurchaseSnapshots)
 		{
-			Debug.LogWarningFormat("[PurchaseProcessor] Check product failed. Store not initialized. Product ID: '{0}'.", _ProductID);
-			return false;
+			string productID = purchaseSnapshot.ProductID;
+			
+			if (productID == _ProductID)
+				return true;
 		}
-		
-		Product product = m_Controller.products.WithID(_ProductID);
-		
-		if (product == null)
-		{
-			Debug.LogWarningFormat("[PurchaseProcessor] Check product failed. Product with ID '{0}' not found.", _ProductID);
-			return false;
-		}
-		
-		return product.hasReceipt;
+		return false;
 	}
 
 	public bool IsLevelPurchased(string _LevelID)
 	{
-		List<ProductInfo> productInfos = new List<ProductInfo>();
+		HashSet<string> levelIDs = new HashSet<string>();
 		foreach (string productID in m_ProductIDs)
 		{
-			if (string.IsNullOrEmpty(productID) || !m_ProductInfos.ContainsKey(productID))
+			ProductSnapshot productSnapshot = GetProductSnapshot(productID);
+			
+			if (productSnapshot == null || productSnapshot.LevelIDs == null)
 				continue;
 			
-			ProductInfo productInfo = m_ProductInfos[productID];
-			
-			if (productInfo != null && productInfo.ContainsLevel(_LevelID))
-				productInfos.Add(productInfo);
+			foreach (string levelID in productSnapshot.LevelIDs)
+				levelIDs.Add(levelID);
 		}
-		return productInfos.Count == 0 || productInfos.Any(_ProductInfo => IsProductPurchased(_ProductInfo.ID));
+		
+		if (!levelIDs.Contains(_LevelID))
+			return true;
+		
+		foreach (PurchaseSnapshot purchaseSnapshot in m_PurchaseSnapshots)
+		{
+			string productID = purchaseSnapshot.ProductID;
+			
+			if (string.IsNullOrEmpty(productID))
+				continue;
+			
+			ProductSnapshot productSnapshot = GetProductSnapshot(productID);
+			
+			if (productSnapshot == null || productSnapshot.LevelIDs == null)
+				continue;
+			
+			if (productSnapshot.LevelIDs.Contains(_LevelID))
+				return true;
+		}
+		return false;
 	}
 
 	public string[] GetProductIDs()
@@ -168,18 +191,17 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	public string[] GetLevelIDs(string _ProductID)
 	{
-		ProductInfo productInfo = GetProductInfo(_ProductID);
+		ProductSnapshot productSnapshot = GetProductSnapshot(_ProductID);
 		
-		if (productInfo == null)
+		if (productSnapshot == null)
 		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get level IDs failed. Product info is null for product with ID '{0}'", _ProductID);
+			Debug.LogErrorFormat("[PurchaseProcessor] Get level IDs failed. Product snapshot is null for product with ID '{0}'", _ProductID);
 			return Array.Empty<string>();
 		}
 		
-		if (productInfo.LevelInfos == null || productInfo.LevelInfos.Length == 0)
-			return Array.Empty<string>();
-		
-		return productInfo.LevelInfos.Select(_LevelInfo => _LevelInfo.ID).ToArray();
+		return productSnapshot.LevelIDs != null
+			? productSnapshot.LevelIDs.ToArray()
+			: Array.Empty<string>();
 	}
 
 	public string GetTitle(string _ProductID)
@@ -239,33 +261,6 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		return TryGetPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, out string localizedPriceString)
 			? localizedPriceString
 			: product.metadata.localizedPriceString;
-	}
-
-	static bool TryGetPrice(decimal _Price, string _CurrencyCode, out string _PriceString)
-	{
-		RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
-			.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
-			.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
-			.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
-		
-		if (regionInfo == null)
-		{
-			_PriceString = null;
-			return false;
-		}
-		
-		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
-		numberFormatInfo.CurrencySymbol = regionInfo.CurrencySymbol;
-		
-		if (_CurrencyCode == "RUB" || _CurrencyCode == "JPY" || _CurrencyCode == "IDR" || _CurrencyCode == "INR")
-		{
-			if (_Price - decimal.Truncate(_Price) < 0.001M)
-				numberFormatInfo.CurrencyDecimalDigits = 0;
-		}
-		
-		_PriceString = string.Format(numberFormatInfo, "{0:C}", _Price);
-		
-		return true;
 	}
 
 	public void Purchase(
@@ -355,14 +350,96 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		);
 	}
 
+	async void OnProductsUpdate(object _Sender, EventArgs _Args)
+	{
+		Debug.Log("[Score processor] Updating products data...");
+		
+		await FetchProducts();
+		
+		Debug.Log("[Score processor] Update products data complete.");
+		
+		m_SignalBus.Fire<ProductDataUpdateSignal>();
+	}
+
+	async void OnPurchasesUpdate(object _Sender, EventArgs _Args)
+	{
+		Debug.Log("[Score processor] Updating purchases data...");
+		
+		await FetchPurchases();
+		
+		Debug.Log("[Score processor] Update purchases data complete.");
+		
+		m_SignalBus.Fire<ProductDataUpdateSignal>();
+	}
+
+	async Task FetchProducts()
+	{
+		m_ProductIDs.Clear();
+		m_ProductSnapshots.Clear();
+		
+		DataSnapshot productsSnapshot = await m_ProductsData.GetValueAsync();
+		
+		foreach (DataSnapshot productSnapshot in productsSnapshot.Children)
+		{
+			string productID = productSnapshot.Key;
+			ProductSnapshot product = new ProductSnapshot(
+				productSnapshot.Child("levels").GetChildKeys()
+			);
+			m_ProductIDs.Add(productID);
+			m_ProductSnapshots[productID] = product;
+		}
+	}
+
+	async Task FetchPurchases()
+	{
+		m_PurchaseSnapshots.Clear();
+		
+		DataSnapshot purchasesSnapshot = await m_PurchasesData.GetValueAsync();
+		
+		foreach (DataSnapshot purchaseSnapshot in purchasesSnapshot.Children)
+		{
+			PurchaseSnapshot purchase = new PurchaseSnapshot(
+				purchaseSnapshot.Key,
+				purchaseSnapshot.Child("receipt").GetString(),
+				purchaseSnapshot.Child("product_id").GetString()
+			);
+			m_PurchaseSnapshots.Add(purchase);
+		}
+	}
+
+	static bool TryGetPrice(decimal _Price, string _CurrencyCode, out string _PriceString)
+	{
+		RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
+			.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
+			.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
+			.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
+		
+		if (regionInfo == null)
+		{
+			_PriceString = null;
+			return false;
+		}
+		
+		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
+		numberFormatInfo.CurrencySymbol = regionInfo.CurrencySymbol;
+		
+		if (_CurrencyCode == "RUB" || _CurrencyCode == "JPY" || _CurrencyCode == "IDR" || _CurrencyCode == "INR")
+		{
+			if (_Price - decimal.Truncate(_Price) < 0.001M)
+				numberFormatInfo.CurrencyDecimalDigits = 0;
+		}
+		
+		_PriceString = string.Format(numberFormatInfo, "{0:C}", _Price);
+		
+		return true;
+	}
+
 	void IStoreListener.OnInitialized(IStoreController _Controller, IExtensionProvider _Extensions)
 	{
 		Debug.Log("[PurchaseProcessor] Initialize complete.");
 		
 		m_Controller = _Controller;
 		m_Extensions = _Extensions;
-		
-		UpdatePurchases();
 		
 		m_Resolved = true;
 		
@@ -384,20 +461,9 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 
 	PurchaseProcessingResult IStoreListener.ProcessPurchase(PurchaseEventArgs _Event)
 	{
-		string productID = _Event.purchasedProduct.definition.id;
+		SavePurchase(_Event.purchasedProduct);
 		
-		Debug.LogFormat("[PurchaseProcessor] Purchase complete. Product ID: '{0}'.", productID);
-		
-		InvokePurchaseSuccess(productID);
-		
-		if (!m_Purchases.Contains(productID))
-			m_SignalBus.Fire(new PurchaseSignal(productID));
-		
-		m_Purchases.Add(productID);
-		
-		SavePurchases();
-		
-		return PurchaseProcessingResult.Complete;
+		return PurchaseProcessingResult.Pending;
 	}
 
 	void IStoreListener.OnPurchaseFailed(Product _Product, PurchaseFailureReason _Reason)
@@ -412,67 +478,23 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 			InvokePurchaseFailed(productID);
 	}
 
-	void LoadPurchases()
+	async void SavePurchase(Product _Product)
 	{
-		m_Purchases.Clear();
+		string productID = _Product.definition.id;
 		
-		string data = SecurePrefs.Load(PURCHASES_KEY, string.Empty);
+		Debug.LogFormat("[PurchaseProcessor] Purchase complete. Product ID: '{0}'.", productID);
 		
-		if (string.IsNullOrEmpty(data))
-			return;
-		
-		string[] purchases = data.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
-		
-		foreach (string purchase in purchases)
+		IDictionary<string, object> data = new Dictionary<string, object>()
 		{
-			Debug.LogFormat("[PurchaseProcessor] Loaded purchase: " + purchase);
-			m_Purchases.Add(purchase);
-		}
-	}
-
-	void SavePurchases()
-	{
-		string data = string.Join(";", m_Purchases.ToArray());
+			{ "product_id", _Product.definition.id },
+			{ "receipt", _Product.receipt },
+		};
 		
-		SecurePrefs.Save(PURCHASES_KEY, data);
-	}
-
-	void UpdatePurchases()
-	{
-		#if UNITY_EDITOR
-		if (!Initialized)
-		{
-			Debug.LogError("[PurchaseProcessor] Update purchases failed. Store not initialized.");
-			return;
-		}
+		await m_PurchasesData.Child(_Product.transactionID).SetValueAsync(data);
 		
-		int count = m_Purchases.Count;
+		m_Controller.ConfirmPendingPurchase(_Product);
 		
-		foreach (Product product in m_Controller.products.all)
-		{
-			if (product == null || !product.hasReceipt)
-				continue;
-			
-			string productID = product.definition.id;
-			
-			if (string.IsNullOrEmpty(productID))
-				continue;
-			
-			if (!m_Purchases.Contains(productID))
-				m_Purchases.Add(productID);
-		}
-		
-		if (m_Purchases.Count != count)
-			SavePurchases();
-		#else
-		m_Purchases.Clear();
-		foreach (Product product in m_Controller.products.all)
-		{
-			if (product != null && product.hasReceipt)
-				m_Purchases.Add(product.definition.id);
-		}
-		SavePurchases();
-		#endif
+		InvokePurchaseSuccess(productID);
 	}
 
 	void InvokePurchaseSuccess(string _ProductID)
@@ -523,20 +545,20 @@ public class PurchaseProcessor : IInitializable, IStoreListener
 		action?.Invoke(_ProductID);
 	}
 
-	ProductInfo GetProductInfo(string _ProductID)
+	ProductSnapshot GetProductSnapshot(string _ProductID)
 	{
 		if (string.IsNullOrEmpty(_ProductID))
 		{
-			Debug.LogError("[PurchaseProcessor] Get product info failed. Product ID is null or empty.");
+			Debug.LogError("[PurchaseProcessor] Get product snapshot failed. Product ID is null or empty.");
 			return null;
 		}
 		
-		if (!m_ProductInfos.ContainsKey(_ProductID))
+		if (!m_ProductSnapshots.ContainsKey(_ProductID))
 		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get product info failed. Product info not found for product with ID '{0}'.", _ProductID);
+			Debug.LogErrorFormat("[PurchaseProcessor] Get product snapshot failed. Product snapshot not found for product with ID '{0}'.", _ProductID);
 			return null;
 		}
 		
-		return m_ProductInfos[_ProductID];
+		return m_ProductSnapshots[_ProductID];
 	}
 }

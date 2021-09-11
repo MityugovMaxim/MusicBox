@@ -11,10 +11,8 @@ using Zenject;
 public class LevelDataUpdateSignal { }
 
 [Preserve]
-public class LevelProcessor : IInitializable, IDisposable
+public class LevelProcessor
 {
-	public bool Initialized { get; private set; }
-
 	Level  m_Level;
 	string m_LevelID;
 
@@ -44,6 +42,16 @@ public class LevelProcessor : IInitializable, IDisposable
 		m_ProgressProcessor = _ProgressProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
+	}
+
+	public async Task LoadLevels()
+	{
+		if (m_LevelsData == null)
+			m_LevelsData = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
+		
+		await FetchLevels();
+		
+		m_LevelsData.ValueChanged += OnLevelsUpdate;
 	}
 
 	public List<string> GetLevelIDs()
@@ -83,36 +91,6 @@ public class LevelProcessor : IInitializable, IDisposable
 		}
 		
 		return levelSnapshot.Title;
-	}
-
-	public string GetLeaderboardID(string _LevelID)
-	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
-		
-		if (levelSnapshot == null)
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get leaderboard ID failed. Level info with ID '{0}' is null.", _LevelID);
-			return string.Empty;
-		}
-		
-		// TODO: Remove
-		//return levelSnapshot.LeaderboardID;
-		return string.Empty;
-	}
-
-	public string GetAchievementID(string _LevelID)
-	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
-		
-		if (levelSnapshot == null)
-		{
-			Debug.LogErrorFormat("[LevelProcessor] Get achievement ID failed. Level info with ID '{0}' is null.", _LevelID);
-			return string.Empty;
-		}
-		
-		// TODO: Remove
-		// return levelSnapshot.AchievementID;
-		return string.Empty;
 	}
 
 	public string GetNextLevelID(string _LevelID)
@@ -258,32 +236,18 @@ public class LevelProcessor : IInitializable, IDisposable
 		m_SampleReceivers.Remove(_SampleReceiver);
 	}
 
-	async void IInitializable.Initialize()
-	{
-		m_LevelsData = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
-		
-		await LoadLevels();
-		
-		m_LevelsData.ChildChanged += OnLevelsUpdate;
-		
-		Initialized = true;
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_LevelsData.ChildChanged -= OnLevelsUpdate;
-		
-		Initialized = false;
-	}
-
 	async void OnLevelsUpdate(object _Sender, EventArgs _Args)
 	{
-		await LoadLevels();
+		Debug.Log("[LevelProcessor] Updating levels data...");
+		
+		await FetchLevels();
+		
+		Debug.Log("[LevelProcessor] Update levels data complete.");
 		
 		m_SignalBus.Fire<LevelDataUpdateSignal>();
 	}
 
-	async Task LoadLevels()
+	async Task FetchLevels()
 	{
 		DataSnapshot levelsSnapshot = await m_LevelsData.GetValueAsync();
 		
@@ -296,7 +260,10 @@ public class LevelProcessor : IInitializable, IDisposable
 			LevelSnapshot level = new LevelSnapshot(
 				levelSnapshot.Child("title").GetString(),
 				levelSnapshot.Child("artist").GetString(),
-				levelSnapshot.Child("mode").GetEnum<LevelMode>()
+				levelSnapshot.Child("mode").GetEnum<LevelMode>(),
+				levelSnapshot.Child("locked").GetBool(),
+				levelSnapshot.Child("payout").GetLong(),
+				levelSnapshot.Child("price").GetLong()
 			);
 			
 			m_LevelIDs.Add(levelID);

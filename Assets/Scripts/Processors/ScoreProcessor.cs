@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -44,8 +43,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 	const int X4_COMBO = 150;
 	const int X3_COMBO = 60;
 	const int X2_COMBO = 20;
-
-	public bool Initialized { get; private set; }
 
 	public long Score => m_Score;
 
@@ -195,32 +192,21 @@ public class ScoreProcessor : IInitializable, IDisposable
 	float m_HoldSuccessScore;
 	float m_HoldFailScore;
 
-	void Restore()
-	{
-		m_Score = 0;
-		m_Combo = 0;
-		
-		m_TapPerfect       = 0;
-		m_TapGood          = 0;
-		m_TapBad           = 0;
-		m_TapFail          = 0;
-		m_DoublePerfect    = 0;
-		m_DoubleGood       = 0;
-		m_DoubleBad        = 0;
-		m_DoubleFail       = 0;
-		m_HoldSuccess      = 0;
-		m_HoldFail         = 0;
-		m_HoldHit          = 0;
-		m_HoldMiss         = 0;
-		m_HoldSuccessScore = 0;
-		m_HoldFailScore    = 0;
-	}
-
 	[Inject]
 	public ScoreProcessor(SignalBus _SignalBus, SocialProcessor _SocialProcessor)
 	{
 		m_SignalBus       = _SignalBus;
 		m_SocialProcessor = _SocialProcessor;
+	}
+
+	public async Task LoadScores()
+	{
+		if (m_ScoresData == null)
+			m_ScoresData = FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
+		
+		await FetchScores();
+		
+		m_ScoresData.ValueChanged += OnScoresUpdate;
 	}
 
 	public int GetAccuracy(string _LevelID)
@@ -230,13 +216,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return scoreSnapshot != null ? scoreSnapshot.Accuracy : 0;
 	}
 
-	public ScoreRank GetRank(string _LevelID)
-	{
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
-		
-		return scoreSnapshot != null ? scoreSnapshot.Rank : ScoreRank.None;
-	}
-
 	public long GetScore(string _LevelID)
 	{
 		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
@@ -244,7 +223,14 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return scoreSnapshot != null ? scoreSnapshot.Score : 0;
 	}
 
-	async void IInitializable.Initialize()
+	public ScoreRank GetRank(string _LevelID)
+	{
+		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
+		
+		return scoreSnapshot != null ? scoreSnapshot.Rank : ScoreRank.None;
+	}
+
+	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
@@ -260,16 +246,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
 		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_ScoresData = FirebaseDatabase.DefaultInstance.RootReference
-			.Child("scores")
-			.Child(m_SocialProcessor.UserID);
-		
-		await LoadScores();
-		
-		m_ScoresData.ValueChanged += OnScoresUpdate;
-		
-		Initialized = true;
 	}
 
 	void IDisposable.Dispose()
@@ -287,8 +263,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
 		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_ScoresData.ValueChanged -= OnScoresUpdate;
 	}
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
@@ -312,40 +286,20 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	async void OnScoresUpdate(object _Sender, EventArgs _Args)
 	{
-		await LoadScores();
+		Debug.Log("[Score processor] Updating scores data...");
+		
+		await FetchScores();
+		
+		Debug.Log("[Score processor] Update scores data complete.");
 		
 		m_SignalBus.Fire<ScoreDataUpdateSignal>();
 	}
 
-	async void SaveScore(string _LevelID)
+	async Task FetchScores()
 	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[ScoreProcessor] Save score failed. Level ID is null or empty.");
-			return;
-		}
-		
-		int       accuracy = Accuracy;
-		long      score    = Score;
-		ScoreRank rank     = Rank;
-		
-		Dictionary<string, object> scoreData = new Dictionary<string, object>()
-		{
-			{ "accuracy", accuracy },
-			{ "score", score },
-			{ "rank", rank },
-		};
-		
-		string json = JsonUtility.ToJson(scoreData);
-		
-		await m_ScoresData.Child(_LevelID).SetRawJsonValueAsync(json);
-	}
-
-	async Task LoadScores()
-	{
-		DataSnapshot scoresSnapshot = await m_ScoresData.GetValueAsync();
-		
 		m_ScoreSnapshots.Clear();
+		
+		DataSnapshot scoresSnapshot = await m_ScoresData.GetValueAsync();
 		
 		foreach (DataSnapshot scoreSnapshot in scoresSnapshot.Children)
 		{
@@ -357,6 +311,51 @@ public class ScoreProcessor : IInitializable, IDisposable
 			);
 			m_ScoreSnapshots[levelID] = score;
 		}
+	}
+
+	void Restore()
+	{
+		m_Score = 0;
+		m_Combo = 0;
+		
+		m_TapPerfect       = 0;
+		m_TapGood          = 0;
+		m_TapBad           = 0;
+		m_TapFail          = 0;
+		m_DoublePerfect    = 0;
+		m_DoubleGood       = 0;
+		m_DoubleBad        = 0;
+		m_DoubleFail       = 0;
+		m_HoldSuccess      = 0;
+		m_HoldFail         = 0;
+		m_HoldHit          = 0;
+		m_HoldMiss         = 0;
+		m_HoldSuccessScore = 0;
+		m_HoldFailScore    = 0;
+	}
+
+	async void SaveScore(string _LevelID)
+	{
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogError("[ScoreProcessor] Save score failed. Level ID is null or empty.");
+			return;
+		}
+		
+		int  accuracy = Accuracy;
+		long score    = Score;
+		int  rank     = (int)Rank;
+		
+		Dictionary<string, object> scoreData = new Dictionary<string, object>()
+		{
+			{ "accuracy", accuracy },
+			{ "score", score },
+			{ "rank", rank },
+		};
+		
+		await m_ScoresData.Child(_LevelID).SetValueAsync(scoreData);
+		
+		Debug.LogFormat("[ScoreProcessor] Save score complete. LevelID: {0}.", _LevelID);
 	}
 
 	void RegisterHoldSuccess(HoldSuccessSignal _Signal)

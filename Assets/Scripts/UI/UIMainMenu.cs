@@ -12,8 +12,8 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 
 	SignalBus              m_SignalBus;
 	LevelProcessor         m_LevelProcessor;
-	SocialProcessor        m_SocialProcessor;
 	MenuProcessor          m_MenuProcessor;
+	SocialProcessor        m_SocialProcessor;
 	ConfigProcessor        m_ConfigProcessor;
 	UIMainMenuItem.Factory m_ItemFactory;
 
@@ -25,16 +25,16 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	public void Construct(
 		SignalBus              _SignalBus,
 		LevelProcessor         _LevelProcessor,
-		SocialProcessor        _SocialProcessor,
 		MenuProcessor          _MenuProcessor,
+		SocialProcessor _SocialProcessor,
 		ConfigProcessor        _ConfigProcessor,
 		UIMainMenuItem.Factory _ItemFactory
 	)
 	{
 		m_SignalBus       = _SignalBus;
 		m_LevelProcessor  = _LevelProcessor;
-		m_SocialProcessor = _SocialProcessor;
 		m_MenuProcessor   = _MenuProcessor;
+		m_SocialProcessor = _SocialProcessor;
 		m_ConfigProcessor = _ConfigProcessor;
 		m_ItemFactory     = _ItemFactory;
 	}
@@ -42,12 +42,6 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 	public void Shop()
 	{
 		m_MenuProcessor.Show(MenuType.ShopMenu);
-	}
-
-	public void Achievements()
-	{
-		if (m_SocialProcessor != null)
-			m_SocialProcessor.ShowAchievements();
 	}
 
 	void IInitializable.Initialize()
@@ -66,16 +60,14 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		Show(true);
-	}
-
 	protected override void OnShowStarted()
 	{
 		Refresh();
+	}
+
+	public void Login()
+	{
+		m_SocialProcessor.AttachGoogleID();
 	}
 
 	void RegisterPurchase()

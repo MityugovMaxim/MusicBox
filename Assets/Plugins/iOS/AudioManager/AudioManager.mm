@@ -61,22 +61,45 @@ NSString*      m_OutputUID;
 	{
 		AVAudioSession* session = [AVAudioSession sharedInstance];
 		
-		NSUInteger outputCount = session.currentRoute.outputs.count;
-		NSString*  outputUID   = session.currentRoute.outputs[0].UID;
+		NSUInteger reason = [[[notification userInfo] objectForKey:AVAudioSessionRouteChangeReasonKey] unsignedIntValue];
 		
-		if (m_OutputCount == outputCount && [m_OutputUID isEqualToString:outputUID])
-			return;
+		switch (reason)
+		{
+			case AVAudioSessionRouteChangeReasonUnknown:
+				NSLog(@"[AudioManager] Route change. Reason: Unknown.");
+				break;
+			case AVAudioSessionRouteChangeReasonOverride:
+				NSLog(@"[AudioManager] Route change. Reason: Override.");
+				break;
+			case AVAudioSessionRouteChangeReasonCategoryChange:
+				NSLog(@"[AudioManager] Route change. Reason: Category change. Category: %@", [session category]);
+				break;
+			case AVAudioSessionRouteChangeReasonWakeFromSleep:
+				NSLog(@"[AudioManager] Route change. Reason: Wake from sleep.");
+				break;
+			case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+				NSLog(@"[AudioManager] Route change. Reason: New device available.");
+				m_Callback();
+				break;
+			case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+				NSLog(@"[AudioManager] Route change. Reason: Old device unavailable.");
+				m_Callback();
+				break;
+			case AVAudioSessionRouteChangeReasonRouteConfigurationChange:
+				NSLog(@"[AudioManager] Route change. Reason: Route configuration change.");
+				break;
+			case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+				NSLog(@"[AudioManager] Route change. Reason: No suitable route for category.");
+				break;
+		}
 		
-		m_OutputCount = outputCount;
-		m_OutputUID   = outputUID;
-		
-		[session setActive:YES error:nil];
-		[session setCategory:AVAudioSessionCategoryPlayback
-			mode:AVAudioSessionModeMoviePlayback
-			options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
-			error:nil];
-		
-		m_Callback();
+		if ([session category] != AVAudioSessionCategoryPlayback)
+		{
+			[session setCategory:AVAudioSessionCategoryPlayback
+				mode:AVAudioSessionModeSpokenAudio
+				options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
+				error:nil];
+		}
 	}
 }
 
@@ -84,21 +107,19 @@ NSString*      m_OutputUID;
 {
 	if ([[notification name] isEqualToString:AVAudioSessionInterruptionNotification])
 	{
-		 NSInteger interruptionType = [[[notification userInfo] objectForKey: AVAudioSessionInterruptionTypeKey] integerValue];
+		 NSUInteger type = [[[notification userInfo] objectForKey: AVAudioSessionInterruptionTypeKey] unsignedIntValue];
 		
 		AVAudioSession* session = [AVAudioSession sharedInstance];
 		
-		switch (interruptionType)
+		switch (type)
 		{
 			case AVAudioSessionInterruptionTypeBegan:
-				UnitySetAudioSessionActive(false);
-				[session setActive:NO error:nil];
+				NSLog(@"[AudioManager] Interruption type: Began");
 				break;
 				
 			case AVAudioSessionInterruptionTypeEnded:
-				UnitySetAudioSessionActive(true);
-				[session setActive:YES error:nil];
-				[session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeMoviePlayback options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+				NSLog(@"[AudioManager] Interruption type: Ended");
+				[session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeSpokenAudio options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
 				break;
 		}
 	}
@@ -153,7 +174,7 @@ extern "C"
 		UnitySetAudioSessionActive(true);
 		[session setActive:YES error:nil];
 		[session setCategory:AVAudioSessionCategoryPlayback
-			mode:AVAudioSessionModeMoviePlayback
+			mode:AVAudioSessionModeSpokenAudio
 			options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
 			error:nil];
 	}

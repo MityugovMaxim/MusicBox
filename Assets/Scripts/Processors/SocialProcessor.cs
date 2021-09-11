@@ -1,8 +1,9 @@
 using System;
+using System.Threading.Tasks;
+using Firebase;
 using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.Scripting;
-using UnityEngine.SocialPlatforms;
 using UnityEngine.SocialPlatforms.GameCenter;
 using Zenject;
 
@@ -31,44 +32,13 @@ public class SocialProcessor : IInitializable, IDisposable
 		m_SignalBus = _SignalBus;
 	}
 
-	void IInitializable.Initialize()
+	public async Task Login()
 	{
-		GameCenterPlatform.ShowDefaultAchievementCompletionBanner(true);
-		
-		m_Auth = FirebaseAuth.DefaultInstance;
-		
-		m_Auth.StateChanged += StateChanged;
-		
-		StateChanged(this, null);
-		
 		if (m_User == null)
-			m_Auth.SignInAnonymouslyAsync();
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_Auth.StateChanged -= StateChanged;
-	}
-
-	void StateChanged(object _Sender, EventArgs _Args)
-	{
-		FirebaseUser user = m_Auth.CurrentUser;
+			await m_Auth.SignInAnonymouslyAsync();
 		
-		if (m_User == user)
-			return;
-		
-		if (user != null)
-		{
-			Debug.LogFormat("[SocialProcessor] User login. User ID: {0}.", user.UserId);
-			m_User = user;
-			m_SignalBus.Fire<LoginSignal>();
-		}
-		else
-		{
-			Debug.LogFormat("[SocialProcessor] User logout. User ID: {0}.", m_User.UserId);
-			m_User = null;
-			m_SignalBus.Fire<LogoutSignal>();
-		}
+		if (m_User != null)
+			await m_User.ReloadAsync();
 	}
 
 	public void AttachGameCenter()
@@ -126,59 +96,41 @@ public class SocialProcessor : IInitializable, IDisposable
 		);
 	}
 
-	public void ShowAchievements()
+	void IInitializable.Initialize()
 	{
-		Social.ShowAchievementsUI();
+		GameCenterPlatform.ShowDefaultAchievementCompletionBanner(true);
+		
+		m_Auth = FirebaseAuth.DefaultInstance;
+		
+		m_Auth.StateChanged += StateChanged;
+		
+		StateChanged(this, null);
 	}
 
-	public void ShowLeaderboard(string _LeaderboardID)
+	void IDisposable.Dispose()
 	{
-		GameCenterPlatform.ShowLeaderboardUI(_LeaderboardID, TimeScope.AllTime);
+		m_Auth.StateChanged -= StateChanged;
 	}
 
-	public void ReportScore(string _LeaderboardID, long _Score)
+	void StateChanged(object _Sender, EventArgs _Args)
 	{
-		Social.ReportScore(
-			_Score,
-			_LeaderboardID,
-			_Success =>
-			{
-				if (_Success)
-					Debug.LogFormat("[SocialProcessor] Report score success. Leaderboard: '{0}'. Score: {1}.", _LeaderboardID, _Score);
-				else
-					Debug.LogErrorFormat("[SocialProcessor] Report score failed. Leaderboard: '{0}' Score: {1}.", _LeaderboardID, _Score);
-			}
-		);
-	}
-
-	public void CompleteAchievement(string _AchievementID)
-	{
-		Social.ReportProgress(
-			_AchievementID,
-			100,
-			_Success =>
-			{
-				if (_Success)
-					Debug.LogFormat("[SocialProcessor] Complete achievement success. Achievement: '{0}'.", _AchievementID);
-				else
-					Debug.LogErrorFormat("[SocialProcessor] Progress achievement failed. Achievement: '{0}'.",_AchievementID);
-			}
-		);
-	}
-
-	public void ProgressAchievement(string _AchievementID, double _Progress)
-	{
-		Social.ReportProgress(
-			_AchievementID,
-			_Progress,
-			_Success =>
-			{
-				if (_Success)
-					Debug.LogFormat("[SocialProcessor] Progress achievement success. Achievement: '{0}'. Progress: {1}.", _AchievementID, _Progress);
-				else
-					Debug.LogErrorFormat("[SocialProcessor] Progress achievement failed. Achievement: '{0}'. Progress: {1}.", _AchievementID, _Progress);
-			}
-		);
+		FirebaseUser user = m_Auth.CurrentUser;
+		
+		if (m_User == user)
+			return;
+		
+		if (user != null)
+		{
+			Debug.LogFormat("[SocialProcessor] User login. User ID: {0}.", user.UserId);
+			m_User = user;
+			m_SignalBus.Fire<LoginSignal>();
+		}
+		else
+		{
+			Debug.LogFormat("[SocialProcessor] User logout. User ID: {0}.", m_User.UserId);
+			m_User = null;
+			m_SignalBus.Fire<LogoutSignal>();
+		}
 	}
 
 	async void GameCenterAuth()
@@ -191,9 +143,7 @@ public class SocialProcessor : IInitializable, IDisposable
 			return;
 		}
 		
-		FirebaseUser user = m_User != null
-			? await m_User.LinkWithCredentialAsync(credential)
-			: await m_Auth.SignInWithCredentialAsync(credential);
+		FirebaseUser user = await Auth(credential);
 		
 		if (user == null)
 			Debug.LogError("[SocialProcessor] Login with Game Center failed. Unknown error.");
@@ -211,9 +161,7 @@ public class SocialProcessor : IInitializable, IDisposable
 			return;
 		}
 		
-		FirebaseUser user = m_User != null
-			? await m_User.LinkWithCredentialAsync(credential)
-			: await m_Auth.SignInWithCredentialAsync(credential);
+		FirebaseUser user = await Auth(credential);
 		
 		if (user == null)
 			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Unknown error.");
@@ -231,13 +179,37 @@ public class SocialProcessor : IInitializable, IDisposable
 			return;
 		}
 		
-		FirebaseUser user = m_User != null
-			? await m_User.LinkWithCredentialAsync(credential)
-			: await m_Auth.SignInWithCredentialAsync(credential);
+		FirebaseUser user = await Auth(credential);
 		
 		if (user == null)
 			Debug.LogError("[SocialProcessor] Login with Google ID failed. Unknown error.");
 		else
 			Debug.LogFormat("[SocialProcessor] Login with Google ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
+	}
+
+	async Task<FirebaseUser> Auth(Credential _Credential)
+	{
+		FirebaseUser user;
+		if (m_User != null)
+		{
+			try
+			{
+				user = await m_User.LinkWithCredentialAsync(_Credential);
+			}
+			catch (FirebaseException exception)
+			{
+				Debug.LogWarningFormat("[SocialProcessor] Link account failed. Error: {0}.", exception.Message);
+				
+				user = await m_Auth.SignInWithCredentialAsync(_Credential);
+			}
+		}
+		else
+		{
+			user = await m_Auth.SignInWithCredentialAsync(_Credential);
+		}
+		
+		m_User = user;
+		
+		return user;
 	}
 }

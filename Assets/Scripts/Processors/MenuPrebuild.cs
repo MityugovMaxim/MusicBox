@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using UnityEngine;
 using UnityEngine.Scripting;
 
 [Preserve]
@@ -14,8 +11,27 @@ public class MenuPrebuild
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>();
 	#else
 	/// PREBUILD_START
+	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()
+	{
+		{ typeof(UIGameMenu), MenuType.GameMenu },
+		{ typeof(UILatencyMenu), MenuType.LatencyMenu },
+		{ typeof(UILevelMenu), MenuType.LevelMenu },
+		{ typeof(UILoadingMenu), MenuType.LoadingMenu },
+		{ typeof(UILoginMenu), MenuType.LoginMenu },
+		{ typeof(UIMainMenu), MenuType.MainMenu },
+		{ typeof(UIPauseMenu), MenuType.PauseMenu },
+		{ typeof(UIProcessingMenu), MenuType.ProcessingMenu },
+		{ typeof(UIProductMenu), MenuType.ProductMenu },
+		{ typeof(UIResultMenu), MenuType.ResultMenu },
+		{ typeof(UIShopMenu), MenuType.ShopMenu },
+	};
 	/// PREBUILD_END
 	#endif
+
+	public static KeyValuePair<Type, MenuType>[] GetMenuTypes()
+	{
+		return m_MenuTypes.ToArray();
+	}
 
 	public static bool TryGetMenuType<T>(out MenuType _MenuType) where T : UIMenu
 	{
@@ -26,7 +42,16 @@ public class MenuPrebuild
 		return m_MenuTypes.TryGetValue(typeof(T), out _MenuType);
 	}
 
-	static void Initialize()
+	public static bool TryGetMenuType(Type _Type, out MenuType _MenuType)
+	{
+		#if UNITY_EDITOR
+		if (m_MenuTypes.Count == 0)
+			Initialize();
+		#endif
+		return m_MenuTypes.TryGetValue(_Type, out _MenuType);
+	}
+
+	public static void Initialize()
 	{
 		m_MenuTypes.Clear();
 		
@@ -43,61 +68,17 @@ public class MenuPrebuild
 			}
 		}
 	}
-
-	#if UNITY_EDITOR
-	public static void Generate()
-	{
-		const string prebuildStart = "/// PREBUILD_START";
-		const string prebuildEnd   = "/// PREBUILD_END";
-		
-		string path = UnityEditor.AssetDatabase.FindAssets("t:Script MenuPrebuild")
-			.Select(UnityEditor.AssetDatabase.GUIDToAssetPath)
-			.FirstOrDefault();
-		
-		if (string.IsNullOrEmpty(path))
-			return;
-		
-		Initialize();
-		
-		TextAsset script = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(path);
-		
-		string[] lines = script.text.Split('\n');
-		
-		bool remove = false;
-		
-		StringBuilder data = new StringBuilder();
-		
-		foreach (string line in lines)
-		{
-			if (line.Contains(prebuildStart))
-			{
-				remove = true;
-				data.AppendLine(line);
-				
-				data.AppendLine("\tstatic readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()");
-				data.AppendLine("\t{");
-				foreach (var entry in m_MenuTypes)
-				{
-					data.AppendFormat("\t\t{{ typeof({0}), MenuType.{1} }},", entry.Key.Name, entry.Value.ToString());
-					data.AppendLine();
-				}
-				data.AppendLine("\t};");
-			}
-			else if (line.Contains(prebuildEnd))
-			{
-				remove = false;
-				data.AppendLine(line);
-			}
-			else if (!remove)
-			{
-				data.AppendLine(line);
-			}
-		}
-		
-		File.WriteAllText(path, data.ToString());
-		
-		UnityEditor.AssetDatabase.SaveAssets();
-		UnityEditor.AssetDatabase.Refresh();
-	}
-	#endif
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

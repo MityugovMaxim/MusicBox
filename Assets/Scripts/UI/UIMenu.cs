@@ -62,7 +62,11 @@ public class UIMenu : UIEntity
 	public void Show(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
 		if (Shown)
+		{
+			_Started?.Invoke();
+			_Finished?.Invoke();
 			return;
+		}
 		
 		Shown          = true;
 		m_ShowStarted  = _Started;
@@ -97,7 +101,11 @@ public class UIMenu : UIEntity
 	public void Hide(bool _Instant = false, Action _Started = null, Action _Finished = null)
 	{
 		if (!Shown)
+		{
+			_Started?.Invoke();
+			_Finished?.Invoke();
 			return;
+		}
 		
 		Shown          = false;
 		m_HideStarted  = _Started;
@@ -144,8 +152,7 @@ public class UIMenu : UIEntity
 		if (_CanvasGroup == null)
 			yield break;
 		
-		_CanvasGroup.interactable   = true;
-		_CanvasGroup.blocksRaycasts = true;
+		_CanvasGroup.interactable = true;
 		
 		OnShowStarted();
 		
@@ -158,6 +165,8 @@ public class UIMenu : UIEntity
 		}
 		
 		yield return ShowAnimation(_CanvasGroup, _Duration);
+		
+		_CanvasGroup.blocksRaycasts = true;
 		
 		OnShowFinished();
 		
