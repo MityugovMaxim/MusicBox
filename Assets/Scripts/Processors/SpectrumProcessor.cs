@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -7,7 +9,6 @@ public class SpectrumProcessor : MonoBehaviour
 	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
 
 	[SerializeField] float m_DampenStep = 0.005f;
-	[SerializeField] float[] m_Amplitude;
 
 	SignalBus      m_SignalBus;
 	LevelProcessor m_LevelProcessor;
@@ -17,12 +18,17 @@ public class SpectrumProcessor : MonoBehaviour
 	readonly float[] m_Spectrum        = new float[64];
 	readonly float[] m_SpectrumDampen  = new float[32];
 
+	float[] m_Amplitude;
+
+	public void SetAmplitude(float[] _Amplitude)
+	{
+		if (_Amplitude != null && _Amplitude.Length == 32)
+			m_Amplitude = _Amplitude;
+	}
+
 	void Awake()
 	{
 		m_AudioSource = GetComponent<AudioSource>();
-		
-		if (m_Amplitude == null || m_Amplitude.Length != 32)
-			m_Amplitude = new float[32];
 	}
 
 	void Update()

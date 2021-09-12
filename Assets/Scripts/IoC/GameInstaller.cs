@@ -45,9 +45,16 @@ public class GameInstaller : MonoInstaller
 		CultureInfo.CurrentUICulture = cultureInfo;
 	}
 
+	[ContextMenu("Test")]
+	public void Test()
+	{
+		MusicClip[] clips = Resources.FindObjectsOfTypeAll<MusicClip>();
+		Debug.LogError("---> COUNT: " + clips.Length + " " + clips[0].GetInstanceID());
+	}
+
 	void InstallFactories()
 	{
-		Container.BindFactory<string, Action<Level>, ResourceRequest, Level.Factory>().FromFactory<AsyncPrefabResourceFactory<Level>>();
+		Container.BindFactory<Level, Level, Level.Factory>().FromFactory<PrefabFactory<Level>>();
 		
 		Container.BindFactory<UIMainMenuItem, UIMainMenuItem, UIMainMenuItem.Factory>().FromFactory<PrefabFactory<UIMainMenuItem>>();
 		

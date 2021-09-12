@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
@@ -19,6 +20,7 @@ public class LevelProcessor
 	readonly SignalBus         m_SignalBus;
 	readonly PurchaseProcessor m_PurchaseProcessor;
 	readonly ProgressProcessor m_ProgressProcessor;
+	readonly StorageProcessor  m_StorageProcessor;
 	readonly Level.Factory     m_LevelFactory;
 	readonly ProductInfo       m_NoAdsProduct;
 
@@ -33,6 +35,7 @@ public class LevelProcessor
 		SignalBus         _SignalBus,
 		PurchaseProcessor _PurchaseProcessor,
 		ProgressProcessor _ProgressProcessor,
+		StorageProcessor  _StorageProcessor,
 		Level.Factory     _LevelFactory,
 		ProductInfo       _NoAdsProduct 
 	)
@@ -40,6 +43,7 @@ public class LevelProcessor
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
+		m_StorageProcessor  = _StorageProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
 	}
@@ -159,18 +163,49 @@ public class LevelProcessor
 			return;
 		}
 		
-		m_LevelFactory.Create(
-			$"{_LevelID}/level",
-			_Level =>
+		Level prefab = Resources.Load<Level>(levelSnapshot.Skin);
+		
+		#if UNITY_EDITOR
+		string path = $"Assets/Levels/{levelSnapshot.Artist} - {levelSnapshot.Title}/Tracks/";
+		
+		List<Track> tracks = new List<Track>();
+		foreach (string trackPath in Directory.GetFiles(path, "*.asset"))
+			tracks.Add(UnityEditor.AssetDatabase.LoadAssetAtPath<Track>(trackPath));
+		
+		m_LevelID = _LevelID;
+		m_Level   = m_LevelFactory.Create(prefab);
+		
+		m_Level.Setup(
+			levelSnapshot.Length,
+			levelSnapshot.BPM,
+			levelSnapshot.Speed,
+			tracks.ToArray()
+		);
+		
+		m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
+		
+		m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
+		#else
+		m_StorageProcessor.LoadLevel(
+			_LevelID,
+			_Tracks =>
 			{
-				m_Level   = _Level;
 				m_LevelID = _LevelID;
+				m_Level   = m_LevelFactory.Create(prefab);
+				
+				m_Level.Setup(
+					levelSnapshot.Length,
+					levelSnapshot.BPM,
+					levelSnapshot.Speed,
+					_Tracks
+				);
 				
 				m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
 				
 				m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
 			}
 		);
+		#endif
 	}
 
 	public void Remove()
@@ -258,12 +293,16 @@ public class LevelProcessor
 		{
 			string levelID = levelSnapshot.Key;
 			LevelSnapshot level = new LevelSnapshot(
-				levelSnapshot.Child("title").GetString(),
-				levelSnapshot.Child("artist").GetString(),
-				levelSnapshot.Child("mode").GetEnum<LevelMode>(),
-				levelSnapshot.Child("locked").GetBool(),
-				levelSnapshot.Child("payout").GetLong(),
-				levelSnapshot.Child("price").GetLong()
+				levelSnapshot.GetString("title", string.Empty),
+				levelSnapshot.GetString("artist", string.Empty),
+				levelSnapshot.GetEnum<LevelMode>("mode"),
+				levelSnapshot.GetFloat("length"),
+				levelSnapshot.GetFloat("bpm"),
+				levelSnapshot.GetFloat("speed"),
+				levelSnapshot.GetBool("locked"),
+				levelSnapshot.GetLong("payout"),
+				levelSnapshot.GetLong("price"),
+				levelSnapshot.GetString("skin", "level")
 			);
 			
 			m_LevelIDs.Add(levelID);

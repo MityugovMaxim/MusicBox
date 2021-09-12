@@ -43,7 +43,7 @@ public partial class TapTrack : Track<TapClip>
 		foreach (TapClip clip in Clips)
 			clip.Initialize(Sequencer);
 		
-		Track.Initialize(Clips);
+		Track.Initialize(Sequencer.Speed, Clips);
 	}
 
 	public override void Sample(float _MinTime, float _MaxTime)

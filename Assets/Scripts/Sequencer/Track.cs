@@ -54,6 +54,8 @@ public abstract partial class Track : ScriptableObject, IEnumerable<Clip>, IRefe
 		Sequencer = _Sequencer;
 	}
 
+	public virtual void Dispose() { }
+
 	public abstract void Sample(float _MinTime, float _MaxTime);
 
 	public abstract IEnumerator<Clip> GetEnumerator();
@@ -151,6 +153,12 @@ public partial class Track<T> : Track where T : Clip
 	[SerializeField] List<T> m_Clips = new List<T>();
 
 	readonly List<T> m_Buffer = new List<T>();
+
+	public override void Dispose()
+	{
+		foreach (Clip clip in Clips)
+			clip.Dispose();
+	}
 
 	public override void Sample(float _MinTime, float _MaxTime)
 	{

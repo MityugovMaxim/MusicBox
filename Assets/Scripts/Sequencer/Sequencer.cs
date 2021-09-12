@@ -94,8 +94,11 @@ public partial class Sequencer : MonoBehaviour
 		set => m_Length = value;
 	}
 
+	public float Speed => m_Speed;
+
 	[SerializeField] float m_Time;
 	[SerializeField] float m_Length;
+	[SerializeField] float m_Speed;
 	[SerializeField] float m_BPM = 90;
 
 	[SerializeField, HideInInspector] Track[] m_Tracks;
@@ -111,10 +114,28 @@ public partial class Sequencer : MonoBehaviour
 		Sample(float.MinValue);
 	}
 
+	void OnDestroy()
+	{
+		Dispose();
+	}
+
 	void LateUpdate()
 	{
 		if (Playing)
 			Sample(m_Time + UnityEngine.Time.deltaTime);
+	}
+
+	public void Setup(
+		float _Length,
+		float _BPM,
+		float _Speed,
+		params Track[] _Tracks
+	)
+	{
+		m_Length = _Length;
+		m_BPM    = _BPM;
+		m_Speed  = _Speed;
+		m_Tracks = _Tracks;
 	}
 
 	public void Initialize()
@@ -124,6 +145,15 @@ public partial class Sequencer : MonoBehaviour
 		
 		foreach (Track track in m_Tracks)
 			track.Initialize(this);
+	}
+
+	public void Dispose()
+	{
+		if (m_Tracks == null || m_Tracks.Length == 0)
+			return;
+		
+		foreach (Track track in m_Tracks)
+			track.Dispose();
 	}
 
 	public void RegisterSampleReceivers(ISampleReceiver[] _SampleReceivers)

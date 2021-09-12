@@ -32,13 +32,25 @@ public class Level : MonoBehaviour
 		
 		if (m_ColorProcessor != null)
 			m_ColorProcessor.Restore();
-		
-		m_Sequencer.Initialize();
 	}
 
 	public void RegisterSampleReceivers(ISampleReceiver[] _SampleReceivers)
 	{
 		m_Sequencer.RegisterSampleReceivers(_SampleReceivers);
+	}
+
+	public void Setup(
+		float          _Length,
+		float          _BPM,
+		float          _Speed,
+		params Track[] _Tracks
+	)
+	{
+		if (m_Sequencer == null)
+			return;
+		
+		m_Sequencer.Setup(_Length, _BPM, _Speed, _Tracks);
+		m_Sequencer.Initialize();
 	}
 
 	public void Play(Action _Finished = null)
@@ -81,5 +93,5 @@ public class Level : MonoBehaviour
 	}
 
 	[Preserve]
-	public class Factory : PlaceholderFactory<string, Action<Level>, ResourceRequest> { }
+	public class Factory : PlaceholderFactory<Level, Level> { }
 }

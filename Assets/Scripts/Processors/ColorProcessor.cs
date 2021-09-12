@@ -2,7 +2,20 @@
 
 public class ColorProcessor : MonoBehaviour
 {
-	public ColorScheme DefaultColorScheme => m_DefaultColorScheme;
+	public ColorSchemeAsset DefaultColorScheme
+	{
+		get => m_DefaultColorScheme;
+		set
+		{
+			if (m_DefaultColorScheme == value)
+				return;
+			
+			m_DefaultColorScheme = value;
+			m_ColorScheme        = value;
+			
+			ProcessColors();
+		}
+	}
 
 	public ColorScheme ColorScheme
 	{

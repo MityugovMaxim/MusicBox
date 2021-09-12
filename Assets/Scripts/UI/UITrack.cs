@@ -23,8 +23,9 @@ public abstract class UITrack<T> : UIEntity where T : Clip
 		m_InputZone = _InputZone;
 	}
 
-	public virtual void Initialize(List<T> _Clips)
+	public virtual void Initialize(float _Speed, List<T> _Clips)
 	{
+		m_Speed = _Speed;
 		m_Clips = _Clips;
 	}
 

@@ -125,4 +125,56 @@ public static class WebRequest
 			1
 		);
 	}
+
+	public static Task<AssetBundle> LoadAssetBundle(string _URL)
+	{
+		UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(_URL, 0);
+		
+		TaskCompletionSource<AssetBundle> completionSource = new TaskCompletionSource<AssetBundle>();
+		
+		UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+		
+		operation.completed += _Operation =>
+		{
+			if (request.isNetworkError)
+			{
+				Debug.LogErrorFormat("[WebRequest] Load asset bundle failed. Network error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.SetCanceled();
+				request.Dispose();
+			}
+			else if (request.isHttpError)
+			{
+				Debug.LogErrorFormat("[WebRequest] Load asset bundle failed. Http error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.SetCanceled();
+				request.Dispose();
+			}
+			else if (request.isDone)
+			{
+				DownloadHandlerAssetBundle handler = request.downloadHandler as DownloadHandlerAssetBundle;
+				
+				if (handler == null)
+				{
+					Debug.LogErrorFormat("[WebRequest] Load asset bundle failed. Download handler is null. URL: '{0}'.", _URL);
+					completionSource.SetCanceled();
+					request.Dispose();
+					return;
+				}
+				
+				AssetBundle assetBundle = handler.assetBundle;
+				
+				if (assetBundle == null)
+				{
+					Debug.LogErrorFormat("[WebRequest] Load asset bundle failed. Asset bundle is null. URL: '{0}'.", _URL);
+					completionSource.SetCanceled();
+					request.Dispose();
+					return;
+				}
+				
+				completionSource.SetResult(assetBundle);
+				request.Dispose();
+			}
+		};
+		
+		return completionSource.Task;
+	}
 }

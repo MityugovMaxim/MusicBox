@@ -29,6 +29,8 @@ public abstract class Clip : ScriptableObject
 		Sequencer = _Sequencer;
 	}
 
+	public virtual void Dispose() { }
+
 	public void Sample(float _Time)
 	{
 		float minTime = MinTime + MinOffset;

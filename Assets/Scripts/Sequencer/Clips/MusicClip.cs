@@ -16,9 +16,26 @@ public class MusicClip : Clip
 	{
 		base.Initialize(_Sequencer);
 		
-		m_AudioSource = _AudioSource;
+		m_AudioSource      = _AudioSource;
+		m_AudioSource.clip = null;
 		
 		m_AudioClip.LoadAudioData();
+	}
+
+	public override void Dispose()
+	{
+		base.Dispose();
+		
+		#if UNITY_EDITOR
+		if (UnityEditor.AssetDatabase.Contains(m_AudioClip))
+			return;
+		#endif
+		
+		m_AudioSource.clip = null;
+		
+		DestroyImmediate(m_AudioClip, true);
+		
+		m_AudioClip = null;
 	}
 
 	protected override void OnEnter(float _Time)

@@ -13,31 +13,31 @@ public class ProductInfoEditor : Editor
 [CustomEditor(typeof(LevelInfo))]
 public class LevelInfoEditor : Editor
 {
-	SerializedProperty TitleProperty         => m_TitleProperty ?? (m_TitleProperty = serializedObject.FindProperty("m_Title"));
-	SerializedProperty ArtistProperty        => m_ArtistProperty ?? (m_ArtistProperty = serializedObject.FindProperty("m_Artist"));
-	SerializedProperty IDProperty            => m_IDProperty ?? (m_IDProperty = serializedObject.FindProperty("m_ID"));
-	SerializedProperty ThumbnailProperty     => m_ThumbnailProperty ?? (m_ThumbnailProperty = serializedObject.FindProperty("m_Thumbnail"));
-	SerializedProperty ClipProperty          => m_ClipProperty ?? (m_ClipProperty = serializedObject.FindProperty("m_Clip"));
-	SerializedProperty LeaderboardIDProperty => m_LeaderboardIDProperty ?? (m_LeaderboardIDProperty = serializedObject.FindProperty("m_LeaderboardID"));
-	SerializedProperty AchievementIDProperty => m_AchievementIDProperty ?? (m_AchievementIDProperty = serializedObject.FindProperty("m_AchievementID"));
-	SerializedProperty ModeProperty          => m_ModeProperty ?? (m_ModeProperty = serializedObject.FindProperty("m_Mode"));
-	SerializedProperty LockedProperty        => m_LockedProperty ?? (m_LockedProperty = serializedObject.FindProperty("m_Locked"));
-	SerializedProperty ExpPayoutProperty     => m_ExpPayoutProperty ?? (m_ExpPayoutProperty = serializedObject.FindProperty("m_ExpPayout"));
-	SerializedProperty ExpRequiredProperty   => m_ExpRequiredProperty ?? (m_ExpRequiredProperty = serializedObject.FindProperty("m_ExpRequired"));
+	SerializedProperty TitleProperty  => m_TitleProperty ?? (m_TitleProperty = serializedObject.FindProperty("m_Title"));
+	SerializedProperty ArtistProperty => m_ArtistProperty ?? (m_ArtistProperty = serializedObject.FindProperty("m_Artist"));
+	SerializedProperty IDProperty     => m_IDProperty ?? (m_IDProperty = serializedObject.FindProperty("m_ID"));
+	SerializedProperty ModeProperty   => m_ModeProperty ?? (m_ModeProperty = serializedObject.FindProperty("m_Mode"));
+	SerializedProperty LockedProperty => m_LockedProperty ?? (m_LockedProperty = serializedObject.FindProperty("m_Locked"));
+	SerializedProperty PayoutProperty => m_PayoutProperty ?? (m_PayoutProperty = serializedObject.FindProperty("m_Payout"));
+	SerializedProperty PriceProperty  => m_PriceProperty ?? (m_PriceProperty = serializedObject.FindProperty("m_Price"));
+	SerializedProperty LengthProperty => m_LengthProperty ?? (m_LengthProperty = serializedObject.FindProperty("m_Length"));
+	SerializedProperty BPMProperty    => m_BPMProperty ?? (m_BPMProperty = serializedObject.FindProperty("m_BPM"));
+	SerializedProperty SpeedProperty  => m_SpeedProperty ?? (m_SpeedProperty = serializedObject.FindProperty("m_Speed"));
+	SerializedProperty SkinProperty   => m_SkinProperty ?? (m_SkinProperty = serializedObject.FindProperty("m_Skin"));
 
 	static string m_Config;
 
 	SerializedProperty m_TitleProperty;
 	SerializedProperty m_ArtistProperty;
 	SerializedProperty m_IDProperty;
-	SerializedProperty m_ThumbnailProperty;
-	SerializedProperty m_ClipProperty;
-	SerializedProperty m_LeaderboardIDProperty;
-	SerializedProperty m_AchievementIDProperty;
 	SerializedProperty m_ModeProperty;
 	SerializedProperty m_LockedProperty;
-	SerializedProperty m_ExpPayoutProperty;
-	SerializedProperty m_ExpRequiredProperty;
+	SerializedProperty m_PayoutProperty;
+	SerializedProperty m_PriceProperty;
+	SerializedProperty m_LengthProperty;
+	SerializedProperty m_BPMProperty;
+	SerializedProperty m_SpeedProperty;
+	SerializedProperty m_SkinProperty;
 
 	public override void OnInspectorGUI()
 	{
@@ -51,23 +51,19 @@ public class LevelInfoEditor : Editor
 		EditorGUILayout.PropertyField(TitleProperty);
 		
 		if (EditorGUI.EndChangeCheck())
-		{
-			IDProperty.stringValue            = GetID(ArtistProperty.stringValue, TitleProperty.stringValue);
-			LeaderboardIDProperty.stringValue = GetLeaderboardID(TitleProperty.stringValue);
-			AchievementIDProperty.stringValue = GetAchievementID(TitleProperty.stringValue);
-		}
+			IDProperty.stringValue = GetID(ArtistProperty.stringValue, TitleProperty.stringValue);
 		
 		EditorGUILayout.PropertyField(IDProperty);
-		EditorGUILayout.PropertyField(ThumbnailProperty);
-		EditorGUILayout.PropertyField(ClipProperty);
-		EditorGUILayout.PropertyField(LeaderboardIDProperty);
-		EditorGUILayout.PropertyField(AchievementIDProperty);
 		EditorGUILayout.PropertyField(ModeProperty);
+		EditorGUILayout.PropertyField(LengthProperty);
+		EditorGUILayout.PropertyField(BPMProperty);
+		EditorGUILayout.PropertyField(SpeedProperty);
+		EditorGUILayout.PropertyField(SkinProperty);
 		
-		EditorGUILayout.PropertyField(ExpPayoutProperty);
+		EditorGUILayout.PropertyField(PayoutProperty);
 		EditorGUILayout.PropertyField(LockedProperty);
 		if (LockedProperty.boolValue)
-			EditorGUILayout.PropertyField(ExpRequiredProperty);
+			EditorGUILayout.PropertyField(PriceProperty);
 		
 		if (GUILayout.Button("Upload"))
 			Upload();
@@ -121,9 +117,13 @@ public class LevelInfoEditor : Editor
 			{ "artist", ArtistProperty.stringValue },
 			{ "title", TitleProperty.stringValue },
 			{ "mode", ModeProperty.intValue },
+			{ "length", LengthProperty.floatValue },
+			{ "bpm", BPMProperty.floatValue },
+			{ "speed", SpeedProperty.floatValue },
 			{ "locked", LockedProperty.boolValue },
-			{ "payout", ExpPayoutProperty.longValue },
-			{ "price", ExpRequiredProperty.longValue },
+			{ "payout", PayoutProperty.longValue },
+			{ "price", PriceProperty.longValue },
+			{ "skin", SkinProperty.stringValue },
 		};
 		try
 		{

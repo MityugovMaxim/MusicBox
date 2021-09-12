@@ -73,7 +73,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 		
 		foreach (LevelInfo levelInfo in m_LevelInfos.Values)
 		{
-			if (levelInfo.Locked && levelInfo.ExpRequired > ExpProgress && levelInfo.ExpRequired <= expProgress)
+			if (levelInfo.Locked && levelInfo.Price > ExpProgress && levelInfo.Price <= expProgress)
 				m_SignalBus.Fire(new LevelUnlockSignal(levelInfo.ID));
 		}
 		
@@ -92,7 +92,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return 0;
 		}
 		
-		return levelInfo.ExpPayout;
+		return levelInfo.Payout;
 	}
 
 	public long GetExpPayout(string _LevelID, ScoreRank _Rank)
@@ -105,7 +105,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return 0;
 		}
 		
-		return levelInfo.ExpPayout * GetExpMultiplier(_Rank);
+		return levelInfo.Payout * GetExpMultiplier(_Rank);
 	}
 
 	public int GetExpMultiplier(ScoreRank _Rank)
@@ -135,7 +135,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return 0;
 		}
 		
-		return levelInfo.Locked ? levelInfo.ExpRequired : 0;
+		return levelInfo.Locked ? levelInfo.Price : 0;
 	}
 
 	public bool IsLevelLocked(string _LevelID)
@@ -148,7 +148,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return false;
 		}
 		
-		return levelInfo.Locked && levelInfo.ExpRequired > ExpProgress;
+		return levelInfo.Locked && levelInfo.Price > ExpProgress;
 	}
 
 	public bool IsLevelUnlocked(string _LevelID)
@@ -161,7 +161,7 @@ public class ProgressProcessor : IInitializable, IDisposable
 			return true;
 		}
 		
-		return !levelInfo.Locked || levelInfo.ExpRequired <= ExpProgress;
+		return !levelInfo.Locked || levelInfo.Price <= ExpProgress;
 	}
 
 	LevelInfo GetLevelInfo(string _LevelID)

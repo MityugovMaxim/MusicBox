@@ -55,9 +55,9 @@ public class UILoadingMenu : UIMenu
 
 	protected override IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
 	{
-		AsyncOperation operation = Resources.UnloadUnusedAssets();
+		yield return Resources.UnloadUnusedAssets();
 		
-		yield return new WaitUntil(() => operation.isDone);
+		System.GC.Collect();
 		
 		yield return new WaitForSeconds(1.0f);
 		

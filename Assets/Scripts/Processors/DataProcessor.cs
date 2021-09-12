@@ -5,22 +5,37 @@ public class LevelSnapshot
 	public string    Title  { get; }
 	public string    Artist { get; }
 	public LevelMode Mode   { get; }
+	public float     Length { get; }
+	public float     BPM    { get; }
+	public float     Speed  { get; }
 	public bool      Locked { get; }
 	public long      Payout { get; }
 	public long      Price  { get; }
+	public string    Skin   { get; }
 
 	public LevelSnapshot(
 		string    _Title,
 		string    _Artist,
 		LevelMode _LevelMode,
+		float     _Length,
+		float     _BPM,
+		float     _Speed,
 		bool      _Locked,
 		long      _Payout,
-		long      _Price
+		long      _Price,
+		string    _Skin
 	)
 	{
 		Title  = _Title;
 		Artist = _Artist;
 		Mode   = _LevelMode;
+		Length = _Length;
+		BPM    = _BPM;
+		Speed  = _Speed;
+		Locked = _Locked;
+		Payout = _Payout;
+		Price  = _Price;
+		Skin   = _Skin;
 	}
 }
 

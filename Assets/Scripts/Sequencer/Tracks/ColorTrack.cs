@@ -25,7 +25,8 @@ public partial class ColorTrack : Track<ColorClip>
 		}
 	}
 
-	[SerializeField, Reference(typeof(ColorProcessor))] string m_ColorProcessor;
+	[SerializeField, Reference(typeof(ColorProcessor))] string           m_ColorProcessor;
+	[SerializeField]                                    ColorSchemeAsset m_DefaultScheme;
 
 	[NonSerialized] string         m_ColorProcessorCache;
 	[NonSerialized] ColorProcessor m_ColorProcessorReference;
@@ -36,6 +37,8 @@ public partial class ColorTrack : Track<ColorClip>
 		
 		if (ColorProcessor == null)
 			return;
+		
+		ColorProcessor.DefaultColorScheme = m_DefaultScheme;
 		
 		ColorScheme colorScheme = ColorProcessor.DefaultColorScheme;
 		

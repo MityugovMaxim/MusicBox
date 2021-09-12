@@ -18,6 +18,7 @@ public class StorageProcessor : IInitializable, IDisposable
 	FirebaseStorage  m_Storage;
 	StorageReference m_ThumbnailsReference;
 	StorageReference m_PreviewsReference;
+	StorageReference m_LevelsReference;
 
 	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
 	readonly Dictionary<string, Action<Sprite>>    m_ProductActions = new Dictionary<string, Action<Sprite>>();
@@ -31,6 +32,7 @@ public class StorageProcessor : IInitializable, IDisposable
 		
 		m_ThumbnailsReference = reference.Child("Thumbnails");
 		m_PreviewsReference   = reference.Child("Previews");
+		m_LevelsReference     = reference.Child("Levels");
 	}
 
 	void IDisposable.Dispose()
@@ -245,6 +247,44 @@ public class StorageProcessor : IInitializable, IDisposable
 			m_ProductActions.Remove(_ProductID);
 			action?.Invoke(m_ProductThumbnails[_ProductID]);
 		}
+	}
+
+	public async void LoadLevel(string _LevelID, Action<Track[]> _Complete)
+	{
+		if (string.IsNullOrEmpty(_LevelID))
+		{
+			Debug.LogError("[StorageProcessor] Load level failed. Level ID is null or empty.");
+			return;
+		}
+		
+		StorageReference reference = m_LevelsReference.Child($"level.{_LevelID}.unity3d");
+		
+		if (reference == null)
+			return;
+		
+		string directory = Path.Combine(Application.streamingAssetsPath, "Levels");
+		
+		if (!Directory.Exists(directory))
+			Directory.CreateDirectory(directory);
+		
+		string path = Path.Combine(directory, $"level.{_LevelID}.unity3d");
+		
+		string url = "file://" + path;
+		
+		string key = $"{_LevelID}_asset_bundle";
+		
+		StorageMetadata metadata = await reference.GetMetadataAsync();
+		
+		if (PlayerPrefs.GetString(key, string.Empty) != metadata.Md5Hash)
+			await reference.GetFileAsync(url);
+		
+		AssetBundle assetBundle = await WebRequest.LoadAssetBundle(url);
+		
+		Track[] tracks = assetBundle.LoadAllAssets<Track>();
+		
+		_Complete?.Invoke(tracks);
+		
+		assetBundle.Unload(false);
 	}
 
 	public void LoadLevelBackground(string _LevelID, Action<Sprite> _Complete)
