@@ -144,7 +144,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 	{
 		get
 		{
-			const double holdCoefficient = 0.99;
+			const double holdCoefficient = 0.98;
 			
 			double score = 0;
 			
@@ -152,7 +152,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			double tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
 			double doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
 			
-			score += holdCount * HOLD_SUCCESS_MULTIPLIER / holdCoefficient;
+			score += holdCount * HOLD_SUCCESS_MULTIPLIER * holdCoefficient;
 			score += holdCount * HOLD_HIT_MULTIPLIER;
 			score *= holdCount;
 			

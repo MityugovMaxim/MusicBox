@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Firebase.Database;
+using UnityEngine;
 
 public static class DataSnapshotExtension
 {
@@ -43,7 +45,7 @@ public static class DataSnapshotExtension
 
 	public static float GetFloat(this DataSnapshot _DataSnapshot)
 	{
-		return float.Parse(_DataSnapshot.GetRawJsonValue());
+		return Convert.ToSingle(_DataSnapshot.Value);
 	}
 
 	public static float GetFloat(this DataSnapshot _DataSnapshot, string _Name, float _Default = 0)

@@ -166,6 +166,27 @@ public class SequencerEditorWindow : EditorWindow
 		
 		GUILayout.BeginHorizontal();
 		
+		switch (Event.current.type)
+		{
+			case EventType.KeyDown:
+				if (Event.current.keyCode != KeyCode.Space)
+					break;
+				
+				Event.current.Use();
+				
+				if (Sequencer.Playing)
+				{
+					Sequencer.Pause();
+				}
+				else
+				{
+					Sequencer.Initialize();
+					Sequencer.Play();
+				}
+				
+				break;
+		}
+		
 		if (!Sequencer.Playing && GUILayout.Button(">"))
 		{
 			Sequencer.Initialize();

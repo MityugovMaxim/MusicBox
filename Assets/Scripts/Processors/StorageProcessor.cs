@@ -262,7 +262,7 @@ public class StorageProcessor : IInitializable, IDisposable
 		if (reference == null)
 			return;
 		
-		string directory = Path.Combine(Application.streamingAssetsPath, "Levels");
+		string directory = Path.Combine(Application.persistentDataPath, "Levels");
 		
 		if (!Directory.Exists(directory))
 			Directory.CreateDirectory(directory);
@@ -276,9 +276,21 @@ public class StorageProcessor : IInitializable, IDisposable
 		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
 		if (PlayerPrefs.GetString(key, string.Empty) != metadata.Md5Hash)
+		{
+			Debug.LogError("---> BEGIN DOWNLOAD LEVEL");
+			
 			await reference.GetFileAsync(url);
+			
+			Debug.LogError("---> LOAD DOWNLOADED");
+			
+			PlayerPrefs.SetString(key, metadata.Md5Hash);
+		}
+		
+		Debug.LogError("---> BEGIN LOAD BUNDLE FROM FILE");
 		
 		AssetBundle assetBundle = await WebRequest.LoadAssetBundle(url);
+		
+		Debug.LogError("---> BUNDLE LOADED SUCCESSFULLY");
 		
 		Track[] tracks = assetBundle.LoadAllAssets<Track>();
 		
