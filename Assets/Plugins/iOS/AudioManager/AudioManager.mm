@@ -13,8 +13,6 @@ typedef void (*CommandHandler)();
 @implementation RouteObserver
 
 CommandHandler m_Callback;
-NSUInteger     m_OutputCount;
-NSString*      m_OutputUID;
 
 - (void) remove
 {
@@ -32,12 +30,9 @@ NSString*      m_OutputUID;
 	
 	AVAudioSession* session = [AVAudioSession sharedInstance];
 	
-	m_OutputCount = session.currentRoute.outputs.count;
-	m_OutputUID   = session.currentRoute.outputs[0].UID;
-	
 	[session setActive:YES error:nil];
 	[session setCategory:AVAudioSessionCategoryPlayback
-		mode:AVAudioSessionModeMoviePlayback
+		mode:AVAudioSessionModeSpokenAudio
 		options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
 		error:nil];
 	
