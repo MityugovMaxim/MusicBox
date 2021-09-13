@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 public class LevelSnapshot
 {
+	public bool      Active { get; }
 	public string    Title  { get; }
 	public string    Artist { get; }
 	public LevelMode Mode   { get; }
@@ -14,6 +15,7 @@ public class LevelSnapshot
 	public string    Skin   { get; }
 
 	public LevelSnapshot(
+		bool      _Active,
 		string    _Title,
 		string    _Artist,
 		LevelMode _LevelMode,
@@ -26,6 +28,7 @@ public class LevelSnapshot
 		string    _Skin
 	)
 	{
+		Active = _Active;
 		Title  = _Title;
 		Artist = _Artist;
 		Mode   = _LevelMode;

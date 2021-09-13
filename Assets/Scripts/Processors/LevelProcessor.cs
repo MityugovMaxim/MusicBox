@@ -20,6 +20,7 @@ public class LevelProcessor
 	readonly SignalBus         m_SignalBus;
 	readonly PurchaseProcessor m_PurchaseProcessor;
 	readonly ProgressProcessor m_ProgressProcessor;
+	[Preserve]
 	readonly StorageProcessor  m_StorageProcessor;
 	readonly Level.Factory     m_LevelFactory;
 	readonly ProductInfo       m_NoAdsProduct;
@@ -291,8 +292,19 @@ public class LevelProcessor
 		
 		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
 		{
+			#if DEVELOPMENT_BUILD
+			bool active = true;
+			#else
+			bool active = levelSnapshot.GetBool("active");
+			#endif
+			
+			if (!active)
+				continue;
+			
 			string levelID = levelSnapshot.Key;
+			
 			LevelSnapshot level = new LevelSnapshot(
+				true,
 				levelSnapshot.GetString("title", string.Empty),
 				levelSnapshot.GetString("artist", string.Empty),
 				levelSnapshot.GetEnum<LevelMode>("mode"),

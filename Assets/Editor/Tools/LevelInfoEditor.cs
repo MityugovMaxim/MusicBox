@@ -13,6 +13,7 @@ public class ProductInfoEditor : Editor
 [CustomEditor(typeof(LevelInfo))]
 public class LevelInfoEditor : Editor
 {
+	SerializedProperty ActiveProperty => m_ActiveProperty ?? (m_ActiveProperty = serializedObject.FindProperty("m_Active"));
 	SerializedProperty TitleProperty  => m_TitleProperty ?? (m_TitleProperty = serializedObject.FindProperty("m_Title"));
 	SerializedProperty ArtistProperty => m_ArtistProperty ?? (m_ArtistProperty = serializedObject.FindProperty("m_Artist"));
 	SerializedProperty IDProperty     => m_IDProperty ?? (m_IDProperty = serializedObject.FindProperty("m_ID"));
@@ -27,6 +28,7 @@ public class LevelInfoEditor : Editor
 
 	static string m_Config;
 
+	SerializedProperty m_ActiveProperty;
 	SerializedProperty m_TitleProperty;
 	SerializedProperty m_ArtistProperty;
 	SerializedProperty m_IDProperty;
@@ -114,6 +116,7 @@ public class LevelInfoEditor : Editor
 		string            levelID  = IDProperty.stringValue;
 		IDictionary<string, object> data = new Dictionary<string, object>()
 		{
+			{ "active", ActiveProperty.boolValue },
 			{ "artist", ArtistProperty.stringValue },
 			{ "title", TitleProperty.stringValue },
 			{ "mode", ModeProperty.intValue },
