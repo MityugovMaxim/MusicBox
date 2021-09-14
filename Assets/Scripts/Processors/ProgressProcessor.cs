@@ -1,53 +1,57 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Firebase.Database;
 using UnityEngine;
 using Zenject;
 
+public class WalletDataUpdateSignal { }
+
 public class ProgressProcessor : IInitializable, IDisposable
 {
-	#if UNITY_EDITOR
-	[UnityEditor.MenuItem("Cheats/+1000 Exp")]
-	public static void Add1000Exp()
-	{
-		string data = PlayerPrefs.GetString(EXP_PROGRESS_KEY, string.Empty);
-		PlayerPrefs.SetString(
-			EXP_PROGRESS_KEY,
-			long.TryParse(data, out long expProgress)
-				? (expProgress + 1000).ToString()
-				: 1000.ToString());
-	}
-	#endif
+	public long Coins { get; private set; }
 
-	const string EXP_PROGRESS_KEY = "EXP_PROGRESS";
+	readonly SignalBus         m_SignalBus;
+	readonly SocialProcessor   m_SocialProcessor;
+	readonly LevelProcessor    m_LevelProcessor;
+	readonly ScoreProcessor    m_ScoreProcessor;
+	readonly PurchaseProcessor m_PurchaseProcessor;
 
-	public long ExpProgress { get; private set; }
+	readonly List<string> m_LevelIDs = new List<string>();
 
-	readonly SignalBus                     m_SignalBus;
-	readonly ScoreProcessor                m_ScoreProcessor;
-	readonly Dictionary<string, LevelInfo> m_LevelInfos = new Dictionary<string,LevelInfo>();
+	DatabaseReference m_WalletData;
 
 	[Inject]
 	public ProgressProcessor(
-		SignalBus      _SignalBus,
-		ScoreProcessor _ScoreProcessor
+		SignalBus       _SignalBus,
+		SocialProcessor _SocialProcessor,
+		LevelProcessor  _LevelProcessor,
+		ScoreProcessor  _ScoreProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_ScoreProcessor = _ScoreProcessor;
+		m_SignalBus       = _SignalBus;
+		m_LevelProcessor  = _LevelProcessor;
+		m_ScoreProcessor  = _ScoreProcessor;
+		m_SocialProcessor = _SocialProcessor;
+	}
+
+	public async Task LoadWallet()
+	{
+		if (m_WalletData == null)
+			m_WalletData = FirebaseDatabase.DefaultInstance.RootReference.Child("wallets").Child(m_SocialProcessor.UserID);
 		
-		LevelRegistry levelRegistry = Registry.Load<LevelRegistry>("level_registry");
-		if (levelRegistry != null)
-		{
-			foreach (LevelInfo levelInfo in levelRegistry)
-			{
-				if (levelInfo == null || !levelInfo.Active)
-					continue;
-				
-				m_LevelInfos[levelInfo.ID] = levelInfo;
-			}
-		}
+		await FetchWallet();
 		
-		LoadExpProgress();
+		m_WalletData.ValueChanged += OnWalletUpdate;
+	}
+
+	async void OnWalletUpdate(object _Sender, EventArgs _Args)
+	{
+		Debug.Log("[ProgressProcessor] Updating wallet data...");
+		
+		await FetchWallet();
+		
+		Debug.Log("[ProgressProcessor] Update wallet data complete.");
 	}
 
 	void IInitializable.Initialize()
@@ -60,55 +64,107 @@ public class ProgressProcessor : IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
 	}
 
-	void RegisterLevelFinish(LevelFinishSignal _Signal)
+	async void RegisterLevelFinish(LevelFinishSignal _Signal)
 	{
-		long expPayout   = GetExpPayout(_Signal.LevelID);
-		long expProgress = ExpProgress;
+		long payout = GetPayout(_Signal.LevelID);
 		
 		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
 		{
 			if (rank != ScoreRank.None && rank <= m_ScoreProcessor.Rank)
-				expProgress += expPayout * GetExpMultiplier(m_ScoreProcessor.Rank);
+				Coins += payout * GetPayoutMultiplier(m_ScoreProcessor.Rank);
 		}
 		
-		foreach (LevelInfo levelInfo in m_LevelInfos.Values)
-		{
-			if (levelInfo.Locked && levelInfo.Price > ExpProgress && levelInfo.Price <= expProgress)
-				m_SignalBus.Fire(new LevelUnlockSignal(levelInfo.ID));
-		}
+		await SaveWallet();
 		
-		ExpProgress = expProgress;
-		
-		SaveExpProgress();
+		m_SignalBus.Fire<WalletDataUpdateSignal>();
 	}
 
-	public long GetExpPayout(string _LevelID)
+	public long GetPayout(string _LevelID)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get exp payout failed. Level info for ID '{0}' is null.", _LevelID);
-			return 0;
-		}
-		
-		return levelInfo.Payout;
+		return m_LevelProcessor.GetPayout(_LevelID);
 	}
 
-	public long GetExpPayout(string _LevelID, ScoreRank _Rank)
+	public long GetPayout(string _LevelID, ScoreRank _Rank)
 	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get exp payout failed. Level info for ID '{0}' is null.", _LevelID);
-			return 0;
-		}
-		
-		return levelInfo.Payout * GetExpMultiplier(_Rank);
+		return GetPayout(_LevelID) * GetPayoutMultiplier(_Rank);
 	}
 
-	public int GetExpMultiplier(ScoreRank _Rank)
+	public long GetPrice(string _LevelID)
+	{
+		return m_LevelProcessor.GetPrice(_LevelID);
+	}
+
+	public bool IsLevelLocked(string _LevelID)
+	{
+		return m_LevelIDs.Contains(_LevelID);
+	}
+
+	public bool IsLevelUnlocked(string _LevelID)
+	{
+		return !m_LevelIDs.Contains(_LevelID);
+	}
+
+	public async Task UnlockLevel(string _LevelID)
+	{
+		long price = GetPrice(_LevelID);
+		
+		if (price > Coins)
+		{
+			Debug.LogErrorFormat("[ProgressProcessor] Unlock level failed. Not enough coins. Required: {0}. Current: {1}.", price, Coins);
+			return;
+		}
+		
+		Coins -= price;
+		
+		m_LevelIDs.Add(_LevelID);
+		
+		try
+		{
+			await SaveWallet();
+			
+			m_SignalBus.Fire(new LevelUnlockSignal(_LevelID));
+			
+			m_SignalBus.Fire<WalletDataUpdateSignal>();
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[ProgressProcessor] Unlock level failed. Error: {0}.", exception.Message);
+			
+			Coins += price;
+			
+			m_LevelIDs.Remove(_LevelID);
+		}
+	}
+
+	async Task FetchWallet()
+	{
+		m_LevelIDs.Clear();
+		
+		DataSnapshot walletSnapshot = await m_WalletData.GetValueAsync();
+		
+		Coins = walletSnapshot.GetLong("coins");
+		
+		List<string> levelIDs = walletSnapshot.GetChildKeys("levels");
+		foreach (string levelID in levelIDs)
+			m_LevelIDs.Add(levelID);
+	}
+
+	async Task SaveWallet()
+	{
+		Dictionary<string, object> wallet = new Dictionary<string, object>();
+		
+		wallet["coins"] = Coins;
+		
+		Dictionary<string, object> levels = new Dictionary<string, object>();
+		foreach (string levelID in m_LevelIDs)
+			levels[levelID] = true;
+		
+		wallet["levels"] = levels;
+		
+		await m_WalletData.SetValueAsync(wallet);
+	}
+
+	static int GetPayoutMultiplier(ScoreRank _Rank)
 	{
 		switch (_Rank)
 		{
@@ -123,75 +179,5 @@ public class ProgressProcessor : IInitializable, IDisposable
 			default:
 				return 0;
 		}
-	}
-
-	public long GetExpRequired(string _LevelID)
-	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get exp required failed. Level info for ID '{0}' is null.", _LevelID);
-			return 0;
-		}
-		
-		return levelInfo.Locked ? levelInfo.Price : 0;
-	}
-
-	public bool IsLevelLocked(string _LevelID)
-	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Level lock check failed. Level info for ID '{0}' is null.", _LevelID);
-			return false;
-		}
-		
-		return levelInfo.Locked && levelInfo.Price > ExpProgress;
-	}
-
-	public bool IsLevelUnlocked(string _LevelID)
-	{
-		LevelInfo levelInfo = GetLevelInfo(_LevelID);
-		
-		if (levelInfo == null)
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Level unlock check failed. LevelInfo for ID '{0}' is null.", _LevelID);
-			return true;
-		}
-		
-		return !levelInfo.Locked || levelInfo.Price <= ExpProgress;
-	}
-
-	LevelInfo GetLevelInfo(string _LevelID)
-	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[ProgressProcessor] Get level info failed. Level ID is null or empty.");
-			return null;
-		}
-		
-		if (!m_LevelInfos.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get level info failed. Level with ID '{0}' not found.", _LevelID);
-			return null;
-		}
-		
-		return m_LevelInfos[_LevelID];
-	}
-
-	void LoadExpProgress()
-	{
-		string data = PlayerPrefs.GetString(EXP_PROGRESS_KEY, string.Empty);
-		
-		ExpProgress = long.TryParse(data, out long progress) ? progress : 0;
-	}
-
-	void SaveExpProgress()
-	{
-		string data = ExpProgress.ToString();
-		
-		PlayerPrefs.SetString(EXP_PROGRESS_KEY, data);
 	}
 }

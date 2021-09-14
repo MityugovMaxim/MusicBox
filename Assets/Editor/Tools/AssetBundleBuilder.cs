@@ -28,7 +28,7 @@ public static class AssetBundleBuilder
 		
 		foreach (LevelInfo levelInfo in levelRegistry)
 		{
-			string tracksPath = $"Assets/Levels/{levelInfo.Artist} - {levelInfo.Title}/Tracks";
+			string tracksPath = $"Assets/Levels/{levelInfo.ID}/Tracks";
 			
 			AssetImporter importer = AssetImporter.GetAtPath(tracksPath);
 			

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
@@ -63,7 +62,7 @@ public class LevelProcessor
 	{
 		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID))
 			.OrderByDescending(m_ProgressProcessor.IsLevelUnlocked)
-			.ThenBy(m_ProgressProcessor.GetExpRequired)
+			.ThenBy(m_ProgressProcessor.GetPrice)
 			.ToList();
 	}
 
@@ -91,11 +90,37 @@ public class LevelProcessor
 		
 		if (levelSnapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Level info with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Level snapshot with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
 		return levelSnapshot.Title;
+	}
+
+	public long GetPayout(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get payout failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelSnapshot.Payout;
+	}
+
+	public long GetPrice(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get price failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelSnapshot.Price;
 	}
 
 	public string GetNextLevelID(string _LevelID)
@@ -148,7 +173,7 @@ public class LevelProcessor
 		return levelSnapshot.Mode;
 	}
 
-	public void Create(string _LevelID)
+	public async void Create(string _LevelID)
 	{
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
@@ -164,14 +189,9 @@ public class LevelProcessor
 			return;
 		}
 		
+		Track[] tracks = await m_StorageProcessor.LoadTracks(_LevelID);
+		
 		Level prefab = Resources.Load<Level>(levelSnapshot.Skin);
-		
-		#if UNITY_EDITOR
-		string path = $"Assets/Levels/{levelSnapshot.Artist} - {levelSnapshot.Title}/Tracks/";
-		
-		List<Track> tracks = new List<Track>();
-		foreach (string trackPath in Directory.GetFiles(path, "*.asset"))
-			tracks.Add(UnityEditor.AssetDatabase.LoadAssetAtPath<Track>(trackPath));
 		
 		m_LevelID = _LevelID;
 		m_Level   = m_LevelFactory.Create(prefab);
@@ -180,33 +200,12 @@ public class LevelProcessor
 			levelSnapshot.Length,
 			levelSnapshot.BPM,
 			levelSnapshot.Speed,
-			tracks.ToArray()
+			tracks
 		);
 		
 		m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
 		
 		m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
-		#else
-		m_StorageProcessor.LoadLevel(
-			_LevelID,
-			_Tracks =>
-			{
-				m_LevelID = _LevelID;
-				m_Level   = m_LevelFactory.Create(prefab);
-				
-				m_Level.Setup(
-					levelSnapshot.Length,
-					levelSnapshot.BPM,
-					levelSnapshot.Speed,
-					_Tracks
-				);
-				
-				m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
-				
-				m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
-			}
-		);
-		#endif
 	}
 
 	public void Remove()
@@ -292,7 +291,7 @@ public class LevelProcessor
 		
 		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
 		{
-			#if DEVELOPMENT_BUILD
+			#if DEVELOPMENT_BUILD || UNITY_EDITOR
 			bool active = true;
 			#else
 			bool active = levelSnapshot.GetBool("active");

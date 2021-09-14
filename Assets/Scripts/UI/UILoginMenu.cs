@@ -11,6 +11,7 @@ public class UILoginMenu : UIMenu
 	LevelProcessor    m_LevelProcessor;
 	ScoreProcessor    m_ScoreProcessor;
 	PurchaseProcessor m_PurchaseProcessor;
+	ProgressProcessor m_ProgressProcessor;
 	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
@@ -19,6 +20,7 @@ public class UILoginMenu : UIMenu
 		LevelProcessor    _LevelProcessor,
 		ScoreProcessor    _ScoreProcessor,
 		PurchaseProcessor _PurchaseProcessor,
+		ProgressProcessor _ProgressProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
@@ -26,6 +28,7 @@ public class UILoginMenu : UIMenu
 		m_LevelProcessor    = _LevelProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
 		m_PurchaseProcessor = _PurchaseProcessor;
+		m_ProgressProcessor = _ProgressProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
@@ -55,6 +58,7 @@ public class UILoginMenu : UIMenu
 			m_ScoreProcessor.LoadScores(),
 			m_PurchaseProcessor.LoadProducts(),
 			m_PurchaseProcessor.LoadPurchases(),
+			m_ProgressProcessor.LoadWallet(),
 		};
 		
 		await Task.WhenAll(tasks);

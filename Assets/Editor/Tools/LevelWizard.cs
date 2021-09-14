@@ -3,8 +3,6 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.UI;
 
 public class LevelWizard : ScriptableWizard
 {
@@ -19,6 +17,7 @@ public class LevelWizard : ScriptableWizard
 	string m_AudioPath   = string.Empty;
 	string m_ArtworkPath = string.Empty;
 	float  m_BPM         = 90;
+	float  m_Speed       = 950;
 
 	protected override bool DrawWizardGUI()
 	{
@@ -27,6 +26,7 @@ public class LevelWizard : ScriptableWizard
 		m_Artist = EditorGUILayout.TextField("Artist", m_Artist);
 		m_Title  = EditorGUILayout.TextField("Title", m_Title);
 		m_BPM    = EditorGUILayout.FloatField("BPM", m_BPM);
+		m_Speed  = EditorGUILayout.FloatField("Speed", m_Speed);
 		
 		EditorGUILayout.BeginHorizontal();
 		m_AudioPath = EditorGUILayout.TextField("Audio", m_AudioPath);
@@ -67,15 +67,9 @@ public class LevelWizard : ScriptableWizard
 		
 		CreateTracks();
 		
-		CreateBackground();
-		
 		CreateColorSchemes();
 		
 		CreateLevelInfo();
-		
-		CreateLevel();
-		
-		ResolveDependencies();
 	}
 
 	void CreateFolders()
@@ -85,18 +79,14 @@ public class LevelWizard : ScriptableWizard
 		
 		List<string> directories = new List<string>();
 		
-		string id        = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root      = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string resources = Path.Combine(root, "Resources");
+		string root = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
 		
 		directories.Add(root);
-		directories.Add(resources);
-		directories.Add(Path.Combine(root, "Background"));
 		directories.Add(Path.Combine(root, "Data"));
-		directories.Add(Path.Combine(resources, id));
 		directories.Add(Path.Combine(root, "ColorSchemes"));
 		directories.Add(Path.Combine(root, "Tracks"));
 		directories.Add(Path.Combine(root, "Sounds"));
+		directories.Add(Path.Combine(root, "Storage"));
 		
 		foreach (string directory in directories)
 		{
@@ -113,7 +103,7 @@ public class LevelWizard : ScriptableWizard
 		if (string.IsNullOrEmpty(m_AudioPath))
 			return;
 		
-		string root      = $"Assets/Levels/{m_Artist} - {m_Title}";
+		string root      = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
 		string sounds    = Path.Combine(root, "Sounds");
 		string extension = Path.GetExtension(m_AudioPath);
 		
@@ -143,12 +133,11 @@ public class LevelWizard : ScriptableWizard
 		if (string.IsNullOrEmpty(m_AudioPath))
 			return;
 		
-		string id        = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root      = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string resources = Path.Combine(root, "Resources");
+		string root      = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
+		string storage   = Path.Combine(root, "Storage");
 		string extension = Path.GetExtension(m_AudioPath);
 		
-		string path = Path.Combine(resources, id, $"preview_clip{extension}");
+		string path = Path.Combine(storage, $"preview_clip{extension}");
 		
 		File.Copy(m_AudioPath, path);
 		
@@ -174,12 +163,11 @@ public class LevelWizard : ScriptableWizard
 		if (string.IsNullOrEmpty(m_ArtworkPath))
 			return;
 		
-		string id        = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root      = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string resources = Path.Combine(root, "Resources");
+		string root      = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
+		string storage   = Path.Combine(root, "Storage");
 		string extension = Path.GetExtension(m_ArtworkPath);
 		
-		string path = Path.Combine(resources, id, $"preview_thumbnail{extension}");
+		string path = Path.Combine(storage, $"preview_thumbnail{extension}");
 		
 		File.Copy(m_ArtworkPath, path);
 		
@@ -206,38 +194,9 @@ public class LevelWizard : ScriptableWizard
 		importer.SaveAndReimport();
 	}
 
-	void CreateBackground()
-	{
-		const string materialPath = "Assets/Common/Materials/Spectrum-Boids.mat";
-		
-		Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-		
-		CustomRenderTexture texture = new CustomRenderTexture(720, 1280);
-		
-		texture.graphicsFormat       = GraphicsFormat.R16G16B16A16_UNorm;
-		texture.depth                = 0;
-		texture.anisoLevel           = 0;
-		texture.antiAliasing         = 2;
-		texture.doubleBuffered       = true;
-		texture.useDynamicScale      = false;
-		texture.initializationMode   = CustomRenderTextureUpdateMode.OnLoad;
-		texture.updateMode           = CustomRenderTextureUpdateMode.Realtime;
-		texture.material             = material;
-		texture.initializationSource = CustomRenderTextureInitializationSource.TextureAndColor;
-		texture.initializationColor  = new Color(0, 0, 0, 1);
-		
-		string root       = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string background = Path.Combine(root, "Background");
-		string path       = Path.Combine(background, "background.asset");
-		
-		AssetDatabase.CreateAsset(texture, path);
-		
-		AssetDatabase.ImportAsset(path);
-	}
-
 	void CreateColorSchemes()
 	{
-		string root         = $"Assets/Levels/{m_Artist} - {m_Title}";
+		string root         = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
 		string colorSchemes = Path.Combine(root, "ColorSchemes");
 		string path         = Path.Combine(colorSchemes, "Default.asset");
 		
@@ -257,18 +216,18 @@ public class LevelWizard : ScriptableWizard
 
 	void CreateTracks()
 	{
-		string root   = $"Assets/Levels/{m_Artist} - {m_Title}";
+		string root   = $"Assets/Levels/{LevelInfoEditor.GetID(m_Artist, m_Title)}";
 		string tracks = Path.Combine(root, "Tracks");
 		
-		string musicTrackPath  = Path.Combine(tracks, "Music Track.asset");
-		string tapTrack1Path   = Path.Combine(tracks, "Tap Track 1.asset");
-		string tapTrack2Path   = Path.Combine(tracks, "Tap Track 2.asset");
-		string tapTrack3Path   = Path.Combine(tracks, "Tap Track 3.asset");
-		string tapTrack4Path   = Path.Combine(tracks, "Tap Track 4.asset");
-		string holdTrack1Path  = Path.Combine(tracks, "Hold Track 1.asset");
-		string holdTrack2Path  = Path.Combine(tracks, "Hold Track 2.asset");
-		string doubleTrackPath = Path.Combine(tracks, "Double Track.asset");
-		string colorTrackPath  = Path.Combine(tracks, "Color Track.asset");
+		string musicTrackPath  = Path.Combine(tracks, "[0] Music Track.asset");
+		string tapTrack1Path   = Path.Combine(tracks, "[1] Tap Track 1.asset");
+		string tapTrack2Path   = Path.Combine(tracks, "[2] Tap Track 2.asset");
+		string tapTrack3Path   = Path.Combine(tracks, "[3] Tap Track 3.asset");
+		string tapTrack4Path   = Path.Combine(tracks, "[4] Tap Track 4.asset");
+		string holdTrack1Path  = Path.Combine(tracks, "[5] Hold Track 1.asset");
+		string holdTrack2Path  = Path.Combine(tracks, "[6] Hold Track 2.asset");
+		string doubleTrackPath = Path.Combine(tracks, "[7] Double Track.asset");
+		string colorTrackPath  = Path.Combine(tracks, "[8] Color Track.asset");
 		
 		MusicTrack  musicTrack  = CreateInstance<MusicTrack>();
 		TapTrack    tapTrack1   = CreateInstance<TapTrack>();
@@ -364,111 +323,44 @@ public class LevelWizard : ScriptableWizard
 
 	void CreateLevelInfo()
 	{
-		string id   = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string path = Path.Combine(root, "Data", $"{m_Artist} - {m_Title}.asset");
-		
-		LevelInfo levelInfo = ScriptableObject.CreateInstance<LevelInfo>();
-		
-		using (SerializedObject levelInfoObject = new SerializedObject(levelInfo))
-		{
-			SerializedProperty artistProperty        = levelInfoObject.FindProperty("m_Artist");
-			SerializedProperty titleProperty         = levelInfoObject.FindProperty("m_Title");
-			SerializedProperty idProperty            = levelInfoObject.FindProperty("m_ID");
-			SerializedProperty leaderboardIDProperty = levelInfoObject.FindProperty("m_LeaderboardID");
-			SerializedProperty achievementIDProperty = levelInfoObject.FindProperty("m_AchievementID");
-			SerializedProperty thumbnailProperty     = levelInfoObject.FindProperty("m_Thumbnail");
-			SerializedProperty clipProperty          = levelInfoObject.FindProperty("m_Clip");
-			
-			artistProperty.stringValue        = m_Artist;
-			titleProperty.stringValue         = m_Title;
-			idProperty.stringValue            = id;
-			leaderboardIDProperty.stringValue = LevelInfoEditor.GetLeaderboardID(m_Title);
-			achievementIDProperty.stringValue = LevelInfoEditor.GetAchievementID(m_Title);
-			thumbnailProperty.stringValue     = $"{id}/preview_thumbnail";
-			clipProperty.stringValue          = $"{id}/preview_clip";
-			
-			levelInfoObject.ApplyModifiedProperties();
-		}
-		
-		AssetDatabase.CreateAsset(levelInfo, path);
-		
-		AssetDatabase.ImportAsset(path);
-	}
-
-	void CreateLevel()
-	{
-		const string prefabPath = "Assets/Common/Prefabs/level.prefab";
-		
-		Level prefab = AssetDatabase.LoadAssetAtPath<Level>(prefabPath);
-		
-		string id        = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root      = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string resources = Path.Combine(root, "Resources");
-		string path      = Path.Combine(resources, id, "level.prefab");
-		
-		Level instance = PrefabUtility.InstantiatePrefab(prefab) as Level;
-		
-		if (instance == null)
-			return;
-		
-		PrefabUtility.SaveAsPrefabAsset(instance.gameObject, path);
-		DestroyImmediate(instance.gameObject);
-		
-		AssetDatabase.ImportAsset(path);
-	}
-
-	void ResolveDependencies()
-	{
-		AssetDatabase.SaveAssets();
-		AssetDatabase.Refresh();
-		
-		string id             = LevelInfoEditor.GetID(m_Artist, m_Title);
-		string root           = $"Assets/Levels/{m_Artist} - {m_Title}";
-		string resources      = Path.Combine(root, "Resources");
-		string backgroundPath = Path.Combine(root, "Background", "background.asset");
-		string levelPath      = Path.Combine(resources, id, "level.prefab");
-		string tracksPath     = Path.Combine(root, "Tracks");
-		string soundsPath     = Path.Combine(root, "Sounds");
-		
-		Level               level      = AssetDatabase.LoadAssetAtPath<Level>(levelPath);
-		RawImage            fx         = level.transform.Find("game_canvas/fx").GetComponent<RawImage>();
-		Sequencer           sequencer  = level.GetComponent<Sequencer>();
-		CustomRenderTexture background = AssetDatabase.LoadAssetAtPath<CustomRenderTexture>(backgroundPath);
-		
-		background.Initialize();
-		
-		fx.texture = background;
-		
-		Track[] tracks = Directory.GetFiles(tracksPath, "*.asset", SearchOption.AllDirectories)
-			.Select(AssetDatabase.LoadAssetAtPath<Track>)
-			.ToArray();
+		string id         = LevelInfoEditor.GetID(m_Artist, m_Title);
+		string root       = $"Assets/Levels/{id}";
+		string dataPath   = Path.Combine(root, "Data", $"{m_Artist} - {m_Title}.asset");
+		string soundsPath = Path.Combine(root, "Sounds");
 		
 		AudioClip[] sounds = Directory.GetFiles(soundsPath, "*.wav", SearchOption.AllDirectories)
 			.Select(AssetDatabase.LoadAssetAtPath<AudioClip>)
 			.ToArray();
 		
-		sequencer.Length = sounds.Sum(_AudioClip => _AudioClip.length) + 2;
+		float length = sounds.Sum(_AudioClip => _AudioClip.length) + 2;
 		
-		using (SerializedObject sequencerObject = new SerializedObject(sequencer))
+		LevelInfo levelInfo = ScriptableObject.CreateInstance<LevelInfo>();
+		
+		using (SerializedObject levelInfoObject = new SerializedObject(levelInfo))
 		{
-			sequencerObject.UpdateIfRequiredOrScript();
+			SerializedProperty activeProperty = levelInfoObject.FindProperty("m_Active");
+			SerializedProperty idProperty     = levelInfoObject.FindProperty("m_ID");
+			SerializedProperty artistProperty = levelInfoObject.FindProperty("m_Artist");
+			SerializedProperty titleProperty  = levelInfoObject.FindProperty("m_Title");
+			SerializedProperty lengthProperty = levelInfoObject.FindProperty("m_Length");
+			SerializedProperty speedProperty  = levelInfoObject.FindProperty("m_Speed");
+			SerializedProperty bpmProperty    = levelInfoObject.FindProperty("m_BPM");
+			SerializedProperty skinProperty   = levelInfoObject.FindProperty("m_Skin");
 			
-			SerializedProperty bpmProperty    = sequencerObject.FindProperty("m_BPM");
-			SerializedProperty tracksProperty = sequencerObject.FindProperty("m_Tracks");
+			activeProperty.boolValue   = false;
+			artistProperty.stringValue = m_Artist;
+			titleProperty.stringValue  = m_Title;
+			idProperty.stringValue     = id;
+			lengthProperty.floatValue  = length;
+			speedProperty.floatValue   = m_Speed;
+			bpmProperty.floatValue     = m_BPM;
+			skinProperty.stringValue   = "level";
 			
-			bpmProperty.floatValue = m_BPM;
-			
-			for (int i = 0; i < tracks.Length; i++)
-			{
-				tracksProperty.InsertArrayElementAtIndex(i);
-				
-				SerializedProperty trackProperty = tracksProperty.GetArrayElementAtIndex(i);
-				
-				trackProperty.objectReferenceValue = tracks[i];
-			}
-			
-			sequencerObject.ApplyModifiedProperties();
+			levelInfoObject.ApplyModifiedProperties();
 		}
+		
+		AssetDatabase.CreateAsset(levelInfo, dataPath);
+		
+		AssetDatabase.ImportAsset(dataPath);
 	}
 }

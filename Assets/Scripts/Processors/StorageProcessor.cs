@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Firebase.Storage;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -18,6 +20,7 @@ public class StorageProcessor : IInitializable, IDisposable
 	FirebaseStorage  m_Storage;
 	StorageReference m_ThumbnailsReference;
 	StorageReference m_PreviewsReference;
+	[Preserve]
 	StorageReference m_LevelsReference;
 
 	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
@@ -249,18 +252,25 @@ public class StorageProcessor : IInitializable, IDisposable
 		}
 	}
 
-	public async void LoadLevel(string _LevelID, Action<Track[]> _Complete)
+	#pragma warning disable 1998
+	public async Task<Track[]> LoadTracks(string _LevelID)
+	#pragma warning restore 1998
 	{
+		#if UNITY_EDITOR
+		return Directory.GetFiles($"Assets/Levels/{_LevelID}/Tracks/", "*.asset")
+			.Select(UnityEditor.AssetDatabase.LoadAssetAtPath<Track>)
+			.ToArray();
+		#else
 		if (string.IsNullOrEmpty(_LevelID))
 		{
 			Debug.LogError("[StorageProcessor] Load level failed. Level ID is null or empty.");
-			return;
+			return null;
 		}
 		
 		StorageReference reference = m_LevelsReference.Child($"level.{_LevelID}.unity3d");
 		
 		if (reference == null)
-			return;
+			return null;
 		
 		string directory = Path.Combine(Application.persistentDataPath, "Levels");
 		
@@ -277,26 +287,19 @@ public class StorageProcessor : IInitializable, IDisposable
 		
 		if (PlayerPrefs.GetString(key, string.Empty) != metadata.Md5Hash)
 		{
-			Debug.LogError("---> BEGIN DOWNLOAD LEVEL");
-			
 			await reference.GetFileAsync(url);
-			
-			Debug.LogError("---> LOAD DOWNLOADED");
 			
 			PlayerPrefs.SetString(key, metadata.Md5Hash);
 		}
 		
-		Debug.LogError("---> BEGIN LOAD BUNDLE FROM FILE");
-		
 		AssetBundle assetBundle = await WebRequest.LoadAssetBundle(url);
-		
-		Debug.LogError("---> BUNDLE LOADED SUCCESSFULLY");
 		
 		Track[] tracks = assetBundle.LoadAllAssets<Track>();
 		
-		_Complete?.Invoke(tracks);
-		
 		assetBundle.Unload(false);
+		
+		return tracks;
+		#endif
 	}
 
 	public void LoadLevelBackground(string _LevelID, Action<Sprite> _Complete)

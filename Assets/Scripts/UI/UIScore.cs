@@ -91,13 +91,13 @@ public class UIScore : UIEntity
 		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
 		{
 			if (rank != ScoreRank.None && rank <= m_Rank)
-				m_ExpPayout += m_ProgressProcessor.GetExpPayout(m_LevelID, rank);
+				m_ExpPayout += m_ProgressProcessor.GetPayout(m_LevelID, rank);
 		}
 		
-		m_RankSPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.S);
-		m_RankAPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.A);
-		m_RankBPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.B);
-		m_RankCPayoutLabel.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.C);
+		m_RankSPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.S);
+		m_RankAPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.A);
+		m_RankBPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.B);
+		m_RankCPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.C);
 		
 		m_RankCIcon.SetAsLastSibling();
 		m_RankBIcon.SetAsLastSibling();

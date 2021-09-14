@@ -346,6 +346,11 @@ public class ScoreProcessor : IInitializable, IDisposable
 		long score    = Score;
 		int  rank     = (int)Rank;
 		
+		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
+		
+		if (scoreSnapshot != null && scoreSnapshot.Accuracy >= Accuracy)
+			return;
+		
 		Dictionary<string, object> scoreData = new Dictionary<string, object>()
 		{
 			{ "accuracy", accuracy },

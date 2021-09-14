@@ -28,8 +28,8 @@ public class UILevelProgress : UIEntity
 		if (!levelLocked)
 			return;
 		
-		double expProgress = m_ProgressProcessor.ExpProgress;
-		double expRequired = m_ProgressProcessor.GetExpRequired(_LevelID);
+		double expProgress = m_ProgressProcessor.Coins;
+		double expRequired = m_ProgressProcessor.GetPrice(_LevelID);
 		
 		float progress = Mathf.Clamp01((float)(expProgress / expRequired));
 		

@@ -169,12 +169,12 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		m_Progress.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
 		
-		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID) && m_ProgressProcessor.GetExpPayout(m_LevelID) > 0);
+		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID) && m_ProgressProcessor.GetPayout(m_LevelID) > 0);
 		
-		m_RankSExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.S);
-		m_RankAExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.A);
-		m_RankBExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.B);
-		m_RankCExpPayout.Exp = m_ProgressProcessor.GetExpPayout(m_LevelID, ScoreRank.C);
+		m_RankSExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.S);
+		m_RankAExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.A);
+		m_RankBExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.B);
+		m_RankCExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.C);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);
