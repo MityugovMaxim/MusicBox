@@ -18,7 +18,6 @@ public class LevelProcessor
 
 	readonly SignalBus         m_SignalBus;
 	readonly PurchaseProcessor m_PurchaseProcessor;
-	readonly ProgressProcessor m_ProgressProcessor;
 	[Preserve]
 	readonly StorageProcessor  m_StorageProcessor;
 	readonly Level.Factory     m_LevelFactory;
@@ -34,7 +33,6 @@ public class LevelProcessor
 	public LevelProcessor(
 		SignalBus         _SignalBus,
 		PurchaseProcessor _PurchaseProcessor,
-		ProgressProcessor _ProgressProcessor,
 		StorageProcessor  _StorageProcessor,
 		Level.Factory     _LevelFactory,
 		ProductInfo       _NoAdsProduct 
@@ -42,7 +40,6 @@ public class LevelProcessor
 	{
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
 		m_StorageProcessor  = _StorageProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
@@ -60,10 +57,7 @@ public class LevelProcessor
 
 	public List<string> GetLevelIDs()
 	{
-		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID))
-			.OrderByDescending(m_ProgressProcessor.IsLevelUnlocked)
-			.ThenBy(m_ProgressProcessor.GetPrice)
-			.ToList();
+		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID)).ToList();
 	}
 
 	public bool Contains(string _LevelID)

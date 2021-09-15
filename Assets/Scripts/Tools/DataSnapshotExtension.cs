@@ -89,6 +89,6 @@ public static class DataSnapshotExtension
 	{
 		if (_DataSnapshot.HasChild(_Name))
 			return _DataSnapshot.Child(_Name).GetChildKeys();
-		return _Default;
+		return _Default ?? new List<string>();
 	}
 }

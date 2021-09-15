@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Firebase;
 using Firebase.Database;
+using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -11,11 +13,10 @@ public class ProgressProcessor : IInitializable, IDisposable
 {
 	public long Coins { get; private set; }
 
-	readonly SignalBus         m_SignalBus;
-	readonly SocialProcessor   m_SocialProcessor;
-	readonly LevelProcessor    m_LevelProcessor;
-	readonly ScoreProcessor    m_ScoreProcessor;
-	readonly PurchaseProcessor m_PurchaseProcessor;
+	readonly SignalBus       m_SignalBus;
+	readonly SocialProcessor m_SocialProcessor;
+	readonly LevelProcessor  m_LevelProcessor;
+	readonly ScoreProcessor  m_ScoreProcessor;
 
 	readonly List<string> m_LevelIDs = new List<string>();
 
@@ -42,7 +43,18 @@ public class ProgressProcessor : IInitializable, IDisposable
 		
 		await FetchWallet();
 		
+		HttpsCallableReference callable = FirebaseFunctions.DefaultInstance.GetHttpsCallable("unlockLevel");
+		
 		m_WalletData.ValueChanged += OnWalletUpdate;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>()
+		{
+			{ "level_id", "mindme_my_home_is_you" }
+		};
+		
+		HttpsCallableResult result = await callable.CallAsync(data);
+		
+		Debug.LogError("---> RESULT: " + result.Data);
 	}
 
 	async void OnWalletUpdate(object _Sender, EventArgs _Args)
