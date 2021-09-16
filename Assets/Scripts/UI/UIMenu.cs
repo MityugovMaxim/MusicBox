@@ -72,6 +72,8 @@ public class UIMenu : UIEntity
 		m_ShowStarted  = _Started;
 		m_ShowFinished = _Finished;
 		
+		gameObject.SetActive(true);
+		
 		if (m_Routine != null)
 			StopCoroutine(m_Routine);
 		
@@ -130,6 +132,8 @@ public class UIMenu : UIEntity
 			InvokeHideFinished();
 			
 			InvokeCloseAction();
+			
+			gameObject.SetActive(false);
 		}
 		else
 		{
@@ -216,6 +220,8 @@ public class UIMenu : UIEntity
 		InvokeHideFinished();
 		
 		InvokeCloseAction();
+		
+		gameObject.SetActive(false);
 	}
 
 	protected virtual IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)

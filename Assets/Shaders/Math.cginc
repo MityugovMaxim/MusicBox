@@ -1,6 +1,6 @@
 ﻿float rand(const half2 _Value)
 { 
-	return frac(sin(dot(_Value, half2(12.9898, 4.1414))) * 43758.5453);
+	return frac(sin(dot(_Value, half2(12.9898, 42.1414))) * 43758.5453);
 }
 
 float noise(const half2 _Value)
@@ -17,6 +17,21 @@ float noise(const half2 _Value)
 	);
 	
 	return sin(result * result * (_Time.y * 10)) * 0.5 + 0.5;
+}
+
+float noise(const half2 _Value, const fixed _Speed)
+{
+	const half2 a = floor(_Value);
+	const half2 b = frac(_Value);
+	const half2 c = b * b * (3.0 - 2.0 * b);
+	
+	const half result = lerp(
+		lerp(rand(a), rand(a + half2(1, 0)), c.x),
+		lerp(rand(a + half2(0, 1)), rand(a + half2(1, 1)), c.x),
+		c.y
+	);
+	
+	return sin(result * result * (_Time.y * _Speed)) * 0.5 + 0.5;
 }
 
 half remap01(const half _Value, const half _Low, const half _High)

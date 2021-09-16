@@ -39,9 +39,10 @@ public class UIMainMenu : UIMenu, IInitializable, IDisposable
 		m_ItemFactory     = _ItemFactory;
 	}
 
-	public void Shop()
+	public async void Shop()
 	{
-		m_MenuProcessor.Show(MenuType.ShopMenu);
+		await m_MenuProcessor.Show(MenuType.ShopMenu);
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 	}
 
 	void IInitializable.Initialize()

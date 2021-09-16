@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Linq;
-using Coffee.UIExtensions;
 using UnityEngine;
 using Zenject;
 
@@ -23,8 +22,6 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
-		
-		UIParticle.Warmup(16);
 	}
 
 	void InstallCulture()
@@ -42,13 +39,6 @@ public class GameInstaller : MonoInstaller
 		
 		CultureInfo.CurrentCulture   = cultureInfo;
 		CultureInfo.CurrentUICulture = cultureInfo;
-	}
-
-	[ContextMenu("Test")]
-	public void Test()
-	{
-		MusicClip[] clips = Resources.FindObjectsOfTypeAll<MusicClip>();
-		Debug.LogError("---> COUNT: " + clips.Length + " " + clips[0].GetInstanceID());
 	}
 
 	void InstallFactories()

@@ -16,6 +16,7 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 
 	SignalBus              m_SignalBus;
 	PurchaseProcessor      m_PurchaseProcessor;
+	MenuProcessor          m_MenuProcessor;
 	UIShopMenuItem.Factory m_ItemFactory;
 
 	IEnumerator m_ItemsRoutine;
@@ -29,11 +30,13 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 	public void Construct(
 		SignalBus              _SignalBus,
 		PurchaseProcessor      _PurchaseProcessor,
+		MenuProcessor          _MenuProcessor,
 		UIShopMenuItem.Factory _ItemFactory
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_PurchaseProcessor = _PurchaseProcessor;
+		m_MenuProcessor     = _MenuProcessor;
 		m_ItemFactory       = _ItemFactory;
 	}
 
@@ -52,9 +55,10 @@ public class UIShopMenu : UIMenu, IInitializable, IDisposable
 		Refresh();
 	}
 
-	public void Back()
+	public async void Back()
 	{
-		Hide();
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		await m_MenuProcessor.Hide(MenuType.ShopMenu);
 	}
 
 	public void Restore()
