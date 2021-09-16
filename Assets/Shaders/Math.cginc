@@ -1,7 +1,7 @@
 ﻿float rand(const half2 _Value)
 { 
-	return frac(sin(dot(_Value, half2(12.9898, 42.1414))) * 43758.5453);
-}
+	return frac(sin(dot(_Value, half2(13.9898, 41.1414))) * 73.5453);
+} 
 
 float noise(const half2 _Value)
 {

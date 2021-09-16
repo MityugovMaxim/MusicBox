@@ -53,7 +53,6 @@ Shader "UI/Pattern"
 
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
 			#pragma multi_compile_local _ UNITY_UI_ALPHACLIP
-			#pragma multi_compile _ BACKGROUND_SCHEME FOREGROUND_SCHEME
 
 			#include "UIMask.cginc"
 			#include "UnityCG.cginc"
@@ -129,12 +128,6 @@ Shader "UI/Pattern"
 				
 				#ifdef UNITY_UI_ALPHACLIP
 				clip (color.a - 0.001);
-				#endif
-				
-				#ifdef BACKGROUND_SCHEME
-				color *= BACKGROUND_BY_PHASE(phase);
-				#elif FOREGROUND_SCHEME
-				color *= FOREGROUND_BY_PHASE(phase);
 				#endif
 				
 				return color;
