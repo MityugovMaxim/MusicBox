@@ -2,11 +2,12 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Scripting;
+using Zenject;
 
 public class UIHoldIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : FXPool<UIHoldIndicator>
+	public class Pool : MemoryPool<UIHoldIndicator>
 	{
 		protected override void Reinitialize(UIHoldIndicator _Item)
 		{

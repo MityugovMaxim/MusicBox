@@ -18,18 +18,18 @@ public class UIScore : UIEntity
 
 	[SerializeField] TMP_Text      m_AccuracyLabel;
 	[SerializeField] TMP_Text      m_ScoreLabel;
-	[SerializeField] UIExpLabel    m_ExpPayoutLabel;
-	[SerializeField] UIExpLabel    m_RankSPayoutLabel;
-	[SerializeField] UIExpLabel    m_RankAPayoutLabel;
-	[SerializeField] UIExpLabel    m_RankBPayoutLabel;
-	[SerializeField] UIExpLabel    m_RankCPayoutLabel;
+	[SerializeField] UICoinsLabel    m_PayoutLabel;
+	[SerializeField] UICoinsLabel    m_RankSPayoutLabel;
+	[SerializeField] UICoinsLabel    m_RankAPayoutLabel;
+	[SerializeField] UICoinsLabel    m_RankBPayoutLabel;
+	[SerializeField] UICoinsLabel    m_RankCPayoutLabel;
 	[SerializeField] RectTransform m_RankSIcon;
 	[SerializeField] RectTransform m_RankAIcon;
 	[SerializeField] RectTransform m_RankBIcon;
 	[SerializeField] RectTransform m_RankCIcon;
 
 	ScoreProcessor    m_ScoreProcessor;
-	ProgressProcessor m_ProgressProcessor;
+	ProfileProcessor m_ProfileProcessor;
 	HapticProcessor   m_HapticProcessor;
 
 	string           m_LevelID;
@@ -44,12 +44,12 @@ public class UIScore : UIEntity
 	[Inject]
 	public void Construct(
 		ScoreProcessor    _ScoreProcessor,
-		ProgressProcessor _ProgressProcessor,
+		ProfileProcessor _ProfileProcessor,
 		HapticProcessor   _HapticProcessor
 	)
 	{
 		m_ScoreProcessor    = _ScoreProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
 		m_HapticProcessor   = _HapticProcessor;
 	}
 
@@ -91,13 +91,13 @@ public class UIScore : UIEntity
 		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
 		{
 			if (rank != ScoreRank.None && rank <= m_Rank)
-				m_ExpPayout += m_ProgressProcessor.GetPayout(m_LevelID, rank);
+				m_ExpPayout += m_ProfileProcessor.GetPayout(m_LevelID, rank);
 		}
 		
-		m_RankSPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.S);
-		m_RankAPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.A);
-		m_RankBPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.B);
-		m_RankCPayoutLabel.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.C);
+		m_RankSPayoutLabel.Coins = m_ProfileProcessor.GetPayout(m_LevelID, ScoreRank.Platinum);
+		m_RankAPayoutLabel.Coins = m_ProfileProcessor.GetPayout(m_LevelID, ScoreRank.Gold);
+		m_RankBPayoutLabel.Coins = m_ProfileProcessor.GetPayout(m_LevelID, ScoreRank.Silver);
+		m_RankCPayoutLabel.Coins = m_ProfileProcessor.GetPayout(m_LevelID, ScoreRank.Bronze);
 		
 		m_RankCIcon.SetAsLastSibling();
 		m_RankBIcon.SetAsLastSibling();
@@ -106,16 +106,16 @@ public class UIScore : UIEntity
 		
 		switch (m_Rank)
 		{
-			case ScoreRank.S:
+			case ScoreRank.Platinum:
 				m_RankSIcon.SetAsLastSibling();
 				break;
-			case ScoreRank.A:
+			case ScoreRank.Gold:
 				m_RankAIcon.SetAsLastSibling();
 				break;
-			case ScoreRank.B:
+			case ScoreRank.Silver:
 				m_RankBIcon.SetAsLastSibling();
 				break;
-			case ScoreRank.C:
+			case ScoreRank.Bronze:
 				m_RankCIcon.SetAsLastSibling();
 				break;
 		}
@@ -164,8 +164,8 @@ public class UIScore : UIEntity
 
 	void ProcessExpPayout()
 	{
-		if (m_ExpPayoutLabel != null)
-			m_ExpPayoutLabel.Exp = (long)(m_ExpPayout * (double)m_ExpPayoutPhase);
+		if (m_PayoutLabel != null)
+			m_PayoutLabel.Coins = (long)(m_ExpPayout * (double)m_ExpPayoutPhase);
 	}
 
 	void InvokeFinished()

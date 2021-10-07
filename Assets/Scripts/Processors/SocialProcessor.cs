@@ -98,8 +98,6 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		GameCenterPlatform.ShowDefaultAchievementCompletionBanner(true);
-		
 		m_Auth = FirebaseAuth.DefaultInstance;
 		
 		m_Auth.StateChanged += StateChanged;

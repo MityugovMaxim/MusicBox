@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Advertisements;
 using Zenject;
@@ -19,7 +20,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	protected abstract string InterstitialID { get; }
 	protected abstract string RewardedID     { get; }
 
-	PurchaseProcessor m_PurchaseProcessor;
+	StoreProcessor m_StoreProcessor;
 	ProductInfo       m_NoAdsProduct;
 
 	bool m_InterstitialLoaded;
@@ -32,9 +33,9 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	Action m_RewardedFailed;
 
 	[Inject]
-	public void Construct(PurchaseProcessor _PurchaseProcessor, ProductInfo _NoAdsProduct)
+	public void Construct(StoreProcessor _StoreProcessor, ProductInfo _NoAdsProduct)
 	{
-		m_PurchaseProcessor = _PurchaseProcessor;
+		m_StoreProcessor = _StoreProcessor;
 		m_NoAdsProduct      = _NoAdsProduct;
 	}
 
@@ -45,7 +46,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void Reload()
 	{
-		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return;
 		
 		if (!Advertisement.isSupported)
@@ -60,7 +61,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowInterstitial(Action _Finished = null)
 	{
-		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Finished?.Invoke();
 			return;
@@ -96,7 +97,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowRewarded(Action _Success = null, Action _Failed = null)
 	{
-		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Success?.Invoke();
 			return;
@@ -129,12 +130,35 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		Advertisement.Show(RewardedID);
 	}
 
-	public void ShowInterstitialAsync(
+	public Task ShowInterstitialAsync(MonoBehaviour _Context)
+	{
+		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+		
+		ShowInterstitial(_Context, () => taskSource.TrySetResult(true));
+		
+		return taskSource.Task;
+	}
+
+	public Task<bool> ShowRewardedAsync(MonoBehaviour _Context)
+	{
+		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+		
+		ShowRewarded(
+			_Context,
+			() => taskSource.TrySetResult(true),
+			() => taskSource.TrySetResult(false),
+			() => taskSource.TrySetCanceled()
+		);
+		
+		return taskSource.Task;
+	}
+
+	public void ShowInterstitial(
 		MonoBehaviour _Context,
 		Action        _Finished = null
 	)
 	{
-		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Finished?.Invoke();
 			return;
@@ -143,14 +167,14 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		_Context.StartCoroutine(ShowInterstitialRoutine(_Finished));
 	}
 
-	public void ShowRewardedAsync(
+	public void ShowRewarded(
 		MonoBehaviour _Context,
 		Action        _Success = null,
 		Action        _Failed  = null,
 		Action        _Cancel  = null
 	)
 	{
-		if (m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Success?.Invoke();
 			return;

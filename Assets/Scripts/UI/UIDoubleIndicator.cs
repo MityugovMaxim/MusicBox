@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.Scripting;
+using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UIDoubleIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : FXPool<UIDoubleIndicator>
+	public class Pool : MemoryPool<UIDoubleIndicator>
 	{
 		protected override void Reinitialize(UIDoubleIndicator _Item)
 		{

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -17,6 +18,16 @@ public class UIEntity : UIBehaviour
 	protected bool IsInstanced => gameObject.scene.isLoaded;
 
 	[NonSerialized] RectTransform m_RectTransform;
+
+	public void BringToFront()
+	{
+		RectTransform.SetAsLastSibling();
+	}
+
+	public void BringToBack()
+	{
+		RectTransform.SetAsFirstSibling();
+	}
 
 	public Vector2 GetLocalPoint(Vector2 _Point)
 	{

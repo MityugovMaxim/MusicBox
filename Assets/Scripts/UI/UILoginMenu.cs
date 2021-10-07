@@ -10,26 +10,29 @@ public class UILoginMenu : UIMenu
 	SocialProcessor   m_SocialProcessor;
 	LevelProcessor    m_LevelProcessor;
 	ScoreProcessor    m_ScoreProcessor;
-	PurchaseProcessor m_PurchaseProcessor;
-	ProgressProcessor m_ProgressProcessor;
+	StoreProcessor m_StoreProcessor;
+	ProfileProcessor  m_ProfileProcessor;
 	MenuProcessor     m_MenuProcessor;
+	UrlProcessor      m_UrlProcessor;
 
 	[Inject]
 	public void Construct(
 		SocialProcessor   _SocialProcessor,
 		LevelProcessor    _LevelProcessor,
 		ScoreProcessor    _ScoreProcessor,
-		PurchaseProcessor _PurchaseProcessor,
-		ProgressProcessor _ProgressProcessor,
-		MenuProcessor     _MenuProcessor
+		StoreProcessor _StoreProcessor,
+		ProfileProcessor  _ProfileProcessor,
+		MenuProcessor     _MenuProcessor,
+		UrlProcessor      _UrlProcessor
 	)
 	{
 		m_SocialProcessor   = _SocialProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
-		m_PurchaseProcessor = _PurchaseProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
+		m_StoreProcessor = _StoreProcessor;
+		m_ProfileProcessor  = _ProfileProcessor;
 		m_MenuProcessor     = _MenuProcessor;
+		m_UrlProcessor      = _UrlProcessor;
 	}
 
 	protected override void OnShowStarted()
@@ -56,16 +59,16 @@ public class UILoginMenu : UIMenu
 		{
 			m_LevelProcessor.LoadLevels(),
 			m_ScoreProcessor.LoadScores(),
-			m_PurchaseProcessor.LoadProducts(),
-			m_PurchaseProcessor.LoadPurchases(),
-			m_ProgressProcessor.LoadWallet(),
+			m_StoreProcessor.LoadProducts(),
+			m_StoreProcessor.LoadPurchases(),
+			m_ProfileProcessor.LoadProfile(),
 		};
 		
 		await Task.WhenAll(tasks);
 		
-		m_PurchaseProcessor.LoadStore();
-		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		
+		m_UrlProcessor.ProcessURL("audiobox://product?product_id=no_ads");
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 	}

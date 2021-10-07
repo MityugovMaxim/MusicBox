@@ -9,17 +9,20 @@ public class UILoadingMenu : UIMenu
 
 	LevelProcessor m_LevelProcessor;
 	MenuProcessor  m_MenuProcessor;
+	MusicProcessor m_MusicProcessor;
 
 	string m_LevelID;
 
 	[Inject]
 	public void Construct(
 		LevelProcessor _LevelProcessor,
-		MenuProcessor  _MenuProcessor
+		MenuProcessor  _MenuProcessor,
+		MusicProcessor _MusicProcessor
 	)
 	{
 		m_LevelProcessor = _LevelProcessor;
 		m_MenuProcessor  = _MenuProcessor;
+		m_MusicProcessor = _MusicProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -42,14 +45,21 @@ public class UILoadingMenu : UIMenu
 		if (gameMenu != null)
 			gameMenu.Setup(m_LevelID);
 		
-		m_MenuProcessor.Show(MenuType.GameMenu, true);
+		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
+		if (pauseMenu != null)
+			pauseMenu.Setup(m_LevelID);
 		
-		if (m_LevelProcessor != null)
-			m_LevelProcessor.Create(m_LevelID);
+		m_MenuProcessor.Show(MenuType.GameMenu, true);
+		m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		
+		m_LevelProcessor.Create(m_LevelID);
 	}
 
 	protected override void OnHideFinished()
 	{
+		m_MusicProcessor.StopMusic();
+		m_MusicProcessor.StopAmbient();
+		
 		m_LevelProcessor.Play();
 	}
 

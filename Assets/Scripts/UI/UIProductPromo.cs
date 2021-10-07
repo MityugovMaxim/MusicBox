@@ -1,37 +1,33 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Zenject;
 
 [RequireComponent(typeof(CanvasGroup))]
-public class UIProductPromo : UIEntity, IPointerClickHandler
+public class UIProductPromo : UIGroup, IPointerClickHandler
 {
-	[SerializeField] UIProductPreviewLabel     m_Label;
-	[SerializeField] UIProductPreviewPrice     m_Price;
-	[SerializeField] UIProductPreviewThumbnail m_Thumbnail;
+	[SerializeField] UIProductLabel     m_Label;
+	[SerializeField] UIProductPrice     m_Price;
+	[SerializeField] UIProductThumbnail m_Thumbnail;
 
-	PurchaseProcessor m_PurchaseProcessor;
-	HapticProcessor   m_HapticProcessor;
-	MenuProcessor     m_MenuProcessor;
+	StoreProcessor  m_StoreProcessor;
+	HapticProcessor m_HapticProcessor;
+	MenuProcessor   m_MenuProcessor;
 
-	string      m_ProductID;
-	CanvasGroup m_CanvasGroup;
-	IEnumerator m_AlphaRoutine;
+	string m_ProductID;
 
 	[Inject]
 	public void Construct(
-		PurchaseProcessor _PurchaseProcessor,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor
+		StoreProcessor  _StoreProcessor,
+		MenuProcessor   _MenuProcessor,
+		HapticProcessor _HapticProcessor
 	)
 	{
-		m_PurchaseProcessor = _PurchaseProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
-		m_CanvasGroup       = GetComponent<CanvasGroup>();
+		m_StoreProcessor  = _StoreProcessor;
+		m_MenuProcessor   = _MenuProcessor;
+		m_HapticProcessor = _HapticProcessor;
 	}
 
-	public void Setup(string _ProductID)
+	public async void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
 		
@@ -41,81 +37,31 @@ public class UIProductPromo : UIEntity, IPointerClickHandler
 			return;
 		}
 		
-		void SetupInternal(bool _Success)
+		bool success = m_StoreProcessor.Loaded || await m_StoreProcessor.LoadStore();
+		
+		if (success && !m_StoreProcessor.IsProductPurchased(m_ProductID))
 		{
-			if (!_Success || m_PurchaseProcessor.IsProductPurchased(m_ProductID))
-			{
-				Hide();
-				return;
-			}
-			
 			m_Label.Setup(m_ProductID);
 			m_Price.Setup(m_ProductID);
 			m_Thumbnail.Setup(m_ProductID);
-			
 			Show();
 		}
-		
-		m_PurchaseProcessor.OnInitialize += SetupInternal;
-	}
-
-	void Show()
-	{
-		if (m_AlphaRoutine != null)
-			StopCoroutine(m_AlphaRoutine);
-		
-		m_AlphaRoutine = AlphaRoutine(m_CanvasGroup, 1, 0.3f);
-		
-		m_CanvasGroup.interactable   = true;
-		m_CanvasGroup.blocksRaycasts = true;
-		
-		StartCoroutine(m_AlphaRoutine);
-	}
-
-	void Hide()
-	{
-		if (m_AlphaRoutine != null)
-			StopCoroutine(m_AlphaRoutine);
-		
-		m_AlphaRoutine = AlphaRoutine(m_CanvasGroup, 0, 0.3f);
-		
-		m_CanvasGroup.interactable   = false;
-		m_CanvasGroup.blocksRaycasts = false;
-		
-		StartCoroutine(m_AlphaRoutine);
-	}
-
-	static IEnumerator AlphaRoutine(CanvasGroup _CanvasGroup, float _Alpha, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		float source = _CanvasGroup.alpha;
-		float target = Mathf.Clamp01(_Alpha);
-		
-		if (!Mathf.Approximately(source, target))
+		else
 		{
-			float time = 0;
-			while (time < _Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / _Duration);
-			}
+			Hide();
 		}
-		
-		_CanvasGroup.alpha = target;
 	}
 
-	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
+	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactHeavy);
 		
-		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>(MenuType.ProductMenu);
+		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		if (productMenu != null)
 			productMenu.Setup(m_ProductID);
-		m_MenuProcessor.Show(MenuType.ProductMenu);
+		
+		await m_MenuProcessor.Show(MenuType.ProductMenu);
+		await m_MenuProcessor.Show(MenuType.ShopMenu, true);
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 	}
 }

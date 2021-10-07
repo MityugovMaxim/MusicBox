@@ -60,7 +60,7 @@ public class MenuPrebuildProcessor : IPreprocessBuildWithReport
 			}
 		}
 		
-		File.WriteAllText(path, data.ToString());
+		File.WriteAllText(path, data.ToString().TrimEnd('\n'));
 		
 		AssetDatabase.SaveAssets();
 		AssetDatabase.Refresh();

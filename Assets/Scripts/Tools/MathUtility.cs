@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public static class MathUtility
@@ -17,7 +18,17 @@ public static class MathUtility
 		return (_Value - _Low) / (_High - _Low);
 	}
 
+	public static float Remap01(double _Value, double _Low, double _High)
+	{
+		return (float)((_Value - _Low) / (_High - _Low));
+	}
+
 	public static float Remap01Clamped(float _Value, float _Low, float _High)
+	{
+		return Mathf.Clamp01(Remap01(_Value, _Low, _High));
+	}
+
+	public static double Remap01Clamped(double _Value, double _Low, double _High)
 	{
 		return Mathf.Clamp01(Remap01(_Value, _Low, _High));
 	}

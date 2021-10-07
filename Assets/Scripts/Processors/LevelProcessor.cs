@@ -10,6 +10,48 @@ using Zenject;
 [Preserve]
 public class LevelDataUpdateSignal { }
 
+public class LevelSnapshot
+{
+	public int       Level  { get; }
+	public string    Title  { get; }
+	public string    Artist { get; }
+	public LevelMode Mode   { get; }
+	public float     Length { get; }
+	public float     BPM    { get; }
+	public float     Speed  { get; }
+	public bool      Locked { get; }
+	public long      Payout { get; }
+	public long      Price  { get; }
+	public string    Skin   { get; }
+
+	public LevelSnapshot(
+		int       _Level,
+		string    _Title,
+		string    _Artist,
+		LevelMode _LevelMode,
+		float     _Length,
+		float     _BPM,
+		float     _Speed,
+		bool      _Locked,
+		long      _Payout,
+		long      _Price,
+		string    _Skin
+	)
+	{
+		Level  = _Level;
+		Title  = _Title;
+		Artist = _Artist;
+		Mode   = _LevelMode;
+		Length = _Length;
+		BPM    = _BPM;
+		Speed  = _Speed;
+		Locked = _Locked;
+		Payout = _Payout;
+		Price  = _Price;
+		Skin   = _Skin;
+	}
+}
+
 [Preserve]
 public class LevelProcessor
 {
@@ -17,7 +59,7 @@ public class LevelProcessor
 	string m_LevelID;
 
 	readonly SignalBus         m_SignalBus;
-	readonly PurchaseProcessor m_PurchaseProcessor;
+	readonly StoreProcessor m_StoreProcessor;
 	[Preserve]
 	readonly StorageProcessor  m_StorageProcessor;
 	readonly Level.Factory     m_LevelFactory;
@@ -32,14 +74,14 @@ public class LevelProcessor
 	[Inject]
 	public LevelProcessor(
 		SignalBus         _SignalBus,
-		PurchaseProcessor _PurchaseProcessor,
+		StoreProcessor _StoreProcessor,
 		StorageProcessor  _StorageProcessor,
 		Level.Factory     _LevelFactory,
 		ProductInfo       _NoAdsProduct 
 	)
 	{
 		m_SignalBus         = _SignalBus;
-		m_PurchaseProcessor = _PurchaseProcessor;
+		m_StoreProcessor = _StoreProcessor;
 		m_StorageProcessor  = _StorageProcessor;
 		m_LevelFactory      = _LevelFactory;
 		m_NoAdsProduct      = _NoAdsProduct;
@@ -57,7 +99,7 @@ public class LevelProcessor
 
 	public List<string> GetLevelIDs()
 	{
-		return m_LevelIDs.Where(_LevelID => m_PurchaseProcessor.IsLevelPurchased(_LevelID)).ToList();
+		return m_LevelIDs.Where(_LevelID => m_StoreProcessor.IsLevelPurchased(_LevelID)).ToList();
 	}
 
 	public bool Contains(string _LevelID)
@@ -71,7 +113,7 @@ public class LevelProcessor
 		
 		if (levelSnapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Level info with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Level snapshot with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
@@ -117,6 +159,19 @@ public class LevelProcessor
 		return levelSnapshot.Price;
 	}
 
+	public int GetLevel(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get level failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelSnapshot.Level;
+	}
+
 	public string GetNextLevelID(string _LevelID)
 	{
 		List<string> levelIDs = GetLevelIDs();
@@ -153,7 +208,7 @@ public class LevelProcessor
 
 	public LevelMode GetLevelMode(string _LevelID)
 	{
-		if (m_NoAdsProduct != null && m_PurchaseProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_NoAdsProduct != null && m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 			return LevelMode.Free;
 		
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
@@ -285,19 +340,16 @@ public class LevelProcessor
 		
 		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
 		{
-			#if DEVELOPMENT_BUILD || UNITY_EDITOR
-			bool active = true;
-			#else
+			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
 			bool active = levelSnapshot.GetBool("active");
-			#endif
-			
 			if (!active)
 				continue;
+			#endif
 			
 			string levelID = levelSnapshot.Key;
 			
 			LevelSnapshot level = new LevelSnapshot(
-				true,
+				levelSnapshot.GetInt("level"),
 				levelSnapshot.GetString("title", string.Empty),
 				levelSnapshot.GetString("artist", string.Empty),
 				levelSnapshot.GetEnum<LevelMode>("mode"),
@@ -319,13 +371,13 @@ public class LevelProcessor
 	{
 		if (string.IsNullOrEmpty(_LevelID))
 		{
-			Debug.LogError("[ProgressProcessor] Get level info failed. Level ID is null or empty.");
+			Debug.LogError("[ProgressProcessor] Get level snapshot failed. Level ID is null or empty.");
 			return null;
 		}
 		
 		if (!m_LevelSnapshots.ContainsKey(_LevelID))
 		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get level info failed. Level with ID '{0}' not found.", _LevelID);
+			Debug.LogErrorFormat("[ProgressProcessor] Get level snapshot failed. Level with ID '{0}' not found.", _LevelID);
 			return null;
 		}
 		

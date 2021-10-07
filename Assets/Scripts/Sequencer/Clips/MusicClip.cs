@@ -49,7 +49,7 @@ public class MusicClip : Clip
 		{
 			double delta = (double)MinTime - _Time;
 			
-			m_AudioSource.PlayScheduled(AudioSettings.dspTime + delta - m_Latency);
+			m_AudioSource.PlayScheduled(AudioSettings.dspTime + delta);// - m_Latency);
 		}
 		else
 		{

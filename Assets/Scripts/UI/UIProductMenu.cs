@@ -7,17 +7,17 @@ using Zenject;
 [Menu(MenuType.ProductMenu)]
 public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 {
-	[SerializeField] UIProductMenuItem          m_Item;
-	[SerializeField] GameObject                 m_ItemsGroup;
-	[SerializeField] RectTransform              m_Container;
-	[SerializeField] UIProductPreviewBackground m_Background;
-	[SerializeField] UIProductPreviewThumbnail  m_Thumbnail;
-	[SerializeField] UIProductPreviewLabel      m_Label;
-	[SerializeField] UIProductPreviewPrice      m_Price;
-	[SerializeField] LevelPreviewAudioSource    m_PreviewSource;
+	[SerializeField] UIProductMenuItem       m_Item;
+	[SerializeField] GameObject              m_ItemsGroup;
+	[SerializeField] RectTransform           m_Container;
+	[SerializeField] UIProductBackground     m_Background;
+	[SerializeField] UIProductThumbnail      m_Thumbnail;
+	[SerializeField] UIProductLabel          m_Label;
+	[SerializeField] UIProductPrice          m_Price;
+	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	SignalBus                 m_SignalBus;
-	PurchaseProcessor         m_PurchaseProcessor;
+	StoreProcessor         m_StoreProcessor;
 	LevelProcessor            m_LevelProcessor;
 	MenuProcessor             m_MenuProcessor;
 	HapticProcessor           m_HapticProcessor;
@@ -30,7 +30,7 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 	[Inject]
 	public void Construct(
 		SignalBus                 _SignalBus,
-		PurchaseProcessor         _PurchaseProcessor,
+		StoreProcessor         _StoreProcessor,
 		LevelProcessor            _LevelProcessor,
 		MenuProcessor             _MenuProcessor,
 		HapticProcessor           _HapticProcessor,
@@ -38,7 +38,7 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 	)
 	{
 		m_SignalBus         = _SignalBus;
-		m_PurchaseProcessor = _PurchaseProcessor;
+		m_StoreProcessor = _StoreProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 		m_HapticProcessor   = _HapticProcessor;
@@ -72,7 +72,7 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 
 	public void Next()
 	{
-		m_ProductID = m_PurchaseProcessor.GetNextProductID(m_ProductID);
+		m_ProductID = m_StoreProcessor.GetNextProductID(m_ProductID);
 		
 		m_Background.Setup(m_ProductID);
 		m_Thumbnail.Setup(m_ProductID);
@@ -87,7 +87,7 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 
 	public void Previous()
 	{
-		m_ProductID = m_PurchaseProcessor.GetPreviousProductID(m_ProductID);
+		m_ProductID = m_StoreProcessor.GetPreviousProductID(m_ProductID);
 		
 		m_Background.Setup(m_ProductID);
 		m_Thumbnail.Setup(m_ProductID);
@@ -100,23 +100,23 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 			item.Stop();
 	}
 
-	public void Purchase()
+	public async void Purchase()
 	{
-		m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		m_PurchaseProcessor.Purchase(
-			m_ProductID,
-			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu),
-			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu),
-			_ProductID => m_MenuProcessor.Hide(MenuType.ProcessingMenu)
-		);
+		bool success = await m_StoreProcessor.Purchase(m_ProductID);
 		
-		m_PreviewSource.Stop();
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		foreach (UIProductMenuItem item in m_Items)
-			item.Stop();
+		if (success)
+		{
+			m_PreviewSource.Stop();
+			
+			m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+			
+			foreach (UIProductMenuItem item in m_Items)
+				item.Stop();
+		}
 	}
 
 	protected override void OnShowStarted()
@@ -139,10 +139,10 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 
 	void Refresh()
 	{
-		if (m_PurchaseProcessor == null)
+		if (m_StoreProcessor == null)
 			return;
 		
-		string[] levelIDs = m_PurchaseProcessor.GetLevelIDs(m_ProductID)
+		string[] levelIDs = m_StoreProcessor.GetLevelIDs(m_ProductID)
 			.Where(m_LevelProcessor.Contains)
 			.ToArray();
 		

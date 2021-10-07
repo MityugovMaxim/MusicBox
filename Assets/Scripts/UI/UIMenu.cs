@@ -36,11 +36,8 @@ public class UIMenu : UIEntity
 	}
 
 	[SerializeField] UIBlur m_Blur;
-
-	protected Action CloseAction;
-
-	[SerializeField] float m_ShowDuration = 0.2f;
-	[SerializeField] float m_HideDuration = 0.2f;
+	[SerializeField] float  m_ShowDuration = 0.2f;
+	[SerializeField] float  m_HideDuration = 0.2f;
 
 	Action m_ShowStarted;
 	Action m_ShowFinished;
@@ -131,8 +128,6 @@ public class UIMenu : UIEntity
 			
 			InvokeHideFinished();
 			
-			InvokeCloseAction();
-			
 			gameObject.SetActive(false);
 		}
 		else
@@ -219,8 +214,6 @@ public class UIMenu : UIEntity
 		
 		InvokeHideFinished();
 		
-		InvokeCloseAction();
-		
 		gameObject.SetActive(false);
 	}
 
@@ -285,13 +278,6 @@ public class UIMenu : UIEntity
 	{
 		Action action = m_HideFinished;
 		m_HideFinished = null;
-		action?.Invoke();
-	}
-
-	protected void InvokeCloseAction()
-	{
-		Action action = CloseAction;
-		CloseAction = null;
 		action?.Invoke();
 	}
 }

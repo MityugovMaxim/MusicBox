@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEngine.Scripting;
+using Zenject;
 
 public class UITapFX : UIEntity
 {
 	[Preserve]
-	public class Pool : FXPool<UITapFX> { }
+	public class Pool : MonoMemoryPool<UITapFX> { }
 
 	public float Duration => m_Duration;
 

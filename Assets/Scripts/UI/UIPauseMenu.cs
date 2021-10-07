@@ -7,12 +7,13 @@ public class UIPauseMenu : UIMenu
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 
-	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
-	[SerializeField] UIHapticState           m_HapticState;
+	[SerializeField] UILevelThumbnail m_Thumbnail;
+	[SerializeField] UIHapticState    m_HapticState;
 
-	MenuProcessor  m_MenuProcessor;
-	LevelProcessor m_LevelProcessor;
-	AdsProcessor   m_AdsProcessor;
+	MenuProcessor   m_MenuProcessor;
+	LevelProcessor  m_LevelProcessor;
+	AdsProcessor    m_AdsProcessor;
+	HapticProcessor m_HapticProcessor;
 
 	string m_LevelID;
 	int    m_RestartAdsCount;
@@ -20,14 +21,16 @@ public class UIPauseMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		MenuProcessor  _MenuProcessor,
-		LevelProcessor _LevelProcessor,
-		AdsProcessor   _AdsProcessor
+		MenuProcessor   _MenuProcessor,
+		LevelProcessor  _LevelProcessor,
+		AdsProcessor    _AdsProcessor,
+		HapticProcessor _HapticProcessor
 	)
 	{
-		m_MenuProcessor  = _MenuProcessor;
-		m_LevelProcessor = _LevelProcessor;
-		m_AdsProcessor   = _AdsProcessor;
+		m_MenuProcessor   = _MenuProcessor;
+		m_LevelProcessor  = _LevelProcessor;
+		m_AdsProcessor    = _AdsProcessor;
+		m_HapticProcessor = _HapticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -39,38 +42,9 @@ public class UIPauseMenu : UIMenu
 		m_HapticState.Setup();
 	}
 
-	public void Pause()
+	public async void Restart()
 	{
-		if (m_LevelProcessor != null)
-			m_LevelProcessor.Pause();
-		
-		Show();
-	}
-
-	public void Resume()
-	{
-		if (m_LevelProcessor != null)
-			m_LevelProcessor.Play();
-		
-		Hide();
-	}
-
-	public void Restart()
-	{
-		void RestartInternal()
-		{
-			if (m_LevelProcessor == null)
-			{
-				Debug.LogError("[UIPauseMenu] Restart level failed. Level provider is null.", gameObject);
-				return;
-			}
-			
-			m_LevelProcessor.Restart();
-			
-			CloseAction = m_LevelProcessor.Play;
-			
-			Hide();
-		}
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_RestartAdsCount++;
 		
@@ -78,40 +52,23 @@ public class UIPauseMenu : UIMenu
 		{
 			m_RestartAdsCount = 0;
 			
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowInterstitialAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					RestartInternal();
-				}
-			);
+			await m_AdsProcessor.ShowInterstitialAsync(this);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
-		else
-		{
-			RestartInternal();
-		}
+		
+		m_LevelProcessor.Restart();
+		
+		await m_MenuProcessor.Hide(MenuType.PauseMenu);
+		
+		m_LevelProcessor.Play();
 	}
 
-	public void Leave()
+	public async void Leave()
 	{
-		async void LeaveInternal()
-		{
-			if (m_LevelProcessor == null)
-			{
-				Debug.LogError("[UIPauseMenu] Leave level failed. Level provider is null.", gameObject);
-				return;
-			}
-			
-			m_LevelProcessor.Remove();
-			
-			await m_MenuProcessor.Show(MenuType.MainMenu);
-			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
-			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-		}
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_LeaveAdsCount++;
 		
@@ -119,22 +76,27 @@ public class UIPauseMenu : UIMenu
 		{
 			m_LeaveAdsCount = 0;
 			
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowInterstitialAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					LeaveInternal();
-				}
-			);
+			await m_AdsProcessor.ShowInterstitialAsync(this);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
-		else
-		{
-			LeaveInternal();
-		}
+		
+		m_LevelProcessor.Remove();
+		
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		if (mainMenu != null)
+			mainMenu.Setup(MainMenuPageType.Levels);
+		
+		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
+		if (levelMenu != null)
+			levelMenu.Setup(m_LevelID);
+		
+		await m_MenuProcessor.Show(MenuType.LevelMenu);
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 	}
 
 	public void Latency()

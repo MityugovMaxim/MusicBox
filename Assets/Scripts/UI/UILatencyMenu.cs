@@ -10,17 +10,17 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 {
 	const int MANUAL_LATENCY_STEP = 25;
 
-	[SerializeField] UILevelPreviewBackground m_Background;
-	[SerializeField] TMP_Text                 m_OutputNameLabel;
-	[SerializeField] TMP_Text                 m_ManualLatencyLabel;
-	[SerializeField] AudioSource              m_AudioSource;
-	[SerializeField] CanvasGroup              m_IndicatorGroup;
-	[SerializeField] RectTransform            m_Indicator;
-	[SerializeField] RectTransform            m_Zone;
-	[SerializeField] int                      m_MinLimit = -1000;
-	[SerializeField] int                      m_MaxLimit = 1000;
-	[SerializeField] Button                   m_IncreaseButton;
-	[SerializeField] Button                   m_DecreaseButton;
+	[SerializeField] UILevelBackground m_Background;
+	[SerializeField] TMP_Text          m_OutputNameLabel;
+	[SerializeField] TMP_Text          m_ManualLatencyLabel;
+	[SerializeField] AudioSource       m_AudioSource;
+	[SerializeField] CanvasGroup       m_IndicatorGroup;
+	[SerializeField] RectTransform     m_Indicator;
+	[SerializeField] RectTransform     m_Zone;
+	[SerializeField] int               m_MinLimit = -1000;
+	[SerializeField] int               m_MaxLimit = 1000;
+	[SerializeField] Button            m_IncreaseButton;
+	[SerializeField] Button            m_DecreaseButton;
 
 	SignalBus m_SignalBus;
 

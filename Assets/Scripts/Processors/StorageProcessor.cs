@@ -1,298 +1,215 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Firebase.Storage;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [Preserve]
-public class StorageProcessor : IInitializable, IDisposable
+public class StorageProcessor
 {
-	readonly Dictionary<string, Sprite>    m_LevelThumbnails    = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Sprite>    m_LevelBackgrounds   = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Sprite>    m_ProductThumbnails  = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, Sprite>    m_ProductBackgrounds = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, AudioClip> m_Previews           = new Dictionary<string, AudioClip>();
+	readonly Dictionary<string, Sprite>    m_SpriteCache    = new Dictionary<string, Sprite>();
+	readonly Dictionary<string, AudioClip> m_AudioClipCache = new Dictionary<string, AudioClip>();
 
-	FirebaseStorage  m_Storage;
-	StorageReference m_ThumbnailsReference;
-	StorageReference m_PreviewsReference;
-	[Preserve]
-	StorageReference m_LevelsReference;
-
-	readonly Dictionary<string, Action<Sprite>>    m_LevelActions   = new Dictionary<string, Action<Sprite>>();
-	readonly Dictionary<string, Action<Sprite>>    m_ProductActions = new Dictionary<string, Action<Sprite>>();
-	readonly Dictionary<string, Action<AudioClip>> m_PreviewActions = new Dictionary<string, Action<AudioClip>>();
-
-	void IInitializable.Initialize()
+	public async Task<Sprite> LoadSprite(string _RemotePath, CancellationToken _Token = default)
 	{
-		m_Storage = FirebaseStorage.DefaultInstance;
+		if (_Token.IsCancellationRequested)
+			return null;
 		
-		StorageReference reference = m_Storage.RootReference;
+		if (string.IsNullOrEmpty(_RemotePath))
+			return null;
 		
-		m_ThumbnailsReference = reference.Child("Thumbnails");
-		m_PreviewsReference   = reference.Child("Previews");
-		m_LevelsReference     = reference.Child("Levels");
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_LevelThumbnails.Clear();
-		m_LevelBackgrounds.Clear();
-		m_Previews.Clear();
-	}
-
-	public async void LoadPreview(string _LevelID, Action<AudioClip> _Complete)
-	{
-		if (m_Previews.ContainsKey(_LevelID) && m_Previews[_LevelID] != null && m_Previews[_LevelID].length > float.Epsilon)
-		{
-			AudioClip preview = m_Previews[_LevelID];
-			_Complete?.Invoke(preview);
-			return;
-		}
+		if (m_SpriteCache.ContainsKey(_RemotePath) && m_SpriteCache[_RemotePath] != null)
+			return m_SpriteCache[_RemotePath];
 		
-		StorageReference reference = m_PreviewsReference.Child($"{_LevelID}.ogg");
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
 		
 		if (reference == null)
-			return;
+			return null;
 		
-		if (m_PreviewActions.ContainsKey(_LevelID))
-		{
-			m_PreviewActions[_LevelID] += _Complete;
-			return;
-		}
+		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
-		m_PreviewActions[_LevelID] = _Complete;
+		if (string.IsNullOrEmpty(path))
+			return null;
 		
-		string directory = Path.Combine(Application.persistentDataPath, "Previews");
+		string directory = Path.GetDirectoryName(path);
+		
+		if (string.IsNullOrEmpty(directory))
+			return null;
 		
 		if (!Directory.Exists(directory))
 			Directory.CreateDirectory(directory);
 		
-		string path = Path.Combine(directory, $"{_LevelID}.ogg");
-		
-		string url = "file://" + path;
-		
-		if (File.Exists(path))
-		{
-			m_Previews[_LevelID] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS);
-			
-			if (m_PreviewActions.ContainsKey(_LevelID))
-			{
-				Action<AudioClip> action = m_PreviewActions[_LevelID];
-				m_PreviewActions.Remove(_LevelID);
-				action?.Invoke(m_Previews[_LevelID]);
-			}
-		}
-		
-		string key = $"{_LevelID}_preview";
+		string url = $"file://{path}";
 		
 		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
 		{
-			m_PreviewActions.Remove(_LevelID);
-			return;
+			Debug.LogFormat("[StorageProcessor] Load sprite '{0}'", _RemotePath);
+			
+			await reference.GetFileAsync(url, null, _Token);
+			
+			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
 		}
 		
-		Debug.LogFormat("[StorageProcessor] Load preview for level with ID '{0}'.", _LevelID);
+		m_SpriteCache[_RemotePath] = await WebRequest.LoadSprite(url, _Token);
 		
-		await reference.GetFileAsync(url);
-		
-		PlayerPrefs.SetString(key, metadata.Md5Hash);
-		
-		m_Previews[_LevelID] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS);
-		
-		if (m_PreviewActions.ContainsKey(_LevelID))
-		{
-			Action<AudioClip> action = m_PreviewActions[_LevelID];
-			m_PreviewActions.Remove(_LevelID);
-			action?.Invoke(m_Previews[_LevelID]);
-		}
+		return m_SpriteCache[_RemotePath];
 	}
 
-	public async void LoadLevelThumbnail(string _LevelID, Action<Sprite> _Complete)
+	public async Task<AudioClip> LoadAudioClip(string _RemotePath, CancellationToken _Token = default)
 	{
-		if (m_LevelThumbnails.ContainsKey(_LevelID) && m_LevelThumbnails[_LevelID] != null)
-		{
-			Sprite thumbnail = m_LevelThumbnails[_LevelID];
-			_Complete?.Invoke(thumbnail);
-			return;
-		}
+		if (_Token.IsCancellationRequested)
+			return null;
 		
-		StorageReference reference = m_ThumbnailsReference.Child("Levels").Child($"{_LevelID}.jpg");
+		if (string.IsNullOrEmpty(_RemotePath))
+			return null;
+		
+		if (m_AudioClipCache.ContainsKey(_RemotePath) && m_AudioClipCache[_RemotePath] != null)
+			return m_AudioClipCache[_RemotePath];
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
 		
 		if (reference == null)
-			return;
+			return null;
 		
-		if (m_LevelActions.ContainsKey(_LevelID))
-		{
-			m_LevelActions[_LevelID] += _Complete;
-			return;
-		}
+		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
-		m_LevelActions[_LevelID] = _Complete;
+		if (string.IsNullOrEmpty(path))
+			return null;
 		
-		string directory = Path.Combine(Application.persistentDataPath, "LevelThumbnails");
+		string directory = Path.GetDirectoryName(path);
+		
+		if (string.IsNullOrEmpty(directory))
+			return null;
 		
 		if (!Directory.Exists(directory))
 			Directory.CreateDirectory(directory);
 		
-		string path = Path.Combine(directory, $"{_LevelID}.jpg");
-		
-		string url = "file://" + path;
-		
-		if (File.Exists(path))
-		{
-			m_LevelThumbnails[_LevelID] = await WebRequest.LoadSprite(url);
-			
-			if (m_LevelActions.ContainsKey(_LevelID))
-			{
-				Action<Sprite> action = m_LevelActions[_LevelID];
-				m_LevelActions.Remove(_LevelID);
-				action?.Invoke(m_LevelThumbnails[_LevelID]);
-			}
-		}
-		
-		string key = $"{_LevelID}_level_thumbnail";
+		string url = $"file://{path}";
 		
 		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
 		{
-			m_LevelActions.Remove(_LevelID);
-			return;
+			Debug.LogFormat("[StorageProcessor] Load audio clip '{0}'", _RemotePath);
+			
+			await reference.GetFileAsync(url, null, _Token);
+			
+			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
 		}
 		
-		Debug.LogFormat("[StorageProcessor] Load thumbnail for level with ID '{0}'.", _LevelID);
+		m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
 		
-		await reference.GetFileAsync(url);
-		
-		PlayerPrefs.SetString(key, metadata.Md5Hash);
-		
-		m_LevelThumbnails[_LevelID] = await WebRequest.LoadSprite(url);
-		
-		if (m_LevelActions.ContainsKey(_LevelID))
-		{
-			Action<Sprite> action = m_LevelActions[_LevelID];
-			m_LevelActions.Remove(_LevelID);
-			action?.Invoke(m_LevelThumbnails[_LevelID]);
-		}
+		return m_AudioClipCache[_RemotePath];
 	}
 
-	public async void LoadProductThumbnail(string _ProductID, Action<Sprite> _Complete)
+	public async Task<AssetBundle> LoadAssetBundle(string _RemotePath, CancellationToken _Token = default)
 	{
-		if (m_ProductThumbnails.ContainsKey(_ProductID) && m_ProductThumbnails[_ProductID] != null)
-		{
-			Sprite thumbnail = m_ProductThumbnails[_ProductID];
-			_Complete?.Invoke(thumbnail);
-			return;
-		}
+		if (_Token.IsCancellationRequested)
+			return null;
 		
-		StorageReference reference = m_ThumbnailsReference.Child("Products").Child($"{_ProductID}.jpg");
+		if (string.IsNullOrEmpty(_RemotePath))
+			return null;
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
 		
 		if (reference == null)
-			return;
+			return null;
 		
-		if (m_ProductActions.ContainsKey(_ProductID))
-		{
-			m_ProductActions[_ProductID] += _Complete;
-			return;
-		}
+		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
-		m_ProductActions[_ProductID] = _Complete;
+		if (string.IsNullOrEmpty(path))
+			return null;
 		
-		string directory = Path.Combine(Application.persistentDataPath, "ProductThumbnails");
+		string directory = Path.GetDirectoryName(path);
+		
+		if (string.IsNullOrEmpty(directory))
+			return null;
 		
 		if (!Directory.Exists(directory))
 			Directory.CreateDirectory(directory);
 		
-		string path = Path.Combine(directory, $"{_ProductID}.jpg");
-		
-		string url = "file://" + path;
-		
-		if (File.Exists(path))
-		{
-			m_ProductThumbnails[_ProductID] = await WebRequest.LoadSprite(url);
-			
-			if (m_ProductActions.ContainsKey(_ProductID))
-			{
-				Action<Sprite> action = m_ProductActions[_ProductID];
-				m_ProductActions.Remove(_ProductID);
-				action?.Invoke(m_ProductThumbnails[_ProductID]);
-			}
-		}
-		
-		string key = $"{_ProductID}_product_thumbnail";
+		string url = $"file://{path}";
 		
 		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		if (PlayerPrefs.GetString(key, string.Empty) == metadata.Md5Hash && File.Exists(path))
+		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
 		{
-			m_ProductActions.Remove(_ProductID);
-			return;
+			Debug.LogFormat("[StorageProcessor] Load asset bundle '{0}'", _RemotePath);
+			
+			await reference.GetFileAsync(url, null, _Token);
+			
+			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
 		}
 		
-		Debug.LogFormat("[StorageProcessor] Load thumbnail for product with ID '{0}'.", _ProductID);
-		
-		await reference.GetFileAsync(url);
-		
-		PlayerPrefs.SetString(key, metadata.Md5Hash);
-		
-		m_ProductThumbnails[_ProductID] = await WebRequest.LoadSprite(url);
-		
-		if (m_ProductActions.ContainsKey(_ProductID))
-		{
-			Action<Sprite> action = m_ProductActions[_ProductID];
-			m_ProductActions.Remove(_ProductID);
-			action?.Invoke(m_ProductThumbnails[_ProductID]);
-		}
+		return await WebRequest.LoadAssetBundle(url, _Token);
 	}
 
-	#pragma warning disable 1998
-	public async Task<Track[]> LoadTracks(string _LevelID)
-	#pragma warning restore 1998
+	public async Task<AudioClip> LoadLevelPreview(string _LevelID, CancellationToken _Token = default)
+	{
+		return await LoadAudioClip($"Previews/{_LevelID}.ogg", _Token);
+	}
+
+	public async Task<Sprite> LoadLevelThumbnail(string _LevelID, CancellationToken _Token = default)
+	{
+		return await LoadSprite($"Thumbnails/Levels/{_LevelID}.jpg", _Token);
+	}
+
+	public async Task<Sprite> LoadProductThumbnail(string _ProductID, CancellationToken _Token = default)
+	{
+		return await LoadSprite($"Thumbnails/Products/{_ProductID}.jpg", _Token);
+	}
+
+	public async Task<Sprite> LoadLevelBackground(string _LevelID, CancellationToken _Token = default)
+	{
+		string path = $"Backgrounds/Levels/{_LevelID}.jpg";
+		
+		if (m_SpriteCache.ContainsKey(path) && m_SpriteCache[path] != null)
+			return m_SpriteCache[path];
+		
+		Sprite thumbnail = await LoadLevelThumbnail(_LevelID, _Token);
+		
+		if (thumbnail == null)
+			return null;
+		
+		m_SpriteCache[path] = BlurUtility.Blur(thumbnail, 0.5f, 8);
+		
+		return m_SpriteCache[path];
+	}
+
+	public async Task<Sprite> LoadProductBackground(string _ProductID, CancellationToken _Token = default)
+	{
+		string path = $"Backgrounds/Products/{_ProductID}.jpg";
+		
+		if (m_SpriteCache.ContainsKey(path) && m_SpriteCache[path] != null)
+			return m_SpriteCache[path];
+		
+		Sprite thumbnail = await LoadProductThumbnail(_ProductID, _Token);
+		
+		if (thumbnail == null)
+			return null;
+		
+		m_SpriteCache[path] = BlurUtility.Blur(thumbnail, 0.5f, 8);
+		
+		return m_SpriteCache[path];
+	}
+
+	public async Task<Track[]> LoadTracks(string _LevelID, CancellationToken _Token = default)
 	{
 		#if UNITY_EDITOR
-		return Directory.GetFiles($"Assets/Levels/{_LevelID}/Tracks/", "*.asset")
+		Track[] tracks = Directory.GetFiles($"Assets/Levels/{_LevelID}/Tracks/", "*.asset")
 			.Select(UnityEditor.AssetDatabase.LoadAssetAtPath<Track>)
 			.ToArray();
+		
+		await Task.Delay(500, _Token);
+		
+		return tracks;
 		#else
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[StorageProcessor] Load level failed. Level ID is null or empty.");
-			return null;
-		}
-		
-		StorageReference reference = m_LevelsReference.Child($"level.{_LevelID}.unity3d");
-		
-		if (reference == null)
-			return null;
-		
-		string directory = Path.Combine(Application.persistentDataPath, "Levels");
-		
-		if (!Directory.Exists(directory))
-			Directory.CreateDirectory(directory);
-		
-		string path = Path.Combine(directory, $"level.{_LevelID}.unity3d");
-		
-		string url = "file://" + path;
-		
-		string key = $"{_LevelID}_asset_bundle";
-		
-		StorageMetadata metadata = await reference.GetMetadataAsync();
-		
-		if (PlayerPrefs.GetString(key, string.Empty) != metadata.Md5Hash)
-		{
-			await reference.GetFileAsync(url);
-			
-			PlayerPrefs.SetString(key, metadata.Md5Hash);
-		}
-		
-		AssetBundle assetBundle = await WebRequest.LoadAssetBundle(url);
+		AssetBundle assetBundle = await LoadAssetBundle($"Levels/level.{_LevelID}.unity3d", _Token);
 		
 		Track[] tracks = assetBundle.LoadAllAssets<Track>();
 		
@@ -300,61 +217,5 @@ public class StorageProcessor : IInitializable, IDisposable
 		
 		return tracks;
 		#endif
-	}
-
-	public void LoadLevelBackground(string _LevelID, Action<Sprite> _Complete)
-	{
-		if (m_LevelBackgrounds.ContainsKey(_LevelID) && m_LevelBackgrounds[_LevelID] != null)
-		{
-			Sprite background = m_LevelBackgrounds[_LevelID];
-			_Complete?.Invoke(background);
-			return;
-		}
-		
-		LoadLevelThumbnail(
-			_LevelID,
-			_Thumbnail =>
-			{
-				if (_Thumbnail == null)
-				{
-					Debug.LogErrorFormat("[LevelProcessor] Get preview background failed. Preview thumbnail is null for level with ID '{0}'.", _LevelID);
-					return;
-				}
-				
-				Sprite background = BlurUtility.Blur(_Thumbnail, 0.5f, 8);
-				
-				m_LevelBackgrounds[_LevelID] = background;
-				
-				_Complete?.Invoke(background);
-			}
-		);
-	}
-
-	public void LoadProductBackground(string _ProductID, Action<Sprite> _Complete)
-	{
-		if (m_ProductBackgrounds.ContainsKey(_ProductID) && m_ProductBackgrounds[_ProductID] != null)
-		{
-			Sprite background = m_ProductBackgrounds[_ProductID];
-			_Complete?.Invoke(background);
-			return;
-		}
-		
-		LoadProductThumbnail(
-			_ProductID,
-			_Thumbnail =>
-			{
-				if (_Thumbnail == null)
-				{
-					Debug.LogErrorFormat("[LevelProcessor] Get preview background failed. Preview thumbnail is null for level with ID '{0}'.", _ProductID);
-					return;
-				}
-				
-				Sprite background = BlurUtility.Blur(_Thumbnail, 0.5f, 8);
-				
-				m_ProductBackgrounds[_ProductID] = background;
-				
-				_Complete?.Invoke(background);
-			}
-		);
 	}
 }

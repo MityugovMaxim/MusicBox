@@ -7,15 +7,17 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_ShowParameterID    = Animator.StringToHash("Show");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	MenuProcessor m_MenuProcessor;
+	MenuProcessor  m_MenuProcessor;
+	LevelProcessor m_LevelProcessor;
 
 	bool     m_Paused;
 	Animator m_Animator;
 
 	[Inject]
-	public void Construct(MenuProcessor _MenuProcessor)
+	public void Construct(MenuProcessor _MenuProcessor, LevelProcessor _LevelProcessor)
 	{
-		m_MenuProcessor = _MenuProcessor;
+		m_MenuProcessor  = _MenuProcessor;
+		m_LevelProcessor = _LevelProcessor;
 	}
 
 	protected override void Awake()
@@ -34,19 +36,18 @@ public class UIGamePauseButton : UIEntity
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
-	public void Resume()
+	public async void Resume()
 	{
 		if (!m_Paused)
 			return;
 		
 		m_Paused = false;
 		
-		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
-		
-		if (pauseMenu != null)
-			pauseMenu.Resume();
-		
 		m_Animator.SetBool(m_ShowParameterID, false);
+		
+		await m_MenuProcessor.Hide(MenuType.PauseMenu);
+		
+		m_LevelProcessor.Play();
 	}
 
 	public void Pause()
@@ -56,12 +57,11 @@ public class UIGamePauseButton : UIEntity
 		
 		m_Paused = true;
 		
-		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
-		
-		if (pauseMenu != null)
-			pauseMenu.Pause();
-		
 		m_Animator.SetBool(m_ShowParameterID, true);
+		
+		m_MenuProcessor.Show(MenuType.PauseMenu);
+		
+		m_LevelProcessor.Pause();
 	}
 
 	public void Toggle()

@@ -1,23 +1,29 @@
 using UnityEngine;
 using UnityEngine.iOS;
-using UnityEngine.Scripting;
 using Zenject;
-using Debug = UnityEngine.Debug;
+
+public enum ResultMenuPageType
+{
+	Discs,
+	Coins,
+	Result
+} 
 
 [Menu(MenuType.ResultMenu)]
 public class UIResultMenu : UIMenu
 {
+	// TODO: Move to remote config
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 	const int NEXT_ADS_COUNT    = 2;
 	const int RATE_US_COUNT     = 2;
 
-	[SerializeField] UILevelPreviewBackground m_Background;
-	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
-	[SerializeField] UILevelPreviewLabel      m_Label;
-	[SerializeField] UIScore                  m_Score;
-	[SerializeField] UILevelLike              m_LikeButton;
-	[SerializeField] UILevelModeButton        m_RestartButton;
+	[SerializeField] UILevelBackground m_Background;
+	[SerializeField] UILevelThumbnail  m_Thumbnail;
+	[SerializeField] UILevelLabel      m_Label;
+	[SerializeField] UIResultProgress  m_Progress;
+	[SerializeField] UILevelLikeButton m_LikeButton;
+	[SerializeField] UILevelModeButton m_RestartButton;
 
 	MenuProcessor   m_MenuProcessor;
 	LevelProcessor  m_LevelProcessor;
@@ -53,45 +59,24 @@ public class UIResultMenu : UIMenu
 		m_Background.Setup(m_LevelID, true);
 		m_Thumbnail.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
-		m_Score.Setup(m_LevelID);
+		m_Progress.Setup();
 		m_LikeButton.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
 	}
 
-	public void Restart()
+	public async void Restart()
 	{
-		void RestartInternal()
-		{
-			if (m_LevelProcessor == null)
-			{
-				Debug.LogError("[UIResultMenu] Restart level failed. Level provider is null.", gameObject);
-				return;
-			}
-			
-			m_LevelProcessor.Restart();
-			
-			CloseAction = m_LevelProcessor.Play;
-			
-			Hide();
-		}
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
 		
 		if (levelMode == LevelMode.Ads)
 		{
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowRewardedAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					RestartInternal();
-				},
-				() => m_MenuProcessor.Hide(MenuType.ProcessingMenu, true),
-				() => m_MenuProcessor.Hide(MenuType.ProcessingMenu)
-			);
+			await m_AdsProcessor.ShowRewardedAsync(this);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
 		else
 		{
@@ -101,42 +86,26 @@ public class UIResultMenu : UIMenu
 			{
 				m_RestartAdsCount = 0;
 				
-				m_MenuProcessor.Show(MenuType.ProcessingMenu);
+				await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 				
-				m_AdsProcessor.ShowInterstitialAsync(
-					this,
-					() =>
-					{
-						m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-						
-						RestartInternal();
-					}
-				);
-			}
-			else
-			{
-				RestartInternal();
+				await m_AdsProcessor.ShowInterstitialAsync(this);
+				
+				await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 			}
 		}
+		
+		m_LevelProcessor.Restart();
+		
+		await m_MenuProcessor.Show(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		await m_MenuProcessor.Hide(MenuType.ResultMenu);
+		
+		m_LevelProcessor.Play();
 	}
 
-	public void Leave()
+	public async void Leave()
 	{
-		async void LeaveInternal()
-		{
-			if (m_LevelProcessor == null)
-			{
-				Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
-				return;
-			}
-			
-			m_LevelProcessor.Remove();
-			
-			await m_MenuProcessor.Show(MenuType.MainMenu);
-			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
-			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
-			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-		}
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_LeaveAdsCount++;
 		
@@ -144,48 +113,27 @@ public class UIResultMenu : UIMenu
 		{
 			m_LeaveAdsCount = 0;
 			
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowInterstitialAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					LeaveInternal();
-				}
-			);
-		}
-		else
-		{
-			LeaveInternal();
-		}
-	}
-
-	[Preserve]
-	public void Next()
-	{
-		async void NextInternal()
-		{
-			if (m_LevelProcessor == null)
-			{
-				Debug.LogError("[UIResultMenu] Leave level failed. Level provider is null.", gameObject);
-				return;
-			}
+			await m_AdsProcessor.ShowInterstitialAsync(this);
 			
-			m_LevelProcessor.Remove();
-			
-			UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
-			if (levelMenu != null)
-				levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
-			
-			await m_MenuProcessor.Show(MenuType.LevelMenu);
-			await m_MenuProcessor.Show(MenuType.MainMenu, true);
-			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
-			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
-			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		}
 		
+		m_LevelProcessor.Remove();
+		
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		if (mainMenu != null)
+			mainMenu.Setup(MainMenuPageType.Levels);
+		
+		await m_MenuProcessor.Show(MenuType.MainMenu);
+		await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+	}
+
+	public async void Next()
+	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_NextAdsCount++;
@@ -194,60 +142,48 @@ public class UIResultMenu : UIMenu
 		{
 			m_NextAdsCount = 0;
 			
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowInterstitialAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					NextInternal();
-				}
-			);
-		}
-		else
-		{
-			NextInternal();
-		}
-	}
-
-	protected override void OnShowStarted()
-	{
-		if (m_Score != null)
-			m_Score.Restore();
-	}
-
-	protected override void OnShowFinished()
-	{
-		void ScoreFinished()
-		{
-			if (m_RateUsCount >= RATE_US_COUNT)
-			{
-				m_RateUsCount = 0;
-				
-				Device.RequestStoreReview();
-			}
+			await m_AdsProcessor.ShowInterstitialAsync(this);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
 		
-		if (m_Score != null)
-			m_Score.Play(ScoreFinished);
-		else
-			ScoreFinished();
+		m_LevelProcessor.Remove();
 		
-		if (m_LevelProcessor != null)
-			m_LevelProcessor.Pause();
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>(MenuType.MainMenu);
+		if (mainMenu != null)
+			mainMenu.Setup(MainMenuPageType.Levels);
+		
+		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>(MenuType.LevelMenu);
+		if (levelMenu != null)
+			levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
+		
+		await m_MenuProcessor.Show(MenuType.LevelMenu);
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+	}
+
+	protected override async void OnShowFinished()
+	{
+		m_LevelProcessor.Pause();
+		
+		await m_Progress.Play();
+		
+		m_RateUsCount++;
+		
+		if (m_RateUsCount >= RATE_US_COUNT)
+		{
+			m_RateUsCount = 0;
+			
+			Device.RequestStoreReview();
+		}
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_LikeButton != null)
-			m_LikeButton.Execute();
-	}
-
-	protected override void OnHideFinished()
-	{
-		if (m_Score != null)
-			m_Score.Restore();
+		m_LikeButton.Execute();
 	}
 }

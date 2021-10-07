@@ -91,7 +91,6 @@ public class StatisticProcessor : IInitializable, IDisposable
 				{ "accuracy", m_ScoreProcessor.Accuracy },
 				{ "score", m_ScoreProcessor.Score },
 				{ "rank", m_ScoreProcessor.Rank.ToString() },
-				{ "is_record", m_ScoreProcessor.IsRecord },
 			}
 		);
 	}
@@ -106,7 +105,6 @@ public class StatisticProcessor : IInitializable, IDisposable
 				{ "accuracy", m_ScoreProcessor.Accuracy },
 				{ "score", m_ScoreProcessor.Score },
 				{ "rank", m_ScoreProcessor.Rank.ToString() },
-				{ "is_record", m_ScoreProcessor.IsRecord },
 			}
 		);
 	}

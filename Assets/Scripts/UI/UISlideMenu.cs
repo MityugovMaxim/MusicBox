@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandler
 {
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+	[SerializeField] RectTransform  m_Content;
 
 	IEnumerator m_RepositionRoutine;
 
@@ -13,7 +14,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		if (m_RepositionRoutine != null)
 			StopCoroutine(m_RepositionRoutine);
 		
-		m_RepositionRoutine = ExpandRoutine(RectTransform, ShowDuration);
+		m_RepositionRoutine = ExpandRoutine(m_Content, ShowDuration);
 		
 		StartCoroutine(m_RepositionRoutine);
 	}
@@ -23,7 +24,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		if (m_RepositionRoutine != null)
 			StopCoroutine(m_RepositionRoutine);
 		
-		m_RepositionRoutine = ShrinkRoutine(RectTransform, HideDuration);
+		m_RepositionRoutine = ShrinkRoutine(m_Content, HideDuration);
 		
 		StartCoroutine(m_RepositionRoutine);
 	}
@@ -35,7 +36,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		
 		_CanvasGroup.alpha = 1;
 		
-		yield return ExpandRoutine(RectTransform, _Duration);
+		yield return ExpandRoutine(m_Content, _Duration);
 	}
 
 	protected override IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
@@ -45,23 +46,23 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		
 		_CanvasGroup.alpha = 1;
 		
-		yield return ShrinkRoutine(RectTransform, _Duration);
+		yield return ShrinkRoutine(m_Content, _Duration);
 	}
 
 	protected override void InstantShow(CanvasGroup _CanvasGroup)
 	{
 		base.InstantShow(_CanvasGroup);
 		
-		RectTransform.anchorMin = Vector2.zero;
-		RectTransform.anchorMax = Vector2.one;
+		m_Content.anchorMin = Vector2.zero;
+		m_Content.anchorMax = Vector2.one;
 	}
 
 	protected override void InstantHide(CanvasGroup _CanvasGroup)
 	{
 		base.InstantHide(_CanvasGroup);
 		
-		RectTransform.anchorMin = new Vector2(0, -1);
-		RectTransform.anchorMax = new Vector2(1, 0);
+		m_Content.anchorMin = new Vector2(0, -1);
+		m_Content.anchorMax = new Vector2(1, 0);
 	}
 
 	IEnumerator ExpandRoutine(RectTransform _RectTransform, float _Duration)
@@ -126,14 +127,14 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 	{
 		float delta = _EventData.delta.y / Screen.height;
 		
-		Vector2 min = RectTransform.anchorMin;
-		Vector2 max = RectTransform.anchorMax;
+		Vector2 min = m_Content.anchorMin;
+		Vector2 max = m_Content.anchorMax;
 		
 		min.y = Mathf.Clamp(min.y + delta, -1, 0);
 		max.y = Mathf.Clamp(max.y + delta, 0, 1);
 		
-		RectTransform.anchorMin = min;
-		RectTransform.anchorMax = max;
+		m_Content.anchorMin = min;
+		m_Content.anchorMax = max;
 	}
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
@@ -149,7 +150,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		
 		float speed = _EventData.delta.y / Screen.height / Time.deltaTime;
 		
-		Vector2 anchor = RectTransform.anchorMax;
+		Vector2 anchor = m_Content.anchorMax;
 		
 		if (speed > speedThreshold)
 			Expand();

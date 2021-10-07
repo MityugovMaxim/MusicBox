@@ -29,6 +29,20 @@ public class UISplineCurve : MaskableGraphic
 		}
 	}
 
+	public float Offset
+	{
+		get => m_Offset;
+		set
+		{
+			if (Mathf.Approximately(m_Offset, value))
+				return;
+			
+			m_Offset = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
 	public Sprite Sprite
 	{
 		get => m_Sprite;

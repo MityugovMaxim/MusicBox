@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class MenuProcessor : IInitializable, IDisposable
+public class MenuProcessor : IInitializable
 {
 	readonly Dictionary<MenuType, UIMenu>   m_MenuCache = new Dictionary<MenuType, UIMenu>();
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos = new Dictionary<MenuType, MenuInfo>();
@@ -42,55 +41,7 @@ public class MenuProcessor : IInitializable, IDisposable
 			}
 		}
 		
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		
 		Show(MenuType.LoginMenu, true);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		UIPauseMenu pauseMenu = GetMenu<UIPauseMenu>(MenuType.PauseMenu);
-		if (pauseMenu != null)
-			pauseMenu.Setup(_Signal.LevelID);
-		
-		Hide(MenuType.MainMenu, true);
-		Hide(MenuType.LevelMenu, true);
-		Hide(MenuType.ResultMenu, true);
-		Hide(MenuType.PauseMenu, true);
-		
-		UIGameMenu gameMenu = GetMenu<UIGameMenu>(MenuType.GameMenu);
-		if (gameMenu != null)
-			gameMenu.Setup(_Signal.LevelID);
-		
-		Show(MenuType.GameMenu, true);
-		Hide(MenuType.LoadingMenu);
-	}
-
-	void RegisterLevelFinish(LevelFinishSignal _Signal)
-	{
-		UIResultMenu resultMenu = GetMenu<UIResultMenu>(MenuType.ResultMenu);
-		if (resultMenu != null)
-			resultMenu.Setup(_Signal.LevelID);
-		
-		Show(MenuType.ResultMenu);
-	}
-
-	void RegisterLevelRestart(LevelRestartSignal _Signal)
-	{
-		Hide(MenuType.MainMenu, true);
-		Hide(MenuType.LevelMenu, true);
-		
-		Show(MenuType.GameMenu, true);
-		Hide(MenuType.ResultMenu);
 	}
 
 	public T GetMenu<T>() where T : UIMenu

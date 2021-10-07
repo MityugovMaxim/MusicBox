@@ -11,7 +11,7 @@ public class UIProductMenuItem : UIEntity
 	[UnityEngine.Scripting.Preserve]
 	public class Factory : PlaceholderFactory<UIProductMenuItem, UIProductMenuItem> { }
 
-	[SerializeField] UILevelPreviewThumbnail m_Thumbnail;
+	[SerializeField] UILevelThumbnail m_Thumbnail;
 	[SerializeField] Button                  m_PlayButton;
 	[SerializeField] Button                  m_PauseButton;
 

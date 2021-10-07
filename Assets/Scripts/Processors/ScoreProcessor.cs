@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
@@ -8,11 +9,69 @@ using Zenject;
 
 public enum ScoreRank
 {
-	None = 0,
-	C    = 1,
-	B    = 2,
-	A    = 3,
-	S    = 4,
+	None     = 0,
+	Bronze   = 1,
+	Silver   = 2,
+	Gold     = 3,
+	Platinum = 4,
+}
+
+public static class ScoreRankExtension
+{
+	public static ScoreRank Next(this ScoreRank _Rank)
+	{
+		ScoreRank[] ranks = Enum.GetValues(typeof(ScoreRank)).OfType<ScoreRank>().ToArray();
+		
+		int minRank = ranks.Cast<int>().Min();
+		int maxRank = ranks.Cast<int>().Max();
+		
+		return (ScoreRank)Mathf.Clamp((int)_Rank + 1, minRank, maxRank);
+	}
+
+	public static ScoreRank Previous(this ScoreRank _Rank)
+	{
+		ScoreRank[] ranks = Enum.GetValues(typeof(ScoreRank)).OfType<ScoreRank>().ToArray();
+		
+		int minRank = ranks.Cast<int>().Min();
+		int maxRank = ranks.Cast<int>().Max();
+		
+		return (ScoreRank)Mathf.Clamp((int)_Rank - 1, minRank, maxRank);
+	}
+
+	public static ScoreRank Max(this ScoreRank _A, ScoreRank _B)
+	{
+		return (ScoreRank)Mathf.Max((int)_A, (int)_B);
+	}
+
+	public static ScoreRank Min(this ScoreRank _A, ScoreRank _B)
+	{
+		return (ScoreRank)Mathf.Min((int)_A, (int)_B);
+	}
+}
+
+public class ScoreSnapshot
+{
+	public int       Accuracy { get; }
+	public long      Score    { get; }
+	public ScoreRank Rank     { get; }
+
+	public ScoreSnapshot(
+		int       _Accuracy,
+		long      _Score,
+		ScoreRank _Rank
+	)
+	{
+		Accuracy = _Accuracy;
+		Score    = _Score;
+		Rank     = _Rank;
+	}
+
+	public ScoreSnapshot(ScoreSnapshot _ScoreSnapshot)
+	{
+		Accuracy = _ScoreSnapshot?.Accuracy ?? 0;
+		Score    = _ScoreSnapshot?.Score ?? 0;
+		Rank     = _ScoreSnapshot?.Rank ?? ScoreRank.None;
+	}
 }
 
 public class ScoreDataUpdateSignal { }
@@ -35,10 +94,10 @@ public class ScoreProcessor : IInitializable, IDisposable
 	const float DOUBLE_PERFECT_THRESHOLD  = 0.65f;
 	const float DOUBLE_GOOD_THRESHOLD     = 0.35f;
 
-	const int S_RANK = 98;
-	const int A_RANK = 85;
-	const int B_RANK = 50;
-	const int C_RANK = 5;
+	const int PLATINUM_RANK = 98;
+	const int GOLD_RANK     = 85;
+	const int SILVER_RANK   = 50;
+	const int BRONZE_RANK   = 5;
 
 	const int X4_COMBO = 150;
 	const int X3_COMBO = 60;
@@ -61,20 +120,22 @@ public class ScoreProcessor : IInitializable, IDisposable
 		get
 		{
 			int accuracy = Accuracy;
-			if (accuracy >= S_RANK)
-				return ScoreRank.S;
-			else if (accuracy > A_RANK)
-				return ScoreRank.A;
-			else if (accuracy > B_RANK)
-				return ScoreRank.B;
-			else if (accuracy > C_RANK)
-				return ScoreRank.C;
+			if (accuracy >= PLATINUM_RANK)
+				return ScoreRank.Platinum;
+			else if (accuracy > GOLD_RANK)
+				return ScoreRank.Gold;
+			else if (accuracy > SILVER_RANK)
+				return ScoreRank.Silver;
+			else if (accuracy > BRONZE_RANK)
+				return ScoreRank.Bronze;
 			else
 				return ScoreRank.None;
 		}
 	}
 
-	public bool IsRecord => m_ScoreSnapshot != null && m_ScoreSnapshot.Accuracy < Accuracy;
+	public int       OriginAccuracy => m_ScoreSnapshot?.Accuracy ?? 0;
+	public long      OriginScore    => m_ScoreSnapshot?.Score ?? 0;
+	public ScoreRank OriginRank     => m_ScoreSnapshot?.Rank ?? ScoreRank.None;
 
 	public int Multiplier
 	{
@@ -230,6 +291,44 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return scoreSnapshot != null ? scoreSnapshot.Rank : ScoreRank.None;
 	}
 
+	public int GetRankMinAccuracy(ScoreRank _Rank)
+	{
+		switch (_Rank)
+		{
+			case ScoreRank.None:
+				return 0;
+			case ScoreRank.Bronze:
+				return BRONZE_RANK;
+			case ScoreRank.Silver:
+				return SILVER_RANK;
+			case ScoreRank.Gold:
+				return GOLD_RANK;
+			case ScoreRank.Platinum:
+				return PLATINUM_RANK;
+			default:
+				return 0;
+		}
+	}
+
+	public int GetRankMaxAccuracy(ScoreRank _Rank)
+	{
+		switch (_Rank)
+		{
+			case ScoreRank.None:
+				return BRONZE_RANK;
+			case ScoreRank.Bronze:
+				return SILVER_RANK;
+			case ScoreRank.Silver:
+				return GOLD_RANK;
+			case ScoreRank.Gold:
+				return PLATINUM_RANK;
+			case ScoreRank.Platinum:
+				return 100;
+			default:
+				return 100;
+		}
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
@@ -267,14 +366,14 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
-		m_ScoreSnapshot = GetScoreSnapshot(_Signal.LevelID);
+		m_ScoreSnapshot = new ScoreSnapshot(GetScoreSnapshot(_Signal.LevelID));
 		
 		Restore();
 	}
 
 	void RegisterLevelRestart(LevelRestartSignal _Signal)
 	{
-		m_ScoreSnapshot = GetScoreSnapshot(_Signal.LevelID);
+		m_ScoreSnapshot = new ScoreSnapshot(GetScoreSnapshot(_Signal.LevelID));
 		
 		Restore();
 	}

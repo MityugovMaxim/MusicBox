@@ -55,6 +55,13 @@ public class UIConstraint : UIEntity
 		Resolve();
 	}
 
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		Resolve();
+	}
+
 	protected override void OnTransformParentChanged()
 	{
 		base.OnTransformParentChanged();

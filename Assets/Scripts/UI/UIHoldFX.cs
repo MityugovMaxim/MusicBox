@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEngine.Scripting;
+using Zenject;
 
 public class UIHoldFX : UIEntity
 {
 	[Preserve]
-	public class Pool : FXPool<UIHoldFX> { }
+	public class Pool : MonoMemoryPool<UIHoldFX> { }
 
 	public float Duration => m_Duration;
 

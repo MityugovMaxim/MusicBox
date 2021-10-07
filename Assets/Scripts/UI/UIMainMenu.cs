@@ -1,139 +1,77 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-[Menu(MenuType.MainMenu)]
-public class UIMainMenu : UIMenu, IInitializable, IDisposable
+public enum MainMenuPageType
 {
-	[SerializeField] UIMainMenuItem m_Item;
-	[SerializeField] RectTransform  m_Container;
-	[SerializeField] UIProductPromo m_ProductPromo;
+	News    = 0,
+	Store   = 1,
+	Levels  = 2,
+	Profile = 3,
+	Offers  = 4,
+}
 
-	SignalBus              m_SignalBus;
-	LevelProcessor         m_LevelProcessor;
-	MenuProcessor          m_MenuProcessor;
-	SocialProcessor        m_SocialProcessor;
-	ConfigProcessor        m_ConfigProcessor;
-	UIMainMenuItem.Factory m_ItemFactory;
+[Menu(MenuType.MainMenu)]
+public class UIMainMenu : UIMenu, IInitializable
+{
+	[SerializeField] UIProductPromo    m_ProductPromo;
+	[SerializeField] UIMainMenuPage[]  m_Pages;
+	[SerializeField] UIMainMenuControl m_Control;
 
-	readonly List<UIMainMenuItem> m_Items = new List<UIMainMenuItem>();
-
-	List<string> m_LevelIDs;
+	SignalBus      m_SignalBus;
+	StoreProcessor m_StoreProcessor;
 
 	[Inject]
 	public void Construct(
-		SignalBus              _SignalBus,
-		LevelProcessor         _LevelProcessor,
-		MenuProcessor          _MenuProcessor,
-		SocialProcessor _SocialProcessor,
-		ConfigProcessor        _ConfigProcessor,
-		UIMainMenuItem.Factory _ItemFactory
+		SignalBus      _SignalBus,
+		StoreProcessor _StoreProcessor 
 	)
 	{
-		m_SignalBus       = _SignalBus;
-		m_LevelProcessor  = _LevelProcessor;
-		m_MenuProcessor   = _MenuProcessor;
-		m_SocialProcessor = _SocialProcessor;
-		m_ConfigProcessor = _ConfigProcessor;
-		m_ItemFactory     = _ItemFactory;
+		m_SignalBus      = _SignalBus;
+		m_StoreProcessor = _StoreProcessor;
 	}
 
-	public async void Shop()
+	public void Setup(MainMenuPageType _PageType)
 	{
-		await m_MenuProcessor.Show(MenuType.ShopMenu);
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		foreach (UIMainMenuPage page in m_Pages)
+		{
+			if (page.Type == _PageType)
+				page.Show();
+			else
+				page.Hide();
+		}
+		
+		m_Control.Select(_PageType);
 	}
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
-		m_SignalBus.Subscribe<ConfigSignal>(RegisterConfig);
-		m_SignalBus.Subscribe<LevelDataUpdateSignal>(RegisterLevelDataUpdate);
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
-		m_SignalBus.Unsubscribe<ConfigSignal>(RegisterConfig);
-		m_SignalBus.Unsubscribe<LevelDataUpdateSignal>(RegisterLevelDataUpdate);
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+		foreach (UIMainMenuPage page in m_Pages)
+		{
+			if (page.Type == MainMenuPageType.Levels)
+				page.Show(true);
+			else
+				page.Hide(true);
+		}
+		
+		m_Control.Select(MainMenuPageType.Levels, true);
 	}
 
 	protected override void OnShowStarted()
 	{
 		Refresh();
-	}
-
-	public void Login()
-	{
-		m_SocialProcessor.AttachGoogleID();
-	}
-
-	void RegisterPurchase()
-	{
-		Refresh();
 		
-		m_ProductPromo.Setup(m_ConfigProcessor.PromoProductID);
+		m_SignalBus.Subscribe<PurchaseSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
-	void RegisterConfig()
+	protected override void OnHideFinished()
 	{
-		m_ProductPromo.Setup(m_ConfigProcessor.PromoProductID);
-	}
-
-	void RegisterLevelDataUpdate()
-	{
-		Refresh();
-	}
-
-	void RegisterScoreDataUpdate()
-	{
-		Refresh();
+		m_SignalBus.Unsubscribe<PurchaseSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()
 	{
-		if (m_LevelProcessor == null)
-			return;
-		
-		m_LevelIDs = m_LevelProcessor.GetLevelIDs();
-		
-		int delta = m_LevelIDs.Count - m_Items.Count;
-		int count = Mathf.Abs(delta);
-		
-		if (delta > 0)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				UIMainMenuItem item = m_ItemFactory.Create(m_Item);
-				item.RectTransform.SetParent(m_Container, false);
-				m_Items.Add(item);
-			}
-		}
-		else if (delta < 0)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				int            index = m_Items.Count - 1;
-				UIMainMenuItem item  = m_Items[index];
-				Destroy(item.gameObject);
-				m_Items.RemoveAt(index);
-			}
-		}
-		
-		foreach (UIMainMenuItem item in m_Items)
-			item.gameObject.SetActive(false);
-		
-		for (var i = 0; i < m_LevelIDs.Count; i++)
-		{
-			UIMainMenuItem item    = m_Items[i];
-			string         levelID = m_LevelIDs[i];
-			
-			item.Setup(levelID);
-			
-			item.gameObject.SetActive(true);
-		}
+		m_ProductPromo.Setup(m_StoreProcessor.GetPromoProductID());
 	}
 }

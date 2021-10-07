@@ -11,4 +11,5 @@ public enum MenuType
 	ResultMenu     = 8,
 	ProcessingMenu = 9,
 	LatencyMenu    = 10,
+	ErrorMenu      = 11,
 }

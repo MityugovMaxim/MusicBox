@@ -9,19 +9,19 @@ public class UILevelModeButton : UIEntity
 	[SerializeField] Image  m_LockIcon;
 
 	LevelProcessor    m_LevelProcessor;
-	ProgressProcessor m_ProgressProcessor;
+	ProfileProcessor m_ProfileProcessor;
 
 	[Inject]
-	public void Construct(LevelProcessor _LevelProcessor, ProgressProcessor _ProgressProcessor)
+	public void Construct(LevelProcessor _LevelProcessor, ProfileProcessor _ProfileProcessor)
 	{
 		m_LevelProcessor    = _LevelProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
 	}
 
 	public void Setup(string _LevelID)
 	{
 		LevelMode levelMode     = m_LevelProcessor.GetLevelMode(_LevelID);
-		bool      levelUnlocked = m_ProgressProcessor.IsLevelUnlocked(_LevelID);
+		bool      levelUnlocked = m_ProfileProcessor.IsLevelUnlocked(_LevelID);
 		
 		if (m_FreeButton != null)
 			m_FreeButton.gameObject.SetActive(levelUnlocked && levelMode == LevelMode.Free);

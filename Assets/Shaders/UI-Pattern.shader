@@ -3,7 +3,8 @@ Shader "UI/Pattern"
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-		_Color ("Tint", Color) = (1,1,1,1)
+		_SourceColor ("Source", Color) = (1,1,1,1)
+		_TargetColor ("Target", Color) = (1,1,1,1)
 		
 		_OutRadius("Out Rad", Float) = 0
 		_InRadius("In Rad", Float) = 0
@@ -85,7 +86,8 @@ Shader "UI/Pattern"
 
 			sampler2D _MainTex;
 			fixed4 _TextureSampleAdd;
-			fixed4 _Color;
+			fixed4 _SourceColor;
+			fixed4 _TargetColor;
 			float _InRadius;
 			float _OutRadius;
 			float _Smooth;
@@ -101,7 +103,7 @@ Shader "UI/Pattern"
 				
 				OUT.uv = rotate45(uv, half2(0, 0)) * count;
 				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
-				OUT.color = IN.color * _Color;
+				OUT.color = IN.color;
 				return OUT;
 			}
 
@@ -120,6 +122,8 @@ Shader "UI/Pattern"
 				
 				fixed4 color = tex2D(_MainTex, uv) * IN.color;
 				color.rgb *= color.a * val + color.a * ring * val * 5 + ring * smoothstep(0.065, 0.07, val);
+				
+				color *= lerp(_SourceColor, _TargetColor, grayscale(color) * 3);
 				
 				#ifdef UNITY_UI_CLIP_RECT
 				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);

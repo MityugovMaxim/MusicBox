@@ -5,25 +5,19 @@ using Zenject;
 [Menu(MenuType.LevelMenu)]
 public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 {
-	[SerializeField] UILevelPreviewBackground m_Background;
-	[SerializeField] UILevelPreviewThumbnail  m_Thumbnail;
-	[SerializeField] UIScoreRank              m_ScoreRank;
-	[SerializeField] UILevelPreviewLabel      m_Label;
+	[SerializeField] UILevelBackground m_Background;
+	[SerializeField] UILevelThumbnail  m_Thumbnail;
+	[SerializeField] UILevelRanks             m_LevelRanks;
+	[SerializeField] UILevelLabel      m_Label;
 	[SerializeField] UILevelModeButton        m_PlayButton;
-	[SerializeField] UILevelProgress          m_Progress;
-	[SerializeField] GameObject               m_ExpPayout;
-	[SerializeField] UIExpLabel               m_RankSExpPayout;
-	[SerializeField] UIExpLabel               m_RankAExpPayout;
-	[SerializeField] UIExpLabel               m_RankBExpPayout;
-	[SerializeField] UIExpLabel               m_RankCExpPayout;
 	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
 
-	SignalBus         m_SignalBus;
-	LevelProcessor    m_LevelProcessor;
-	AdsProcessor      m_AdsProcessor;
-	MenuProcessor     m_MenuProcessor;
-	ProgressProcessor m_ProgressProcessor;
-	HapticProcessor   m_HapticProcessor;
+	SignalBus        m_SignalBus;
+	LevelProcessor   m_LevelProcessor;
+	AdsProcessor     m_AdsProcessor;
+	MenuProcessor    m_MenuProcessor;
+	ProfileProcessor m_ProfileProcessor;
+	HapticProcessor  m_HapticProcessor;
 
 	string      m_LevelID;
 	AudioSource m_AudioSource;
@@ -34,7 +28,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		LevelProcessor    _LevelProcessor,
 		AdsProcessor      _AdsProcessor,
 		MenuProcessor     _MenuProcessor,
-		ProgressProcessor _ProgressProcessor,
+		ProfileProcessor _ProfileProcessor,
 		HapticProcessor   _HapticProcessor
 	)
 	{
@@ -42,7 +36,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		m_LevelProcessor    = _LevelProcessor;
 		m_AdsProcessor      = _AdsProcessor;
 		m_MenuProcessor     = _MenuProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
 		m_HapticProcessor   = _HapticProcessor;
 	}
 
@@ -97,18 +91,10 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		Select(levelID);
 	}
 
-	public void Play()
+	public async void Play()
 	{
-		if (m_ProgressProcessor.IsLevelLocked(m_LevelID))
+		if (m_ProfileProcessor.IsLevelLocked(m_LevelID))
 			return;
-		
-		void PlayInternal()
-		{
-			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
-			if (loadingMenu != null)
-				loadingMenu.Setup(m_LevelID);
-			m_MenuProcessor.Show(MenuType.LoadingMenu);
-		}
 		
 		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
 		
@@ -118,34 +104,30 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		if (levelMode == LevelMode.Ads)
 		{
-			m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			m_AdsProcessor.ShowRewardedAsync(
-				this,
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					PlayInternal();
-				},
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
-					
-					Setup(m_LevelID);
-				},
-				() =>
-				{
-					m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-					
-					Setup(m_LevelID);
-				}
-			);
+			bool success = await m_AdsProcessor.ShowRewardedAsync(this);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			if (!success)
+			{
+				Debug.LogErrorFormat("[UILevelMenu] Play failed. Rewarded video error occured. Level ID: {0}.", m_LevelID);
+				
+				Setup(m_LevelID);
+				
+				return;
+			}
 		}
-		else
-		{
-			PlayInternal();
-		}
+		
+		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
+		if (loadingMenu != null)
+			loadingMenu.Setup(m_LevelID);
+		
+		await m_MenuProcessor.Show(MenuType.LoadingMenu);
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		await m_MenuProcessor.Hide(MenuType.LevelMenu, true);
+		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
 	}
 
 	protected override void OnShowFinished()
@@ -164,17 +146,9 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_Background.Setup(m_LevelID, !Shown);
 		m_Thumbnail.Setup(m_LevelID);
-		m_ScoreRank.Setup(m_LevelID);
+		m_LevelRanks.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
-		m_Progress.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
-		
-		m_ExpPayout.SetActive(m_ProgressProcessor.IsLevelUnlocked(m_LevelID) && m_ProgressProcessor.GetPayout(m_LevelID) > 0);
-		
-		m_RankSExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.S);
-		m_RankAExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.A);
-		m_RankBExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.B);
-		m_RankCExpPayout.Exp = m_ProgressProcessor.GetPayout(m_LevelID, ScoreRank.C);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);

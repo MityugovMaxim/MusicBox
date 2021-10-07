@@ -53,6 +53,7 @@ Shader "UI/Cube"
 
 			#include "UnityCG.cginc"
 			#include "UIMask.cginc"
+			#include "Math.cginc"
 
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
 			#pragma multi_compile_local _ UNITY_UI_ALPHACLIP
@@ -61,7 +62,8 @@ Shader "UI/Cube"
 			{
 				float4 vertex : POSITION;
 				fixed4 color  : COLOR;
-				half2 uv     : TEXCOORD0;
+				half2 uv      : TEXCOORD0;
+				half2 mask    : TEXCOORD1;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 

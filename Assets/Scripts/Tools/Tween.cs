@@ -82,7 +82,7 @@ public abstract class Tween<T> : UIEntity
 				if (cycle.BeforeDelay > float.Epsilon)
 					yield return new WaitForSeconds(cycle.BeforeDelay);
 				
-				Process(0);
+				Process(cycle.Curve.Evaluate(0));
 				
 				float time     = 0;
 				float duration = cycle.Duration;
@@ -99,9 +99,7 @@ public abstract class Tween<T> : UIEntity
 					Process(cycle.Curve.Evaluate(phase));
 				}
 				
-				Process(m_Type == TweenType.PingPong ? 0 : 1);
-				
-				yield return null;
+				Process(cycle.Curve.Evaluate(m_Type == TweenType.PingPong ? 0 : 1));
 				
 				if (cycle.AfterDelay > float.Epsilon)
 					yield return new WaitForSeconds(cycle.AfterDelay);
