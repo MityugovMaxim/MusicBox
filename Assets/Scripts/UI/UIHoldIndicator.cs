@@ -7,7 +7,7 @@ using Zenject;
 public class UIHoldIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : MemoryPool<UIHoldIndicator>
+	public class Pool : MonoMemoryPool<UIHoldIndicator>
 	{
 		protected override void Reinitialize(UIHoldIndicator _Item)
 		{

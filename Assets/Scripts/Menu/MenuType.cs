@@ -1,8 +1,8 @@
 public enum MenuType
 {
-	LoginMenu      = 0,
-	MainMenu       = 1,
-	ShopMenu       = 2,
+	BlockMenu      = 0,
+	LoginMenu      = 1,
+	MainMenu       = 2,
 	LevelMenu      = 3,
 	ProductMenu    = 4,
 	LoadingMenu    = 5,

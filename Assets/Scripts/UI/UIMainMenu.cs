@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Zenject;
 
@@ -11,7 +12,7 @@ public enum MainMenuPageType
 }
 
 [Menu(MenuType.MainMenu)]
-public class UIMainMenu : UIMenu, IInitializable
+public class UIMainMenu : UIMenu
 {
 	[SerializeField] UIProductPromo    m_ProductPromo;
 	[SerializeField] UIMainMenuPage[]  m_Pages;
@@ -19,53 +20,74 @@ public class UIMainMenu : UIMenu, IInitializable
 
 	SignalBus      m_SignalBus;
 	StoreProcessor m_StoreProcessor;
+	UrlProcessor   m_UrlProcessor;
+
+	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Levels;
 
 	[Inject]
 	public void Construct(
 		SignalBus      _SignalBus,
-		StoreProcessor _StoreProcessor 
+		StoreProcessor _StoreProcessor,
+		UrlProcessor   _UrlProcessor
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_StoreProcessor = _StoreProcessor;
+		m_UrlProcessor   = _UrlProcessor;
 	}
 
-	public void Setup(MainMenuPageType _PageType)
+	public void Select(MainMenuPageType _PageType)
 	{
-		foreach (UIMainMenuPage page in m_Pages)
-		{
-			if (page.Type == _PageType)
-				page.Show();
-			else
-				page.Hide();
-		}
-		
-		m_Control.Select(_PageType);
+		Select(_PageType, false);
 	}
 
-	void IInitializable.Initialize()
+	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
+		if (m_PageType == _PageType)
+			return;
+		
+		m_PageType = _PageType;
+		
 		foreach (UIMainMenuPage page in m_Pages)
 		{
-			if (page.Type == MainMenuPageType.Levels)
-				page.Show(true);
+			if (page.Type == m_PageType)
+				page.Show(_Instant);
 			else
-				page.Hide(true);
+				page.Hide(_Instant);
 		}
 		
-		m_Control.Select(MainMenuPageType.Levels, true);
+		m_Control.Select(m_PageType, _Instant);
 	}
 
 	protected override void OnShowStarted()
 	{
 		Refresh();
 		
+		foreach (UIMainMenuPage page in m_Pages)
+		{
+			if (page.Type == m_PageType)
+				page.Show(true);
+			else
+				page.Hide(true);
+		}
+		m_Control.Select(m_PageType, true);
+		
 		m_SignalBus.Subscribe<PurchaseSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
+		
+		Application.deepLinkActivated += ProcessDeepLink;
+	}
+
+	protected override void OnHideStarted()
+	{
+		Application.deepLinkActivated -= ProcessDeepLink;
 	}
 
 	protected override void OnHideFinished()
 	{
+		foreach (UIMainMenuPage page in m_Pages)
+			page.Hide(true);
+		
 		m_SignalBus.Unsubscribe<PurchaseSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
@@ -73,5 +95,10 @@ public class UIMainMenu : UIMenu, IInitializable
 	void Refresh()
 	{
 		m_ProductPromo.Setup(m_StoreProcessor.GetPromoProductID());
+	}
+
+	async void ProcessDeepLink(string _URL)
+	{
+		await m_UrlProcessor.ProcessURL(_URL);
 	}
 }

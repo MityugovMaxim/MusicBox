@@ -329,6 +329,17 @@ public class ScoreProcessor : IInitializable, IDisposable
 		}
 	}
 
+	public int GetDiscsCount(ScoreRank _Rank)
+	{
+		int count = 0;
+		foreach (ScoreSnapshot scoreSnapshot in m_ScoreSnapshots.Values)
+		{
+			if (scoreSnapshot.Rank >= _Rank)
+				count++;
+		}
+		return count;
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);

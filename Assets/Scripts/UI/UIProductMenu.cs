@@ -17,7 +17,7 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	SignalBus                 m_SignalBus;
-	StoreProcessor         m_StoreProcessor;
+	StoreProcessor            m_StoreProcessor;
 	LevelProcessor            m_LevelProcessor;
 	MenuProcessor             m_MenuProcessor;
 	HapticProcessor           m_HapticProcessor;
@@ -30,19 +30,19 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 	[Inject]
 	public void Construct(
 		SignalBus                 _SignalBus,
-		StoreProcessor         _StoreProcessor,
+		StoreProcessor            _StoreProcessor,
 		LevelProcessor            _LevelProcessor,
 		MenuProcessor             _MenuProcessor,
 		HapticProcessor           _HapticProcessor,
 		UIProductMenuItem.Factory _ItemFactory
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_StoreProcessor = _StoreProcessor;
-		m_LevelProcessor    = _LevelProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
-		m_ItemFactory       = _ItemFactory;
+		m_SignalBus       = _SignalBus;
+		m_StoreProcessor  = _StoreProcessor;
+		m_LevelProcessor  = _LevelProcessor;
+		m_MenuProcessor   = _MenuProcessor;
+		m_HapticProcessor = _HapticProcessor;
+		m_ItemFactory     = _ItemFactory;
 	}
 
 	void IInitializable.Initialize()

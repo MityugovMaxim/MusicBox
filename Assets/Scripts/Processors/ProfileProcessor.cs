@@ -73,6 +73,8 @@ public class ProgressSnapshot
 
 public class ProfileProcessor : IInitializable, IDisposable
 {
+	public bool Loaded { get; private set; }
+
 	public int                         Level         => m_ProfileSnapshot?.Level ?? 0;
 	public int                         BronzeDiscs   => m_ProfileSnapshot?.BronzeDiscs ?? 0;
 	public int                         SilverDiscs   => m_ProfileSnapshot?.SilverDiscs ?? 0;
@@ -114,6 +116,11 @@ public class ProfileProcessor : IInitializable, IDisposable
 			m_ProfileData = FirebaseDatabase.DefaultInstance.RootReference.Child("profiles").Child(m_SocialProcessor.UserID);
 		
 		await FetchProfile();
+		
+		if (Loaded)
+			return;
+		
+		Loaded = true;
 		
 		m_ProfileData.ValueChanged += OnProfileUpdate;
 	}

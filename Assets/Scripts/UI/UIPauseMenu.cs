@@ -87,7 +87,7 @@ public class UIPauseMenu : UIMenu
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
-			mainMenu.Setup(MainMenuPageType.Levels);
+			mainMenu.Select(MainMenuPageType.Levels);
 		
 		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
 		if (levelMenu != null)
@@ -101,7 +101,7 @@ public class UIPauseMenu : UIMenu
 
 	public void Latency()
 	{
-		UILatencyMenu latencyMenu = m_MenuProcessor.GetMenu<UILatencyMenu>(MenuType.LatencyMenu);
+		UILatencyMenu latencyMenu = m_MenuProcessor.GetMenu<UILatencyMenu>();
 		
 		if (latencyMenu != null)
 			latencyMenu.Setup(m_LevelID);

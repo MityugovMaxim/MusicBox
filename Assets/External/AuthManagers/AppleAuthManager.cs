@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 public static class AppleAuthManager
 {
@@ -11,6 +12,19 @@ public static class AppleAuthManager
 
 	static Action<string> m_LoginSuccess;
 	static Action<string> m_LoginFailed;
+
+	public static Task<string> LoginAsync(string _Nonce)
+	{
+		TaskCompletionSource<string> taskSource = new TaskCompletionSource<string>();
+		
+		Login(
+			_Nonce,
+			_Token => taskSource.TrySetResult(_Token),
+			_Error => taskSource.TrySetException(new Exception(_Error)) 
+		);
+		
+		return taskSource.Task;
+	}
 
 	public static void Login(
 		string         _Nonce,

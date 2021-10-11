@@ -5,12 +5,12 @@ using Zenject;
 [Menu(MenuType.LevelMenu)]
 public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 {
-	[SerializeField] UILevelBackground m_Background;
-	[SerializeField] UILevelThumbnail  m_Thumbnail;
-	[SerializeField] UILevelRanks             m_LevelRanks;
-	[SerializeField] UILevelLabel      m_Label;
-	[SerializeField] UILevelModeButton        m_PlayButton;
-	[SerializeField] LevelPreviewAudioSource  m_PreviewSource;
+	[SerializeField] UILevelBackground       m_Background;
+	[SerializeField] UILevelThumbnail        m_Thumbnail;
+	[SerializeField] UILevelDiscs            m_Discs;
+	[SerializeField] UILevelLabel            m_Label;
+	[SerializeField] UILevelModeButton       m_PlayButton;
+	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	SignalBus        m_SignalBus;
 	LevelProcessor   m_LevelProcessor;
@@ -146,7 +146,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_Background.Setup(m_LevelID, !Shown);
 		m_Thumbnail.Setup(m_LevelID);
-		m_LevelRanks.Setup(m_LevelID);
+		m_Discs.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
 		

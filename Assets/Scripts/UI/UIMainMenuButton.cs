@@ -4,15 +4,28 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Animator))]
-public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
 	[Serializable]
 	public class MainMenuButtonEvent : UnityEvent<MainMenuPageType> { }
 
 	public MainMenuPageType PageType => m_PageType;
 
-	static readonly int m_EnabledParameterID  = Animator.StringToHash("Enabled");
-	static readonly int m_DisabledParameterID = Animator.StringToHash("Disabled");
+	Animator Animator
+	{
+		get
+		{
+			if (m_Animator == null)
+			{
+				m_Animator = GetComponent<Animator>();
+				m_Animator.keepAnimatorControllerStateOnDisable = true;
+			}
+			return m_Animator;
+		}
+	}
+
+	static readonly int m_EnabledParameterID  = Animator.StringToHash("Enable");
+	static readonly int m_DisabledParameterID = Animator.StringToHash("Disable");
 	static readonly int m_PressedParameterID  = Animator.StringToHash("Pressed");
 	static readonly int m_InstantParameterID  = Animator.StringToHash("Instant");
 
@@ -21,39 +34,41 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerEnterHand
 
 	Animator m_Animator;
 
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		m_Animator = GetComponent<Animator>();
-		
-		m_Animator.keepAnimatorControllerStateOnDisable = true;
-	}
+	bool m_Pressed;
 
 	public void Toggle(bool _Value, bool _Instant = false)
 	{
-		m_Animator.SetBool(m_InstantParameterID, _Instant);
-		m_Animator.SetTrigger(_Value ? m_EnabledParameterID : m_DisabledParameterID);
+		Animator.SetBool(m_InstantParameterID, _Instant);
+		Animator.SetTrigger(_Value ? m_EnabledParameterID : m_DisabledParameterID);
 	}
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
 	{
-		m_Animator.SetBool(m_PressedParameterID, true);
+		m_Pressed = true;
+		
+		Animator.SetBool(m_PressedParameterID, m_Pressed);
+	}
+
+	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
+	{
+		m_Pressed = false;
+		
+		Animator.SetBool(m_PressedParameterID, m_Pressed);
 	}
 
 	void IPointerEnterHandler.OnPointerEnter(PointerEventData _EventData)
 	{
-		m_Animator.SetBool(m_PressedParameterID, true);
+		Animator.SetBool(m_PressedParameterID, m_Pressed);
 	}
 
 	void IPointerExitHandler.OnPointerExit(PointerEventData _EventData)
 	{
-		m_Animator.SetBool(m_PressedParameterID, false);
+		Animator.SetBool(m_PressedParameterID, false);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		m_Animator.SetBool(m_PressedParameterID, false);
+		Animator.SetBool(m_PressedParameterID, false);
 		
 		m_Click?.Invoke(m_PageType);
 	}

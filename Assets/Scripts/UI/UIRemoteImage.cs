@@ -1,7 +1,9 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 public class UIRemoteImage : UIEntity
 {
@@ -9,7 +11,20 @@ public class UIRemoteImage : UIEntity
 	[SerializeField] UIGroup  m_LoaderGroup;
 	[SerializeField] UILoader m_Loader;
 
+	StorageProcessor m_StorageProcessor;
+
 	CancellationTokenSource m_TokenSource;
+
+	[Inject]
+	public void Construct(StorageProcessor _StorageProcessor)
+	{
+		m_StorageProcessor = _StorageProcessor;
+	}
+
+	public void Load(Uri _Uri)
+	{
+		Load(m_StorageProcessor.LoadSprite(_Uri));
+	}
 
 	public async void Load(Task<Sprite> _Task)
 	{

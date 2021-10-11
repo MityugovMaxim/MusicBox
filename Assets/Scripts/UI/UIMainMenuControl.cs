@@ -15,8 +15,12 @@ public class UIMainMenuControl : UIEntity
 		
 		foreach (UIMainMenuButton button in m_Buttons)
 		{
-			if (button.PageType == _PageType)
-				m_Ring.Move(button.RectTransform, _Instant);
+			if (button.PageType != _PageType)
+				continue;
+			
+			m_Ring.Move(button.RectTransform, _Instant);
+			
+			break;
 		}
 	}
 }

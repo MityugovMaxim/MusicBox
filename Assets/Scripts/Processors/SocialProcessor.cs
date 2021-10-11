@@ -4,7 +4,6 @@ using Firebase;
 using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.Scripting;
-using UnityEngine.SocialPlatforms.GameCenter;
 using Zenject;
 
 [Preserve]
@@ -16,6 +15,13 @@ public class LogoutSignal { }
 [Preserve]
 public class SocialProcessor : IInitializable, IDisposable
 {
+	public bool Online
+	{
+		get => m_Online && Application.internetReachability != NetworkReachability.NotReachable;
+		private set => m_Online = value;
+	}
+
+	public bool   Guest  => m_User?.IsAnonymous ?? true;
 	public string UserID => m_User?.UserId;
 	public string Email  => m_User?.Email;
 	public string Name   => m_User?.DisplayName;
@@ -25,6 +31,7 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	FirebaseAuth m_Auth;
 	FirebaseUser m_User;
+	bool         m_Online;
 
 	[Inject]
 	public SocialProcessor(SignalBus _SignalBus)
@@ -34,66 +41,67 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	public async Task Login()
 	{
-		if (m_User == null)
-			await m_Auth.SignInAnonymouslyAsync();
-		
-		if (m_User != null)
-			await m_User.ReloadAsync();
+		try
+		{
+			if (m_User == null)
+				await m_Auth.SignInAnonymouslyAsync();
+			
+			if (m_User != null)
+				await m_User.ReloadAsync();
+			
+			Online = true;
+		}
+		catch (Exception)
+		{
+			Debug.LogWarning("[SocialProcessor] Login failed. Entering offline mode.");
+			
+			Online = false;
+		}
 	}
 
-	public void AttachGameCenter()
+	public void Logout()
 	{
-		Social.localUser.Authenticate(
-			(_Success, _Error) =>
-			{
-				if (_Success)
-				{
-					Debug.LogFormat("[SocialManager] Login with Apple ID success. Player ID: {0}.", Social.localUser.id);
-					
-					GameCenterAuth();
-				}
-				else
-				{
-					Debug.LogErrorFormat("[SocialManager] Login with Game Center failed. Error: {0}.", _Error);
-				}
-			}
-		);
+		m_Auth.SignOut();
 	}
 
-	public void AttachAppleID()
+	public async Task<bool> AttachAppleID()
 	{
-		string nonce = Guid.NewGuid().ToString();
-		
-		AppleAuthManager.Login(
-			nonce,
-			_Token =>
-			{
-				Debug.LogFormat("[SocialManager] Login with Apple ID success. Nonce: {0}. Token: {1}.", nonce, _Token);
-				
-				AppleAuth(_Token, nonce);
-			},
-			_Error =>
-			{
-				Debug.LogErrorFormat("[SocialManager] Login with Apple ID failed. Nonce: {0}. Error: {1}.", nonce, _Error);
-			}
-		);
+		try
+		{
+			string nonce = Guid.NewGuid().ToString();
+			
+			string token = await AppleAuthManager.LoginAsync(nonce);
+			
+			await AppleAuth(token, nonce);
+			
+			return true;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[SocialManager] Login with Apple ID failed. Error: {0}", exception.Message);
+			
+			return false;
+		}
 	}
 
-	public void AttachGoogleID()
+	public async Task<bool> AttachGoogleID()
 	{
-		GoogleAuthManager.Login(
-			"266200973318-r1sbm8gud1amf7rvd04u8shn2mqkt3ci.apps.googleusercontent.com",
-			_Token =>
-			{
-				Debug.LogFormat("[SocialManager] Login with Google ID success. Token: {0}.", _Token);
-				
-				GoogleAuth(_Token, null);
-			},
-			_Error =>
-			{
-				Debug.LogErrorFormat("[SocialManager] Login with Apple ID failed. Error: {0}.", _Error);
-			}
-		);
+		try
+		{
+			string clientID = "266200973318-r1sbm8gud1amf7rvd04u8shn2mqkt3ci.apps.googleusercontent.com";
+			
+			string token = await GoogleAuthManager.LoginAsync(clientID);
+			
+			await GoogleAuth(clientID, token);
+			
+			return true;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[SocialManager] Login with Google ID failed. Error: {0}", exception.Message);
+			
+			return false;
+		}
 	}
 
 	void IInitializable.Initialize()
@@ -131,33 +139,9 @@ public class SocialProcessor : IInitializable, IDisposable
 		}
 	}
 
-	async void GameCenterAuth()
-	{
-		Credential credential = await GameCenterAuthProvider.GetCredentialAsync();
-		
-		if (!credential.IsValid())
-		{
-			Debug.LogError("[SocialProcessor] Login with Game Center failed. Game Center credential invalid.");
-			return;
-		}
-		
-		FirebaseUser user = await Auth(credential);
-		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with Game Center failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with Game Center success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
-	}
-
-	async void AppleAuth(string _Token, string _Nonce)
+	async Task AppleAuth(string _Token, string _Nonce)
 	{
 		Credential credential = OAuthProvider.GetCredential("apple.com", _Token, _Nonce, null);
-		
-		if (!credential.IsValid())
-		{
-			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Apple sign in credential invalid.");
-			return;
-		}
 		
 		FirebaseUser user = await Auth(credential);
 		
@@ -167,15 +151,9 @@ public class SocialProcessor : IInitializable, IDisposable
 			Debug.LogFormat("[SocialProcessor] Login with Apple ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
 	}
 
-	async void GoogleAuth(string _IDToken, string _AccessToken)
+	async Task GoogleAuth(string _IDToken, string _AccessToken)
 	{
 		Credential credential = GoogleAuthProvider.GetCredential(_IDToken, _AccessToken);
-		
-		if (!credential.IsValid())
-		{
-			Debug.LogError("[SocialProcessor] Login with Google ID failed. Apple sign in credential invalid.");
-			return;
-		}
 		
 		FirebaseUser user = await Auth(credential);
 		

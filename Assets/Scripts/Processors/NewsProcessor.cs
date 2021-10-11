@@ -131,10 +131,10 @@ public class NewsProcessor
 
 	async Task FetchNews()
 	{
-		DataSnapshot newsSnapshots = await m_NewsData.GetValueAsync();
-		
 		m_NewsIDs.Clear();
 		m_NewsSnapshots.Clear();
+		
+		DataSnapshot newsSnapshots = await m_NewsData.OrderByChild("order").GetValueAsync();
 		
 		foreach (DataSnapshot newsSnapshot in newsSnapshots.Children)
 		{

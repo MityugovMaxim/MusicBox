@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,27 @@ public class StorageProcessor
 {
 	readonly Dictionary<string, Sprite>    m_SpriteCache    = new Dictionary<string, Sprite>();
 	readonly Dictionary<string, AudioClip> m_AudioClipCache = new Dictionary<string, AudioClip>();
+	readonly Dictionary<string, TextAsset> m_TextAssetCache = new Dictionary<string, TextAsset>();
+
+	public async Task<Sprite> LoadSprite(Uri _Uri, CancellationToken _Token = default)
+	{
+		if (_Uri == null)
+			return null;
+		
+		string url = _Uri.AbsolutePath;
+		
+		if (string.IsNullOrEmpty(url))
+			return null;
+		
+		Sprite sprite = await WebRequest.LoadSprite(url, _Token);
+		
+		if (sprite == null)
+			return null;
+		
+		m_SpriteCache[url] = sprite;
+		
+		return sprite;
+	}
 
 	public async Task<Sprite> LoadSprite(string _RemotePath, CancellationToken _Token = default)
 	{
@@ -44,15 +66,22 @@ public class StorageProcessor
 		
 		string url = $"file://{path}";
 		
-		StorageMetadata metadata = await reference.GetMetadataAsync();
-		
-		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+		try
 		{
-			Debug.LogFormat("[StorageProcessor] Load sprite '{0}'", _RemotePath);
+			StorageMetadata metadata = await reference.GetMetadataAsync();
 			
-			await reference.GetFileAsync(url, null, _Token);
-			
-			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+			{
+				Debug.LogFormat("[StorageProcessor] Load sprite '{0}'", _RemotePath);
+				
+				await reference.GetFileAsync(url, null, _Token);
+				
+				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			}
+		}
+		catch
+		{
+			Debug.LogWarningFormat("[StorageProcessor] Load sprite '{0}' failed. Try to load it from cache.", _RemotePath);
 		}
 		
 		m_SpriteCache[_RemotePath] = await WebRequest.LoadSprite(url, _Token);
@@ -91,15 +120,22 @@ public class StorageProcessor
 		
 		string url = $"file://{path}";
 		
-		StorageMetadata metadata = await reference.GetMetadataAsync();
-		
-		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+		try
 		{
-			Debug.LogFormat("[StorageProcessor] Load audio clip '{0}'", _RemotePath);
+			StorageMetadata metadata = await reference.GetMetadataAsync();
 			
-			await reference.GetFileAsync(url, null, _Token);
-			
-			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+			{
+				Debug.LogFormat("[StorageProcessor] Load audio clip '{0}'", _RemotePath);
+				
+				await reference.GetFileAsync(url, null, _Token);
+				
+				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			}
+		}
+		catch
+		{
+			Debug.LogWarningFormat("[StorageProcessor] Load audio clip '{0}' failed. Try to load it from cache.", _RemotePath);
 		}
 		
 		m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
@@ -135,15 +171,22 @@ public class StorageProcessor
 		
 		string url = $"file://{path}";
 		
-		StorageMetadata metadata = await reference.GetMetadataAsync();
-		
-		if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+		try
 		{
-			Debug.LogFormat("[StorageProcessor] Load asset bundle '{0}'", _RemotePath);
+			StorageMetadata metadata = await reference.GetMetadataAsync();
 			
-			await reference.GetFileAsync(url, null, _Token);
-			
-			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+			{
+				Debug.LogFormat("[StorageProcessor] Load asset bundle '{0}'", _RemotePath);
+				
+				await reference.GetFileAsync(url, null, _Token);
+				
+				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+			}
+		}
+		catch
+		{
+			Debug.LogWarningFormat("[StorageProcessor] Load asset bundle '{0}' failed. Try to load it from cache.", _RemotePath);
 		}
 		
 		return await WebRequest.LoadAssetBundle(url, _Token);

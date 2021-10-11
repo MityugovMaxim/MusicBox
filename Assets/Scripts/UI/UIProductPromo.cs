@@ -37,16 +37,31 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 			return;
 		}
 		
-		bool success = m_StoreProcessor.Loaded || await m_StoreProcessor.LoadStore();
+		if (m_StoreProcessor.IsProductPurchased(m_ProductID))
+		{
+			Hide();
+			return;
+		}
 		
-		if (success && !m_StoreProcessor.IsProductPurchased(m_ProductID))
+		if (m_StoreProcessor.Loaded)
 		{
 			m_Label.Setup(m_ProductID);
 			m_Price.Setup(m_ProductID);
 			m_Thumbnail.Setup(m_ProductID);
 			Show();
+			return;
 		}
-		else
+		
+		try
+		{
+			await m_StoreProcessor.LoadStore();
+			
+			m_Label.Setup(m_ProductID);
+			m_Price.Setup(m_ProductID);
+			m_Thumbnail.Setup(m_ProductID);
+			Show();
+		}
+		catch
 		{
 			Hide();
 		}
@@ -61,7 +76,9 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 			productMenu.Setup(m_ProductID);
 		
 		await m_MenuProcessor.Show(MenuType.ProductMenu);
-		await m_MenuProcessor.Show(MenuType.ShopMenu, true);
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		if (mainMenu != null)
+			mainMenu.Select(MainMenuPageType.Store, true);
 	}
 }

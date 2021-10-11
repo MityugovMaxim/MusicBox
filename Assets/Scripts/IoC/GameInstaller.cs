@@ -9,11 +9,11 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] ProductInfo    m_NoAdsProduct;
 	[SerializeField] MusicProcessor m_MusicProcessor;
 
-	[SerializeField] UILevelsPageItem  m_LevelsPageItem;
-	[SerializeField] UIMainMenuGroup m_MainMenuGroup;
-	[SerializeField] UIStorePageItem  m_StorePageItem;
-	[SerializeField] UIOffersPageItem m_OffersPageItem;
-	[SerializeField] UINewsPageItem  m_NewsPageItem;
+	[SerializeField] UILevelItem  m_LevelItem;
+	[SerializeField] UILevelGroup m_LevelGroup;
+	[SerializeField] UIStoreItem  m_StoreItem;
+	[SerializeField] UIOfferItem m_OfferItem;
+	[SerializeField] UINewsItem  m_NewsItem;
 
 	public override void InstallBindings()
 	{
@@ -30,29 +30,29 @@ public class GameInstaller : MonoInstaller
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
 		
-		Container.BindMemoryPool<UILevelsPageItem, UILevelsPageItem.Pool>()
+		Container.BindMemoryPool<UILevelItem, UILevelItem.Pool>()
 			.WithInitialSize(10)
-			.FromComponentInNewPrefab(m_LevelsPageItem)
+			.FromComponentInNewPrefab(m_LevelItem)
 			.UnderTransformGroup("[UIMainMenuItem] Pool");
 		
-		Container.BindMemoryPool<UIMainMenuGroup, UIMainMenuGroup.Pool>()
+		Container.BindMemoryPool<UILevelGroup, UILevelGroup.Pool>()
 			.WithInitialSize(3)
-			.FromComponentInNewPrefab(m_MainMenuGroup)
+			.FromComponentInNewPrefab(m_LevelGroup)
 			.UnderTransformGroup("[UIMainMenuGroup] Pool");
 		
-		Container.BindMemoryPool<UIStorePageItem, UIStorePageItem.Pool>()
+		Container.BindMemoryPool<UIStoreItem, UIStoreItem.Pool>()
 			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_StorePageItem)
+			.FromComponentInNewPrefab(m_StoreItem)
 			.UnderTransformGroup("[UIShopMenuItem] Pool");
 		
-		Container.BindMemoryPool<UIOffersPageItem, UIOffersPageItem.Pool>()
+		Container.BindMemoryPool<UIOfferItem, UIOfferItem.Pool>()
 			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_OffersPageItem)
+			.FromComponentInNewPrefab(m_OfferItem)
 			.UnderTransformGroup("[UIOfferMenuItem] Pool");
 		
-		Container.BindMemoryPool<UINewsPageItem, UINewsPageItem.Pool>()
+		Container.BindMemoryPool<UINewsItem, UINewsItem.Pool>()
 			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_NewsPageItem)
+			.FromComponentInNewPrefab(m_NewsItem)
 			.UnderTransformGroup("[UINewsMenuItem] Pool");
 	}
 
@@ -86,10 +86,12 @@ public class GameInstaller : MonoInstaller
 	{
 		#if UNITY_IOS
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
+		Container.Bind(typeof(NotificationProcessor), typeof(IInitializable)).To<iOSNotificationProcessor>().FromNew().AsSingle();
 		#endif
 		
 		Container.Bind<MusicProcessor>().To<MusicProcessor>().FromInstance(m_MusicProcessor).AsSingle();
 		
+		Container.BindInterfacesAndSelfTo<TimeProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNew().AsSingle();
@@ -98,7 +100,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<MessageProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<NewsProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<OfferProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<OffersProcessor>().FromNew().AsSingle();
 		
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
@@ -120,6 +122,8 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProductDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<PurchaseDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<OfferDataUpdateSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<LevelStartSignal>();
 		Container.DeclareSignal<LevelPlaySignal>();

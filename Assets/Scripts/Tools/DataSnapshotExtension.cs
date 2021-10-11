@@ -80,7 +80,6 @@ public static class DataSnapshotExtension
 	public static List<string> GetChildKeys(this DataSnapshot _DataSnapshot)
 	{
 		return _DataSnapshot.Children
-			.Where(_Entry => _Entry.GetBool())
 			.Select(_Entry => _Entry.Key)
 			.ToList();
 	}
@@ -90,5 +89,12 @@ public static class DataSnapshotExtension
 		if (_DataSnapshot.HasChild(_Name))
 			return _DataSnapshot.Child(_Name).GetChildKeys();
 		return _Default ?? new List<string>();
+	}
+
+	public static Dictionary<string, long> GetLongDictionary(this DataSnapshot _DataSnapshot, string _Name, Dictionary<string, long> _Default = null)
+	{
+		if (_DataSnapshot.HasChild(_Name))
+			return _DataSnapshot.Child(_Name).GetChildKeys().ToDictionary(_Key => _Key, _Key => _DataSnapshot.GetLong(_Key));
+		return _Default ?? new Dictionary<string, long>();
 	}
 }

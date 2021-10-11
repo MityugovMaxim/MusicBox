@@ -8,6 +8,9 @@ Shader "UI/Cube"
 		_ReflectionTex ("Reflection Texture", 2D) = "black" {}
 		_Refraction ("Refraction", Float) = 0.5
 		_Strength ("Strength", Float) = 1
+		_SpeedX ("Speed X", Float) = 1
+		_SpeedY ("Speed Y", Float) = 1
+		_Scale ("Scale", Float) = 1
 		
 		[Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 		[HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
@@ -80,24 +83,28 @@ Shader "UI/Cube"
 			sampler2D _NormalTex;
 			sampler2D _ReflectionTex;
 			fixed4 _Color;
-			fixed4 _TextureSampleAdd;
 			half _Refraction;
 			half _Strength;
-			half _AngleY;
-			half _AngleX;
+			float _Speed;
+			float _SpeedX;
+			float _SpeedY;
+			float _Scale;
 
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
 				UNITY_SETUP_INSTANCE_ID(IN);
 				
-				const half offset = frac(_Time.x);
+				const half2 offset = half2(
+					frac(_Time.x * _SpeedX),
+					frac(_Time.x * _SpeedY)
+				);
 				
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.color = IN.color * _Color;
 				OUT.uv = IN.uv;
 				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
-				OUT.screen = ComputeScreenPos(OUT.vertex) * 2 - half2(offset * 4, offset * 6);
+				OUT.screen = ComputeScreenPos(OUT.vertex) * _Scale - offset;
 				
 				return OUT;
 			}
@@ -108,8 +115,10 @@ Shader "UI/Cube"
 				const fixed2 offset = (normal.xy * 2 - 1) * normal.a * _Refraction;
 				const fixed4 reflection = tex2D(_ReflectionTex, IN.screen - offset);
 				
-				fixed4 color = (tex2D(_MainTex, IN.uv) + _TextureSampleAdd) * IN.color;
-				color.rgb += color.rgb * reflection.rgb * reflection.rgb * normal.a * 60 * _Strength;
+				const fixed3 reflectionColor = clamp(reflection.rgb, 0, 1);
+				
+				fixed4 color = tex2D(_MainTex, IN.uv) * IN.color;
+				color.rgb += color.rgb * reflectionColor * reflectionColor * normal.a * 60 * _Strength;
 				
 				#ifdef UNITY_UI_CLIP_RECT
 				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);

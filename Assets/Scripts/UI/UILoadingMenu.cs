@@ -53,6 +53,8 @@ public class UILoadingMenu : UIMenu
 		m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		
 		m_LevelProcessor.Create(m_LevelID);
+		
+		m_MenuProcessor.Hide(MenuType.LoadingMenu);
 	}
 
 	protected override void OnHideFinished()

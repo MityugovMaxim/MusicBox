@@ -72,17 +72,17 @@ public class UIGroup : UIEntity
 			return;
 		}
 		
+		if (m_DisplayRoutine != null)
+			StopCoroutine(m_DisplayRoutine);
+		
 		InvokeHideStarted();
 		InvokeHideFinished();
+		
+		gameObject.SetActive(true);
 		
 		Shown          = true;
 		m_ShowStarted  = _Started;
 		m_ShowFinished = _Finished;
-		
-		if (m_DisplayRoutine != null)
-			StopCoroutine(m_DisplayRoutine);
-		
-		gameObject.SetActive(true);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{
@@ -115,17 +115,17 @@ public class UIGroup : UIEntity
 			return;
 		}
 		
+		if (m_DisplayRoutine != null)
+			StopCoroutine(m_DisplayRoutine);
+		
 		InvokeShowStarted();
 		InvokeShowFinished();
+		
+		gameObject.SetActive(true);
 		
 		Shown          = false;
 		m_HideStarted  = _Started;
 		m_HideFinished = _Finished;
-		
-		if (m_DisplayRoutine != null)
-			StopCoroutine(m_DisplayRoutine);
-		
-		gameObject.SetActive(true);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -13,88 +14,146 @@ public class UrlProcessor
 		m_MenuProcessor = _MenuProcessor;
 	}
 
-	public void ProcessURL(string _URL)
+	public async Task ProcessURL(string _URL)
 	{
-		string                     anchor     = GetAnchor(_URL);
-		string                     function   = GetFunction(_URL);
-		Dictionary<string, string> parameters = GetParameters(_URL);
+		if (string.IsNullOrEmpty(_URL))
+			return;
 		
-		Debug.LogFormat("[UrlProcessor] Process URL. Anchor: {0} Function: {1}", anchor, function);
+		Uri uri = new Uri(_URL);
 		
-		switch (function)
+		if (uri.Scheme != "audiobox")
 		{
+			Application.OpenURL(_URL);
+			return;
+		}
+		
+		Dictionary<string, string> parameters = GetParameters(uri.Query);
+		
+		switch (uri.Host)
+		{
+			case "news":
+				await ProcessNews();
+				break;
 			case "level":
-				ProcessLevel(parameters);
+				await ProcessLevel(parameters);
 				break;
-			case "product":
-				ProcessProduct(parameters);
+			case "store":
+				await ProcessProduct(parameters);
 				break;
-			case "promo":
-				ProcessPromo(parameters);
+			case "offers":
+				await ProcessOffers();
+				break;
+			case "profile":
+				await ProcessProfile();
+				break;
+			default:
+				Application.OpenURL(_URL);
 				break;
 		}
 	}
 
-	static string GetAnchor(string _URL)
-	{
-		string[] data = _URL.Split(new string[] { "://", "?" }, StringSplitOptions.RemoveEmptyEntries);
-		
-		return data.Length >= 1 ? data[0] : string.Empty;
-	}
-
-	static string GetFunction(string _URL)
-	{
-		string[] data = _URL.Split(new string[] { "://", "?" }, StringSplitOptions.RemoveEmptyEntries);
-		
-		return data.Length >= 2 ? data[1] : string.Empty;
-	}
-
 	static Dictionary<string, string> GetParameters(string _URL)
 	{
-		string[] data = _URL.Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries);
-		
 		Dictionary<string, string> parameters = new Dictionary<string, string>();
-		if (data.Length >= 2)
+		
+		string[] data = _URL.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+		if (data.Length > 0)
 		{
-			for (int i = 1; i < data.Length; i++)
+			foreach (string parameter in data)
 			{
-				string[] parameter = data[i].Split('=');
+				string[] entry = parameter.Split('=');
 				
-				if (parameter.Length >= 2)
-					parameters[parameter[0]] = parameter[1];
+				if (entry.Length >= 2)
+					parameters[entry[0]] = entry[1];
 			}
 		}
 		return parameters;
 	}
 
-	void ProcessLevel(Dictionary<string, string> _Parameters)
+	Task ProcessNews()
 	{
-		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
-			return;
-		
-		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
-		if (levelMenu != null)
-			levelMenu.Setup(levelID);
-		
-		m_MenuProcessor.Show(MenuType.LevelMenu, true);
+		return SelectMainPage(MainMenuPageType.News);
 	}
 
-	void ProcessProduct(Dictionary<string, string> _Parameters)
+	async Task ProcessProduct(IReadOnlyDictionary<string, string> _Parameters)
 	{
 		if (_Parameters == null || !_Parameters.TryGetValue("product_id", out string productID))
 			return;
 		
+		UIMainMenu    mainMenu    = m_MenuProcessor.GetMenu<UIMainMenu>();
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
+		
+		bool instant = mainMenu == null || !mainMenu.Shown;
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		
 		if (productMenu != null)
 			productMenu.Setup(productID);
 		
-		m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		m_MenuProcessor.Show(MenuType.ShopMenu, true);
-		m_MenuProcessor.Show(MenuType.ProductMenu, true);
+		await m_MenuProcessor.Show(MenuType.ProductMenu, instant);
+		
+		if (mainMenu != null)
+			mainMenu.Select(MainMenuPageType.Store, true);
+		
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	void ProcessPromo(Dictionary<string, string> _Parameters)
+	async Task ProcessLevel(IReadOnlyDictionary<string, string> _Parameters)
 	{
+		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
+			return;
 		
+		UIMainMenu  mainMenu  = m_MenuProcessor.GetMenu<UIMainMenu>();
+		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		
+		if (levelMenu != null)
+			levelMenu.Setup(levelID);
+		
+		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		
+		await m_MenuProcessor.Show(MenuType.LevelMenu, mainMenu == null || !mainMenu.Shown);
+		
+		if (mainMenu != null)
+			mainMenu.Select(MainMenuPageType.Levels);
+		
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	Task ProcessOffers()
+	{
+		return SelectMainPage(MainMenuPageType.Offers);
+	}
+
+	Task ProcessProfile()
+	{
+		return SelectMainPage(MainMenuPageType.Profile);
+	}
+
+	async Task SelectMainPage(MainMenuPageType _PageType)
+	{
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		bool instant = mainMenu == null || !mainMenu.Shown;
+		
+		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
+		
+		if (mainMenu != null)
+			mainMenu.Select(_PageType, instant);
 	}
 }

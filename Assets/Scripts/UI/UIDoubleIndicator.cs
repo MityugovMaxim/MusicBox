@@ -6,7 +6,7 @@ using Zenject;
 public class UIDoubleIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : MemoryPool<UIDoubleIndicator>
+	public class Pool : MonoMemoryPool<UIDoubleIndicator>
 	{
 		protected override void Reinitialize(UIDoubleIndicator _Item)
 		{

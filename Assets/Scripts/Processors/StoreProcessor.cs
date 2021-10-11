@@ -51,8 +51,6 @@ public class StoreProcessor : IStoreListener
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
 
-	Action<bool> m_OnInitialize;
-
 	readonly SignalBus       m_SignalBus;
 	readonly SocialProcessor m_SocialProcessor;
 
@@ -101,9 +99,15 @@ public class StoreProcessor : IStoreListener
 		m_PurchasesData.ValueChanged += OnPurchasesUpdate;
 	}
 
-	public Task<bool> LoadStore()
+	public Task LoadStore()
 	{
 		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+		
+		if (Loaded)
+		{
+			taskSource.TrySetResult(true);
+			return taskSource.Task;
+		}
 		
 		void LoadStoreSuccess()
 		{
@@ -116,7 +120,7 @@ public class StoreProcessor : IStoreListener
 		{
 			m_LoadingStore = false;
 			
-			taskSource.TrySetResult(false);
+			taskSource.TrySetCanceled();
 		}
 		
 		m_LoadStoreSuccess += LoadStoreSuccess;
@@ -279,7 +283,7 @@ public class StoreProcessor : IStoreListener
 	{
 		if (!Loaded)
 		{
-			Debug.LogError("[PurchaseProcessor] Get title failed. Store not initialized.");
+			Debug.LogError("[PurchaseProcessor] Get title failed. Store is not loaded.");
 			return "-";
 		}
 		
@@ -298,7 +302,7 @@ public class StoreProcessor : IStoreListener
 	{
 		if (!Loaded)
 		{
-			Debug.LogError("[PurchaseProcessor] Get description failed. Store not initialized.");
+			Debug.LogError("[PurchaseProcessor] Get description failed. Store is not loaded.");
 			return "-";
 		}
 		
@@ -317,7 +321,7 @@ public class StoreProcessor : IStoreListener
 	{
 		if (!Loaded)
 		{
-			Debug.LogError("[PurchaseProcessor] Get price failed. Store not initialized.");
+			Debug.LogError("[PurchaseProcessor] Get price failed. Store is not loaded.");
 			return "-";
 		}
 		
@@ -344,7 +348,7 @@ public class StoreProcessor : IStoreListener
 		
 		if (!Loaded)
 		{
-			Debug.LogError("[PurchaseProcessor] Purchase failed. Store not initialized.");
+			Debug.LogError("[PurchaseProcessor] Purchase failed. Store is not loaded.");
 			return false;
 		}
 		
@@ -371,12 +375,12 @@ public class StoreProcessor : IStoreListener
 		
 		void PurchaseFailed()
 		{
-			taskSource.TrySetResult(false);
+			taskSource.TrySetCanceled();
 		}
 		
 		void PurchaseCanceled()
 		{
-			taskSource.TrySetResult(false);
+			taskSource.TrySetCanceled();
 		}
 		
 		m_PurchaseSuccess  = PurchaseSuccess;
@@ -563,6 +567,9 @@ public class StoreProcessor : IStoreListener
 
 	async void ReceiptValidation(Product _Product)
 	{
+		if (m_ReceiptValidation == null)
+			m_ReceiptValidation = FirebaseFunctions.DefaultInstance.GetHttpsCallable("receipt_validation");
+		
 		Dictionary<string, object> data = new Dictionary<string, object>()
 		{
 			{ "product_id", _Product.definition.id },
@@ -611,7 +618,7 @@ public class StoreProcessor : IStoreListener
 		m_PurchaseCanceled = null;
 		action?.Invoke();
 	}
-	
+
 	void InvokePurchaseFailed()
 	{
 		Action action = m_PurchaseFailed;
@@ -620,7 +627,7 @@ public class StoreProcessor : IStoreListener
 		m_PurchaseCanceled = null;
 		action?.Invoke();
 	}
-	
+
 	void InvokePurchaseCanceled()
 	{
 		Action action = m_PurchaseCanceled;

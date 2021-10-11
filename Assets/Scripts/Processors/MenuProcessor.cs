@@ -9,18 +9,15 @@ public class MenuProcessor : IInitializable
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos = new Dictionary<MenuType, MenuInfo>();
 	readonly List<MenuType>                 m_MenuOrder = new List<MenuType>();
 
-	readonly SignalBus      m_SignalBus;
 	readonly Canvas         m_Canvas;
 	readonly UIMenu.Factory m_MenuFactory;
 
 	[Inject]
 	public MenuProcessor(
-		SignalBus      _SignalBus,
 		Canvas         _Canvas,
 		UIMenu.Factory _MenuFactory
 	)
 	{
-		m_SignalBus   = _SignalBus;
 		m_Canvas      = _Canvas;
 		m_MenuFactory = _MenuFactory;
 	}
@@ -44,7 +41,7 @@ public class MenuProcessor : IInitializable
 		Show(MenuType.LoginMenu, true);
 	}
 
-	public T GetMenu<T>() where T : UIMenu
+	public T GetMenu<T>(bool _Cache = false) where T : UIMenu
 	{
 		if (!MenuPrebuild.TryGetMenuType<T>(out MenuType menuType))
 		{
@@ -52,13 +49,16 @@ public class MenuProcessor : IInitializable
 			return null;
 		}
 		
-		return GetMenu<T>(menuType);
+		return GetMenu<T>(menuType, _Cache);
 	}
 
-	public T GetMenu<T>(MenuType _MenuType) where T : UIMenu
+	T GetMenu<T>(MenuType _MenuType, bool _Cache = false) where T : UIMenu
 	{
 		if (m_MenuCache.ContainsKey(_MenuType) && m_MenuCache[_MenuType] is T menuCache)
 			return menuCache;
+		
+		if (_Cache)
+			return null;
 		
 		if (!m_MenuInfos.ContainsKey(_MenuType))
 		{
@@ -107,44 +107,20 @@ public class MenuProcessor : IInitializable
 
 	public Task<UIMenu> Hide(MenuType _MenuType, bool _Instant = false)
 	{
-		UIMenu menu = GetMenu<UIMenu>(_MenuType);
-		
 		TaskCompletionSource<UIMenu> completionSource = new TaskCompletionSource<UIMenu>();
+		
+		UIMenu menu = GetMenu<UIMenu>(_MenuType, true);
+		
+		if (menu == null)
+		{
+			completionSource.TrySetResult(null);
+			return completionSource.Task;
+		}
 		
 		menu.Hide(
 			_Instant,
 			null,
 			() => completionSource.TrySetResult(menu)
-		);
-		
-		return completionSource.Task;
-	}
-
-	public Task<T> Show<T>(bool _Instant = false) where T : UIMenu
-	{
-		T menu = GetMenu<T>();
-		
-		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
-		
-		menu.Show(
-			_Instant,
-			null,
-			() => completionSource.SetResult(menu)
-		);
-		
-		return completionSource.Task;
-	}
-	
-	public Task<T> Hide<T>(bool _Instant = false) where T : UIMenu
-	{
-		T menu = GetMenu<T>();
-		
-		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
-		
-		menu.Hide(
-			_Instant,
-			null,
-			() => completionSource.SetResult(menu)
 		);
 		
 		return completionSource.Task;

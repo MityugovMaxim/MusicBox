@@ -180,8 +180,11 @@ public class MusicProcessor : MonoBehaviour
 			yield break;
 		}
 		
-		_AudioSource.clip = _AudioClip;
-		_AudioSource.Play();
+		if (_AudioSource.clip != _AudioClip)
+			_AudioSource.clip = _AudioClip;
+		
+		if (!_AudioSource.isPlaying)
+			_AudioSource.Play();
 		
 		yield return VolumeRoutine(_AudioSource, _Volume, _Duration);
 		
