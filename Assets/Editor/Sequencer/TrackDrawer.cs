@@ -5,14 +5,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-// TODO: Refactor
-// Tracks needed:
-// - Music
-// - Tap
-// - Hold + Curve handles
-// - Event
-// - Haptic (Experimental)
-
 public class TrackDrawer
 {
 	static readonly Dictionary<Type, Type> m_TrackDrawerTypes = new Dictionary<Type, Type>();
