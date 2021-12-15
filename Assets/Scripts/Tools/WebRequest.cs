@@ -217,4 +217,69 @@ public static class WebRequest
 			1
 		);
 	}
+
+	public static Task<string> LoadText(string _URL, CancellationToken _Token = default)
+	{
+		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
+		
+		if (_Token.IsCancellationRequested)
+		{
+			completionSource.TrySetCanceled();
+			return completionSource.Task;
+		}
+		
+		UnityWebRequest request = UnityWebRequest.Get(_URL);
+		
+		_Token.Register(() => completionSource.TrySetCanceled());
+		
+		UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+		
+		operation.completed += _Operation =>
+		{
+			if (_Token.IsCancellationRequested)
+			{
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.isNetworkError)
+			{
+				Debug.LogErrorFormat("[WebRequest] Load texture failed. Network error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.isHttpError)
+			{
+				Debug.LogErrorFormat("[WebRequest] Load texture failed. Http error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.isDone)
+			{
+				DownloadHandlerFile handler = request.downloadHandler as DownloadHandlerFile;
+				
+				if (handler == null)
+				{
+					Debug.LogErrorFormat("[WebRequest] Load text failed. Download handler is null. URL: '{0}'.", _URL);
+					completionSource.TrySetCanceled();
+					request.Dispose();
+					return;
+				}
+				
+				string text = handler.text;
+				
+				if (string.IsNullOrEmpty(text))
+				{
+					Debug.LogErrorFormat("[WebRequest] Load text failed. Text is null or empty. URL: '{0}'.", _URL);
+					completionSource.TrySetCanceled();
+					request.Dispose();
+					return;
+				}
+				
+				completionSource.TrySetResult(text);
+				request.Dispose();
+			}
+		};
+		
+		return completionSource.Task;
+	}
 }

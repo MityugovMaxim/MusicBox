@@ -91,6 +91,7 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<MusicProcessor>().To<MusicProcessor>().FromInstance(m_MusicProcessor).AsSingle();
 		
+		Container.BindInterfacesAndSelfTo<LanguageProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<TimeProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
