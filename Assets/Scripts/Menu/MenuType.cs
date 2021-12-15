@@ -12,4 +12,6 @@ public enum MenuType
 	ProcessingMenu = 9,
 	LatencyMenu    = 10,
 	ErrorMenu      = 11,
+	RewardMenu     = 12,
+	ReviveMenu     = 13,
 }

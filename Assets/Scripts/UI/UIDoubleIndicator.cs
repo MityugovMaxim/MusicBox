@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -14,7 +15,7 @@ public class UIDoubleIndicator : UIIndicator
 		}
 	}
 
-	public override UIHandle Handle     => m_Handle;
+	public override UIHandle Handle => m_Handle;
 
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_SuccessParameterID = Animator.StringToHash("Success");
@@ -22,8 +23,14 @@ public class UIDoubleIndicator : UIIndicator
 
 	[SerializeField] UIDoubleHandle m_Handle;
 
-	public void Setup()
+	DoubleClip         m_Clip;
+	Action<DoubleClip> m_Use;
+
+	public void Setup(DoubleClip _Clip, Action<DoubleClip> _Use = null)
 	{
+		m_Clip = _Clip;
+		m_Use  = _Use;
+		
 		if (m_Handle != null)
 			m_Handle.Setup(this);
 	}
@@ -48,6 +55,8 @@ public class UIDoubleIndicator : UIIndicator
 		FXProcessor.DoubleFX(Handle.GetWorldRect());
 		
 		Animator.SetTrigger(m_SuccessParameterID);
+		
+		InvokeUse();
 	}
 
 	public void Fail(float _Progress)
@@ -55,5 +64,16 @@ public class UIDoubleIndicator : UIIndicator
 		SignalBus.Fire(new DoubleFailSignal(_Progress));
 		
 		Animator.SetTrigger(m_FailParameterID);
+		
+		InvokeUse();
+	}
+
+	void InvokeUse()
+	{
+		Action<DoubleClip> action = m_Use;
+		DoubleClip         clip   = m_Clip;
+		m_Use  = null;
+		m_Clip = null;
+		action?.Invoke(clip);
 	}
 }
