@@ -255,17 +255,7 @@ public static class WebRequest
 			}
 			else if (request.isDone)
 			{
-				DownloadHandlerFile handler = request.downloadHandler as DownloadHandlerFile;
-				
-				if (handler == null)
-				{
-					Debug.LogErrorFormat("[WebRequest] Load text failed. Download handler is null. URL: '{0}'.", _URL);
-					completionSource.TrySetCanceled();
-					request.Dispose();
-					return;
-				}
-				
-				string text = handler.text;
+				string text = request.downloadHandler.text;
 				
 				if (string.IsNullOrEmpty(text))
 				{

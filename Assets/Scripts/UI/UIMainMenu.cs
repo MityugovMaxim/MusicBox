@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -94,7 +95,14 @@ public class UIMainMenu : UIMenu
 
 	void Refresh()
 	{
-		m_ProductPromo.Setup(m_StoreProcessor.GetPromoProductID());
+		string productID = m_StoreProcessor.GetProductIDs()
+			.SkipWhile(m_StoreProcessor.IsProductPurchased)
+			.FirstOrDefault(m_StoreProcessor.CheckPromo);
+		
+		if (string.IsNullOrEmpty(productID))
+			return;
+		
+		m_ProductPromo.Setup(productID);
 	}
 
 	async void ProcessDeepLink(string _URL)

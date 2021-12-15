@@ -11,28 +11,40 @@ using Zenject;
 
 public class ProfileDataUpdateSignal { }
 
+public class ProfileItem
+{
+	public string ID        { get; }
+	public long   Timestamp { get; }
+
+	public ProfileItem(string _ID, long _Timestamp)
+	{
+		ID        = _ID;
+		Timestamp = _Timestamp;
+	}
+}
+
 public class ProfileSnapshot
 {
-	public int                   Level         { get; }
-	public long                  Coins         { get; }
-	public int                   BronzeDiscs   { get; }
-	public int                   SilverDiscs   { get; }
-	public int                   GoldDiscs     { get; }
-	public int                   PlatinumDiscs { get; }
-	public IReadOnlyList<string> LevelIDs      { get; }
-	public IReadOnlyList<string> OfferIDs      { get; }
-	public IReadOnlyList<string> ProductIDs    { get; }
+	public int                        Level         { get; }
+	public long                       Coins         { get; }
+	public int                        BronzeDiscs   { get; }
+	public int                        SilverDiscs   { get; }
+	public int                        GoldDiscs     { get; }
+	public int                        PlatinumDiscs { get; }
+	public IReadOnlyList<ProfileItem> Levels        { get; }
+	public IReadOnlyList<ProfileItem> Offers        { get; }
+	public IReadOnlyList<ProfileItem> Products      { get; }
 
 	public ProfileSnapshot(
-		int                   _Level,
-		long                  _Coins,
-		int                   _BronzeDiscs,
-		int                   _SilverDiscs,
-		int                   _GoldDiscs,
-		int                   _PlatinumDiscs,
-		IReadOnlyList<string> _LevelIDs,
-		IReadOnlyList<string> _OfferIDs,
-		IReadOnlyList<string> _ProductIDs
+		int                        _Level,
+		long                       _Coins,
+		int                        _BronzeDiscs,
+		int                        _SilverDiscs,
+		int                        _GoldDiscs,
+		int                        _PlatinumDiscs,
+		IReadOnlyList<ProfileItem> _Levels,
+		IReadOnlyList<ProfileItem> _Offers,
+		IReadOnlyList<ProfileItem> _Products
 	)
 	{
 		Level         = _Level;
@@ -41,33 +53,9 @@ public class ProfileSnapshot
 		SilverDiscs   = _SilverDiscs;
 		GoldDiscs     = _GoldDiscs;
 		PlatinumDiscs = _PlatinumDiscs;
-		LevelIDs      = _LevelIDs;
-		OfferIDs      = _OfferIDs;
-		ProductIDs    = _ProductIDs;
-	}
-}
-
-public class ProgressSnapshot
-{
-	public long                      BronzeDiscExp   { get; }
-	public long                      SilverDiscExp   { get; }
-	public long                      GoldDiscExp     { get; }
-	public long                      PlatinumDiscExp { get; }
-	public IReadOnlyCollection<long> Levels          { get; }
-
-	public ProgressSnapshot(
-		long                      _BronzeDiscExp,
-		long                      _SilverDiscExp,
-		long                      _GoldDiscExp,
-		long                      _PlatinumDiscExp,
-		IReadOnlyCollection<long> _Levels
-	)
-	{
-		BronzeDiscExp   = _BronzeDiscExp;
-		SilverDiscExp   = _SilverDiscExp;
-		GoldDiscExp     = _GoldDiscExp;
-		PlatinumDiscExp = _PlatinumDiscExp;
-		Levels          = _Levels;
+		Levels        = _Levels;
+		Offers        = _Offers;
+		Products      = _Products;
 	}
 }
 
@@ -75,21 +63,23 @@ public class ProfileProcessor : IInitializable, IDisposable
 {
 	public bool Loaded { get; private set; }
 
-	public int                         Level         => m_ProfileSnapshot?.Level ?? 0;
-	public int                         BronzeDiscs   => m_ProfileSnapshot?.BronzeDiscs ?? 0;
-	public int                         SilverDiscs   => m_ProfileSnapshot?.SilverDiscs ?? 0;
-	public int                         GoldDiscs     => m_ProfileSnapshot?.GoldDiscs ?? 0;
-	public int                         PlatinumDiscs => m_ProfileSnapshot?.PlatinumDiscs ?? 0;
-	public long                        Coins         => m_ProfileSnapshot?.Coins ?? 0;
-	public IReadOnlyCollection<string> LevelIDs      => m_ProfileSnapshot?.LevelIDs;
+	public int                        Level         => m_ProfileSnapshot?.Level ?? 0;
+	public int                        BronzeDiscs   => m_ProfileSnapshot?.BronzeDiscs ?? 0;
+	public int                        SilverDiscs   => m_ProfileSnapshot?.SilverDiscs ?? 0;
+	public int                        GoldDiscs     => m_ProfileSnapshot?.GoldDiscs ?? 0;
+	public int                        PlatinumDiscs => m_ProfileSnapshot?.PlatinumDiscs ?? 0;
+	public long                       Coins         => m_ProfileSnapshot?.Coins ?? 0;
+	public IReadOnlyList<ProfileItem> Levels        => m_ProfileSnapshot?.Levels;
+	public IReadOnlyList<ProfileItem> Offers        => m_ProfileSnapshot?.Offers;
+	public IReadOnlyList<ProfileItem> Products      => m_ProfileSnapshot?.Products;
 
-	readonly SignalBus         m_SignalBus;
-	readonly SocialProcessor   m_SocialProcessor;
-	readonly LevelProcessor    m_LevelProcessor;
-	readonly StoreProcessor m_StoreProcessor;
+	readonly SignalBus       m_SignalBus;
+	readonly SocialProcessor m_SocialProcessor;
+	readonly LevelProcessor  m_LevelProcessor;
+	readonly StoreProcessor  m_StoreProcessor;
+	readonly MenuProcessor   m_MenuProcessor;
 
 	ProfileSnapshot  m_ProfileSnapshot;
-	ProgressSnapshot m_ProgressSnapshot;
 
 	DatabaseReference      m_ProfileData;
 	DatabaseReference      m_LevelData;
@@ -98,16 +88,18 @@ public class ProfileProcessor : IInitializable, IDisposable
 
 	[Inject]
 	public ProfileProcessor(
-		SignalBus         _SignalBus,
-		SocialProcessor   _SocialProcessor,
-		LevelProcessor    _LevelProcessor,
-		StoreProcessor _StoreProcessor
+		SignalBus       _SignalBus,
+		SocialProcessor _SocialProcessor,
+		LevelProcessor  _LevelProcessor,
+		StoreProcessor  _StoreProcessor,
+		MenuProcessor   _MenuProcessor
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_LevelProcessor    = _LevelProcessor;
-		m_SocialProcessor   = _SocialProcessor;
-		m_StoreProcessor = _StoreProcessor;
+		m_SignalBus       = _SignalBus;
+		m_LevelProcessor  = _LevelProcessor;
+		m_SocialProcessor = _SocialProcessor;
+		m_StoreProcessor  = _StoreProcessor;
+		m_MenuProcessor   = _MenuProcessor;
 	}
 
 	public async Task LoadProfile()
@@ -161,58 +153,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 
-	public long GetExp()
-	{
-		if (m_ProfileSnapshot == null || m_ProgressSnapshot == null)
-			return 0;
-		
-		long exp = 0;
-		exp += m_ProfileSnapshot.BronzeDiscs * m_ProgressSnapshot.BronzeDiscExp;
-		exp += m_ProfileSnapshot.SilverDiscs * m_ProgressSnapshot.SilverDiscExp;
-		exp += m_ProfileSnapshot.GoldDiscs * m_ProgressSnapshot.GoldDiscExp;
-		exp += m_ProfileSnapshot.PlatinumDiscs * m_ProgressSnapshot.PlatinumDiscExp;
-		return exp;
-	}
-
-	public float GetExpProgress()
-	{
-		long exp    = GetExp();
-		long source = m_ProgressSnapshot.Levels.Where(_Exp => _Exp <= exp).Min();
-		long target = m_ProgressSnapshot.Levels.Where(_Exp => _Exp >= exp).Min();
-		
-		return MathUtility.Remap01Clamped(exp, source, target);
-	}
-
-	public long GetPayout(string _LevelID)
-	{
-		return m_LevelProcessor.GetPayout(_LevelID);
-	}
-
-	public long GetPayout(string _LevelID, ScoreRank _Rank)
-	{
-		return GetPayout(_LevelID) * GetPayoutMultiplier(_Rank);
-	}
-
-	public long GetPrice(string _LevelID)
-	{
-		return m_LevelProcessor.GetPrice(_LevelID);
-	}
-
-	public bool HasOffer(string _OfferID)
-	{
-		return m_ProfileSnapshot?.OfferIDs.Contains(_OfferID) ?? false;
-	}
-
-	public bool HasLevel(string _LevelID)
-	{
-		return m_ProfileSnapshot?.LevelIDs.Contains(_LevelID) ?? false;
-	}
-
-	public bool HasProduct(string _ProductID)
-	{
-		return m_ProfileSnapshot?.ProductIDs.Contains(_ProductID) ?? false;
-	}
-
 	public bool IsLevelLocked(string _LevelID)
 	{
 		if (!m_StoreProcessor.IsLevelPurchased(_LevelID))
@@ -228,7 +168,7 @@ public class ProfileProcessor : IInitializable, IDisposable
 		if (price == 0)
 			return false;
 		
-		return LevelIDs != null && !LevelIDs.Contains(_LevelID);
+		return Levels != null && Levels.All(_Level => _Level.ID != _LevelID);
 	}
 
 	public bool IsLevelUnlocked(string _LevelID)
@@ -238,12 +178,34 @@ public class ProfileProcessor : IInitializable, IDisposable
 
 	public async Task UnlockLevel(string _LevelID)
 	{
-		long price = GetPrice(_LevelID);
+		long price = m_LevelProcessor.GetPrice(_LevelID);
 		
 		if (m_ProfileSnapshot != null && price > Coins)
 		{
-			// TODO: Open shop
-			Debug.LogErrorFormat("[ProgressProcessor] Unlock level failed. Not enough coins. Required: {0}. Current: {1}.", price, Coins);
+			Debug.LogWarningFormat("[ProgressProcessor] Unlock level failed. Not enough coins. Required: {0}. Current: {1}.", price, Coins);
+			
+			string productID = m_StoreProcessor.GetProductIDs()
+				.SkipWhile(m_StoreProcessor.IsProductPurchased)
+				.SkipWhile(_ProductID => m_StoreProcessor.GetCoins(_ProductID) < price)
+				.Aggregate((_A, _B) => m_StoreProcessor.GetCoins(_A) < m_StoreProcessor.GetCoins(_B) ? _A : _B);
+			
+			if (string.IsNullOrEmpty(productID))
+				return;
+			
+			UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+			
+			UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
+			
+			if (productMenu != null)
+				productMenu.Setup(productID);
+			
+			await m_MenuProcessor.Show(MenuType.ProductMenu);
+			
+			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			
+			if (mainMenu != null)
+				mainMenu.Select(MainMenuPageType.Store, true);
+			
 			return;
 		}
 		
@@ -272,28 +234,11 @@ public class ProfileProcessor : IInitializable, IDisposable
 			profileSnapshot.GetInt("silver_discs"),
 			profileSnapshot.GetInt("gold_discs"),
 			profileSnapshot.GetInt("platinum_discs"),
-			profileSnapshot.GetChildKeys("levels"),
-			profileSnapshot.GetChildKeys("offers"),
-			profileSnapshot.GetChildKeys("products")
+			profileSnapshot.Child("levels").Children.Select(_Item => new ProfileItem(_Item.Key, _Item.GetLong())).ToList(),
+			profileSnapshot.Child("offers").Children.Select(_Item => new ProfileItem(_Item.Key, _Item.GetLong())).ToList(),
+			profileSnapshot.Child("products").Children.Select(_Item => new ProfileItem(_Item.Key, _Item.GetLong())).ToList()
 		);
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
-	}
-
-	static int GetPayoutMultiplier(ScoreRank _Rank)
-	{
-		switch (_Rank)
-		{
-			case ScoreRank.Platinum:
-				return 3;
-			case ScoreRank.Gold:
-				return 2;
-			case ScoreRank.Silver:
-				return 1;
-			case ScoreRank.Bronze:
-				return 1;
-			default:
-				return 0;
-		}
 	}
 }

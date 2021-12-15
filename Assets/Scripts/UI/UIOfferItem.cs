@@ -21,9 +21,10 @@ public class UIOfferItem : UIEntity
 	[SerializeField] UICoinsLabel     m_CoinsLabel;
 	[SerializeField] TMP_Text         m_Label;
 
-	OffersProcessor m_OffersProcessor;
-	AdsProcessor    m_AdsProcessor;
-	MenuProcessor   m_MenuProcessor;
+	OffersProcessor   m_OffersProcessor;
+	LanguageProcessor m_LanguageProcessor;
+	AdsProcessor      m_AdsProcessor;
+	MenuProcessor     m_MenuProcessor;
 
 	Animator m_Animator;
 	bool     m_Collected;
@@ -35,14 +36,16 @@ public class UIOfferItem : UIEntity
 
 	[Inject]
 	public void Construct(
-		OffersProcessor _OffersProcessor,
-		AdsProcessor    _AdsProcessor,
-		MenuProcessor   _MenuProcessor
+		OffersProcessor   _OffersProcessor,
+		LanguageProcessor _LanguageProcessor,
+		AdsProcessor      _AdsProcessor,
+		MenuProcessor     _MenuProcessor
 	)
 	{
-		m_OffersProcessor = _OffersProcessor;
-		m_AdsProcessor    = _AdsProcessor;
-		m_MenuProcessor   = _MenuProcessor;
+		m_OffersProcessor   = _OffersProcessor;
+		m_LanguageProcessor = _LanguageProcessor;
+		m_AdsProcessor      = _AdsProcessor;
+		m_MenuProcessor     = _MenuProcessor;
 	}
 
 	public void Setup(string _OfferID)
@@ -53,7 +56,7 @@ public class UIOfferItem : UIEntity
 		m_OfferID   = _OfferID;
 		m_LevelID   = m_OffersProcessor.GetLevelID(m_OfferID);
 		m_Coins     = m_OffersProcessor.GetCoins(m_OfferID);
-		m_Target    = m_OffersProcessor.GetRewardedCount(m_OfferID);
+		m_Target    = m_OffersProcessor.GetAdsCount(m_OfferID);
 		m_Progress  = GetProgress(m_OfferID);
 		
 		m_Title.text = m_OffersProcessor.GetTitle(m_OfferID);
@@ -77,9 +80,9 @@ public class UIOfferItem : UIEntity
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			bool completeSuccess = await m_OffersProcessor.CompleteOffer(m_OfferID);
+			bool collectSuccess = await m_OffersProcessor.CollectOffer(m_OfferID);
 			
-			if (completeSuccess)
+			if (collectSuccess)
 			{
 				m_Collected = true;
 				
@@ -91,7 +94,12 @@ public class UIOfferItem : UIEntity
 			{
 				UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
 				if (errorMenu != null)
-					errorMenu.Setup("Error", "Failed to collect offer reward.\nCheck your internet connection and try again.");
+				{
+					errorMenu.Setup(
+						m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_TITLE"),
+						m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_MESSAGE")
+					);
+				}
 				
 				await m_MenuProcessor.Show(MenuType.ErrorMenu);
 				
@@ -116,7 +124,14 @@ public class UIOfferItem : UIEntity
 			}
 			else
 			{
-				// TODO: Setup error menu
+				UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
+				if (errorMenu != null)
+				{
+					errorMenu.Setup(
+						m_LanguageProcessor.Get("OFFER_PROGRESS_ERROR_TITLE"),
+						m_LanguageProcessor.Get("OFFER_PROGRESS_ERROR_MESSAGE")
+					);
+				}
 				
 				await m_MenuProcessor.Show(MenuType.ErrorMenu);
 				
@@ -191,7 +206,7 @@ public class UIOfferItem : UIEntity
 	void ProcessProgress()
 	{
 		m_Label.text = m_Progress < m_Target
-			? $"WATCH {m_Progress}/{m_Target}"
-			: "COLLECT";
+			? m_LanguageProcessor.Format("OFFER_PROGRESS", m_Progress, m_Target)
+			: m_LanguageProcessor.Get("OFFER_COLLECT");
 	}
 }

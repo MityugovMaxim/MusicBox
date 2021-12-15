@@ -35,11 +35,17 @@ public class PurchaseSnapshot
 public class ProductSnapshot
 {
 	public bool                  Promo    { get; }
+	public long                  Coins    { get; }
 	public IReadOnlyList<string> LevelIDs { get; }
 
-	public ProductSnapshot(bool _Promo, IReadOnlyList<string> _LevelIDs)
+	public ProductSnapshot(
+		bool                  _Promo,
+		long                  _Coins,
+		IReadOnlyList<string> _LevelIDs
+	)
 	{
 		Promo    = _Promo;
+		Coins    = _Coins;
 		LevelIDs = _LevelIDs;
 	}
 }
@@ -156,6 +162,32 @@ public class StoreProcessor : IStoreListener
 		return false;
 	}
 
+	public long GetCoins(string _ProductID)
+	{
+		ProductSnapshot productSnapshot = GetProductSnapshot(_ProductID);
+		
+		if (productSnapshot == null)
+		{
+			Debug.LogErrorFormat("[StoreProcessor] Get coins failed. Product snapshot with ID '{0}' is null.", _ProductID);
+			return 0;
+		}
+		
+		return productSnapshot.Coins;
+	}
+
+	public bool CheckPromo(string _ProductID)
+	{
+		ProductSnapshot productSnapshot = GetProductSnapshot(_ProductID);
+		
+		if (productSnapshot == null)
+		{
+			Debug.LogErrorFormat("[StoreProcessor] Check promo failed. Product snapshot with ID '{0}' is null.", _ProductID);
+			return false;
+		}
+		
+		return productSnapshot.Promo;
+	}
+
 	public bool ContainsLevel(string _LevelID)
 	{
 		foreach (string productID in m_ProductIDs)
@@ -203,21 +235,9 @@ public class StoreProcessor : IStoreListener
 		return false;
 	}
 
-	public string GetPromoProductID()
-	{
-		return m_ProductIDs.SkipWhile(IsProductPurchased).FirstOrDefault(IsPromo);
-	}
-
 	public List<string> GetProductIDs()
 	{
 		return m_ProductIDs.SkipWhile(IsProductPurchased).ToList();
-	}
-
-	public bool IsPromo(string _ProductID)
-	{
-		ProductSnapshot productSnapshot = GetProductSnapshot(_ProductID);
-		
-		return productSnapshot != null && productSnapshot.Promo;
 	}
 
 	public string GetNextProductID(string _ProductID)
@@ -470,9 +490,16 @@ public class StoreProcessor : IStoreListener
 		
 		foreach (DataSnapshot productSnapshot in productsSnapshot.Children)
 		{
+			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
+			bool active = productSnapshot.GetBool(active);
+			if (!active)
+				continue;
+			#endif
+			
 			string productID = productSnapshot.Key;
 			ProductSnapshot product = new ProductSnapshot(
 				productSnapshot.GetBool("promo"),
+				productSnapshot.GetLong("coins"),
 				productSnapshot.GetChildKeys("levels")
 			);
 			m_ProductIDs.Add(productID);

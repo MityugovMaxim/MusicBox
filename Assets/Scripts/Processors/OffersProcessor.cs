@@ -5,32 +5,28 @@ using System.Threading.Tasks;
 using Firebase.Database;
 using Firebase.Functions;
 using UnityEngine;
-using UnityEngine.Purchasing.MiniJSON;
 using Zenject;
 
 public class OfferDataUpdateSignal { }
 
 public class OfferSnapshot
 {
-	public string                Title            { get; }
-	public string                LevelID          { get; }
-	public long                  Coins            { get; }
-	public int                   RequiredAdsCount { get; }
-	public IReadOnlyList<string> RequiredOfferIDs { get; }
+	public string Title    { get; }
+	public string LevelID  { get; }
+	public long   Coins    { get; }
+	public int    AdsCount { get; }
 
 	public OfferSnapshot(
-		string                _Title,
-		string                _LevelID,
-		long                  _Coins,
-		int                   _RequiredAdsCount,
-		IReadOnlyList<string> _RequiredOfferIDs
+		string _Title,
+		string _LevelID,
+		long   _Coins,
+		int    _AdsCount
 	)
 	{
-		Title            = _Title;
-		LevelID          = _LevelID;
-		Coins            = _Coins;
-		RequiredAdsCount = _RequiredAdsCount;
-		RequiredOfferIDs = _RequiredOfferIDs;
+		Title    = _Title;
+		LevelID  = _LevelID;
+		Coins    = _Coins;
+		AdsCount = _AdsCount;
 	}
 }
 
@@ -40,7 +36,6 @@ public class OffersProcessor
 
 	readonly SignalBus        m_SignalBus;
 	readonly ProfileProcessor m_ProfileProcessor;
-	readonly TimeProcessor    m_TimeProcessor;
 
 	readonly List<string>                      m_OfferIDs       = new List<string>();
 	readonly Dictionary<string, OfferSnapshot> m_OfferSnapshots = new Dictionary<string, OfferSnapshot>();
@@ -50,13 +45,11 @@ public class OffersProcessor
 	[Inject]
 	public OffersProcessor(
 		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor,
-		TimeProcessor    _TimeProcessor
+		ProfileProcessor _ProfileProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_ProfileProcessor = _ProfileProcessor;
-		m_TimeProcessor    = _TimeProcessor;
 	}
 
 	public async Task LoadOffers()
@@ -74,16 +67,16 @@ public class OffersProcessor
 		m_OffersData.ValueChanged += OnOffersUpdate;
 	}
 
-	public async Task<bool> CompleteOffer(string _OfferID)
+	public async Task<bool> CollectOffer(string _OfferID)
 	{
-		HttpsCallableReference completeOffer = FirebaseFunctions.DefaultInstance.GetHttpsCallable("completeOffer");
+		HttpsCallableReference collectOffer = FirebaseFunctions.DefaultInstance.GetHttpsCallable("collectOffer");
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		data["offer_id"] = _OfferID;
 		
 		try
 		{
-			HttpsCallableResult result = await completeOffer.CallAsync(data);
+			HttpsCallableResult result = await collectOffer.CallAsync(data);
 			
 			bool success = (bool)result.Data;
 			
@@ -99,7 +92,12 @@ public class OffersProcessor
 
 	public List<string> GetOfferIDs()
 	{
-		return m_OfferIDs.SkipWhile(m_ProfileProcessor.HasOffer).ToList();
+		return m_OfferIDs.SkipWhile(IsOfferCollected).ToList();
+	}
+
+	public bool IsOfferCollected(string _OfferID)
+	{
+		return m_ProfileProcessor.Offers != null && m_ProfileProcessor.Offers.Any(_Offer => _Offer.ID == _OfferID);
 	}
 
 	public string GetTitle(string _OfferID)
@@ -141,7 +139,7 @@ public class OffersProcessor
 		return offerSnapshot.Coins;
 	}
 
-	public int GetRewardedCount(string _OfferID)
+	public int GetAdsCount(string _OfferID)
 	{
 		OfferSnapshot offerSnapshot = GetOfferSnapshot(_OfferID);
 		
@@ -151,7 +149,7 @@ public class OffersProcessor
 			return 0;
 		}
 		
-		return offerSnapshot.RequiredAdsCount;
+		return offerSnapshot.AdsCount;
 	}
 
 	async void OnOffersUpdate(object _Sender, EventArgs _Args)
@@ -186,8 +184,7 @@ public class OffersProcessor
 				offerSnapshot.GetString("title", string.Empty),
 				offerSnapshot.GetString("level_id", string.Empty),
 				offerSnapshot.GetLong("coins"),
-				offerSnapshot.GetInt("required_ads_count"),
-				offerSnapshot.GetChildKeys("required_offer_ids")
+				offerSnapshot.GetInt("ads_count")
 			);
 			
 			m_OfferIDs.Add(offerID);
@@ -205,7 +202,7 @@ public class OffersProcessor
 		
 		if (!m_OfferSnapshots.ContainsKey(_OfferID))
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get offer snapshot failed. Offer with ID '{0}' not found.");
+			Debug.LogErrorFormat("[OfferProcessor] Get offer snapshot failed. Offer with ID '{0}' not found.", _OfferID);
 			return null;
 		}
 		
