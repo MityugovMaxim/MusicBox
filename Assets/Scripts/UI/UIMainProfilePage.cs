@@ -16,26 +16,29 @@ public class UIMainProfilePage : UIMainMenuPage
 	[SerializeField] GameObject    m_LoginControls;
 	[SerializeField] GameObject    m_LogoutControls;
 
-	SignalBus        m_SignalBus;
-	SocialProcessor  m_SocialProcessor;
-	ProfileProcessor m_ProfileProcessor;
-	ScoreProcessor   m_ScoreProcessor;
-	MenuProcessor    m_MenuProcessor;
+	SignalBus         m_SignalBus;
+	LanguageProcessor m_LanguageProcessor;
+	SocialProcessor   m_SocialProcessor;
+	ProfileProcessor  m_ProfileProcessor;
+	ScoreProcessor    m_ScoreProcessor;
+	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
 	public void Construct(
-		SignalBus        _SignalBus,
-		SocialProcessor  _SocialProcessor,
-		ProfileProcessor _ProfileProcessor,
-		ScoreProcessor   _ScoreProcessor,
-		MenuProcessor    _MenuProcessor
+		SignalBus         _SignalBus,
+		LanguageProcessor _LanguageProcessor,
+		SocialProcessor   _SocialProcessor,
+		ProfileProcessor  _ProfileProcessor,
+		ScoreProcessor    _ScoreProcessor,
+		MenuProcessor     _MenuProcessor
 	)
 	{
-		m_SignalBus        = _SignalBus;
-		m_SocialProcessor  = _SocialProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_ScoreProcessor   = _ScoreProcessor;
-		m_MenuProcessor    = _MenuProcessor;
+		m_SignalBus         = _SignalBus;
+		m_LanguageProcessor = _LanguageProcessor;
+		m_SocialProcessor   = _SocialProcessor;
+		m_ProfileProcessor  = _ProfileProcessor;
+		m_ScoreProcessor    = _ScoreProcessor;
+		m_MenuProcessor     = _MenuProcessor;
 	}
 
 	public async void SignInApple()
@@ -114,6 +117,6 @@ public class UIMainProfilePage : UIMainMenuPage
 			return;
 		}
 		
-		m_NameLabel.text = "Guest";
+		m_NameLabel.text = m_LanguageProcessor.Get("PROFILE_GUEST");
 	}
 }
