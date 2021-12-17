@@ -23,13 +23,11 @@ public class UIDoubleIndicator : UIIndicator
 
 	[SerializeField] UIDoubleHandle m_Handle;
 
-	DoubleClip         m_Clip;
-	Action<DoubleClip> m_Use;
+	Action m_Finished;
 
-	public void Setup(DoubleClip _Clip, Action<DoubleClip> _Use = null)
+	public void Setup(Action _Finished)
 	{
-		m_Clip = _Clip;
-		m_Use  = _Use;
+		m_Finished = _Finished;
 		
 		if (m_Handle != null)
 			m_Handle.Setup(this);
@@ -56,7 +54,7 @@ public class UIDoubleIndicator : UIIndicator
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 		
-		InvokeUse();
+		InvokeFinished();
 	}
 
 	public void Fail(float _Progress)
@@ -65,15 +63,13 @@ public class UIDoubleIndicator : UIIndicator
 		
 		Animator.SetTrigger(m_FailParameterID);
 		
-		InvokeUse();
+		InvokeFinished();
 	}
 
-	void InvokeUse()
+	void InvokeFinished()
 	{
-		Action<DoubleClip> action = m_Use;
-		DoubleClip         clip   = m_Clip;
-		m_Use  = null;
-		m_Clip = null;
-		action?.Invoke(clip);
+		Action action = m_Finished;
+		m_Finished = null;
+		action?.Invoke();
 	}
 }

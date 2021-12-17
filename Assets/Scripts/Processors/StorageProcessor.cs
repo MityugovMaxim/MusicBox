@@ -257,16 +257,36 @@ public class StorageProcessor
 		return await LoadSprite($"Thumbnails/Levels/{_LevelID}.jpg", _Token);
 	}
 
+	public async Task<Sprite> LoadOfferThumbnail(string _OfferID, CancellationToken _Token = default)
+	{
+		return await LoadSprite($"Thumbnails/Offers/{_OfferID}.jpg", _Token);
+	}
+
+	public async Task<Sprite> LoadNewsThumbnail(string _NewsID, CancellationToken _Token = default)
+	{
+		return await LoadSprite($"Thumbnails/News/{_NewsID}.jpg", _Token);
+	}
+
 	public async Task<Sprite> LoadProductThumbnail(string _ProductID, CancellationToken _Token = default)
 	{
 		return await LoadSprite($"Thumbnails/Products/{_ProductID}.jpg", _Token);
 	}
 
-	public async Task<Dictionary<string, string>> LoadLocalization(string _Language, CancellationToken _Token = default)
+	public async Task<Dictionary<string, string>> LoadLocalization(SystemLanguage _Language, CancellationToken _Token = default)
 	{
 		Dictionary<string, string> localization = new Dictionary<string, string>();
 		
-		string text = await LoadText($"Localization/{_Language}.json", _Token);
+		string text;
+		
+		try
+		{
+			text = await LoadText($"Localization/{_Language}.json", _Token);
+		}
+		catch (Exception)
+		{
+			Debug.LogWarningFormat("[StorageProcessor] Load localization failed. Language: {0}.", _Language);
+			text = await LoadText($"Localization/{SystemLanguage.English}.json", _Token);
+		}
 		
 		Dictionary<string, object> data = MiniJson.JsonDecode(text) as Dictionary<string, object>;
 		

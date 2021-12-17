@@ -36,7 +36,7 @@ public class UILoadingMenu : UIMenu
 			m_Loader.Restore();
 	}
 
-	protected override void OnShowFinished()
+	protected override async void OnShowFinished()
 	{
 		if (m_Loader != null)
 			m_Loader.Play();
@@ -49,12 +49,12 @@ public class UILoadingMenu : UIMenu
 		if (pauseMenu != null)
 			pauseMenu.Setup(m_LevelID);
 		
-		m_MenuProcessor.Show(MenuType.GameMenu, true);
-		m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		await m_MenuProcessor.Show(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		
-		m_LevelProcessor.Create(m_LevelID);
+		await m_LevelProcessor.Load(m_LevelID);
 		
-		m_MenuProcessor.Hide(MenuType.LoadingMenu);
+		await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 	}
 
 	protected override void OnHideFinished()
@@ -65,14 +65,14 @@ public class UILoadingMenu : UIMenu
 		m_LevelProcessor.Play();
 	}
 
-	protected override IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
+	protected override IEnumerator ShowAnimation(CanvasGroup _CanvasGroup, float _Duration)
 	{
+		yield return base.ShowAnimation(_CanvasGroup, _Duration);
+		
 		yield return Resources.UnloadUnusedAssets();
 		
 		System.GC.Collect();
 		
 		yield return new WaitForSeconds(1.0f);
-		
-		yield return base.HideAnimation(_CanvasGroup, _Duration);
 	}
 }

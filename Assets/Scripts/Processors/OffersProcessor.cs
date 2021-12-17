@@ -92,12 +92,7 @@ public class OffersProcessor
 
 	public List<string> GetOfferIDs()
 	{
-		return m_OfferIDs.SkipWhile(IsOfferCollected).ToList();
-	}
-
-	public bool IsOfferCollected(string _OfferID)
-	{
-		return m_ProfileProcessor.Offers != null && m_ProfileProcessor.Offers.Any(_Offer => _Offer.ID == _OfferID);
+		return m_OfferIDs.Where(_OfferID => m_ProfileProcessor.Offers == null || m_ProfileProcessor.Offers.All(_Offer => _Offer.ID != _OfferID)).ToList();
 	}
 
 	public string GetTitle(string _OfferID)

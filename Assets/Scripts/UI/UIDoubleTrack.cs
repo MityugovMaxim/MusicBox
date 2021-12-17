@@ -17,6 +17,13 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		m_IndicatorPool = _IndicatorPool;
 	}
 
+	public override void Initialize(float _Speed, List<DoubleClip> _Clips)
+	{
+		base.Initialize(_Speed, _Clips);
+		
+		m_Used.Clear();
+	}
+
 	protected override void RemoveIndicator(DoubleClip _Clip)
 	{
 		if (!m_Indicators.ContainsKey(_Clip))
@@ -64,7 +71,7 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		
 		indicator.RectTransform.SetParent(RectTransform, false);
 		
-		indicator.Setup(_Clip, _UsedClip => m_Used.Add(_UsedClip));
+		indicator.Setup(() => m_Used.Add(_Clip));
 		
 		if (m_InputReceiver != null)
 			m_InputReceiver.RegisterIndicator(indicator);

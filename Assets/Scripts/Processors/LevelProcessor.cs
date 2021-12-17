@@ -222,7 +222,7 @@ public class LevelProcessor
 		return levelSnapshot.Mode;
 	}
 
-	public async void Create(string _LevelID)
+	public async Task Load(string _LevelID)
 	{
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		

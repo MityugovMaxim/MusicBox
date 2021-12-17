@@ -38,6 +38,7 @@ public class UIRemoteImage : UIEntity
 		m_Loader.Play();
 		
 		m_Image.sprite = null;
+		m_Image.gameObject.SetActive(false);
 		m_LoaderGroup.Show(true);
 		
 		int frame = Time.frameCount;
@@ -48,6 +49,7 @@ public class UIRemoteImage : UIEntity
 			return;
 		
 		m_Image.sprite = sprite;
+		m_Image.gameObject.SetActive(true);
 		
 		m_LoaderGroup.Hide(frame == Time.frameCount || !gameObject.activeInHierarchy);
 		

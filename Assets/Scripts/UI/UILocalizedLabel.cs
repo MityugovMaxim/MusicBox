@@ -15,7 +15,8 @@ public class UILocalizedLabel : UIEntity
 		}
 	}
 
-	[SerializeField] string m_LocalizationKey;
+	[SerializeField] string   m_LocalizationKey;
+	[SerializeField] string[] m_Data;
 
 	TMP_Text          m_Label;
 	LanguageProcessor m_LanguageProcessor;
@@ -30,6 +31,9 @@ public class UILocalizedLabel : UIEntity
 	{
 		base.OnEnable();
 		
-		Label.text = m_LanguageProcessor.Get(m_LocalizationKey);
+		if (m_Data != null && m_Data.Length > 0)
+			Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data);
+		else
+			Label.text = m_LanguageProcessor.Get(m_LocalizationKey);
 	}
 }

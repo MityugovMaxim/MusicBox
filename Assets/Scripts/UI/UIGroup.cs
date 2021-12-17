@@ -19,6 +19,7 @@ public class UIGroup : UIEntity
 	}
 
 	[SerializeField] bool  m_Interactable;
+	[SerializeField] bool  m_KeepActive;
 	[SerializeField] float m_ShowDuration = 0.2f;
 	[SerializeField] float m_HideDuration = 0.2f;
 
@@ -147,7 +148,7 @@ public class UIGroup : UIEntity
 			
 			InvokeHideFinished();
 			
-			gameObject.SetActive(false);
+			gameObject.SetActive(!m_KeepActive);
 		}
 	}
 
@@ -217,7 +218,7 @@ public class UIGroup : UIEntity
 		_CanvasGroup.interactable   = m_Interactable;
 		_CanvasGroup.blocksRaycasts = m_Interactable;
 		
-		yield return AlphaRoutine(_CanvasGroup, 1, _Duration);
+		yield return ShowAnimationRoutine(_CanvasGroup, _Duration);
 		
 		OnShowFinished();
 		
@@ -236,7 +237,7 @@ public class UIGroup : UIEntity
 		_CanvasGroup.interactable   = m_Interactable;
 		_CanvasGroup.blocksRaycasts = m_Interactable;
 		
-		yield return AlphaRoutine(_CanvasGroup, 0, _Duration);
+		yield return HideAnimationRoutine(_CanvasGroup, _Duration);
 		
 		_CanvasGroup.interactable   = false;
 		_CanvasGroup.blocksRaycasts = false;
@@ -245,7 +246,17 @@ public class UIGroup : UIEntity
 		
 		InvokeHideFinished();
 		
-		gameObject.SetActive(false);
+		gameObject.SetActive(!m_KeepActive);
+	}
+
+	protected virtual IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		yield return AlphaRoutine(_CanvasGroup, 1, _Duration);
+	}
+
+	protected virtual IEnumerator HideAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		yield return AlphaRoutine(_CanvasGroup, 0, _Duration);
 	}
 
 	static IEnumerator AlphaRoutine(CanvasGroup _CanvasGroup, float _Alpha, float _Duration)

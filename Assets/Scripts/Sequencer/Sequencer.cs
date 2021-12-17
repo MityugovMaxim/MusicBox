@@ -126,10 +126,10 @@ public partial class Sequencer : MonoBehaviour
 	}
 
 	public void Setup(
-		float _Length,
-		float _BPM,
-		float _Speed,
-		params Track[] _Tracks
+		float   _Length,
+		float   _BPM,
+		float   _Speed,
+		Track[] _Tracks
 	)
 	{
 		m_Length = _Length;

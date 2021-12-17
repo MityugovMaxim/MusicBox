@@ -7,6 +7,7 @@ public class UITapTrack : UITrack<TapClip>
 	UITapIndicator.Pool m_IndicatorPool;
 	UIInputReceiver     m_InputReceiver;
 
+	readonly HashSet<TapClip>                    m_Used       = new HashSet<TapClip>();
 	readonly Dictionary<TapClip, UITapIndicator> m_Indicators = new Dictionary<TapClip, UITapIndicator>();
 
 	[Inject]
@@ -14,6 +15,13 @@ public class UITapTrack : UITrack<TapClip>
 	{
 		m_InputReceiver = _InputReceiver;
 		m_IndicatorPool = _IndicatorPool;
+	}
+
+	public override void Initialize(float _Speed, List<TapClip> _Clips)
+	{
+		base.Initialize(_Speed, _Clips);
+		
+		m_Used.Clear();
 	}
 
 	protected override void RemoveIndicator(TapClip _Clip)
@@ -40,8 +48,8 @@ public class UITapTrack : UITrack<TapClip>
 		
 		foreach (TapClip clip in _Clips)
 		{
-			if (!m_Indicators.ContainsKey(clip))
-				m_Indicators[clip] = CreateIndicator();
+			if (!m_Indicators.ContainsKey(clip) && !m_Used.Contains(clip))
+				m_Indicators[clip] = CreateIndicator(clip);
 			
 			UITapIndicator indicator = m_Indicators[clip];
 			
@@ -54,7 +62,7 @@ public class UITapTrack : UITrack<TapClip>
 		}
 	}
 
-	UITapIndicator CreateIndicator()
+	UITapIndicator CreateIndicator(TapClip _Clip)
 	{
 		UITapIndicator indicator = m_IndicatorPool.Spawn();
 		
@@ -63,7 +71,7 @@ public class UITapTrack : UITrack<TapClip>
 		
 		indicator.RectTransform.SetParent(RectTransform, false);
 		
-		indicator.Setup();
+		indicator.Setup(() => m_Used.Add(_Clip));
 		
 		if (m_InputReceiver != null)
 			m_InputReceiver.RegisterIndicator(indicator);

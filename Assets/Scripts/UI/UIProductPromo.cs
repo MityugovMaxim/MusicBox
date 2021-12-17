@@ -1,5 +1,7 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Zenject;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -64,6 +66,56 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 		catch
 		{
 			Hide();
+		}
+	}
+
+	protected override IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		yield return new WaitForSeconds(10);
+		
+		LayoutElement layoutElement = GetComponent<LayoutElement>();
+		
+		if (layoutElement != null)
+		{
+			float       time     = 0;
+			float       source   = layoutElement.preferredHeight;
+			const float duration = 0.2f;
+			const float target   = 150;
+			while (time < duration)
+			{
+				yield return null;
+				
+				time += Time.deltaTime;
+				
+				layoutElement.preferredHeight = Mathf.Lerp(source, target, time / duration);
+			}
+			layoutElement.preferredHeight = target;
+		}
+		
+		yield return base.ShowAnimationRoutine(_CanvasGroup, _Duration);
+	}
+
+	protected override IEnumerator HideAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
+	{
+		yield return base.HideAnimationRoutine(_CanvasGroup, _Duration);
+		
+		LayoutElement layoutElement = GetComponent<LayoutElement>();
+		
+		if (layoutElement != null)
+		{
+			float       time     = 0;
+			float       source   = layoutElement.preferredHeight;
+			const float duration = 0.2f;
+			const float target   = 0;
+			while (time < duration)
+			{
+				yield return null;
+				
+				time += Time.deltaTime;
+				
+				layoutElement.preferredHeight = Mathf.Lerp(source, target, time / duration);
+			}
+			layoutElement.preferredHeight = target;
 		}
 	}
 

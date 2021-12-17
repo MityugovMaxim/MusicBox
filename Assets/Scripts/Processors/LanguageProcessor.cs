@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Storage;
 using UnityEngine;
+using Zenject;
 
 public class LanguageProcessor
 {
@@ -11,6 +12,7 @@ public class LanguageProcessor
 
 	StorageReference m_LocalizationReference;
 
+	[Inject]
 	public LanguageProcessor(StorageProcessor _StorageProcessor)
 	{
 		m_StorageProcessor = _StorageProcessor;
@@ -36,9 +38,7 @@ public class LanguageProcessor
 	{
 		m_Localization.Clear();
 		
-		string language = Application.systemLanguage.ToString();
-		
-		Dictionary<string, string> localization = await m_StorageProcessor.LoadLocalization(language);
+		Dictionary<string, string> localization = await m_StorageProcessor.LoadLocalization(Application.systemLanguage);
 		
 		foreach (var entry in localization)
 			m_Localization[entry.Key] = entry.Value;

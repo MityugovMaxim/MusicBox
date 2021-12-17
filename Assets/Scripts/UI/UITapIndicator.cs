@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -14,7 +15,7 @@ public class UITapIndicator : UIIndicator
 		}
 	}
 
-	public override UIHandle Handle     => m_Handle;
+	public override UIHandle Handle => m_Handle;
 
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_SuccessParameterID = Animator.StringToHash("Success");
@@ -22,8 +23,12 @@ public class UITapIndicator : UIIndicator
 
 	[SerializeField] UITapHandle m_Handle;
 
-	public void Setup()
+	Action m_Finished;
+
+	public void Setup(Action _Finished)
 	{
+		m_Finished = _Finished;
+		
 		if (m_Handle != null)
 			m_Handle.Setup(this);
 	}
@@ -48,6 +53,8 @@ public class UITapIndicator : UIIndicator
 		FXProcessor.TapFX(Handle.GetWorldRect());
 		
 		Animator.SetTrigger(m_SuccessParameterID);
+		
+		InvokeFinished();
 	}
 
 	public void Fail(float _Progress)
@@ -55,5 +62,14 @@ public class UITapIndicator : UIIndicator
 		SignalBus.Fire(new TapFailSignal(_Progress));
 		
 		Animator.SetTrigger(m_FailParameterID);
+		
+		InvokeFinished();
+	}
+
+	void InvokeFinished()
+	{
+		Action action = m_Finished;
+		m_Finished = null;
+		action?.Invoke();
 	}
 }

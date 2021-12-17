@@ -15,6 +15,9 @@ public enum MainMenuPageType
 [Menu(MenuType.MainMenu)]
 public class UIMainMenu : UIMenu
 {
+	public UIProfile Profile => m_Profile;
+
+	[SerializeField] UIProfile         m_Profile;
 	[SerializeField] UIProductPromo    m_ProductPromo;
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;

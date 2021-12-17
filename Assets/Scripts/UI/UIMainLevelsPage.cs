@@ -10,6 +10,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 	[SerializeField] RectTransform m_Container;
 
 	SignalBus         m_SignalBus;
+	LanguageProcessor m_LanguageProcessor;
 	LevelProcessor    m_LevelProcessor;
 	ProfileProcessor  m_ProfileProcessor;
 	ScoreProcessor    m_ScoreProcessor;
@@ -24,22 +25,24 @@ public class UIMainLevelsPage : UIMainMenuPage
 
 	[Inject]
 	public void Construct(
-		SignalBus            _SignalBus,
-		LevelProcessor       _LevelProcessor,
-		ProfileProcessor     _ProfileProcessor,
-		ScoreProcessor       _ScoreProcessor,
-		StoreProcessor       _StoreProcessor,
+		SignalBus         _SignalBus,
+		LanguageProcessor _LanguageProcessor,
+		LevelProcessor    _LevelProcessor,
+		ProfileProcessor  _ProfileProcessor,
+		ScoreProcessor    _ScoreProcessor,
+		StoreProcessor    _StoreProcessor,
 		UILevelItem.Pool  _ItemPool,
 		UILevelGroup.Pool _GroupPool
 	)
 	{
-		m_SignalBus        = _SignalBus;
-		m_LevelProcessor   = _LevelProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_ScoreProcessor   = _ScoreProcessor;
-		m_StoreProcessor   = _StoreProcessor;
-		m_ItemPool         = _ItemPool;
-		m_GroupPool        = _GroupPool;
+		m_SignalBus         = _SignalBus;
+		m_LanguageProcessor = _LanguageProcessor;
+		m_LevelProcessor    = _LevelProcessor;
+		m_ProfileProcessor  = _ProfileProcessor;
+		m_ScoreProcessor    = _ScoreProcessor;
+		m_StoreProcessor    = _StoreProcessor;
+		m_ItemPool          = _ItemPool;
+		m_GroupPool         = _GroupPool;
 	}
 
 	protected override void OnShowStarted()
@@ -84,7 +87,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 			.OrderBy(m_ScoreProcessor.GetRank)
 			.ToArray();
 		
-		CreateItemsGroup("Library", levelIDs);
+		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_LIBRARY"), levelIDs);
 	}
 
 	void CreateProducts()
@@ -94,7 +97,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 			.Where(m_ProfileProcessor.IsLevelLocked)
 			.ToArray();
 		
-		CreateItemsGroup("Products", levelIDs);
+		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_PRODUCTS"), levelIDs);
 	}
 
 	void CreateLocked()
@@ -107,7 +110,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 			.ToDictionary(_LevelGroup => _LevelGroup.Key, _LevelGroup => _LevelGroup.ToArray());
 		
 		foreach (var entry in groups)
-			CreateItemsGroup($"Level: {entry.Key}", entry.Value);
+			CreateItemsGroup(m_LanguageProcessor.Format("TRACKS_LEVEL", entry.Key), entry.Value);
 	}
 
 	void CreateItemsGroup(string _Title, IReadOnlyCollection<string> _LevelIDs)
