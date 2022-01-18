@@ -5,6 +5,9 @@ using Zenject;
 
 public class FXProcessor : UIEntity, IInitializable
 {
+	[SerializeField] UIFXHighlight[] m_Highlights;
+	[SerializeField] UIFXHighlight   m_Flash;
+
 	UIInputZone     m_InputZone;
 	UITapFX.Pool    m_TapFXPool;
 	UIDoubleFX.Pool m_DoubleFXPool;
@@ -42,6 +45,8 @@ public class FXProcessor : UIEntity, IInitializable
 		);
 		
 		StartCoroutine(delayRoutine);
+		
+		Highlight(_Rect.center);
 	}
 
 	public void DoubleFX(Rect _Rect)
@@ -57,6 +62,8 @@ public class FXProcessor : UIEntity, IInitializable
 		);
 		
 		StartCoroutine(delayRoutine);
+		
+		Flash();
 	}
 
 	public void HoldFX(Rect _Rect)
@@ -72,6 +79,8 @@ public class FXProcessor : UIEntity, IInitializable
 		);
 		
 		StartCoroutine(delayRoutine);
+		
+		Highlight(_Rect.center);
 	}
 
 	void Prewarm()
@@ -103,5 +112,19 @@ public class FXProcessor : UIEntity, IInitializable
 		);
 		
 		return RectTransform.InverseTransformPoint(position);
+	}
+
+	void Highlight(Vector2 _Position)
+	{
+		foreach (UIFXHighlight highlight in m_Highlights)
+		{
+			if (highlight != null && highlight.RectTransform.GetWorldRect().Contains(_Position, true))
+				highlight.Play();
+		}
+	}
+
+	void Flash()
+	{
+		m_Flash.Play();
 	}
 }

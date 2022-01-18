@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Google;
 
 public static class GoogleAuthManager
 {
@@ -24,19 +23,19 @@ public static class GoogleAuthManager
 	)
 	{
 		#if UNITY_EDITOR
-		_Failed?.Invoke("Google auth not supported by editor.");
-		return;
-		#endif
+		await Task.Delay(500);
 		
-		GoogleSignIn.Configuration = new GoogleSignInConfiguration
+		_Failed?.Invoke("Google auth not supported by editor.");
+		#else
+		Google.GoogleSignIn.Configuration = new Google.GoogleSignInConfiguration
 		{
 			RequestIdToken = true,
 			WebClientId    = _ClientID
 		};
 		
-		Task<GoogleSignInUser> task = GoogleSignIn.DefaultInstance.SignIn();
+		Task<Google.GoogleSignInUser> task = Google.GoogleSignIn.DefaultInstance.SignIn();
 		
-		GoogleSignInUser user = await task;
+		Google.GoogleSignInUser user = await task;
 		
 		if (task.IsCanceled)
 			_Failed?.Invoke("Google auth canceled.");
@@ -44,5 +43,6 @@ public static class GoogleAuthManager
 			_Failed?.Invoke(task.Exception?.Message);
 		else
 			_Success?.Invoke(task.Result.IdToken);
+		#endif
 	}
 }

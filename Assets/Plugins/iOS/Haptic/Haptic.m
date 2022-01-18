@@ -5,6 +5,7 @@ UINotificationFeedbackGenerator* NotificationGenerator;
 UIImpactFeedbackGenerator*       LightImpactGenerator;
 UIImpactFeedbackGenerator*       MediumImpactGenerator;
 UIImpactFeedbackGenerator*       HeavyImpactGenerator;
+UIImpactFeedbackGenerator*       RigidImpactGenerator;
 
 void InitializeHapticGenerators()
 {
@@ -13,6 +14,7 @@ void InitializeHapticGenerators()
     LightImpactGenerator  = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
     MediumImpactGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium];
     HeavyImpactGenerator  = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
+    RigidImpactGenerator  = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleRigid];
 }
 
 void HapticSelection()
@@ -48,4 +50,9 @@ void HapticMediumImpact()
 void HapticHeavyImpact()
 {
     [HeavyImpactGenerator impactOccurred];
+}
+
+void HapticRigidImpact()
+{
+    [RigidImpactGenerator impactOccured];
 }

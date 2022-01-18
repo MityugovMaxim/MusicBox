@@ -96,27 +96,24 @@ public partial class Sequencer : MonoBehaviour
 
 	public float Speed => m_Speed;
 
-	[SerializeField] float m_Time;
-	[SerializeField] float m_Length;
-	[SerializeField] float m_Speed;
-	[SerializeField] float m_BPM = 90;
+	[SerializeField] float           m_Time;
+	[SerializeField] float           m_Length;
+	[SerializeField] float           m_Speed;
+	[SerializeField] float           m_BPM = 90;
+	[SerializeField] UIInputReceiver m_InputReceiver;
 
 	[SerializeField, HideInInspector] Track[] m_Tracks;
 
 	Action            m_Finished;
 	ISampleReceiver[] m_SampleReceivers;
 
-	void OnDisable()
-	{
-		if (!Application.isPlaying)
-			return;
-		
-		Sample(float.MinValue);
-	}
-
 	void OnDestroy()
 	{
-		Dispose();
+		if (m_Tracks == null || m_Tracks.Length == 0)
+			return;
+		
+		foreach (Track track in m_Tracks)
+			track.Dispose();
 	}
 
 	void LateUpdate()
@@ -145,15 +142,6 @@ public partial class Sequencer : MonoBehaviour
 		
 		foreach (Track track in m_Tracks)
 			track.Initialize(this);
-	}
-
-	public void Dispose()
-	{
-		if (m_Tracks == null || m_Tracks.Length == 0)
-			return;
-		
-		foreach (Track track in m_Tracks)
-			track.Dispose();
 	}
 
 	public void RegisterSampleReceivers(ISampleReceiver[] _SampleReceivers)
@@ -208,6 +196,9 @@ public partial class Sequencer : MonoBehaviour
 		
 		foreach (Track track in m_Tracks)
 			track.Sample(minTime, maxTime);
+		
+		if (!Mathf.Approximately(minTime, maxTime))
+			m_InputReceiver.Process();
 		
 		if (m_SampleReceivers != null)
 		{

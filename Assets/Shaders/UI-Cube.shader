@@ -2,7 +2,7 @@ Shader "UI/Cube"
 {
 	Properties
 	{
-		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+		_MainTex ("Sprite Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
 		_NormalTex ("Normal Texture", 2D) = "black" {}
 		_ReflectionTex ("Reflection Texture", 2D) = "black" {}

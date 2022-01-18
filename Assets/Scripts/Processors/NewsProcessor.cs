@@ -10,22 +10,25 @@ public class NewsDataUpdateSignal { }
 
 public class NewsSnapshot
 {
-	public string Image { get; }
-	public string Title { get; }
-	public string Text  { get; }
-	public string URL   { get; }
+	public string Image    { get; }
+	public string Title    { get; }
+	public string Text     { get; }
+	public string URL      { get; }
+	public string Language { get; }
 
 	public NewsSnapshot(
 		string _Image,
 		string _Title,
 		string _Text,
-		string _URL
+		string _URL,
+		string _Language
 	)
 	{
-		Image = _Image;
-		Title = _Title;
-		Text  = _Text;
-		URL   = _URL;
+		Image    = _Image;
+		Title    = _Title;
+		Text     = _Text;
+		URL      = _URL;
+		Language = _Language;
 	}
 }
 
@@ -33,7 +36,8 @@ public class NewsProcessor
 {
 	public bool Loaded { get; private set; }
 
-	readonly SignalBus m_SignalBus;
+	readonly SignalBus         m_SignalBus;
+	readonly LanguageProcessor m_LanguageProcessor;
 
 	readonly List<string>                     m_NewsIDs       = new List<string>();
 	readonly Dictionary<string, NewsSnapshot> m_NewsSnapshots = new Dictionary<string, NewsSnapshot>();
@@ -41,9 +45,13 @@ public class NewsProcessor
 	DatabaseReference m_NewsData;
 
 	[Inject]
-	public NewsProcessor(SignalBus _SignalBus)
+	public NewsProcessor(
+		SignalBus         _SignalBus,
+		LanguageProcessor _LanguageProcessor
+	)
 	{
-		m_SignalBus = _SignalBus;
+		m_SignalBus         = _SignalBus;
+		m_LanguageProcessor = _LanguageProcessor;
 	}
 
 	public async Task LoadNews()
@@ -63,7 +71,14 @@ public class NewsProcessor
 
 	public List<string> GetNewsIDs()
 	{
-		return m_NewsIDs.ToList();
+		return m_NewsIDs.Where(
+			_NewsID =>
+			{
+				NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
+				
+				return newsSnapshot != null && m_LanguageProcessor.SupportsLanguage(newsSnapshot.Language);
+			}
+		).ToList();
 	}
 
 	public string GetImage(string _NewsID)
@@ -150,7 +165,8 @@ public class NewsProcessor
 				newsSnapshot.GetString("image", string.Empty),
 				newsSnapshot.GetString("title", string.Empty),
 				newsSnapshot.GetString("text", string.Empty),
-				newsSnapshot.GetString("url", string.Empty)
+				newsSnapshot.GetString("url", string.Empty),
+				newsSnapshot.GetString("language", string.Empty)
 			);
 			
 			m_NewsIDs.Add(newsID);

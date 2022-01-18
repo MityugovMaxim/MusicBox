@@ -24,9 +24,14 @@ public class UIReward : UIEntity
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		m_PlayState = StateBehaviour.GetBehaviour(m_Animator, "play");
-		if (m_PlayState != null)
-			m_PlayState.OnComplete += InvokePlayFinished;
+		StateBehaviour.RegisterComplete(m_Animator, "play", InvokePlayFinished);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		StateBehaviour.UnregisterComplete(m_Animator, "play", InvokePlayFinished);
 	}
 
 	public void Setup(UIEntity _Entity)

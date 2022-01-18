@@ -15,7 +15,7 @@ public class UIMainOffersPage : UIMainMenuPage
 	[SerializeField] UIGroup       m_EmptyGroup;
 
 	SignalBus        m_SignalBus;
-	OffersProcessor   m_OffersProcessor;
+	OffersProcessor  m_OffersProcessor;
 	UIOfferItem.Pool m_ItemPool;
 
 	List<string> m_OfferIDs;

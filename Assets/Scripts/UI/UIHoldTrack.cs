@@ -4,7 +4,6 @@ using Zenject;
 
 public class UIHoldTrack : UITrack<HoldClip>
 {
-	readonly HashSet<HoldClip>                     m_Used       = new HashSet<HoldClip>();
 	readonly Dictionary<HoldClip, UIHoldIndicator> m_Indicators = new Dictionary<HoldClip, UIHoldIndicator>();
 
 	UIInputReceiver      m_InputReceiver;
@@ -15,13 +14,6 @@ public class UIHoldTrack : UITrack<HoldClip>
 	{
 		m_InputReceiver = _InputReceiver;
 		m_IndicatorPool = _IndicatorPool;
-	}
-
-	public override void Initialize(float _Speed, List<HoldClip> _Clips)
-	{
-		base.Initialize(_Speed, _Clips);
-		
-		m_Used.Clear();
 	}
 
 	protected override void RemoveIndicator(HoldClip _Clip)
@@ -37,6 +29,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 		indicator.Restore();
 		
 		m_Indicators.Remove(_Clip);
+		
 		m_InputReceiver.UnregisterIndicator(indicator);
 		
 		m_IndicatorPool.Despawn(indicator);
@@ -48,7 +41,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 		
 		foreach (HoldClip clip in _Clips)
 		{
-			if (!m_Indicators.ContainsKey(clip) && !m_Used.Contains(clip))
+			if (!m_Indicators.ContainsKey(clip))
 				m_Indicators[clip] = CreateIndicator(clip);
 			
 			UIHoldIndicator indicator = m_Indicators[clip];
@@ -64,8 +57,6 @@ public class UIHoldTrack : UITrack<HoldClip>
 			
 			indicator.Process(progress);
 		}
-		
-		m_InputReceiver.Process();
 	}
 
 	UIHoldIndicator CreateIndicator(HoldClip _Clip)
@@ -79,7 +70,7 @@ public class UIHoldTrack : UITrack<HoldClip>
 		
 		float duration = GetDistance(_Clip.MaxTime) - GetDistance(_Clip.MinTime);
 		
-		indicator.Setup(_Clip, duration, () => m_Used.Add(_Clip));
+		indicator.Setup(_Clip, duration);
 		
 		if (m_InputReceiver != null)
 			m_InputReceiver.RegisterIndicator(indicator);

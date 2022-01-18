@@ -48,9 +48,9 @@ public class UIOfferItem : UIEntity
 	{
 		Restore();
 		
-		m_OfferID   = _OfferID;
-		m_Target    = m_OffersProcessor.GetAdsCount(m_OfferID);
-		m_Progress  = GetProgress(m_OfferID);
+		m_OfferID  = _OfferID;
+		m_Target   = m_OffersProcessor.GetAdsCount(m_OfferID);
+		m_Progress = GetProgress(m_OfferID);
 		
 		m_Title.text = m_OffersProcessor.GetTitle(m_OfferID);
 		
@@ -80,9 +80,9 @@ public class UIOfferItem : UIEntity
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool progressSuccess = await m_AdsProcessor.ShowRewardedAsync(this);
+		bool success = await m_AdsProcessor.ShowRewardedAsync(this);
 		
-		if (progressSuccess)
+		if (success)
 		{
 			m_Progress++;
 			
@@ -111,64 +111,10 @@ public class UIOfferItem : UIEntity
 
 	async Task CollectOffer()
 	{
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		bool success = await m_OffersProcessor.CollectOffer(m_OfferID);
 		
-		string offerID = m_OfferID;
-		
-		bool collectSuccess = await m_OffersProcessor.CollectOffer(offerID);
-		
-		if (collectSuccess)
-		{
-			await Task.Delay(250);
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			await DisplayReward(offerID);
-			
+		if (success)
 			Collect();
-		}
-		else
-		{
-			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
-			if (errorMenu != null)
-			{
-				errorMenu.Setup(
-					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_TITLE"),
-					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_MESSAGE")
-				);
-			}
-			
-			await m_MenuProcessor.Show(MenuType.ErrorMenu);
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-	}
-
-	async Task DisplayReward(string _OfferID)
-	{
-		UIRewardMenu rewardMenu = m_MenuProcessor.GetMenu<UIRewardMenu>();
-		
-		if (rewardMenu == null)
-			return;
-		
-		Debug.LogError("---> OFFER ID TO DISPLAY: " + _OfferID);
-		
-		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
-		
-		rewardMenu.Setup(
-			mainMenu != null ? mainMenu.Profile : null,
-			m_StorageProcessor.LoadOfferThumbnail(_OfferID),
-			m_OffersProcessor.GetTitle(_OfferID),
-			string.Empty
-		);
-		
-		await m_MenuProcessor.Show(MenuType.RewardMenu);
-		
-		await Task.Delay(1500);
-		
-		await rewardMenu.Play();
-		
-		await m_MenuProcessor.Hide(MenuType.RewardMenu);
 	}
 
 	void Collect()

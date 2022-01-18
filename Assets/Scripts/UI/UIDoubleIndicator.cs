@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -23,12 +22,8 @@ public class UIDoubleIndicator : UIIndicator
 
 	[SerializeField] UIDoubleHandle m_Handle;
 
-	Action m_Finished;
-
-	public void Setup(Action _Finished)
+	public void Setup()
 	{
-		m_Finished = _Finished;
-		
 		if (m_Handle != null)
 			m_Handle.Setup(this);
 	}
@@ -53,8 +48,6 @@ public class UIDoubleIndicator : UIIndicator
 		FXProcessor.DoubleFX(Handle.GetWorldRect());
 		
 		Animator.SetTrigger(m_SuccessParameterID);
-		
-		InvokeFinished();
 	}
 
 	public void Fail(float _Progress)
@@ -62,14 +55,5 @@ public class UIDoubleIndicator : UIIndicator
 		SignalBus.Fire(new DoubleFailSignal(_Progress));
 		
 		Animator.SetTrigger(m_FailParameterID);
-		
-		InvokeFinished();
-	}
-
-	void InvokeFinished()
-	{
-		Action action = m_Finished;
-		m_Finished = null;
-		action?.Invoke();
 	}
 }

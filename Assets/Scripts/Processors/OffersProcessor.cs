@@ -34,8 +34,11 @@ public class OffersProcessor
 {
 	public bool Loaded { get; private set; }
 
-	readonly SignalBus        m_SignalBus;
-	readonly ProfileProcessor m_ProfileProcessor;
+	readonly SignalBus         m_SignalBus;
+	readonly LanguageProcessor m_LanguageProcessor;
+	readonly StorageProcessor  m_StorageProcessor;
+	readonly ProfileProcessor  m_ProfileProcessor;
+	readonly MenuProcessor     m_MenuProcessor;
 
 	readonly List<string>                      m_OfferIDs       = new List<string>();
 	readonly Dictionary<string, OfferSnapshot> m_OfferSnapshots = new Dictionary<string, OfferSnapshot>();
@@ -44,12 +47,18 @@ public class OffersProcessor
 
 	[Inject]
 	public OffersProcessor(
-		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor
+		SignalBus         _SignalBus,
+		LanguageProcessor _LanguageProcessor,
+		StorageProcessor  _StorageProcessor,
+		ProfileProcessor  _ProfileProcessor,
+		MenuProcessor     _MenuProcessor
 	)
 	{
-		m_SignalBus        = _SignalBus;
-		m_ProfileProcessor = _ProfileProcessor;
+		m_SignalBus         = _SignalBus;
+		m_LanguageProcessor = _LanguageProcessor;
+		m_StorageProcessor  = _StorageProcessor;
+		m_ProfileProcessor  = _ProfileProcessor;
+		m_MenuProcessor     = _MenuProcessor;
 	}
 
 	public async Task LoadOffers()
@@ -74,20 +83,71 @@ public class OffersProcessor
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		data["offer_id"] = _OfferID;
 		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		bool success;
+		
 		try
 		{
 			HttpsCallableResult result = await collectOffer.CallAsync(data);
 			
-			bool success = (bool)result.Data;
-			
-			await m_ProfileProcessor.LoadProfile();
-			
-			return success;
+			success = (bool)result.Data;
 		}
 		catch (Exception)
 		{
-			return false;
+			success = false;
 		}
+		
+		if (success)
+		{
+			await Task.Delay(250);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			await DisplayReward(_OfferID);
+		}
+		else
+		{
+			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
+			if (errorMenu != null)
+			{
+				errorMenu.Setup(
+					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_TITLE"),
+					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_MESSAGE")
+				);
+			}
+			
+			await m_MenuProcessor.Show(MenuType.ErrorMenu);
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+		}
+		
+		return success;
+	}
+
+	async Task DisplayReward(string _OfferID)
+	{
+		UIRewardMenu rewardMenu = m_MenuProcessor.GetMenu<UIRewardMenu>();
+		
+		if (rewardMenu == null)
+			return;
+		
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		rewardMenu.Setup(
+			mainMenu != null ? mainMenu.Profile : null,
+			m_StorageProcessor.LoadOfferThumbnail(_OfferID),
+			GetTitle(_OfferID),
+			string.Empty
+		);
+		
+		await m_MenuProcessor.Show(MenuType.RewardMenu);
+		
+		await Task.Delay(2500);
+		
+		await rewardMenu.Play();
+		
+		await m_MenuProcessor.Hide(MenuType.RewardMenu);
 	}
 
 	public List<string> GetOfferIDs()

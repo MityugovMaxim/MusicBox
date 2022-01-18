@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class UIPath : UIEntity
 {
 	public float Phase
@@ -63,6 +64,26 @@ public class UIPath : UIEntity
 		ProcessPhase();
 	}
 
+	void Update()
+	{
+		bool hasChanged = false;
+		
+		if (Source != null && Source.hasChanged)
+		{
+			hasChanged        = true;
+			Source.hasChanged = false;
+		}
+		
+		if (Target != null && Target.hasChanged)
+		{
+			hasChanged        = true;
+			Target.hasChanged = false;
+		}
+		
+		if (hasChanged)
+			ProcessPhase();
+	}
+
 	protected override void OnDisable()
 	{
 		base.OnDisable();
@@ -104,11 +125,11 @@ public class UIPath : UIEntity
 
 	void ProcessPhase()
 	{
-		if (!gameObject.activeInHierarchy || m_Source == null || m_Target == null || m_Object == null)
+		if (Source == null || Target == null || m_Object == null)
 			return;
 		
-		Rect source = m_Source.GetWorldRect();
-		Rect target = m_Target.GetWorldRect();
+		Rect source = Source.GetWorldRect();
+		Rect target = Target.GetWorldRect();
 		Rect rect = new Rect(
 			Vector2.Lerp(source.position, target.position, Phase),
 			Vector2.Lerp(source.size, target.size, Phase)

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -40,6 +41,25 @@ public class HapticProcessor : IInitializable, IDisposable
 	{
 		if (m_HapticEnabled)
 			m_Haptic.Process(_HapticType);
+	}
+
+	public async void Play(Haptic.Type _HapticType, int _Frequency, float _Duration)
+	{
+		int delay = 1000 / Mathf.Max(1, _Frequency);
+		
+		if (!m_HapticEnabled)
+			return;
+		
+		int time     = 0;
+		int duration = (int)(_Duration * 1000);
+		while (time < duration)
+		{
+			Process(_HapticType);
+			
+			await Task.Delay(delay);
+			
+			time += delay;
+		}
 	}
 
 	void IInitializable.Initialize()

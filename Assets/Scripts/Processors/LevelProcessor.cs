@@ -12,43 +12,41 @@ public class LevelDataUpdateSignal { }
 
 public class LevelSnapshot
 {
-	public int       Level  { get; }
-	public string    Title  { get; }
-	public string    Artist { get; }
-	public LevelMode Mode   { get; }
-	public float     Length { get; }
-	public float     BPM    { get; }
-	public float     Speed  { get; }
-	public bool      Locked { get; }
-	public long      Payout { get; }
-	public long      Price  { get; }
-	public string    Skin   { get; }
+	public int       Level          { get; }
+	public string    Title          { get; }
+	public string    Artist         { get; }
+	public LevelMode Mode           { get; }
+	public float     Length         { get; }
+	public float     BPM            { get; }
+	public float     Speed          { get; }
+	public float     Invincibility  { get; }
+	public long      DefaultPayout  { get; }
+	public long      BronzePayout   { get; }
+	public long      SilverPayout   { get; }
+	public long      GoldPayout     { get; }
+	public long      PlatinumPayout { get; }
+	public long      Price          { get; }
+	public long      RevivePrice    { get; }
+	public string    Skin           { get; }
 
-	public LevelSnapshot(
-		int       _Level,
-		string    _Title,
-		string    _Artist,
-		LevelMode _LevelMode,
-		float     _Length,
-		float     _BPM,
-		float     _Speed,
-		bool      _Locked,
-		long      _Payout,
-		long      _Price,
-		string    _Skin
-	)
+	public LevelSnapshot(DataSnapshot _Data)
 	{
-		Level  = _Level;
-		Title  = _Title;
-		Artist = _Artist;
-		Mode   = _LevelMode;
-		Length = _Length;
-		BPM    = _BPM;
-		Speed  = _Speed;
-		Locked = _Locked;
-		Payout = _Payout;
-		Price  = _Price;
-		Skin   = _Skin;
+		Level          = _Data.GetInt("level");
+		Title          = _Data.GetString("title", string.Empty);
+		Artist         = _Data.GetString("artist", string.Empty);
+		Mode           = _Data.GetEnum<LevelMode>("mode");
+		Length         = _Data.GetFloat("length");
+		BPM            = _Data.GetFloat("bpm");
+		Speed          = _Data.GetFloat("speed");
+		Invincibility  = _Data.GetFloat("invincibility", 0.5f);
+		DefaultPayout  = _Data.GetLong("default_payout");
+		BronzePayout   = _Data.GetLong("bronze_payout");
+		SilverPayout   = _Data.GetLong("silver_payout");
+		GoldPayout     = _Data.GetLong("gold_payout");
+		PlatinumPayout = _Data.GetLong("platinum_payout");
+		Price          = _Data.GetLong("price");
+		RevivePrice    = _Data.GetLong("revive_price");
+		Skin           = _Data.GetString("skin", "level");
 	}
 }
 
@@ -58,12 +56,11 @@ public class LevelProcessor
 	Level  m_Level;
 	string m_LevelID;
 
-	readonly SignalBus         m_SignalBus;
-	readonly StoreProcessor m_StoreProcessor;
-	[Preserve]
-	readonly StorageProcessor  m_StorageProcessor;
-	readonly Level.Factory     m_LevelFactory;
-	readonly ProductInfo       m_NoAdsProduct;
+	readonly SignalBus        m_SignalBus;
+	readonly StoreProcessor   m_StoreProcessor;
+	readonly StorageProcessor m_StorageProcessor;
+	readonly Level.Factory    m_LevelFactory;
+	readonly ProductInfo      m_NoAdsProduct;
 
 	readonly List<string>                      m_LevelIDs        = new List<string>();
 	readonly Dictionary<string, LevelSnapshot> m_LevelSnapshots  = new Dictionary<string, LevelSnapshot>();
@@ -73,18 +70,18 @@ public class LevelProcessor
 
 	[Inject]
 	public LevelProcessor(
-		SignalBus         _SignalBus,
-		StoreProcessor _StoreProcessor,
-		StorageProcessor  _StorageProcessor,
-		Level.Factory     _LevelFactory,
-		ProductInfo       _NoAdsProduct 
+		SignalBus        _SignalBus,
+		StoreProcessor   _StoreProcessor,
+		StorageProcessor _StorageProcessor,
+		Level.Factory    _LevelFactory,
+		ProductInfo      _NoAdsProduct 
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_StoreProcessor = _StoreProcessor;
-		m_StorageProcessor  = _StorageProcessor;
-		m_LevelFactory      = _LevelFactory;
-		m_NoAdsProduct      = _NoAdsProduct;
+		m_SignalBus        = _SignalBus;
+		m_StoreProcessor   = _StoreProcessor;
+		m_StorageProcessor = _StorageProcessor;
+		m_LevelFactory     = _LevelFactory;
+		m_NoAdsProduct     = _NoAdsProduct;
 	}
 
 	public async Task LoadLevels()
@@ -133,7 +130,7 @@ public class LevelProcessor
 		return levelSnapshot.Title;
 	}
 
-	public long GetPayout(string _LevelID)
+	public long GetPayout(string _LevelID, ScoreRank _Rank)
 	{
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
@@ -143,7 +140,19 @@ public class LevelProcessor
 			return 0;
 		}
 		
-		return levelSnapshot.Payout;
+		long payout = 0;
+		if (_Rank >= ScoreRank.None)
+			payout += levelSnapshot.DefaultPayout;
+		if (_Rank >= ScoreRank.Bronze)
+			payout += levelSnapshot.BronzePayout;
+		if (_Rank >= ScoreRank.Silver)
+			payout += levelSnapshot.SilverPayout;
+		if (_Rank >= ScoreRank.Gold)
+			payout += levelSnapshot.GoldPayout;
+		if (_Rank >= ScoreRank.Platinum)
+			payout += levelSnapshot.PlatinumPayout;
+		
+		return payout;
 	}
 
 	public long GetPrice(string _LevelID)
@@ -157,6 +166,32 @@ public class LevelProcessor
 		}
 		
 		return levelSnapshot.Price;
+	}
+
+	public long GetRevivePrice(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get revive price failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelSnapshot.RevivePrice;
+	}
+
+	public float GetInvincibility(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get invincibility failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return levelSnapshot.Invincibility;
 	}
 
 	public int GetLevel(string _LevelID)
@@ -310,6 +345,19 @@ public class LevelProcessor
 		m_SignalBus.Fire(new LevelRestartSignal(m_LevelID));
 	}
 
+	public void Revive()
+	{
+		if (m_Level == null)
+		{
+			Debug.LogError("[LevelProcessor] Revive level failed. Level is null.");
+			return;
+		}
+		
+		m_SignalBus.Fire(new LevelReviveSignal(m_LevelID));
+		
+		m_Level.Play();
+	}
+
 	public void AddSampleReceiver(ISampleReceiver _SampleReceiver)
 	{
 		m_SampleReceivers.Add(_SampleReceiver);
@@ -348,19 +396,7 @@ public class LevelProcessor
 			
 			string levelID = levelSnapshot.Key;
 			
-			LevelSnapshot level = new LevelSnapshot(
-				levelSnapshot.GetInt("level"),
-				levelSnapshot.GetString("title", string.Empty),
-				levelSnapshot.GetString("artist", string.Empty),
-				levelSnapshot.GetEnum<LevelMode>("mode"),
-				levelSnapshot.GetFloat("length"),
-				levelSnapshot.GetFloat("bpm"),
-				levelSnapshot.GetFloat("speed"),
-				levelSnapshot.GetBool("locked"),
-				levelSnapshot.GetLong("payout"),
-				levelSnapshot.GetLong("price"),
-				levelSnapshot.GetString("skin", "level")
-			);
+			LevelSnapshot level = new LevelSnapshot(levelSnapshot);
 			
 			m_LevelIDs.Add(levelID);
 			m_LevelSnapshots[levelID] = level;

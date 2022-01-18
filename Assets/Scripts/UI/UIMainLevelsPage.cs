@@ -110,7 +110,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 			.ToDictionary(_LevelGroup => _LevelGroup.Key, _LevelGroup => _LevelGroup.ToArray());
 		
 		foreach (var entry in groups)
-			CreateItemsGroup(m_LanguageProcessor.Format("TRACKS_LEVEL", entry.Key), entry.Value);
+			CreateItemsGroup(m_LanguageProcessor.Format("TRACKS_LEVEL", $"<sprite name=level_{entry.Key}>"), entry.Value);
 	}
 
 	void CreateItemsGroup(string _Title, IReadOnlyCollection<string> _LevelIDs)

@@ -71,7 +71,7 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 
 	protected override IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
 	{
-		yield return new WaitForSeconds(10);
+		yield return new WaitForSeconds(2);
 		
 		LayoutElement layoutElement = GetComponent<LayoutElement>();
 		

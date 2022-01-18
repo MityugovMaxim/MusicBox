@@ -49,7 +49,12 @@ public class UILoadingMenu : UIMenu
 		if (pauseMenu != null)
 			pauseMenu.Setup(m_LevelID);
 		
+		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
+		if (reviveMenu != null)
+			reviveMenu.Setup(m_LevelID);
+		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
+		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		
 		await m_LevelProcessor.Load(m_LevelID);

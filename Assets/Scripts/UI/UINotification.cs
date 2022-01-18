@@ -25,9 +25,14 @@ public class UINotification : UIEntity, IPointerClickHandler, IEndDragHandler
 		
 		m_Animator = GetComponent<Animator>();
 		
-		m_HideState = StateBehaviour.GetBehaviour(m_Animator, "hide");
-		if (m_HideState != null)
-			m_HideState.OnComplete += InvokeFinished;
+		StateBehaviour.RegisterComplete(m_Animator, "hide", InvokeFinished);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		StateBehaviour.UnregisterComplete(m_Animator, "hide", InvokeFinished);
 	}
 
 	public void Setup(

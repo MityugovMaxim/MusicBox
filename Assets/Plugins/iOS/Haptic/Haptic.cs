@@ -12,6 +12,7 @@ public abstract class Haptic
 		ImpactLight  = 5,
 		ImpactMedium = 6,
 		ImpactHeavy  = 7,
+		ImpactRigid  = 8,
 	}
 
 	public abstract bool SupportsHaptic { get; }

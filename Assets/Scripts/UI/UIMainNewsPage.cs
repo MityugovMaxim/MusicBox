@@ -12,6 +12,7 @@ public class UIMainNewsPage : UIMainMenuPage
 	[SerializeField] UIGroup       m_ItemsGroup;
 	[SerializeField] UIGroup       m_LoaderGroup;
 	[SerializeField] UIGroup       m_ErrorGroup;
+	[SerializeField] UIGroup       m_EmptyGroup;
 
 	SignalBus       m_SignalBus;
 	NewsProcessor   m_NewsProcessor;
@@ -92,7 +93,14 @@ public class UIMainNewsPage : UIMainMenuPage
 		m_NewsIDs = m_NewsProcessor.GetNewsIDs();
 		
 		if (m_NewsIDs == null || m_NewsIDs.Count == 0)
+		{
+			m_ItemsGroup.Hide();
+			m_EmptyGroup.Show();
 			return;
+		}
+		
+		m_ItemsGroup.Show();
+		m_EmptyGroup.Hide();
 		
 		foreach (string newsID in m_NewsIDs)
 		{

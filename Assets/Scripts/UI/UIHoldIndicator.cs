@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
@@ -31,12 +30,8 @@ public class UIHoldIndicator : UIIndicator
 
 	IEnumerator m_HighlightRoutine;
 
-	Action m_Finished;
-
-	public void Setup(HoldClip _Clip, float _Distance, Action _Finished)
+	public void Setup(HoldClip _Clip, float _Distance)
 	{
-		m_Finished = _Finished;
-		
 		if (m_Spline == null)
 			return;
 		
@@ -153,8 +148,6 @@ public class UIHoldIndicator : UIIndicator
 		
 		Animator.SetTrigger(m_SuccessParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
-		
-		InvokeFinished();
 	}
 
 	public void Fail(float _MinProgress, float _MaxProgress)
@@ -163,8 +156,6 @@ public class UIHoldIndicator : UIIndicator
 		
 		Animator.SetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
-		
-		InvokeFinished();
 	}
 
 	public void Hit(float _MinProgress, float _MaxProgress)
@@ -217,12 +208,5 @@ public class UIHoldIndicator : UIIndicator
 		}
 		
 		m_Highlight.Max = 1;
-	}
-
-	void InvokeFinished()
-	{
-		Action action = m_Finished;
-		m_Finished = null;
-		action?.Invoke();
 	}
 }

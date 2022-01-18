@@ -4,24 +4,20 @@ using Zenject;
 
 public class UITapTrack : UITrack<TapClip>
 {
+	SignalBus           m_SignalBus;
 	UITapIndicator.Pool m_IndicatorPool;
 	UIInputReceiver     m_InputReceiver;
 
-	readonly HashSet<TapClip>                    m_Used       = new HashSet<TapClip>();
 	readonly Dictionary<TapClip, UITapIndicator> m_Indicators = new Dictionary<TapClip, UITapIndicator>();
 
 	[Inject]
-	public void Construct(UIInputReceiver _InputReceiver, UITapIndicator.Pool _IndicatorPool)
+	public void Construct(
+		UIInputReceiver     _InputReceiver,
+		UITapIndicator.Pool _IndicatorPool
+	)
 	{
 		m_InputReceiver = _InputReceiver;
 		m_IndicatorPool = _IndicatorPool;
-	}
-
-	public override void Initialize(float _Speed, List<TapClip> _Clips)
-	{
-		base.Initialize(_Speed, _Clips);
-		
-		m_Used.Clear();
 	}
 
 	protected override void RemoveIndicator(TapClip _Clip)
@@ -48,12 +44,10 @@ public class UITapTrack : UITrack<TapClip>
 		
 		foreach (TapClip clip in _Clips)
 		{
-			if (!m_Indicators.ContainsKey(clip) && !m_Used.Contains(clip))
-				m_Indicators[clip] = CreateIndicator(clip);
+			if (!m_Indicators.ContainsKey(clip))
+				m_Indicators[clip] = CreateIndicator();
 			
-			UITapIndicator indicator = m_Indicators[clip];
-			
-			if (indicator == null)
+			if (!m_Indicators.TryGetValue(clip, out UITapIndicator indicator))
 				continue;
 			
 			indicator.RectTransform.anchorMin        = anchor;
@@ -62,7 +56,7 @@ public class UITapTrack : UITrack<TapClip>
 		}
 	}
 
-	UITapIndicator CreateIndicator(TapClip _Clip)
+	UITapIndicator CreateIndicator()
 	{
 		UITapIndicator indicator = m_IndicatorPool.Spawn();
 		
@@ -71,7 +65,7 @@ public class UITapTrack : UITrack<TapClip>
 		
 		indicator.RectTransform.SetParent(RectTransform, false);
 		
-		indicator.Setup(() => m_Used.Add(_Clip));
+		indicator.Setup();
 		
 		if (m_InputReceiver != null)
 			m_InputReceiver.RegisterIndicator(indicator);

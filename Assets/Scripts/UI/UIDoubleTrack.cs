@@ -7,7 +7,6 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 	UIInputReceiver        m_InputReceiver;
 	UIDoubleIndicator.Pool m_IndicatorPool;
 
-	readonly HashSet<DoubleClip>                       m_Used       = new HashSet<DoubleClip>();
 	readonly Dictionary<DoubleClip, UIDoubleIndicator> m_Indicators = new Dictionary<DoubleClip, UIDoubleIndicator>();
 
 	[Inject]
@@ -15,13 +14,6 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 	{
 		m_InputReceiver = _InputReceiver;
 		m_IndicatorPool = _IndicatorPool;
-	}
-
-	public override void Initialize(float _Speed, List<DoubleClip> _Clips)
-	{
-		base.Initialize(_Speed, _Clips);
-		
-		m_Used.Clear();
 	}
 
 	protected override void RemoveIndicator(DoubleClip _Clip)
@@ -48,12 +40,10 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		
 		foreach (DoubleClip clip in _Clips)
 		{
-			if (!m_Indicators.ContainsKey(clip) && !m_Used.Contains(clip))
-				m_Indicators[clip] = CreateIndicator(clip);
+			if (!m_Indicators.ContainsKey(clip))
+				m_Indicators[clip] = CreateIndicator();
 			
-			UIDoubleIndicator indicator = m_Indicators[clip];
-			
-			if (indicator == null)
+			if (!m_Indicators.TryGetValue(clip, out UIDoubleIndicator indicator))
 				continue;
 			
 			indicator.RectTransform.anchorMin        = anchor;
@@ -62,7 +52,7 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		}
 	}
 
-	UIDoubleIndicator CreateIndicator(DoubleClip _Clip)
+	UIDoubleIndicator CreateIndicator()
 	{
 		UIDoubleIndicator indicator = m_IndicatorPool.Spawn();
 		
@@ -71,7 +61,7 @@ public class UIDoubleTrack : UITrack<DoubleClip>
 		
 		indicator.RectTransform.SetParent(RectTransform, false);
 		
-		indicator.Setup(() => m_Used.Add(_Clip));
+		indicator.Setup();
 		
 		if (m_InputReceiver != null)
 			m_InputReceiver.RegisterIndicator(indicator);

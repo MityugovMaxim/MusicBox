@@ -8,9 +8,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 {
 	public override bool raycastTarget => true;
 
-	UIInputZone  m_InputZone;
-
-	SignalBus m_SignalBus;
+	UIInputZone m_InputZone;
 
 	readonly UIVertex[] m_Vertices =
 	{
@@ -25,6 +23,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	readonly List<UIHandle>                  m_InactiveHandles = new List<UIHandle>();
 	readonly List<UIHandle>                  m_ActiveHandles   = new List<UIHandle>();
 
+	bool m_Processing;
+
 	[Inject]
 	public void Construct(UIInputZone _InputZone)
 	{
@@ -33,11 +33,18 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	public void Process()
 	{
+		if (m_Processing)
+			return;
+		
+		m_Processing = true;
+		
 		EnableHandles();
 		
 		MoveInput();
 		
 		DisableHandles();
+		
+		m_Processing = false;
 	}
 
 	public void RegisterIndicator(UIIndicator _Indicator)
@@ -205,10 +212,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 			UIHandle handle = m_ActiveHandles[i];
 			
 			if (handle == null)
-			{
-				m_ActiveHandles.RemoveAt(i);
 				continue;
-			}
 			
 			List<int> pointerIDs = GetPointerIDs(handle);
 			

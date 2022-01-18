@@ -12,21 +12,39 @@ public abstract class UITrack<T> : UIEntity where T : Clip
 	[SerializeField] float m_MinPadding;
 	[SerializeField] float m_MaxPadding;
 
+	SignalBus   m_SignalBus;
 	UIInputZone m_InputZone;
 
 	[NonSerialized] List<T> m_Clips       = new List<T>();
 	[NonSerialized] List<T> m_ClipsBuffer = new List<T>();
 
-	[Inject]
-	public void Construct(UIInputZone _InputZone)
+	protected override void OnDestroy()
 	{
-		m_InputZone = _InputZone;
+		base.OnDestroy();
+		
+		if (m_SignalBus != null)
+			m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
 	}
 
-	public virtual void Initialize(float _Speed, List<T> _Clips)
+	[Inject]
+	public void Construct(SignalBus _SignalBus, UIInputZone _InputZone)
+	{
+		m_InputZone = _InputZone;
+		
+		m_SignalBus = _SignalBus;
+		if (m_SignalBus != null)
+			m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+	}
+
+	public void Initialize(float _Speed, List<T> _Clips)
 	{
 		m_Speed = _Speed;
 		m_Clips = _Clips;
+	}
+
+	void RegisterLevelRestart()
+	{
+		Process();
 	}
 
 	protected float GetTime(float _Distance)

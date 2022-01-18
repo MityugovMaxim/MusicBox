@@ -20,8 +20,7 @@ public class UIRewardMenu : UIMenu
 		string       _Description
 	)
 	{
-		if (m_Reward != null)
-			m_Reward.Setup(_Entity);
+		m_Entity = _Entity;
 		
 		if (m_Icon != null)
 			m_Icon.Load(_Sprite);
@@ -45,6 +44,9 @@ public class UIRewardMenu : UIMenu
 	protected override void OnShowStarted()
 	{
 		base.OnShowStarted();
+		
+		if (m_Reward != null)
+			m_Reward.Setup(m_Entity);
 		
 		if (m_Dialog != null)
 			m_Dialog.Show(true);

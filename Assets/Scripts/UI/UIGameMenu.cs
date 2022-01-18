@@ -64,6 +64,10 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 			resultMenu.Setup(m_LevelID);
 		
 		await m_MenuProcessor.Show(MenuType.ResultMenu);
+		
+		m_LevelProcessor.Pause();
+		
+		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 	}

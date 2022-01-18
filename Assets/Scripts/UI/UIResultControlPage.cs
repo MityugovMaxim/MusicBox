@@ -4,7 +4,6 @@ using Zenject;
 
 public class UIResultControlPage : UIResultMenuPage
 {
-	// TODO: Move to remote config
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 	const int NEXT_ADS_COUNT    = 2;
@@ -18,40 +17,63 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UILevelLikeButton m_LikeButton;
 	[SerializeField] UILevelModeButton m_RestartButton;
 
-	MenuProcessor   m_MenuProcessor;
-	LevelProcessor  m_LevelProcessor;
-	AdsProcessor    m_AdsProcessor;
-	HapticProcessor m_HapticProcessor;
+	ScoreProcessor   m_ScoreProcessor;
+	ProfileProcessor m_ProfileProcessor;
+	LevelProcessor   m_LevelProcessor;
+	AdsProcessor     m_AdsProcessor;
+	MenuProcessor    m_MenuProcessor;
+	HapticProcessor  m_HapticProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
 	int m_RestartAdsCount;
 	int m_RateUsCount;
 
-	string m_LevelID;
+	string    m_LevelID;
+	ScoreRank m_Rank;
+	int       m_Accuracy;
+	long      m_Score;
 
 	[Inject]
 	public void Construct(
-		MenuProcessor   _MenuProcessor,
-		LevelProcessor  _LevelProcessor,
-		AdsProcessor    _AdsProcessor,
-		HapticProcessor _HapticProcessor
+		ScoreProcessor   _ScoreProcessor,
+		ProfileProcessor _ProfileProcessor,
+		LevelProcessor   _LevelProcessor,
+		AdsProcessor     _AdsProcessor,
+		MenuProcessor    _MenuProcessor,
+		HapticProcessor  _HapticProcessor
 	)
 	{
-		m_MenuProcessor   = _MenuProcessor;
-		m_LevelProcessor  = _LevelProcessor;
-		m_AdsProcessor    = _AdsProcessor;
-		m_HapticProcessor = _HapticProcessor;
+		m_ScoreProcessor   = _ScoreProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
+		m_LevelProcessor   = _LevelProcessor;
+		m_AdsProcessor     = _AdsProcessor;
+		m_MenuProcessor    = _MenuProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 	}
 
 	public override void Setup(string _LevelID)
 	{
-		m_LevelID = _LevelID;
+		m_LevelID  = _LevelID;
+		m_Rank     = m_ScoreProcessor.Rank;
+		m_Accuracy = m_ScoreProcessor.Accuracy;
+		m_Score    = m_ScoreProcessor.Score;
 		
 		m_Thumbnail.Setup(m_LevelID);
+		m_Discs.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_LikeButton.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
+	}
+
+	public override async void Play()
+	{
+		await m_ProfileProcessor.CompleteLevel(
+			m_LevelID,
+			m_Rank,
+			m_Accuracy,
+			m_Score
+		);
 	}
 
 	public async void Leave()

@@ -12,8 +12,9 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] UILevelItem  m_LevelItem;
 	[SerializeField] UILevelGroup m_LevelGroup;
 	[SerializeField] UIStoreItem  m_StoreItem;
-	[SerializeField] UIOfferItem m_OfferItem;
-	[SerializeField] UINewsItem  m_NewsItem;
+	[SerializeField] UIOfferItem  m_OfferItem;
+	[SerializeField] UINewsItem   m_NewsItem;
+	[SerializeField] UIUnlockItem m_UnlockItem;
 
 	public override void InstallBindings()
 	{
@@ -54,6 +55,11 @@ public class GameInstaller : MonoInstaller
 			.WithInitialSize(5)
 			.FromComponentInNewPrefab(m_NewsItem)
 			.UnderTransformGroup("[UINewsMenuItem] Pool");
+		
+		Container.BindMemoryPool<UIUnlockItem, UIUnlockItem.Pool>()
+			.WithInitialSize(5)
+			.FromComponentInNewPrefab(m_UnlockItem)
+			.UnderTransformGroup("[UIUnlockItem] Pool");
 	}
 
 	void InstallCulture()
@@ -86,7 +92,7 @@ public class GameInstaller : MonoInstaller
 	{
 		#if UNITY_IOS
 		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
-		Container.Bind(typeof(NotificationProcessor), typeof(IInitializable)).To<iOSNotificationProcessor>().FromNew().AsSingle();
+		Container.Bind(typeof(MessageProcessor), typeof(IInitializable)).To<iOSMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
 		Container.Bind<MusicProcessor>().To<MusicProcessor>().FromInstance(m_MusicProcessor).AsSingle();
@@ -98,13 +104,14 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StoreProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<HealthProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<MessageProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<NewsProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<OffersProcessor>().FromNew().AsSingle();
 		
 		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProfileProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
 	}
@@ -125,6 +132,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<PurchaseDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<OfferDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<LevelStartSignal>();
 		Container.DeclareSignal<LevelPlaySignal>();
@@ -134,6 +142,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<LevelUnlockSignal>();
 		Container.DeclareSignal<LevelScoreSignal>();
 		Container.DeclareSignal<LevelComboSignal>();
+		Container.DeclareSignal<LevelReviveSignal>();
 		
 		Container.DeclareSignal<HoldHitSignal>();
 		Container.DeclareSignal<HoldMissSignal>();
@@ -145,6 +154,9 @@ public class GameInstaller : MonoInstaller
 		
 		Container.DeclareSignal<DoubleSuccessSignal>();
 		Container.DeclareSignal<DoubleFailSignal>();
+		
+		Container.DeclareSignal<HealthDamageSignal>();
+		Container.DeclareSignal<HealthRestoreSignal>();
 	}
 
 	void InstallAudioManager()

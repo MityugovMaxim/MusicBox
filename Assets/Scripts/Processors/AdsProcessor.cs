@@ -139,12 +139,13 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		return taskSource.Task;
 	}
 
-	public Task<bool> ShowRewardedAsync(MonoBehaviour _Context)
+	public Task<bool> ShowRewardedAsync(MonoBehaviour _Context, bool _Force = false)
 	{
 		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
 		
 		ShowRewarded(
 			_Context,
+			_Force,
 			() => taskSource.TrySetResult(true),
 			() => taskSource.TrySetResult(false),
 			() => taskSource.TrySetCanceled()
@@ -169,12 +170,13 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowRewarded(
 		MonoBehaviour _Context,
+		bool          _Force   = false,
 		Action        _Success = null,
 		Action        _Failed  = null,
 		Action        _Cancel  = null
 	)
 	{
-		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (!_Force || m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
 		{
 			_Success?.Invoke();
 			return;

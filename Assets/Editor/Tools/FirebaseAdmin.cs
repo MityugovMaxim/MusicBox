@@ -1,10 +1,5 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Firebase.Auth;
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.Purchasing;
 
 public static class FirebaseAdmin
 {
@@ -12,25 +7,13 @@ public static class FirebaseAdmin
 
 	public static async Task Login()
 	{
-		if (string.IsNullOrEmpty(m_Config))
-		{
-			string path = EditorUtility.OpenFilePanel("Select Firebase config", Application.dataPath, "json");
-			
-			if (string.IsNullOrEmpty(path))
-				return;
-			
-			m_Config = File.ReadAllText(path);
-		}
+		const string email    = "mityugovmaxim@gmail.com";
+		const string password = "123456";
 		
-		Dictionary<string, object> service = (Dictionary<string, object>)MiniJson.JsonDecode(m_Config);
+		if (FirebaseAuth.DefaultInstance.CurrentUser != null && FirebaseAuth.DefaultInstance.CurrentUser.Email == email)
+			return;
 		
-		string email    = service["email"] as string;
-		string password = service["password"] as string;
-		
-		await FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(
-			email,
-			password
-		);
+		await FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password);
 	}
 
 	public static void Logout()

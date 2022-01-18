@@ -15,6 +15,17 @@ public enum MainMenuPageType
 [Menu(MenuType.MainMenu)]
 public class UIMainMenu : UIMenu
 {
+	// TODO: Remove
+	void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+			resultMenu.Setup("mindme_my_home_is_you");
+			m_MenuProcessor.Show(MenuType.ResultMenu);
+		}
+	}
+
 	public UIProfile Profile => m_Profile;
 
 	[SerializeField] UIProfile         m_Profile;
@@ -25,6 +36,7 @@ public class UIMainMenu : UIMenu
 	SignalBus      m_SignalBus;
 	StoreProcessor m_StoreProcessor;
 	UrlProcessor   m_UrlProcessor;
+	MenuProcessor  m_MenuProcessor;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Levels;
 
@@ -32,12 +44,14 @@ public class UIMainMenu : UIMenu
 	public void Construct(
 		SignalBus      _SignalBus,
 		StoreProcessor _StoreProcessor,
-		UrlProcessor   _UrlProcessor
+		UrlProcessor   _UrlProcessor,
+		MenuProcessor _MenuProcessor
 	)
 	{
 		m_SignalBus      = _SignalBus;
 		m_StoreProcessor = _StoreProcessor;
 		m_UrlProcessor   = _UrlProcessor;
+		m_MenuProcessor  = _MenuProcessor;
 	}
 
 	public void Select(MainMenuPageType _PageType)

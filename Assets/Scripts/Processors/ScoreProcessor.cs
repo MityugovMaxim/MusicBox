@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
@@ -16,61 +15,17 @@ public enum ScoreRank
 	Platinum = 4,
 }
 
-public static class ScoreRankExtension
-{
-	public static ScoreRank Next(this ScoreRank _Rank)
-	{
-		ScoreRank[] ranks = Enum.GetValues(typeof(ScoreRank)).OfType<ScoreRank>().ToArray();
-		
-		int minRank = ranks.Cast<int>().Min();
-		int maxRank = ranks.Cast<int>().Max();
-		
-		return (ScoreRank)Mathf.Clamp((int)_Rank + 1, minRank, maxRank);
-	}
-
-	public static ScoreRank Previous(this ScoreRank _Rank)
-	{
-		ScoreRank[] ranks = Enum.GetValues(typeof(ScoreRank)).OfType<ScoreRank>().ToArray();
-		
-		int minRank = ranks.Cast<int>().Min();
-		int maxRank = ranks.Cast<int>().Max();
-		
-		return (ScoreRank)Mathf.Clamp((int)_Rank - 1, minRank, maxRank);
-	}
-
-	public static ScoreRank Max(this ScoreRank _A, ScoreRank _B)
-	{
-		return (ScoreRank)Mathf.Max((int)_A, (int)_B);
-	}
-
-	public static ScoreRank Min(this ScoreRank _A, ScoreRank _B)
-	{
-		return (ScoreRank)Mathf.Min((int)_A, (int)_B);
-	}
-}
-
 public class ScoreSnapshot
 {
 	public int       Accuracy { get; }
 	public long      Score    { get; }
 	public ScoreRank Rank     { get; }
 
-	public ScoreSnapshot(
-		int       _Accuracy,
-		long      _Score,
-		ScoreRank _Rank
-	)
+	public ScoreSnapshot(DataSnapshot _DataSnapshot)
 	{
-		Accuracy = _Accuracy;
-		Score    = _Score;
-		Rank     = _Rank;
-	}
-
-	public ScoreSnapshot(ScoreSnapshot _ScoreSnapshot)
-	{
-		Accuracy = _ScoreSnapshot?.Accuracy ?? 0;
-		Score    = _ScoreSnapshot?.Score ?? 0;
-		Rank     = _ScoreSnapshot?.Rank ?? ScoreRank.None;
+		Accuracy = _DataSnapshot.GetInt("accuracy");
+		Score    = _DataSnapshot.GetLong("score");
+		Rank     = _DataSnapshot.GetEnum<ScoreRank>("rank");
 	}
 }
 
@@ -99,8 +54,9 @@ public class ScoreProcessor : IInitializable, IDisposable
 	const int SILVER_RANK   = 50;
 	const int BRONZE_RANK   = 5;
 
-	const int X4_COMBO = 150;
-	const int X3_COMBO = 60;
+	const int X8_COMBO = 320;
+	const int X6_COMBO = 150;
+	const int X4_COMBO = 60;
 	const int X2_COMBO = 20;
 
 	public long Score => m_Score;
@@ -133,25 +89,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		}
 	}
 
-	public int       OriginAccuracy => m_ScoreSnapshot?.Accuracy ?? 0;
-	public long      OriginScore    => m_ScoreSnapshot?.Score ?? 0;
-	public ScoreRank OriginRank     => m_ScoreSnapshot?.Rank ?? ScoreRank.None;
-
-	public int Multiplier
-	{
-		get
-		{
-			if (Combo >= X4_COMBO)
-				return 4;
-			else if (Combo >= X3_COMBO)
-				return 3;
-			else if (Combo >= X2_COMBO)
-				return 2;
-			else
-				return 1;
-		}
-	}
-
 	public int Combo
 	{
 		get => m_Combo;
@@ -160,14 +97,58 @@ public class ScoreProcessor : IInitializable, IDisposable
 			if (m_Combo == value)
 				return;
 			
-			int sourceMultiplier = Multiplier;
-			
 			m_Combo = value;
 			
-			int targetMultiplier = Multiplier;
+			m_SignalBus.Fire(new LevelComboSignal(m_Combo, Multiplier, Progress));
+		}
+	}
+
+	public int Multiplier
+	{
+		get
+		{
+			if (Combo >= X8_COMBO)
+				return 8;
+			else if (Combo >= X6_COMBO)
+				return 6;
+			else if (Combo >= X4_COMBO)
+				return 4;
+			else if (Combo >= X2_COMBO)
+				return 2;
+			else
+				return 1;
+		}
+	}
+
+	public float Progress
+	{
+		get
+		{
+			int minProgress;
+			if (Combo >= X8_COMBO)
+				minProgress = X8_COMBO;
+			else if (Combo >= X6_COMBO)
+				minProgress = X6_COMBO;
+			else if (Combo >= X4_COMBO)
+				minProgress = X4_COMBO;
+			else if (Combo >= X2_COMBO)
+				minProgress = X2_COMBO;
+			else
+				minProgress = 0;
 			
-			if (sourceMultiplier != targetMultiplier)
-				m_SignalBus.Fire(new LevelComboSignal(targetMultiplier));
+			int maxProgress;
+			if (Combo >= X8_COMBO)
+				maxProgress = X8_COMBO;
+			else if (Combo >= X6_COMBO)
+				maxProgress = X8_COMBO;
+			else if (Combo >= X4_COMBO)
+				maxProgress = X6_COMBO;
+			else if (Combo >= X2_COMBO)
+				maxProgress = X4_COMBO;
+			else
+				maxProgress = X2_COMBO;
+			
+			return Mathf.InverseLerp(minProgress, maxProgress - 1, Combo);
 		}
 	}
 
@@ -231,10 +212,10 @@ public class ScoreProcessor : IInitializable, IDisposable
 	readonly Dictionary<string, ScoreSnapshot> m_ScoreSnapshots = new Dictionary<string, ScoreSnapshot>();
 
 	DatabaseReference m_ScoresData;
-	ScoreSnapshot     m_ScoreSnapshot;
 
-	long m_Score;
-	int  m_Combo;
+	string m_LevelID;
+	long   m_Score;
+	int    m_Combo;
 
 	int m_TapPerfect;
 	int m_TapGood;
@@ -306,7 +287,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			case ScoreRank.Platinum:
 				return PLATINUM_RANK;
 			default:
-				return 0;
+				return PLATINUM_RANK;
 		}
 	}
 
@@ -340,11 +321,41 @@ public class ScoreProcessor : IInitializable, IDisposable
 		return count;
 	}
 
+	public async Task SaveScore()
+	{
+		if (string.IsNullOrEmpty(m_LevelID))
+		{
+			Debug.LogError("[ScoreProcessor] Save score failed. Level ID is null or empty.");
+			return;
+		}
+		
+		int  accuracy = Accuracy;
+		long score    = Score;
+		int  rank     = (int)Rank;
+		
+		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(m_LevelID);
+		
+		if (scoreSnapshot != null && scoreSnapshot.Accuracy >= Accuracy)
+			return;
+		
+		Dictionary<string, object> scoreData = new Dictionary<string, object>()
+		{
+			{ "accuracy", accuracy },
+			{ "score", score },
+			{ "rank", rank },
+		};
+		
+		m_LevelID = null;
+		
+		await m_ScoresData.Child(m_LevelID).SetValueAsync(scoreData);
+		
+		Debug.LogFormat("[ScoreProcessor] Save score complete. LevelID: {0}.", m_LevelID);
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
 		
 		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
 		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
@@ -377,21 +388,16 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
-		m_ScoreSnapshot = new ScoreSnapshot(GetScoreSnapshot(_Signal.LevelID));
+		m_LevelID = _Signal.LevelID;
 		
 		Restore();
 	}
 
 	void RegisterLevelRestart(LevelRestartSignal _Signal)
 	{
-		m_ScoreSnapshot = new ScoreSnapshot(GetScoreSnapshot(_Signal.LevelID));
+		m_LevelID = _Signal.LevelID;
 		
 		Restore();
-	}
-
-	void RegisterLevelFinish(LevelFinishSignal _Signal)
-	{
-		SaveScore(_Signal.LevelID);
 	}
 
 	async void OnScoresUpdate(object _Sender, EventArgs _Args)
@@ -414,11 +420,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		foreach (DataSnapshot scoreSnapshot in scoresSnapshot.Children)
 		{
 			string levelID = scoreSnapshot.Key;
-			ScoreSnapshot score = new ScoreSnapshot(
-				scoreSnapshot.Child("accuracy").GetInt(),
-				scoreSnapshot.Child("score").GetLong(),
-				scoreSnapshot.Child("rank").GetEnum<ScoreRank>()
-			);
+			ScoreSnapshot score = new ScoreSnapshot(scoreSnapshot);
 			m_ScoreSnapshots[levelID] = score;
 		}
 	}
@@ -442,35 +444,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_HoldMiss         = 0;
 		m_HoldSuccessScore = 0;
 		m_HoldFailScore    = 0;
-	}
-
-	async void SaveScore(string _LevelID)
-	{
-		if (string.IsNullOrEmpty(_LevelID))
-		{
-			Debug.LogError("[ScoreProcessor] Save score failed. Level ID is null or empty.");
-			return;
-		}
-		
-		int  accuracy = Accuracy;
-		long score    = Score;
-		int  rank     = (int)Rank;
-		
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
-		
-		if (scoreSnapshot != null && scoreSnapshot.Accuracy >= Accuracy)
-			return;
-		
-		Dictionary<string, object> scoreData = new Dictionary<string, object>()
-		{
-			{ "accuracy", accuracy },
-			{ "score", score },
-			{ "rank", rank },
-		};
-		
-		await m_ScoresData.Child(_LevelID).SetValueAsync(scoreData);
-		
-		Debug.LogFormat("[ScoreProcessor] Save score complete. LevelID: {0}.", _LevelID);
 	}
 
 	void RegisterHoldSuccess(HoldSuccessSignal _Signal)

@@ -40,10 +40,10 @@ public class Level : MonoBehaviour
 	}
 
 	public void Setup(
-		float          _Length,
-		float          _BPM,
-		float          _Speed,
-		params Track[] _Tracks
+		float   _Length,
+		float   _BPM,
+		float   _Speed,
+		Track[] _Tracks
 	)
 	{
 		if (m_Sequencer == null)

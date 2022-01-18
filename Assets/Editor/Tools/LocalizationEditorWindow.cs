@@ -27,7 +27,9 @@ public class LocalizationEditorWindow : EditorWindow
 		public Localization(string _Key, string _Value)
 		{
 			Key   = _Key;
-			Value = _Value;
+			Value = _Value
+				.Replace("\n", "\\n")
+				.Replace("\t", "\\t");
 		}
 	}
 
@@ -97,6 +99,8 @@ public class LocalizationEditorWindow : EditorWindow
 		
 		Debug.Log("[LocalizationEditorWindow] Fetching localizations...");
 		
+		await FirebaseAdmin.Login();
+		
 		foreach (SystemLanguage language in m_Languages)
 			await Fetch(language);
 		
@@ -122,6 +126,8 @@ public class LocalizationEditorWindow : EditorWindow
 	{
 		Debug.Log("[LocalizationEditorWindow] Uploading localizations...");
 		
+		await FirebaseAdmin.Login();
+		
 		foreach (SystemLanguage language in m_Languages)
 			await Upload(language);
 		
@@ -136,7 +142,7 @@ public class LocalizationEditorWindow : EditorWindow
 		
 		m_Localizations[_Language] = localizations;
 		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child($"Localization/{_Language}.json");
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child($"Localization/{_Language.GetCode()}.json");
 		
 		try
 		{
@@ -157,7 +163,7 @@ public class LocalizationEditorWindow : EditorWindow
 
 	async Task Upload(SystemLanguage _Language)
 	{
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child($"Localization/{_Language}.json");
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child($"Localization/{_Language.GetCode()}.json");
 		
 		List<Localization> localizations = m_Localizations[_Language];
 		
@@ -204,26 +210,53 @@ public class LocalizationEditorWindow : EditorWindow
 			EditorGUI.SelectableLabel(_Rect, "Localization Keys");
 		};
 		
+		m_LocalizationsList.onRemoveCallback += _List =>
+		{
+			Localization localization = localizations[_List.index];
+			
+			foreach (var entry in m_Localizations)
+				entry.Value.RemoveAll(_Localization => _Localization.Key == localization.Key);
+		};
+		
 		m_LocalizationsList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
 		{
 			Rect keyRect = new Rect(
 				_Rect.x,
 				_Rect.y,
-				_Rect.width * 0.5f - 10,
+				_Rect.width * 0.5f - 10 - 90,
 				_Rect.height
 			);
 			
 			Rect separatorRect = new Rect(
-				_Rect.x + _Rect.width * 0.5f - 10,
+				_Rect.x + _Rect.width * 0.5f - 10 - 90,
 				_Rect.y,
 				20,
 				_Rect.height
 			);
 			
 			Rect valueRect = new Rect(
-				_Rect.x + _Rect.width * 0.5f + 10,
+				_Rect.x + _Rect.width * 0.5f + 10 - 90,
 				_Rect.y,
 				_Rect.width * 0.5f - 10,
+				_Rect.height
+			);
+			
+			Rect upperRect = new Rect(
+				_Rect.x + _Rect.width - 90,
+				_Rect.y,
+				30,
+				_Rect.height
+			);
+			Rect lowerRect = new Rect(
+				_Rect.x + _Rect.width - 60,
+				_Rect.y,
+				30,
+				_Rect.height
+			);
+			Rect capitalizeRect = new Rect(
+				_Rect.x + _Rect.width - 30,
+				_Rect.y,
+				30,
 				_Rect.height
 			);
 			
@@ -233,6 +266,13 @@ public class LocalizationEditorWindow : EditorWindow
 			localization.Value = EditorGUI.TextField(valueRect, localization.Value);
 			
 			EditorGUI.LabelField(separatorRect, ":");
+			
+			if (GUI.Button(upperRect, "AB"))
+				localization.Value = localization.Value.ToUpperInvariant();
+			if (GUI.Button(lowerRect, "ab"))
+				localization.Value = localization.Value.ToLowerInvariant();
+			if (GUI.Button(capitalizeRect, "Ab"))
+				localization.Value = localization.Value.Substring(0, 1).ToUpperInvariant() + localization.Value.Substring(1).ToLowerInvariant();
 		};
 	}
 

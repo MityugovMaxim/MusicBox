@@ -58,13 +58,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.7490196}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d3fd817b31ee744ba81b363e94d2c5bf, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 627311076898676180}
   - component: {fileID: 1304609656468938811}
   m_Layer: 5
-  m_Name: main_menu_group
+  m_Name: level_group
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -216,7 +216,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Title
+  m_text: AVAILABLE AT <sprite name=level_1>
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b8a669d2cdbd741b88d67b01024fd0da, type: 2}
   m_sharedMaterial: {fileID: 6603240175740317581, guid: b8a669d2cdbd741b88d67b01024fd0da,
@@ -251,7 +251,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 4
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
