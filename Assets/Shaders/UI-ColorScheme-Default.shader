@@ -2,7 +2,7 @@ Shader "UI/ColorScheme/Default"
 {
 	Properties
 	{
-		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+		_MainTex ("Sprite Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
 		_Power ("Power", Float) = 1
 		
