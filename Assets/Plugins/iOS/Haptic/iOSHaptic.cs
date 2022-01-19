@@ -33,6 +33,9 @@ public class iOSHaptic : Haptic
 	[DllImport("__Internal")]
 	static extern void HapticRigidImpact();
 
+	[DllImport("__Internal")]
+	static extern void HapticSoftImpact();
+
 	public override bool SupportsHaptic => Device.generation >= DeviceGeneration.iPhone7;
 
 	protected override void Initialize()
@@ -76,6 +79,9 @@ public class iOSHaptic : Haptic
 				return;
 			case Type.ImpactRigid:
 				HapticRigidImpact();
+				return;
+			case Type.ImpactSoft:
+				HapticSoftImpact();
 				return;
 		}
 	}
