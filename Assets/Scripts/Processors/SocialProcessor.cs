@@ -7,10 +7,7 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class LoginSignal { }
-
-[Preserve]
-public class LogoutSignal { }
+public class SocialDataUpdateSignal { }
 
 [Preserve]
 public class SocialProcessor : IInitializable, IDisposable
@@ -62,6 +59,20 @@ public class SocialProcessor : IInitializable, IDisposable
 	public void Logout()
 	{
 		m_Auth.SignOut();
+	}
+
+	public void SetUsername(string _Username)
+	{
+		if (m_User == null)
+			return;
+		
+		UserProfile profile = new UserProfile();
+		profile.DisplayName = _Username;
+		profile.PhotoUrl    = m_User.PhotoUrl;
+		
+		m_User.UpdateUserProfileAsync(profile);
+		
+		m_SignalBus.Fire<SocialDataUpdateSignal>();
 	}
 
 	public async Task<bool> AttachAppleID()
@@ -129,13 +140,13 @@ public class SocialProcessor : IInitializable, IDisposable
 		{
 			Debug.LogFormat("[SocialProcessor] User login. User ID: {0}.", user.UserId);
 			m_User = user;
-			m_SignalBus.Fire<LoginSignal>();
+			m_SignalBus.Fire<SocialDataUpdateSignal>();
 		}
 		else
 		{
 			Debug.LogFormat("[SocialProcessor] User logout. User ID: {0}.", m_User.UserId);
 			m_User = null;
-			m_SignalBus.Fire<LogoutSignal>();
+			m_SignalBus.Fire<SocialDataUpdateSignal>();
 		}
 	}
 

@@ -35,9 +35,7 @@ public class UINewsItem : UIEntity
 	{
 		m_NewsID = _NewsID;
 		
-		string image = m_NewsProcessor.GetImage(_NewsID);
-		
-		m_Image.Load(m_StorageProcessor.LoadSprite(image));
+		m_Image.Load(m_StorageProcessor.LoadNewsThumbnail(m_NewsID));
 		
 		m_Title.text = m_NewsProcessor.GetTitle(m_NewsID);
 		m_Text.text  = m_NewsProcessor.GetText(m_NewsID);

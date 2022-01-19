@@ -24,6 +24,20 @@ public abstract class UIImage : MaskableGraphic
 
 	public override Texture mainTexture => m_Sprite != null ? m_Sprite.texture : base.mainTexture;
 
+	public Sprite Sprite
+	{
+		get => m_Sprite;
+		set
+		{
+			if (m_Sprite == value)
+				return;
+			
+			m_Sprite = value;
+			
+			SetAllDirty();
+		}
+	}
+
 	protected BlendType   Type   => m_Type;
 	protected BlendScheme Scheme => m_Scheme;
 
@@ -35,7 +49,7 @@ public abstract class UIImage : MaskableGraphic
 	{
 		Rect    rect = GetPixelAdjustedRect();
 		Vector4 mask = GetMask();
-		Vector4 uv   = m_Sprite != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Sprite) : Vector4.zero;
+		Vector4 uv   = m_Sprite != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Sprite) : new Vector4(0, 0, 1, 1);
 		
 		Color32 color32 = color;
 		_VertexHelper.Clear();

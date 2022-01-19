@@ -71,10 +71,9 @@ public abstract class DatabaseEditorWindow<T> : EditorWindow where T : DatabaseE
 	protected abstract DatabaseReference DatabaseReference { get; }
 
 	[SerializeField] Vector2 m_ScrollPosition;
+	[SerializeField] Color   m_SeparatorColor = new Color(0.12f, 0.12f, 0.12f);
 
 	bool m_Locked;
-
-	static readonly Color m_SeparatorColor = new Color(0.12f, 0.12f, 0.12f);
 
 	void OnGUI()
 	{

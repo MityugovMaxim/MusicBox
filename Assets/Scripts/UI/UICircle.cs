@@ -1,142 +1,83 @@
-﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-[ExecuteInEditMode]
-public class UICircle : MaskableGraphic
+public class UICircle : UIImage
 {
-	public Sprite Sprite
+	static readonly MaterialPool m_MaterialPool = new MaterialPool();
+
+	[SerializeField, Range(0, 1)] float m_Size;
+	[SerializeField, Range(0, 1)] float m_Fade;
+
+	protected override Material GetMaterial()
 	{
-		get => m_Sprite;
-		set
+		string materialID = GetMaterialID();
+		
+		Material material = m_MaterialPool.Get(materialID);
+		
+		if (material != null)
+			return material;
+		
+		string keyword;
+		switch (Scheme)
 		{
-			if (m_Sprite == value)
-				return;
-			
-			m_Sprite = value;
-			
-			SetMaterialDirty();
+			case BlendScheme.Background:
+				keyword = "BACKGROUND_SCHEME";
+				break;
+			case BlendScheme.Foreground:
+				keyword = "FOREGROUND_SCHEME";
+				break;
+			default:
+				keyword = null;
+				break;
 		}
+		
+		material = CreateMaterial("UI/Circle", keyword);
+		
+		switch (Type)
+		{
+			case BlendType.Blend:
+				SetBlend(material);
+				break;
+			
+			case BlendType.Additive:
+				SetAdditive(material);
+				break;
+		}
+		
+		m_MaterialPool.Register(materialID, material);
+		
+		return material;
 	}
 
-	public float Origin
+	protected override Vector2 GetUV2()
 	{
-		get => m_Origin;
-		set
-		{
-			if (Mathf.Approximately(m_Origin, value))
-				return;
-			
-			m_Origin = value;
-			
-			SetVerticesDirty();
-		}
+		return new Vector2(m_Size, m_Fade);
 	}
 
-	public float Arc
+	protected override Vector2 GetUV3()
 	{
-		get => m_Arc;
-		set
-		{
-			if (Mathf.Approximately(m_Arc, value))
-				return;
-			
-			m_Arc = value;
-			
-			SetVerticesDirty();
-		}
+		return Vector2.zero;
 	}
 
-	public override Texture mainTexture => Sprite != null ? Sprite.texture : base.mainTexture;
-
-	[SerializeField]              Sprite m_Sprite;
-	[SerializeField]              int    m_Samples; 
-	[SerializeField]              float  m_Radius;
-	[SerializeField]              float  m_Width;
-	[SerializeField, Range(0, 1)] float  m_Origin;
-	[SerializeField, Range(0, 1)] float  m_Arc = 1;
-	[SerializeField]              bool   m_Clockwise;
-
-	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
-	readonly List<int>      m_Indices  = new List<int>();
-
-	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
+	protected override Vector3 GetNormal()
 	{
-		_VertexHelper.Clear();
-		
-		Color32 color = this.color;
-		
-		if (m_Radius <= float.Epsilon || m_Width <= float.Epsilon || m_Arc <= float.Epsilon || color.a <= 0)
-			return;
-		
-		m_Vertices.Clear();
-		m_Indices.Clear();
-		
-		int samples = Mathf.Max(1, Mathf.FloorToInt(m_Samples * m_Arc));
-		
-		float      angle = 360.0f * m_Arc / samples;
-		Quaternion step  = Quaternion.Euler(0, 0, m_Clockwise ? -angle : angle);
-		
-		Vector3 origin = Quaternion.Euler(0, 0, 360.0f * m_Origin) * Vector3.right;
-		Vector3 outer  = origin * m_Radius;
-		Vector3 inner  = origin * Mathf.Max(0, m_Radius - m_Width);
-		Rect    uv     = new Rect(0, 0, 1, 1);
-		if (Sprite != null)
-		{
-			uv = new Rect(
-				Sprite.rect.x / Sprite.texture.width,
-				Sprite.rect.y / Sprite.texture.height,
-				Sprite.rect.width / Sprite.texture.width,
-				Sprite.rect.height / Sprite.texture.height
-			);
-		}
-		for (int i = 0; i <= samples; i++)
-		{
-			float phase = Mathf.Lerp(uv.yMax, uv.yMin, (float)i / samples);
-			
-			m_Vertices.Add(Create(outer, color, new Vector2(uv.xMin, phase)));
-			m_Vertices.Add(Create(inner, color, new Vector2(uv.xMax, phase)));
-			
-			outer = step * outer;
-			inner = step * inner;
-		}
-		
-		if (m_Clockwise)
-		{
-			for (int i = 0; i < samples; i++)
-			{
-				m_Indices.Add(i * 2 + 3);
-				m_Indices.Add(i * 2 + 1);
-				m_Indices.Add(i * 2 + 0);
-				m_Indices.Add(i * 2 + 3);
-				m_Indices.Add(i * 2 + 0);
-				m_Indices.Add(i * 2 + 2);
-			}
-		}
-		else
-		{
-			for (int i = 0; i < samples; i++)
-			{
-				m_Indices.Add(i * 2 + 0);
-				m_Indices.Add(i * 2 + 1);
-				m_Indices.Add(i * 2 + 3);
-				m_Indices.Add(i * 2 + 2);
-				m_Indices.Add(i * 2 + 0);
-				m_Indices.Add(i * 2 + 3);
-			}
-		}
-		
-		_VertexHelper.AddUIVertexStream(m_Vertices, m_Indices);
+		return Vector3.zero;
 	}
 
-	static UIVertex Create(Vector3 _Position, Color32 _Color, Vector2 _UV)
+	protected override Vector4 GetTangent()
 	{
-		return new UIVertex()
-		{
-			position = _Position,
-			color    = _Color,
-			normal   = Vector3.forward,
-			uv0      = _UV,
-		};
+		if (Sprite == null)
+			return new Vector4(0, 0, 1, 1);
+		
+		return new Vector4(
+			Sprite.rect.x / Sprite.texture.width,
+			Sprite.rect.y / Sprite.texture.height,
+			Sprite.rect.width / Sprite.texture.width,
+			Sprite.rect.height / Sprite.texture.height
+		);
+	}
+
+	string GetMaterialID()
+	{
+		return $"circle_{Type}_{Scheme}";
 	}
 }

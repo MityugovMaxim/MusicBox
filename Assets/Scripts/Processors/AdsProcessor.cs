@@ -21,7 +21,6 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	protected abstract string RewardedID     { get; }
 
 	StoreProcessor m_StoreProcessor;
-	ProductInfo       m_NoAdsProduct;
 
 	bool m_InterstitialLoaded;
 	bool m_RewardedLoaded;
@@ -33,10 +32,9 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	Action m_RewardedFailed;
 
 	[Inject]
-	public void Construct(StoreProcessor _StoreProcessor, ProductInfo _NoAdsProduct)
+	public void Construct(StoreProcessor _StoreProcessor)
 	{
 		m_StoreProcessor = _StoreProcessor;
-		m_NoAdsProduct      = _NoAdsProduct;
 	}
 
 	void IInitializable.Initialize()
@@ -46,7 +44,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void Reload()
 	{
-		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsNoAdsPurchased())
 			return;
 		
 		if (!Advertisement.isSupported)
@@ -61,7 +59,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowInterstitial(Action _Finished = null)
 	{
-		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsNoAdsPurchased())
 		{
 			_Finished?.Invoke();
 			return;
@@ -97,7 +95,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 
 	public void ShowRewarded(Action _Success = null, Action _Failed = null)
 	{
-		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsNoAdsPurchased())
 		{
 			_Success?.Invoke();
 			return;
@@ -159,7 +157,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		Action        _Finished = null
 	)
 	{
-		if (m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsNoAdsPurchased())
 		{
 			_Finished?.Invoke();
 			return;
@@ -176,7 +174,7 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 		Action        _Cancel  = null
 	)
 	{
-		if (!_Force || m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (!_Force || m_StoreProcessor.IsNoAdsPurchased())
 		{
 			_Success?.Invoke();
 			return;

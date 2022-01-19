@@ -1,98 +1,22 @@
-using System;
 using TMPro;
 using UnityEngine;
 using Zenject;
 
 public class UIProfile : UIEntity
 {
-	public string Username
-	{
-		get => m_Username;
-		set
-		{
-			if (m_Username == value)
-				return;
-			
-			m_Username = value;
-			
-			m_UsernameLabel.text = m_Username;
-		}
-	}
-
-	public Uri Avatar
-	{
-		get => m_Avatar;
-		set
-		{
-			if (m_Avatar == value)
-				return;
-			
-			m_Avatar = value;
-			
-			m_AvatarImage.Load(m_Avatar);
-		}
-	}
-
-	public float Progress
-	{
-		get => m_Progress;
-		set
-		{
-			if (Mathf.Approximately(m_Progress, value))
-				return;
-			
-			m_Progress = value;
-			
-			Vector2 anchor = m_ProgressBar.anchorMax;
-			anchor.x                = m_Progress;
-			m_ProgressBar.anchorMax = anchor;
-		}
-	}
-
-	public int Level
-	{
-		get => m_Level;
-		set
-		{
-			if (m_Level == value)
-				return;
-			
-			m_Level = value;
-			
-			m_LevelLabel.text = m_Level.ToString();
-		}
-	}
-
-	public long Coins
-	{
-		get => m_Coins;
-		set
-		{
-			if (m_Coins == value)
-				return;
-			
-			m_Coins = value;
-			
-			m_CoinsLabel.text = m_Coins.ToString();
-		}
-	}
-
-	[SerializeField] UIRemoteImage m_AvatarImage;
-	[SerializeField] TMP_Text      m_UsernameLabel;
-	[SerializeField] TMP_Text      m_LevelLabel;
-	[SerializeField] TMP_Text      m_CoinsLabel;
-	[SerializeField] RectTransform m_ProgressBar;
-
-	Uri    m_Avatar;
-	string m_Username;
-	float  m_Progress;
-	int    m_Level;
-	long   m_Coins;
-	bool   m_Locked;
+	[SerializeField] UIRemoteGraphic m_Avatar;
+	[SerializeField] TMP_Text        m_Username;
+	[SerializeField] UILevel         m_Level;
+	[SerializeField] TMP_Text        m_Coins;
+	[SerializeField] RectTransform   m_Progress;
+	[SerializeField] TMP_Text        m_Discs;
+	[SerializeField] float           m_MinProgress;
+	[SerializeField] float           m_MaxProgress;
 
 	SignalBus         m_SignalBus;
 	LanguageProcessor m_LanguageProcessor;
 	ProfileProcessor  m_ProfileProcessor;
+	ProgressProcessor m_ProgressProcessor;
 	SocialProcessor   m_SocialProcessor;
 
 	[Inject]
@@ -100,33 +24,24 @@ public class UIProfile : UIEntity
 		SignalBus         _SignalBus,
 		LanguageProcessor _LanguageProcessor,
 		ProfileProcessor  _ProfileProcessor,
+		ProgressProcessor _ProgressProcessor,
 		SocialProcessor   _SocialProcessor
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_LanguageProcessor = _LanguageProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
+		m_ProgressProcessor = _ProgressProcessor;
 		m_SocialProcessor   = _SocialProcessor;
 		
 		Refresh();
 		
-		m_SignalBus.Subscribe<LoginSignal>(RegisterLogin);
+		m_SignalBus.Subscribe<SocialDataUpdateSignal>(RegisterSocialDataUpdate);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
+		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(RegisterProgressDataUpdate);
 	}
 
-	public void Lock()
-	{
-		m_Locked = true;
-	}
-
-	public void Unlock()
-	{
-		m_Locked = false;
-		
-		Refresh();
-	}
-
-	void RegisterLogin()
+	void RegisterSocialDataUpdate()
 	{
 		Refresh();
 	}
@@ -136,14 +51,60 @@ public class UIProfile : UIEntity
 		Refresh();
 	}
 
+	void RegisterProgressDataUpdate()
+	{
+		Refresh();
+	}
+
 	void Refresh()
 	{
-		if (m_Locked)
-			return;
+		ProcessUsername();
 		
-		Username = m_SocialProcessor.Guest ? m_LanguageProcessor.Get("PROFILE_GUEST") : m_SocialProcessor.Name;
-		Avatar   = m_SocialProcessor.Photo;
-		Level    = m_ProfileProcessor.GetLevel();
-		Progress = m_ProfileProcessor.GetProgress();
+		ProcessDiscs();
+		
+		m_Avatar.Load(@"https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg");
+		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
+		m_Level.Level = m_ProfileProcessor.GetLevel();
+		
+		Vector2 size = m_Progress.sizeDelta;
+		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_ProfileProcessor.GetProgress());
+		m_Progress.sizeDelta = size;
+	}
+
+	void ProcessDiscs()
+	{
+		int level        = m_ProfileProcessor.GetLevel();
+		int currentDiscs = m_ProfileProcessor.Discs;
+		int targetDiscs  = m_ProgressProcessor.GetMaxLimit(level);
+		
+		m_Discs.text = $"{currentDiscs}/{targetDiscs}";
+	}
+
+	void ProcessUsername()
+	{
+		string username = m_SocialProcessor.Name;
+		if (!string.IsNullOrEmpty(username))
+		{
+			m_Username.text = username;
+			return;
+		}
+		
+		string email = m_SocialProcessor.Email;
+		if (!string.IsNullOrEmpty(email))
+		{
+			m_Username.text = email.Split('@')[0];
+			return;
+		}
+		
+		string device = SystemInfo.deviceName;
+		if (!string.IsNullOrEmpty(device))
+		{
+			m_Username.text = device;
+			return;
+		}
+		
+		m_Username.text = m_SocialProcessor.Guest
+			? m_LanguageProcessor.Get("PROFILE_GUEST")
+			: SystemInfo.deviceModel;
 	}
 }

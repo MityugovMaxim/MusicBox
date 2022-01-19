@@ -10,6 +10,8 @@ public class UILoginMenu : UIMenu
 	SocialProcessor   m_SocialProcessor;
 	LevelProcessor    m_LevelProcessor;
 	ScoreProcessor    m_ScoreProcessor;
+	NewsProcessor     m_NewsProcessor;
+	OffersProcessor   m_OffersProcessor;
 	StoreProcessor    m_StoreProcessor;
 	ProgressProcessor m_ProgressProcessor;
 	MessageProcessor  m_MessageProcessor;
@@ -22,6 +24,8 @@ public class UILoginMenu : UIMenu
 		SocialProcessor   _SocialProcessor,
 		LevelProcessor    _LevelProcessor,
 		ScoreProcessor    _ScoreProcessor,
+		NewsProcessor     _NewsProcessor,
+		OffersProcessor   _OffersProcessor,
 		StoreProcessor    _StoreProcessor,
 		ProgressProcessor _ProgressProcessor,
 		MessageProcessor  _MessageProcessor,
@@ -33,6 +37,8 @@ public class UILoginMenu : UIMenu
 		m_SocialProcessor   = _SocialProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
+		m_NewsProcessor     = _NewsProcessor;
+		m_OffersProcessor   = _OffersProcessor;
 		m_StoreProcessor    = _StoreProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
 		m_MessageProcessor  = _MessageProcessor;
@@ -68,6 +74,8 @@ public class UILoginMenu : UIMenu
 			m_ProfileProcessor.LoadProfile(),
 			m_LevelProcessor.LoadLevels(),
 			m_ScoreProcessor.LoadScores(),
+			m_NewsProcessor.LoadNews(),
+			m_OffersProcessor.LoadOffers(),
 			m_StoreProcessor.LoadProducts(),
 			m_StoreProcessor.LoadPurchases(),
 		};

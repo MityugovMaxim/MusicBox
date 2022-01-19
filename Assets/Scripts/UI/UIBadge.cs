@@ -1,4 +1,3 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -20,10 +19,6 @@ public class UIBadge : UIGroup
 
 	[SerializeField] TMP_Text m_Label;
 	[SerializeField] int      m_Value;
-
-	CanvasGroup m_CanvasGroup;
-
-	IEnumerator m_AlphaRoutine;
 
 	protected override void OnDidApplyAnimationProperties()
 	{

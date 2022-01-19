@@ -115,7 +115,7 @@ public class UILevelProgress : UIGroup
 	[Preserve]
 	void LevelUp()
 	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactRigid);
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		m_Label.Play();
 	}

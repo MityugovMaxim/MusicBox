@@ -89,7 +89,7 @@ public class UIDiscProgress : UIGroup
 		
 		m_CollectFinished = () => Hide();
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactRigid);
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		if (m_Animator != null)
 			m_Animator.SetTrigger(m_CollectParameterID);

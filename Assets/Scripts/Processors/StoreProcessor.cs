@@ -20,33 +20,29 @@ public class PurchaseSnapshot
 	public string ProductID { get; }
 	public string Receipt   { get; }
 
-	public PurchaseSnapshot(
-		string _ID,
-		string _ProductID,
-		string _Receipt
-	)
+	public PurchaseSnapshot(DataSnapshot _Data)
 	{
-		ID        = _ID;
-		ProductID = _ProductID;
-		Receipt   = _Receipt;
+		ID        = _Data.Key;
+		ProductID = _Data.GetString("product_id");
+		Receipt   = _Data.GetString("receipt");
 	}
 }
 
 public class ProductSnapshot
 {
+	public string                ID       { get; }
 	public bool                  Promo    { get; }
+	public bool                  NoAds    { get; }
 	public long                  Coins    { get; }
 	public IReadOnlyList<string> LevelIDs { get; }
 
-	public ProductSnapshot(
-		bool                  _Promo,
-		long                  _Coins,
-		IReadOnlyList<string> _LevelIDs
-	)
+	public ProductSnapshot(DataSnapshot _Data)
 	{
-		Promo    = _Promo;
-		Coins    = _Coins;
-		LevelIDs = _LevelIDs;
+		ID       = _Data.Key;
+		Promo    = _Data.GetBool("promo");
+		Coins    = _Data.GetLong("coins");
+		NoAds    = _Data.GetBool("no_ads");
+		LevelIDs = _Data.GetChildKeys("levels");
 	}
 }
 
@@ -148,6 +144,23 @@ public class StoreProcessor : IStoreListener
 		UnityPurchasing.Initialize(this, config);
 		
 		return taskSource.Task;
+	}
+
+	public bool IsNoAdsPurchased()
+	{
+		foreach (PurchaseSnapshot purchaseSnapshot in m_PurchaseSnapshots)
+		{
+			if (purchaseSnapshot == null)
+				continue;
+			
+			string productID = purchaseSnapshot.ProductID;
+			
+			ProductSnapshot productSnapshot = GetProductSnapshot(productID);
+			
+			if (productSnapshot != null && productSnapshot.NoAds)
+				return true;
+		}
+		return false;
 	}
 
 	public bool IsProductPurchased(string _ProductID)
@@ -490,20 +503,15 @@ public class StoreProcessor : IStoreListener
 		
 		foreach (DataSnapshot productSnapshot in productsSnapshot.Children)
 		{
-			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
-			bool active = productSnapshot.GetBool(active);
+			bool active = productSnapshot.GetBool("active");
+			
 			if (!active)
 				continue;
-			#endif
 			
-			string productID = productSnapshot.Key;
-			ProductSnapshot product = new ProductSnapshot(
-				productSnapshot.GetBool("promo"),
-				productSnapshot.GetLong("coins"),
-				productSnapshot.GetChildKeys("levels")
-			);
-			m_ProductIDs.Add(productID);
-			m_ProductSnapshots[productID] = product;
+			ProductSnapshot product = new ProductSnapshot(productSnapshot);
+			
+			m_ProductIDs.Add(product.ID);
+			m_ProductSnapshots[product.ID] = product;
 		}
 	}
 
@@ -514,14 +522,7 @@ public class StoreProcessor : IStoreListener
 		DataSnapshot purchasesSnapshot = await m_PurchasesData.GetValueAsync();
 		
 		foreach (DataSnapshot purchaseSnapshot in purchasesSnapshot.Children)
-		{
-			PurchaseSnapshot purchase = new PurchaseSnapshot(
-				purchaseSnapshot.Key,
-				purchaseSnapshot.GetString("receipt"),
-				purchaseSnapshot.GetString("product_id")
-			);
-			m_PurchaseSnapshots.Add(purchase);
-		}
+			m_PurchaseSnapshots.Add(new PurchaseSnapshot(purchaseSnapshot));
 	}
 
 	static bool TryGetPrice(decimal _Price, string _CurrencyCode, out string _PriceString)

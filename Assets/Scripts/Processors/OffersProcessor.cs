@@ -11,22 +11,19 @@ public class OfferDataUpdateSignal { }
 
 public class OfferSnapshot
 {
+	public string ID       { get; }
 	public string Title    { get; }
 	public string LevelID  { get; }
 	public long   Coins    { get; }
 	public int    AdsCount { get; }
 
-	public OfferSnapshot(
-		string _Title,
-		string _LevelID,
-		long   _Coins,
-		int    _AdsCount
-	)
+	public OfferSnapshot(DataSnapshot _Data)
 	{
-		Title    = _Title;
-		LevelID  = _LevelID;
-		Coins    = _Coins;
-		AdsCount = _AdsCount;
+		ID       = _Data.Key;
+		Title    = _Data.GetString("title");
+		LevelID  = _Data.GetString("level_id");
+		Coins    = _Data.GetLong("coins");
+		AdsCount = _Data.GetInt("ads_count");
 	}
 }
 
@@ -132,10 +129,8 @@ public class OffersProcessor
 		if (rewardMenu == null)
 			return;
 		
-		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
-		
 		rewardMenu.Setup(
-			mainMenu != null ? mainMenu.Profile : null,
+			null,
 			m_StorageProcessor.LoadOfferThumbnail(_OfferID),
 			GetTitle(_OfferID),
 			string.Empty
@@ -227,23 +222,15 @@ public class OffersProcessor
 		
 		foreach (DataSnapshot offerSnapshot in offersSnapshot.Children)
 		{
-			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
 			bool active = offerSnapshot.GetBool("active");
+			
 			if (!active)
 				continue;
-			#endif
 			
-			string offerID = offerSnapshot.Key;
+			OfferSnapshot offer = new OfferSnapshot(offerSnapshot);
 			
-			OfferSnapshot offer = new OfferSnapshot(
-				offerSnapshot.GetString("title", string.Empty),
-				offerSnapshot.GetString("level_id", string.Empty),
-				offerSnapshot.GetLong("coins"),
-				offerSnapshot.GetInt("ads_count")
-			);
-			
-			m_OfferIDs.Add(offerID);
-			m_OfferSnapshots[offerID] = offer;
+			m_OfferIDs.Add(offer.ID);
+			m_OfferSnapshots[offer.ID] = offer;
 		}
 	}
 

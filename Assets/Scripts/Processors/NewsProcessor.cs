@@ -10,25 +10,19 @@ public class NewsDataUpdateSignal { }
 
 public class NewsSnapshot
 {
-	public string Image    { get; }
+	public string ID       { get; }
+	public string Language { get; }
 	public string Title    { get; }
 	public string Text     { get; }
 	public string URL      { get; }
-	public string Language { get; }
 
-	public NewsSnapshot(
-		string _Image,
-		string _Title,
-		string _Text,
-		string _URL,
-		string _Language
-	)
+	public NewsSnapshot(DataSnapshot _Data)
 	{
-		Image    = _Image;
-		Title    = _Title;
-		Text     = _Text;
-		URL      = _URL;
-		Language = _Language;
+		ID       = _Data.Key;
+		Language = _Data.GetString("language");
+		Title    = _Data.GetString("title");
+		Text     = _Data.GetString("description");
+		URL      = _Data.GetString("url");
 	}
 }
 
@@ -79,19 +73,6 @@ public class NewsProcessor
 				return newsSnapshot != null && m_LanguageProcessor.SupportsLanguage(newsSnapshot.Language);
 			}
 		).ToList();
-	}
-
-	public string GetImage(string _NewsID)
-	{
-		NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
-		
-		if (newsSnapshot == null)
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get image failed. News with ID '{0}' is null.", _NewsID);
-			return string.Empty;
-		}
-		
-		return newsSnapshot.Image;
 	}
 
 	public string GetTitle(string _NewsID)
@@ -153,24 +134,15 @@ public class NewsProcessor
 		
 		foreach (DataSnapshot newsSnapshot in newsSnapshots.Children)
 		{
-			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
-			bool active = levelSnapshot.GetBool("active");
+			bool active = newsSnapshot.GetBool("active");
+			
 			if (!active)
 				continue;
-			#endif
 			
-			string newsID = newsSnapshot.Key;
+			NewsSnapshot news = new NewsSnapshot(newsSnapshot);
 			
-			NewsSnapshot news = new NewsSnapshot(
-				newsSnapshot.GetString("image", string.Empty),
-				newsSnapshot.GetString("title", string.Empty),
-				newsSnapshot.GetString("text", string.Empty),
-				newsSnapshot.GetString("url", string.Empty),
-				newsSnapshot.GetString("language", string.Empty)
-			);
-			
-			m_NewsIDs.Add(newsID);
-			m_NewsSnapshots[newsID] = news;
+			m_NewsIDs.Add(news.ID);
+			m_NewsSnapshots[news.ID] = news;
 		}
 	}
 

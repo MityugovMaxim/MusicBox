@@ -6,21 +6,17 @@ public class UIMainProfilePage : UIMainMenuPage
 {
 	public override MainMenuPageType Type => MainMenuPageType.Profile;
 
-	[SerializeField] UIRemoteImage m_Avatar;
-	[SerializeField] TMP_Text      m_NameLabel;
-	[SerializeField] UICoinsLabel  m_CoinsLabel;
-	[SerializeField] TMP_Text      m_BronzeDiscsLabel;
-	[SerializeField] TMP_Text      m_SilverDiscsLabel;
-	[SerializeField] TMP_Text      m_GoldDiscsLabel;
-	[SerializeField] TMP_Text      m_PlatinumDiscsLabel;
-	[SerializeField] GameObject    m_LoginControls;
-	[SerializeField] GameObject    m_LogoutControls;
+	[SerializeField] UIRemoteGraphic m_Avatar;
+	[SerializeField] TMP_InputField  m_Username;
+	[SerializeField] UILevel         m_Level;
+	[SerializeField] TMP_Text        m_Coins;
+	[SerializeField] GameObject      m_LoginControls;
+	[SerializeField] GameObject      m_LogoutControls;
 
 	SignalBus         m_SignalBus;
 	LanguageProcessor m_LanguageProcessor;
 	SocialProcessor   m_SocialProcessor;
 	ProfileProcessor  m_ProfileProcessor;
-	ScoreProcessor    m_ScoreProcessor;
 	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
@@ -29,7 +25,6 @@ public class UIMainProfilePage : UIMainMenuPage
 		LanguageProcessor _LanguageProcessor,
 		SocialProcessor   _SocialProcessor,
 		ProfileProcessor  _ProfileProcessor,
-		ScoreProcessor    _ScoreProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
@@ -37,7 +32,6 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_LanguageProcessor = _LanguageProcessor;
 		m_SocialProcessor   = _SocialProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
-		m_ScoreProcessor    = _ScoreProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
@@ -66,16 +60,26 @@ public class UIMainProfilePage : UIMainMenuPage
 		Reload();
 	}
 
+	public void ChangeUsername(string _Username)
+	{
+		if (string.IsNullOrEmpty(_Username))
+			m_Username.text = m_SocialProcessor.Name;
+		
+		m_SocialProcessor.SetUsername(_Username);
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();
 		
+		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideFinished()
 	{
+		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
 	}
@@ -96,27 +100,33 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_LogoutControls.SetActive(m_SocialProcessor.Online && !m_SocialProcessor.Guest);
 		
 		m_Avatar.Load(m_SocialProcessor.Photo);
-		m_CoinsLabel.Coins = m_ProfileProcessor.Coins;
 		
-		m_BronzeDiscsLabel.text   = m_ScoreProcessor.GetDiscsCount(ScoreRank.Bronze).ToString();
-		m_SilverDiscsLabel.text   = m_ScoreProcessor.GetDiscsCount(ScoreRank.Silver).ToString();
-		m_GoldDiscsLabel.text     = m_ScoreProcessor.GetDiscsCount(ScoreRank.Gold).ToString();
-		m_PlatinumDiscsLabel.text = m_ScoreProcessor.GetDiscsCount(ScoreRank.Platinum).ToString();
+		m_Level.Level = m_ProfileProcessor.GetLevel();
+		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
 		
-		string name = m_SocialProcessor.Name;
-		if (!string.IsNullOrEmpty(name))
+		string username = m_SocialProcessor.Name;
+		if (!string.IsNullOrEmpty(username))
 		{
-			m_NameLabel.text = name;
+			m_Username.text = username;
 			return;
 		}
 		
 		string email = m_SocialProcessor.Email;
 		if (!string.IsNullOrEmpty(email))
 		{
-			m_NameLabel.text = email.Split('@')[0];
+			m_Username.text = email.Split('@')[0];
 			return;
 		}
 		
-		m_NameLabel.text = m_LanguageProcessor.Get("PROFILE_GUEST");
+		string device = SystemInfo.deviceName;
+		if (!string.IsNullOrEmpty(device))
+		{
+			m_Username.text = device;
+			return;
+		}
+		
+		m_Username.text = m_SocialProcessor.Guest
+			? m_LanguageProcessor.Get("PROFILE_GUEST")
+			: SystemInfo.deviceModel;
 	}
 }

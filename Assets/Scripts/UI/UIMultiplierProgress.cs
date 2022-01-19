@@ -22,7 +22,7 @@ public class UIMultiplierProgress : UIEntity
 
 	static readonly int m_PlayParameterID = Animator.StringToHash("Play");
 
-	[SerializeField] UICircle       m_Progress;
+	[SerializeField] UIRing       m_Progress;
 	[SerializeField] float          m_Duration = 0.2f;
 	[SerializeField] AnimationCurve m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 

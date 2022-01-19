@@ -1,15 +1,25 @@
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Firebase.Database;
+using Firebase.Storage;
 using UnityEditor;
 using UnityEngine;
 
 public static class AssetBundleBuilder
 {
-	[MenuItem("AssetBundle/Create")]
-	public static void CreateAssetBundles()
+	[MenuItem("Tools/Create asset bundles")]
+	public static async void CreateAssetBundles()
 	{
-		Levels();
+		EditorUtility.DisplayProgressBar("Creating asset bundles...", "Fetching level IDs", 0.1f);
+		
+		await ProcessLevels();
+		
+		EditorUtility.ClearProgressBar();
 		
 		string path = Path.Combine(Application.dataPath, "AssetBundles");
+		
+		EditorUtility.DisplayProgressBar("Creating asset bundles...", "Building asset bundles", 0.1f);
 		
 		if (!Directory.Exists(path))
 			Directory.CreateDirectory(path);
@@ -18,23 +28,39 @@ public static class AssetBundleBuilder
 		
 		AssetDatabase.SaveAssets();
 		AssetDatabase.Refresh();
+		
+		await UploadAssetBundles(path);
 	}
 
-	static void Levels()
+	static async Task ProcessLevels()
 	{
-		const string registryPath = "Assets/Database/level_registry.asset";
+		await FirebaseAdmin.Login();
 		
-		LevelRegistry levelRegistry = AssetDatabase.LoadAssetAtPath<LevelRegistry>(registryPath);
+		DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
 		
-		foreach (LevelInfo levelInfo in levelRegistry)
+		DataSnapshot data = await reference.GetValueAsync();
+		
+		string[] levelIDs = data.Children.Select(_Snapshot => _Snapshot.Key).ToArray();
+		
+		foreach (string levelID in levelIDs)
 		{
-			string tracksPath = $"Assets/Levels/{levelInfo.ID}/Tracks";
+			string tracksPath = $"Assets/Levels/{levelID}/Tracks";
 			
 			AssetImporter importer = AssetImporter.GetAtPath(tracksPath);
 			
-			importer.assetBundleName = $"level.{levelInfo.ID}.unity3d";
+			importer.assetBundleName = $"level.{levelID}.unity3d";
 			
 			importer.SaveAndReimport();
 		}
+	}
+
+	static async Task UploadAssetBundles(string _Path)
+	{
+		await FirebaseAdmin.Login();
+		
+		string[] paths = Directory.GetFiles(_Path, "*.asset");
+		
+		foreach (string path in paths)
+			await FirebaseStorage.DefaultInstance.RootReference.Child("Levels").PutFileAsync(path);
 	}
 }

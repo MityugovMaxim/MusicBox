@@ -1,3 +1,4 @@
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -31,9 +32,26 @@ public class UILocalizedLabel : UIEntity
 	{
 		base.OnEnable();
 		
-		if (m_Data != null && m_Data.Length > 0)
-			Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data);
-		else
+		if (m_Data == null || m_Data.Length == 0)
+		{
 			Label.text = m_LanguageProcessor.Get(m_LocalizationKey);
+			return;
+		}
+		
+		switch (m_Data.Length)
+		{
+			case 1:
+				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0]);
+				break;
+			case 2:
+				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1]);
+				break;
+			case 3:
+				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1], m_Data[2]);
+				break;
+			default:
+				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data.OfType<object>().ToArray());
+				break;
+		}
 	}
 }

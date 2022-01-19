@@ -6,7 +6,6 @@ using Zenject;
 public class GameInstaller : MonoInstaller
 {
 	[SerializeField] Canvas         m_Canvas;
-	[SerializeField] ProductInfo    m_NoAdsProduct;
 	[SerializeField] MusicProcessor m_MusicProcessor;
 
 	[SerializeField] UILevelItem  m_LevelItem;
@@ -29,7 +28,6 @@ public class GameInstaller : MonoInstaller
 		InstallAudioManager();
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
-		Container.Bind<ProductInfo>().FromScriptableObject(m_NoAdsProduct).AsSingle();
 		
 		Container.BindMemoryPool<UILevelItem, UILevelItem.Pool>()
 			.WithInitialSize(10)
@@ -120,11 +118,9 @@ public class GameInstaller : MonoInstaller
 	{
 		SignalBusInstaller.Install(Container);
 		
-		Container.DeclareSignal<LoginSignal>().OptionalSubscriber();
-		Container.DeclareSignal<LogoutSignal>().OptionalSubscriber();
-		
 		Container.DeclareSignal<PurchaseSignal>();
 		
+		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LevelDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();

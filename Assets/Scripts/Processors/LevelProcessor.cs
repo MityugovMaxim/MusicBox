@@ -12,6 +12,7 @@ public class LevelDataUpdateSignal { }
 
 public class LevelSnapshot
 {
+	public string    ID             { get; }
 	public int       Level          { get; }
 	public string    Title          { get; }
 	public string    Artist         { get; }
@@ -31,6 +32,7 @@ public class LevelSnapshot
 
 	public LevelSnapshot(DataSnapshot _Data)
 	{
+		ID             = _Data.Key;
 		Level          = _Data.GetInt("level");
 		Title          = _Data.GetString("title", string.Empty);
 		Artist         = _Data.GetString("artist", string.Empty);
@@ -60,7 +62,6 @@ public class LevelProcessor
 	readonly StoreProcessor   m_StoreProcessor;
 	readonly StorageProcessor m_StorageProcessor;
 	readonly Level.Factory    m_LevelFactory;
-	readonly ProductInfo      m_NoAdsProduct;
 
 	readonly List<string>                      m_LevelIDs        = new List<string>();
 	readonly Dictionary<string, LevelSnapshot> m_LevelSnapshots  = new Dictionary<string, LevelSnapshot>();
@@ -73,15 +74,13 @@ public class LevelProcessor
 		SignalBus        _SignalBus,
 		StoreProcessor   _StoreProcessor,
 		StorageProcessor _StorageProcessor,
-		Level.Factory    _LevelFactory,
-		ProductInfo      _NoAdsProduct 
+		Level.Factory    _LevelFactory
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_StoreProcessor   = _StoreProcessor;
 		m_StorageProcessor = _StorageProcessor;
 		m_LevelFactory     = _LevelFactory;
-		m_NoAdsProduct     = _NoAdsProduct;
 	}
 
 	public async Task LoadLevels()
@@ -243,7 +242,7 @@ public class LevelProcessor
 
 	public LevelMode GetLevelMode(string _LevelID)
 	{
-		if (m_NoAdsProduct != null && m_StoreProcessor.IsProductPurchased(m_NoAdsProduct.ID))
+		if (m_StoreProcessor.IsNoAdsPurchased())
 			return LevelMode.Free;
 		
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
@@ -388,18 +387,15 @@ public class LevelProcessor
 		
 		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
 		{
-			#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
 			bool active = levelSnapshot.GetBool("active");
+			
 			if (!active)
 				continue;
-			#endif
-			
-			string levelID = levelSnapshot.Key;
 			
 			LevelSnapshot level = new LevelSnapshot(levelSnapshot);
 			
-			m_LevelIDs.Add(levelID);
-			m_LevelSnapshots[levelID] = level;
+			m_LevelIDs.Add(level.ID);
+			m_LevelSnapshots[level.ID] = level;
 		}
 	}
 
