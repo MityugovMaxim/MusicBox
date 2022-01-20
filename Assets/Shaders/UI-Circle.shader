@@ -68,9 +68,8 @@ Shader "UI/Circle"
 				float4 vertex : POSITION;
 				float4 color  : COLOR;
 				half2  uv     : TEXCOORD0;
+				half2  rect   : TEXCOORD1;
 				half2  data   : TEXCOORD2;
-				half4  rect   : TANGENT;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct fragData
@@ -78,10 +77,9 @@ Shader "UI/Circle"
 				float4 vertex : SV_POSITION;
 				fixed4 color  : COLOR;
 				half2  uv     : TEXCOORD0;
+				half2  rect   : TEXCOORD2;
 				half2  data   : TEXCOORD1;
-				half4  rect   : TEXCOORD2;
 				half4  mask   : TEXCOORD3;
-				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			sampler2D _MainTex;
@@ -91,7 +89,6 @@ Shader "UI/Circle"
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
-				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.uv = IN.uv;
 				OUT.data = IN.data;
@@ -105,10 +102,8 @@ Shader "UI/Circle"
 			{
 				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
 				
-				const half2 position = half2(
-					remap01(IN.uv.x, IN.rect.x, IN.rect.x + IN.rect.z) - 0.5,
-					remap01(IN.uv.y, IN.rect.y, IN.rect.y + IN.rect.w) - 0.5
-				);
+				const half2 position = IN.rect - 0.5;
+				
 				const half size = IN.data.x * 0.5f;
 				const half fade = IN.data.y;
 				

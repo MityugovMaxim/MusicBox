@@ -72,6 +72,12 @@ public static class WebRequest
 
 	public static Task<Texture2D> LoadTexture(string _URL, CancellationToken _Token = default)
 	{
+		if (string.IsNullOrEmpty(_URL))
+		{
+			Debug.LogError("[WebRequest] Load texture failed. URL is null or empty.");
+			return null;
+		}
+		
 		TaskCompletionSource<Texture2D> completionSource = new TaskCompletionSource<Texture2D>();
 		
 		if (_Token.IsCancellationRequested)
@@ -137,6 +143,12 @@ public static class WebRequest
 
 	public static Task<AssetBundle> LoadAssetBundle(string _URL, CancellationToken _Token = default)
 	{
+		if (string.IsNullOrEmpty(_URL))
+		{
+			Debug.LogError("[WebRequest] Load AssetBundle failed. URL is null or empty.");
+			return null;
+		}
+		
 		TaskCompletionSource<AssetBundle> completionSource = new TaskCompletionSource<AssetBundle>();
 		
 		if (_Token.IsCancellationRequested)
@@ -202,6 +214,12 @@ public static class WebRequest
 
 	public static async Task<Sprite> LoadSprite(string _URL, CancellationToken _Token = default)
 	{
+		if (string.IsNullOrEmpty(_URL))
+		{
+			Debug.LogError("[WebRequest] Load sprite failed. URL is null or empty.");
+			return null;
+		}
+		
 		Texture2D texture = await LoadTexture(_URL, _Token);
 		
 		if (texture == null)

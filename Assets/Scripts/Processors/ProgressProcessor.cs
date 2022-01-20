@@ -137,7 +137,13 @@ public class ProgressProcessor
 	{
 		m_ProgressSnapshots.Clear();
 		
-		DataSnapshot progressSnapshots = await m_ProgressData.GetValueAsync();
+		DataSnapshot progressSnapshots = await m_ProgressData.GetValueAsync(15000, 2);
+		
+		if (progressSnapshots == null)
+		{
+			Debug.LogError("[ProgressProcessor] Fetch progress failed.");
+			return;
+		}
 		
 		foreach (DataSnapshot progressSnapshot in progressSnapshots.Children)
 			m_ProgressSnapshots.Add(new ProgressSnapshot(progressSnapshot));

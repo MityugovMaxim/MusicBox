@@ -62,7 +62,7 @@ public abstract class MessageProcessor : IInitializable
 		TopicsLanguage = m_LanguageProcessor.Language;
 		
 		List<Task> tasks = new List<Task>();
-		foreach (string language in LanguageProcessor.SupportedLanguages.Except(TopicsLanguage))
+		foreach (string language in m_LanguageProcessor.SupportedLanguages.Except(TopicsLanguage))
 		foreach (string topic in m_Topics)
 			tasks.Add(FirebaseMessaging.UnsubscribeAsync($"{topic}_{language}"));
 		

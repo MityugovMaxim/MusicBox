@@ -55,6 +55,8 @@ public class LevelSnapshot
 [Preserve]
 public class LevelProcessor
 {
+	public bool Loaded { get; private set; }
+
 	Level  m_Level;
 	string m_LevelID;
 
@@ -89,6 +91,11 @@ public class LevelProcessor
 			m_LevelsData = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
 		
 		await FetchLevels();
+		
+		if (Loaded)
+			return;
+		
+		Loaded = true;
 		
 		m_LevelsData.ValueChanged += OnLevelsUpdate;
 	}
@@ -380,12 +387,18 @@ public class LevelProcessor
 
 	async Task FetchLevels()
 	{
-		DataSnapshot levelsSnapshot = await m_LevelsData.GetValueAsync();
-		
 		m_LevelIDs.Clear();
 		m_LevelSnapshots.Clear();
 		
-		foreach (DataSnapshot levelSnapshot in levelsSnapshot.Children)
+		DataSnapshot levelSnapshots = await m_LevelsData.GetValueAsync(15000, 2);
+		
+		if (levelSnapshots == null)
+		{
+			Debug.LogError("[LevelProcessor] Fetch levels failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot levelSnapshot in levelSnapshots.Children)
 		{
 			bool active = levelSnapshot.GetBool("active");
 			

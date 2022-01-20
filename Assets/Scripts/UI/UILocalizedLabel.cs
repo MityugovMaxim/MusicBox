@@ -17,6 +17,7 @@ public class UILocalizedLabel : UIEntity
 	}
 
 	[SerializeField] string   m_LocalizationKey;
+	[SerializeField] bool     m_Trim;
 	[SerializeField] string[] m_Data;
 
 	TMP_Text          m_Label;
@@ -32,26 +33,29 @@ public class UILocalizedLabel : UIEntity
 	{
 		base.OnEnable();
 		
+		string text = GetText();
+		
+		if (m_Trim)
+			text = text.Trim();
+		
+		Label.text = text;
+	}
+
+	string GetText()
+	{
 		if (m_Data == null || m_Data.Length == 0)
-		{
-			Label.text = m_LanguageProcessor.Get(m_LocalizationKey);
-			return;
-		}
+			return m_LanguageProcessor.Get(m_LocalizationKey);
 		
 		switch (m_Data.Length)
 		{
 			case 1:
-				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0]);
-				break;
+				return m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0]);
 			case 2:
-				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1]);
-				break;
+				return m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1]);
 			case 3:
-				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1], m_Data[2]);
-				break;
+				return m_LanguageProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1], m_Data[2]);
 			default:
-				Label.text = m_LanguageProcessor.Format(m_LocalizationKey, m_Data.OfType<object>().ToArray());
-				break;
+				return m_LanguageProcessor.Format(m_LocalizationKey, m_Data.OfType<object>().ToArray());
 		}
 	}
 }

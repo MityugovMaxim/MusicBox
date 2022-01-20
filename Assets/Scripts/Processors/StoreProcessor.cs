@@ -48,7 +48,9 @@ public class ProductSnapshot
 
 public class StoreProcessor : IStoreListener
 {
-	public bool Loaded { get; private set; }
+	public bool Loaded          { get; private set; }
+	public bool ProductsLoaded  { get; private set; }
+	public bool PurchasesLoaded { get; private set; }
 
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
@@ -88,15 +90,32 @@ public class StoreProcessor : IStoreListener
 		
 		await FetchProducts();
 		
+		if (ProductsLoaded)
+			return;
+		
+		ProductsLoaded = true;
+		
 		m_ProductsData.ValueChanged += OnProductsUpdate;
 	}
 
 	public async Task LoadPurchases()
 	{
+		if (m_PurchasesData != null && m_PurchasesData.Key != m_SocialProcessor.UserID)
+		{
+			PurchasesLoaded              =  false;
+			m_PurchasesData.ValueChanged -= OnPurchasesUpdate;
+			m_PurchasesData              =  null;
+		}
+		
 		if (m_PurchasesData == null)
 			m_PurchasesData = FirebaseDatabase.DefaultInstance.RootReference.Child("purchases").Child(m_SocialProcessor.UserID);
 		
 		await FetchPurchases();
+		
+		if (PurchasesLoaded)
+			return;
+		
+		PurchasesLoaded = true;
 		
 		m_PurchasesData.ValueChanged += OnPurchasesUpdate;
 	}
@@ -499,9 +518,15 @@ public class StoreProcessor : IStoreListener
 		m_ProductIDs.Clear();
 		m_ProductSnapshots.Clear();
 		
-		DataSnapshot productsSnapshot = await m_ProductsData.GetValueAsync();
+		DataSnapshot productSnapshots = await m_ProductsData.GetValueAsync(15000, 2);
 		
-		foreach (DataSnapshot productSnapshot in productsSnapshot.Children)
+		if (productSnapshots == null)
+		{
+			Debug.LogError("[StoreProcessor] Fetch products failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot productSnapshot in productSnapshots.Children)
 		{
 			bool active = productSnapshot.GetBool("active");
 			
@@ -519,9 +544,15 @@ public class StoreProcessor : IStoreListener
 	{
 		m_PurchaseSnapshots.Clear();
 		
-		DataSnapshot purchasesSnapshot = await m_PurchasesData.GetValueAsync();
+		DataSnapshot purchaseSnapshots = await m_ProductsData.GetValueAsync(15000, 2);
 		
-		foreach (DataSnapshot purchaseSnapshot in purchasesSnapshot.Children)
+		if (purchaseSnapshots == null)
+		{
+			Debug.LogError("[StoreProcessor] Fetch purchases failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot purchaseSnapshot in purchaseSnapshots.Children)
 			m_PurchaseSnapshots.Add(new PurchaseSnapshot(purchaseSnapshot));
 	}
 

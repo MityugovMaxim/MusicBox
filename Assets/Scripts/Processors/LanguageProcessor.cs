@@ -10,11 +10,11 @@ public class LanguageProcessor
 
 	public string Language { get; private set; }
 
-	public static IReadOnlyCollection<string> SupportedLanguages => m_Languages;
+	public IReadOnlyCollection<string> SupportedLanguages => m_Languages;
 
 	readonly StorageProcessor m_StorageProcessor;
 
-	static readonly string[] m_Languages =
+	readonly string[] m_Languages =
 	{
 		SystemLanguage.English.GetCode(),
 		SystemLanguage.Russian.GetCode(),
@@ -31,14 +31,16 @@ public class LanguageProcessor
 		m_StorageProcessor = _StorageProcessor;
 	}
 
-	public void SetLanguage(string _Language)
+	public bool SelectLanguage(string _Language)
 	{
 		if (!m_Languages.Contains(_Language))
-			return;
+			return false;
 		
 		PlayerPrefs.SetString(LANGUAGE_KEY, _Language);
 		
 		Language = _Language;
+		
+		return true;
 	}
 
 	public bool SupportsLanguage(string _Language)
@@ -74,7 +76,7 @@ public class LanguageProcessor
 			m_Localization[entry.Key] = entry.Value;
 	}
 
-	static string LoadLanguage()
+	string LoadLanguage()
 	{
 		string language = PlayerPrefs.HasKey(LANGUAGE_KEY) ? PlayerPrefs.GetString(LANGUAGE_KEY) : Application.systemLanguage.GetCode();
 		

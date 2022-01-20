@@ -53,17 +53,12 @@ public class UILoginMenu : UIMenu
 		m_Loader.Play();
 	}
 
-	protected override void OnShowFinished()
-	{
-		Login();
-	}
-
 	protected override void OnHideFinished()
 	{
 		m_Loader.Restore();
 	}
 
-	async void Login()
+	public async Task Login()
 	{
 		await m_SocialProcessor.Login();
 		

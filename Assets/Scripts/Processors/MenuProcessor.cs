@@ -22,7 +22,7 @@ public class MenuProcessor : IInitializable
 		m_MenuFactory = _MenuFactory;
 	}
 
-	void IInitializable.Initialize()
+	async void IInitializable.Initialize()
 	{
 		MenuRegistry menuRegistry = Registry.Load<MenuRegistry>("menu_registry");
 		
@@ -38,7 +38,11 @@ public class MenuProcessor : IInitializable
 			}
 		}
 		
-		Show(MenuType.LoginMenu, true);
+		await Show(MenuType.LoginMenu, true);
+		
+		UILoginMenu loginMenu = GetMenu<UILoginMenu>();
+		if (loginMenu != null)
+			await loginMenu.Login();
 	}
 
 	public T GetMenu<T>(bool _Cache = false) where T : UIMenu

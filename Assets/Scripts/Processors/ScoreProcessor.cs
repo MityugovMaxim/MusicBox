@@ -59,6 +59,8 @@ public class ScoreProcessor : IInitializable, IDisposable
 	const int X4_COMBO = 60;
 	const int X2_COMBO = 20;
 
+	public bool Loaded { get; private set; }
+
 	public long Score => m_Score;
 
 	public int Accuracy
@@ -243,10 +245,22 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	public async Task LoadScores()
 	{
+		if (m_ScoresData != null && m_ScoresData.Key != m_SocialProcessor.UserID)
+		{
+			Loaded                    =  false;
+			m_ScoresData.ValueChanged -= OnScoresUpdate;
+			m_ScoresData              =  null;
+		}
+		
 		if (m_ScoresData == null)
 			m_ScoresData = FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
 		
 		await FetchScores();
+		
+		if (Loaded)
+			return;
+		
+		Loaded = true;
 		
 		m_ScoresData.ValueChanged += OnScoresUpdate;
 	}
@@ -415,9 +429,15 @@ public class ScoreProcessor : IInitializable, IDisposable
 	{
 		m_ScoreSnapshots.Clear();
 		
-		DataSnapshot scoresSnapshot = await m_ScoresData.GetValueAsync();
+		DataSnapshot scoreSnapshots = await m_ScoresData.GetValueAsync(15000, 2);
 		
-		foreach (DataSnapshot scoreSnapshot in scoresSnapshot.Children)
+		if (scoreSnapshots == null)
+		{
+			Debug.LogError("[ScoreProcessor] Fetch scores failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot scoreSnapshot in scoreSnapshots.Children)
 		{
 			string levelID = scoreSnapshot.Key;
 			ScoreSnapshot score = new ScoreSnapshot(scoreSnapshot);

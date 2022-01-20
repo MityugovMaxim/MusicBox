@@ -91,6 +91,13 @@ public class ProfileProcessor
 
 	public async Task LoadProfile()
 	{
+		if (m_ProfileData != null && m_ProfileData.Key != m_SocialProcessor.UserID)
+		{
+			Loaded                     =  false;
+			m_ProfileData.ValueChanged -= OnProfileUpdate;
+			m_ProfileData              =  null;
+		}
+		
 		if (m_ProfileData == null)
 			m_ProfileData = FirebaseDatabase.DefaultInstance.RootReference.Child("profiles").Child(m_SocialProcessor.UserID);
 		
@@ -265,7 +272,13 @@ public class ProfileProcessor
 
 	async Task FetchProfile()
 	{
-		DataSnapshot profileSnapshot = await m_ProfileData.GetValueAsync();
+		DataSnapshot profileSnapshot = await m_ProfileData.GetValueAsync(15000, 2);
+		
+		if (profileSnapshot == null)
+		{
+			Debug.LogError("[ProfileProcessor] Fetch profile failed.");
+			return;
+		}
 		
 		m_ProfileSnapshot = new ProfileSnapshot(profileSnapshot);
 		

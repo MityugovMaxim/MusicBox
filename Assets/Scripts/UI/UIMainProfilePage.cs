@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -35,29 +36,74 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
+	public async void SignInEmail()
+	{
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		
+		#if UNITY_EDITOR
+		await m_SocialProcessor.AttachEmail("mityugovmaxim@gmail.com", "123456");
+		#endif
+		
+		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+		if (loginMenu != null)
+			await loginMenu.Login();
+	}
+
 	public async void SignInApple()
 	{
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
 		await m_SocialProcessor.AttachAppleID();
 		
-		Reload();
+		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+		if (loginMenu != null)
+			await loginMenu.Login();
 	}
 
 	public async void SignInGoogle()
 	{
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
 		await m_SocialProcessor.AttachGoogleID();
 		
-		Reload();
+		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+		if (loginMenu != null)
+			await loginMenu.Login();
 	}
 
-	public void Logout()
+	public async void Logout()
 	{
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		
 		m_SocialProcessor.Logout();
 		
-		Reload();
+		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+		if (loginMenu != null)
+			await loginMenu.Login();
 	}
 
 	public void ChangeUsername(string _Username)
@@ -82,16 +128,6 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
-	}
-
-	async void Reload()
-	{
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.LevelMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu, true);
 	}
 
 	void Refresh()

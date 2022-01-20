@@ -2,6 +2,20 @@ using UnityEngine;
 
 public class UICircle : UIImage
 {
+	public float Size
+	{
+		get => m_Size;
+		set
+		{
+			if (Mathf.Approximately(m_Size, value))
+				return;
+			
+			m_Size = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
 	static readonly MaterialPool m_MaterialPool = new MaterialPool();
 
 	[SerializeField, Range(0, 1)] float m_Size;
@@ -65,15 +79,7 @@ public class UICircle : UIImage
 
 	protected override Vector4 GetTangent()
 	{
-		if (Sprite == null)
-			return new Vector4(0, 0, 1, 1);
-		
-		return new Vector4(
-			Sprite.rect.x / Sprite.texture.width,
-			Sprite.rect.y / Sprite.texture.height,
-			Sprite.rect.width / Sprite.texture.width,
-			Sprite.rect.height / Sprite.texture.height
-		);
+		return Vector4.zero;
 	}
 
 	string GetMaterialID()

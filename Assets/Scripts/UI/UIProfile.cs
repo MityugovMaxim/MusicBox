@@ -62,7 +62,7 @@ public class UIProfile : UIEntity
 		
 		ProcessDiscs();
 		
-		m_Avatar.Load(@"https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg");
+		m_Avatar.Load(m_SocialProcessor.Photo);
 		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
 		m_Level.Level = m_ProfileProcessor.GetLevel();
 		

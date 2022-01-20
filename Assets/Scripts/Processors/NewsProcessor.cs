@@ -130,7 +130,13 @@ public class NewsProcessor
 		m_NewsIDs.Clear();
 		m_NewsSnapshots.Clear();
 		
-		DataSnapshot newsSnapshots = await m_NewsData.OrderByChild("order").GetValueAsync();
+		DataSnapshot newsSnapshots = await m_NewsData.OrderByChild("order").GetValueAsync(15000, 2);
+		
+		if (newsSnapshots == null)
+		{
+			Debug.LogError("[NewsProcessor] Fetch news failed.");
+			return;
+		}
 		
 		foreach (DataSnapshot newsSnapshot in newsSnapshots.Children)
 		{

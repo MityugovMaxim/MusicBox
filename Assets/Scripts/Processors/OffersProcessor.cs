@@ -218,9 +218,15 @@ public class OffersProcessor
 		m_OfferIDs.Clear();
 		m_OfferSnapshots.Clear();
 		
-		DataSnapshot offersSnapshot = await m_OffersData.OrderByChild("order").GetValueAsync();
+		DataSnapshot offerSnapshots = await m_OffersData.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		foreach (DataSnapshot offerSnapshot in offersSnapshot.Children)
+		if (offerSnapshots == null)
+		{
+			Debug.LogError("[OffersProcessor] Fetch offers failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot offerSnapshot in offerSnapshots.Children)
 		{
 			bool active = offerSnapshot.GetBool("active");
 			

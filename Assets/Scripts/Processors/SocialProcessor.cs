@@ -58,6 +58,10 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	public void Logout()
 	{
+		m_User = null;
+		
+		Online = false;
+		
 		m_Auth.SignOut();
 	}
 
@@ -75,6 +79,24 @@ public class SocialProcessor : IInitializable, IDisposable
 		m_SignalBus.Fire<SocialDataUpdateSignal>();
 	}
 
+	public async Task<bool> AttachEmail(string _Email, string _Password)
+	{
+		try
+		{
+			await EmailAuth(_Email, _Password);
+			
+			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			
+			return true;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[SocialManager] Login with email failed. Error: {0}", exception.Message);
+			
+			return false;
+		}
+	}
+
 	public async Task<bool> AttachAppleID()
 	{
 		try
@@ -84,6 +106,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			string token = await AppleAuthManager.LoginAsync(nonce);
 			
 			await AppleAuth(token, nonce);
+			
+			m_SignalBus.Fire<SocialDataUpdateSignal>();
 			
 			return true;
 		}
@@ -104,6 +128,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			string token = await GoogleAuthManager.LoginAsync(clientID);
 			
 			await GoogleAuth(clientID, token);
+			
+			m_SignalBus.Fire<SocialDataUpdateSignal>();
 			
 			return true;
 		}
@@ -148,6 +174,18 @@ public class SocialProcessor : IInitializable, IDisposable
 			m_User = null;
 			m_SignalBus.Fire<SocialDataUpdateSignal>();
 		}
+	}
+
+	async Task EmailAuth(string _Email, string _Password)
+	{
+		Credential credential = EmailAuthProvider.GetCredential(_Email, _Password);
+		
+		FirebaseUser user = await Auth(credential);
+		
+		if (user == null)
+			Debug.LogError("[SocialProcessor] Login with email failed. Unknown error.");
+		else
+			Debug.LogFormat("[SocialProcessor] Login with email success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
 	}
 
 	async Task AppleAuth(string _Token, string _Nonce)
