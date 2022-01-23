@@ -68,8 +68,6 @@ public class UILoginMenu : UIMenu
 	{
 		await m_SocialProcessor.Login();
 		
-		await Task.Delay(250);
-		
 		await Task.WhenAll(
 			m_LanguageProcessor.LoadLocalization(),
 			m_ProductProcessor.LoadProducts(),
