@@ -309,7 +309,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		if (_Value > 0 && m_Duration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 20, m_Duration);
+			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 30, m_Duration);
 			
 			float time = 0;
 			while (time < m_Duration)
@@ -326,6 +326,8 @@ public class UIResultRewardPage : UIResultMenuPage
 			_Label.RectTransform.SetAsLastSibling();
 			_Label.Play();
 		}
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		_Label.Value = (long)_Value;
 		
