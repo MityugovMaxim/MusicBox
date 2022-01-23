@@ -46,16 +46,18 @@ public class UIMainLevelsPage : UIMainMenuPage
 	{
 		Refresh();
 		
-		m_SignalBus.Subscribe<LevelDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<LevelDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_SignalBus.Unsubscribe<LevelDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<LevelDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()
@@ -100,7 +102,6 @@ public class UIMainLevelsPage : UIMainMenuPage
 	{
 		Dictionary<int, string[]> groups = m_LevelIDs
 			.Where(_LevelID => !m_ProfileProcessor.HasLevel(_LevelID))
-			//.SkipWhile(m_ProductProcessor.HasLevel)
 			.GroupBy(m_LevelProcessor.GetLevel)
 			.OrderBy(_LevelGroup => _LevelGroup.Key)
 			.ToDictionary(_LevelGroup => _LevelGroup.Key, _LevelGroup => _LevelGroup.ToArray());
