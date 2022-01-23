@@ -59,7 +59,6 @@ public class ProfileProcessor
 	readonly ProgressProcessor m_ProgressProcessor;
 	readonly ProductProcessor  m_ProductProcessor;
 	readonly OffersProcessor   m_OffersProcessor;
-	readonly ScoreProcessor    m_ScoreProcessor;
 	readonly MenuProcessor     m_MenuProcessor;
 
 	ProfileSnapshot m_ProfileSnapshot;
@@ -73,7 +72,6 @@ public class ProfileProcessor
 		ProgressProcessor _ProgressProcessor,
 		ProductProcessor  _ProductProcessor,
 		OffersProcessor   _OffersProcessor,
-		ScoreProcessor    _ScoreProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
@@ -82,7 +80,6 @@ public class ProfileProcessor
 		m_ProgressProcessor = _ProgressProcessor;
 		m_ProductProcessor  = _ProductProcessor;
 		m_OffersProcessor   = _OffersProcessor;
-		m_ScoreProcessor    = _ScoreProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UINewsItem : UIEntity
+public class UINewsItem : UIGroupLayout
 {
 	[Preserve]
 	public class Pool : MonoMemoryPool<UINewsItem> { }
@@ -16,6 +16,9 @@ public class UINewsItem : UIEntity
 	StorageProcessor m_StorageProcessor;
 	UrlProcessor     m_UrlProcessor;
 
+	string m_NewsID;
+	string m_URL;
+
 	[Inject]
 	public void Construct(
 		NewsProcessor    _NewsProcessor,
@@ -27,9 +30,6 @@ public class UINewsItem : UIEntity
 		m_StorageProcessor = _StorageProcessor;
 		m_UrlProcessor     = _UrlProcessor;
 	}
-
-	string m_NewsID;
-	string m_URL;
 
 	public void Setup(string _NewsID)
 	{

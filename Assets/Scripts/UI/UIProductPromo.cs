@@ -1,11 +1,8 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using Zenject;
 
-[RequireComponent(typeof(CanvasGroup))]
-public class UIProductPromo : UIGroup, IPointerClickHandler
+public class UIProductPromo : UIGroupLayout, IPointerClickHandler
 {
 	[SerializeField] UIProductLabel     m_Label;
 	[SerializeField] UIProductPrice     m_Price;
@@ -29,83 +26,19 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 		m_HapticProcessor  = _HapticProcessor;
 	}
 
-	public void Setup(string _ProductID)
+	public async void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
+		m_Label.Setup(m_ProductID);
+		m_Price.Setup(m_ProductID);
+		m_Thumbnail.Setup(m_ProductID);
 		
 		if (string.IsNullOrEmpty(m_ProductID))
-		{
-			Hide();
-			return;
-		}
-		
-		if (m_ProfileProcessor.HasProduct(m_ProductID))
-		{
-			Hide();
-			return;
-		}
-		
-		try
-		{
-			m_Label.Setup(m_ProductID);
-			m_Price.Setup(m_ProductID);
-			m_Thumbnail.Setup(m_ProductID);
-			Show();
-		}
-		catch
-		{
-			Hide();
-		}
-	}
-
-	protected override IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		yield return new WaitForSeconds(2);
-		
-		LayoutElement layoutElement = GetComponent<LayoutElement>();
-		
-		if (layoutElement != null)
-		{
-			float       time     = 0;
-			float       source   = layoutElement.preferredHeight;
-			const float duration = 0.2f;
-			const float target   = 150;
-			while (time < duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				layoutElement.preferredHeight = Mathf.Lerp(source, target, time / duration);
-			}
-			layoutElement.preferredHeight = target;
-		}
-		
-		yield return base.ShowAnimationRoutine(_CanvasGroup, _Duration);
-	}
-
-	protected override IEnumerator HideAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		yield return base.HideAnimationRoutine(_CanvasGroup, _Duration);
-		
-		LayoutElement layoutElement = GetComponent<LayoutElement>();
-		
-		if (layoutElement != null)
-		{
-			float       time     = 0;
-			float       source   = layoutElement.preferredHeight;
-			const float duration = 0.2f;
-			const float target   = 0;
-			while (time < duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				layoutElement.preferredHeight = Mathf.Lerp(source, target, time / duration);
-			}
-			layoutElement.preferredHeight = target;
-		}
+			await HideAsync();
+		else if (m_ProfileProcessor.HasProduct(m_ProductID))
+			await HideAsync();
+		else
+			await ShowAsync();
 	}
 
 	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

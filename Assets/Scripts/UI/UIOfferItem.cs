@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIOfferItem : UIEntity
+public class UIOfferItem : UIGroupLayout
 {
 	[Preserve]
 	public class Pool : MonoMemoryPool<UIOfferItem> { }
@@ -95,6 +95,8 @@ public class UIOfferItem : UIEntity
 
 	async Task CollectOffer()
 	{
+		await HideAsync();
+		
 		await m_OffersProcessor.CollectOffer(m_OfferID);
 	}
 

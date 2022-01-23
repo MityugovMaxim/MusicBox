@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -32,7 +33,7 @@ public class UIMainOffersPage : UIMainMenuPage
 
 	protected override void OnShowStarted()
 	{
-		Refresh();
+		Refresh(false);
 		
 		m_SignalBus.Subscribe<OfferDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
@@ -46,8 +47,16 @@ public class UIMainOffersPage : UIMainMenuPage
 
 	void Refresh()
 	{
+		Refresh(true);
+	}
+
+	async void Refresh(bool _Instant)
+	{
 		foreach (UIOfferItem item in m_Items)
+		{
+			item.Hide(true);
 			m_ItemPool.Despawn(item);
+		}
 		m_Items.Clear();
 		
 		m_OfferIDs = m_ProfileProcessor.GetVisibleOfferIDs();
@@ -71,6 +80,14 @@ public class UIMainOffersPage : UIMainMenuPage
 			item.RectTransform.SetParent(m_Container, false);
 			
 			m_Items.Add(item);
+		}
+		
+		for (int i = m_Items.Count - 1; i >= 0; i--)
+		{
+			m_Items[i].Show(_Instant);
+			
+			if (!_Instant)
+				await Task.Delay(150);
 		}
 	}
 }

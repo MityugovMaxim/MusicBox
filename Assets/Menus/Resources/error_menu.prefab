@@ -395,9 +395,9 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2243737745580134726}
   m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
 --- !u!114 &2243737745580134722
 MonoBehaviour:
@@ -1139,7 +1139,7 @@ GameObject:
   - component: {fileID: 9056183733851683077}
   - component: {fileID: 4869534842677023404}
   m_Layer: 5
-  m_Name: Image
+  m_Name: background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1185,7 +1185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.9764706}
   m_RaycastTarget: 1
   m_Maskable: 0
   m_OnCullStateChanged:
@@ -1208,6 +1208,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5410254318827574492}
     m_Modifications:
+    - target: {fileID: 5186423732581786224, guid: 37ebe0249f4f64d20a42f61ec6a8193d,
+        type: 3}
+      propertyPath: m_LocalizationKey
+      value: COMMON_OK
+      objectReference: {fileID: 0}
     - target: {fileID: 6173259422220489606, guid: 37ebe0249f4f64d20a42f61ec6a8193d,
         type: 3}
       propertyPath: m_Sprite

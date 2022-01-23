@@ -8,7 +8,7 @@ public class UIGroup : UIEntity
 {
 	public bool Shown { get; private set; }
 
-	CanvasGroup CanvasGroup
+	protected CanvasGroup CanvasGroup
 	{
 		get
 		{
@@ -24,151 +24,62 @@ public class UIGroup : UIEntity
 
 	CanvasGroup m_CanvasGroup;
 
-	Action m_ShowStarted;
-	Action m_ShowFinished;
-	Action m_HideStarted;
-	Action m_HideFinished;
+	IEnumerator m_AlphaRoutine;
 
-	IEnumerator m_DisplayRoutine;
+	Action m_AlphaFinished;
 
 	TaskCompletionSource<bool> m_TaskSource;
 
-	public Task ShowAsync(bool _Instant = false)
-	{
-		m_TaskSource?.TrySetResult(false);
-		
-		m_TaskSource = new TaskCompletionSource<bool>();
-		
-		Show(
-			_Instant,
-			null,
-			() => m_TaskSource?.TrySetResult(true)
-		);
-		
-		return m_TaskSource.Task;
-	}
-
-	public Task HideAsync(bool _Instant = false)
-	{
-		m_TaskSource?.TrySetResult(false);
-		
-		m_TaskSource = new TaskCompletionSource<bool>();
-		
-		Hide(
-			_Instant,
-			null,
-			() => m_TaskSource?.TrySetResult(true)
-		);
-		
-		return m_TaskSource.Task;
-	}
-
-	public void Show(bool _Instant = false, Action _Started = null, Action _Finished = null)
+	public async Task ShowAsync(bool _Instant = false)
 	{
 		if (Shown)
-		{
-			_Started?.Invoke();
-			_Finished?.Invoke();
 			return;
-		}
 		
-		if (m_DisplayRoutine != null)
-			StopCoroutine(m_DisplayRoutine);
-		
-		InvokeHideStarted();
-		InvokeHideFinished();
+		Shown = true;
 		
 		gameObject.SetActive(true);
 		
-		Shown          = true;
-		m_ShowStarted  = _Started;
-		m_ShowFinished = _Finished;
+		CanvasGroup.interactable   = m_Interactable;
+		CanvasGroup.blocksRaycasts = m_Interactable;
 		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_DisplayRoutine = ShowRoutine(CanvasGroup, m_ShowDuration);
-			
-			StartCoroutine(m_DisplayRoutine);
-		}
-		else
-		{
-			OnShowStarted();
-			
-			CanvasGroup.alpha          = 1;
-			CanvasGroup.interactable   = m_Interactable;
-			CanvasGroup.blocksRaycasts = m_Interactable;
-			
-			InvokeShowStarted();
-			
-			OnShowFinished();
-			
-			InvokeShowFinished();
-		}
+		OnShowStarted();
+		
+		await ShowAnimation(m_ShowDuration, _Instant);
+		
+		OnShowFinished();
 	}
 
-	public void Hide(bool _Instant = false, Action _Started = null, Action _Finished = null)
+	public async Task HideAsync(bool _Instant = false)
 	{
 		if (!Shown)
-		{
-			_Started?.Invoke();
-			_Finished?.Invoke();
 			return;
-		}
 		
-		if (m_DisplayRoutine != null)
-			StopCoroutine(m_DisplayRoutine);
+		Shown = false;
 		
-		InvokeShowStarted();
-		InvokeShowFinished();
+		OnHideStarted();
 		
-		if (!gameObject.activeSelf)
-			gameObject.SetActive(true);
+		await HideAnimation(m_HideDuration, _Instant);
 		
-		Shown          = false;
-		m_HideStarted  = _Started;
-		m_HideFinished = _Finished;
+		OnHideFinished();
 		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_DisplayRoutine = HideRoutine(CanvasGroup, m_HideDuration);
-			
-			StartCoroutine(m_DisplayRoutine);
-		}
-		else
-		{
-			OnHideStarted();
-			
-			InvokeHideStarted();
-			
-			CanvasGroup.alpha          = 0;
-			CanvasGroup.blocksRaycasts = false;
-			CanvasGroup.interactable   = false;
-			
-			OnHideFinished();
-			
-			InvokeHideFinished();
-			
-			if (gameObject.activeSelf)
-				gameObject.SetActive(false);
-		}
+		CanvasGroup.interactable   = false;
+		CanvasGroup.blocksRaycasts = false;
+		
+		gameObject.SetActive(false);
 	}
 
-	protected override void OnEnable()
+	public async void Show(bool _Instant = false, Action _Finished = null)
 	{
-		base.OnEnable();
+		await ShowAsync(_Instant);
 		
-		if (Shown)
-		{
-			CanvasGroup.alpha          = 1;
-			CanvasGroup.interactable   = m_Interactable;
-			CanvasGroup.blocksRaycasts = m_Interactable;
-		}
-		else
-		{
-			CanvasGroup.alpha          = 0;
-			CanvasGroup.interactable   = false;
-			CanvasGroup.blocksRaycasts = false;
-		}
+		_Finished?.Invoke();
+	}
+
+	public async void Hide(bool _Instant = false, Action _Finished = null)
+	{
+		await HideAsync(_Instant);
+		
+		_Finished?.Invoke();
 	}
 
 	protected virtual void OnShowStarted() { }
@@ -179,92 +90,50 @@ public class UIGroup : UIEntity
 
 	protected virtual void OnHideFinished() { }
 
-	void InvokeShowStarted()
+	protected virtual Task ShowAnimation(float _Duration, bool _Instant = false)
 	{
-		Action action = m_ShowStarted;
-		m_ShowStarted = null;
-		action?.Invoke();
+		return AlphaAnimation(1, _Duration, _Instant);
 	}
 
-	void InvokeShowFinished()
+	protected virtual Task HideAnimation(float _Duration, bool _Instant = false)
 	{
-		Action action = m_ShowFinished;
-		m_ShowFinished = null;
-		action?.Invoke();
+		return AlphaAnimation(0, _Duration, _Instant);
 	}
 
-	void InvokeHideStarted()
+	protected Task AlphaAnimation(float _Alpha, float _Duration, bool _Instant = false)
 	{
-		Action action = m_HideStarted;
-		m_HideStarted = null;
-		action?.Invoke();
+		if (m_AlphaRoutine != null)
+			StopCoroutine(m_AlphaRoutine);
+		
+		InvokeAlphaFinished();
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_AlphaFinished = () => completionSource.TrySetResult(true);
+		
+		if (!_Instant && gameObject.activeInHierarchy)
+		{
+			m_AlphaRoutine = AlphaRoutine(CanvasGroup, _Alpha, _Duration, InvokeAlphaFinished);
+			
+			StartCoroutine(m_AlphaRoutine);
+		}
+		else
+		{
+			CanvasGroup.alpha = _Alpha;
+			
+			InvokeAlphaFinished();
+		}
+		
+		return completionSource.Task;
 	}
 
-	void InvokeHideFinished()
-	{
-		Action action = m_HideFinished;
-		m_HideFinished = null;
-		action?.Invoke();
-	}
-
-	IEnumerator ShowRoutine(CanvasGroup _CanvasGroup, float _Duration)
+	static IEnumerator AlphaRoutine(CanvasGroup _CanvasGroup, float _Alpha, float _Duration, Action _Finished)
 	{
 		if (_CanvasGroup == null)
+		{
+			_Finished?.Invoke();
 			yield break;
-		
-		OnShowStarted();
-		
-		InvokeShowStarted();
-		
-		_CanvasGroup.interactable   = m_Interactable;
-		_CanvasGroup.blocksRaycasts = m_Interactable;
-		
-		yield return StartCoroutine(ShowAnimationRoutine(_CanvasGroup, _Duration));
-		
-		OnShowFinished();
-		
-		InvokeShowFinished();
-	}
-
-	IEnumerator HideRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		OnHideStarted();
-		
-		InvokeHideStarted();
-		
-		_CanvasGroup.interactable   = m_Interactable;
-		_CanvasGroup.blocksRaycasts = m_Interactable;
-		
-		yield return StartCoroutine(HideAnimationRoutine(_CanvasGroup, _Duration));
-		
-		_CanvasGroup.interactable   = false;
-		_CanvasGroup.blocksRaycasts = false;
-		
-		OnHideFinished();
-		
-		InvokeHideFinished();
-		
-		if (gameObject.activeSelf)
-			gameObject.SetActive(true);
-	}
-
-	protected virtual IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		yield return StartCoroutine(AlphaRoutine(_CanvasGroup, 1, _Duration));
-	}
-
-	protected virtual IEnumerator HideAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		yield return StartCoroutine(AlphaRoutine(_CanvasGroup, 0, _Duration));
-	}
-
-	static IEnumerator AlphaRoutine(CanvasGroup _CanvasGroup, float _Alpha, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
+		}
 		
 		float source = _CanvasGroup.alpha;
 		float target = Mathf.Clamp01(_Alpha);
@@ -284,5 +153,14 @@ public class UIGroup : UIEntity
 		}
 		
 		_CanvasGroup.alpha = target;
+		
+		_Finished?.Invoke();
+	}
+
+	void InvokeAlphaFinished()
+	{
+		Action action = m_AlphaFinished;
+		m_AlphaFinished = null;
+		action?.Invoke();
 	}
 }
