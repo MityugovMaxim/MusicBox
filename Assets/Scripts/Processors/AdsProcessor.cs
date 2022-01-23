@@ -39,12 +39,6 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		
 		m_LoadAdsFinished = _Success => completionSource.TrySetResult(_Success);
 		
-		if (m_ProfileProcessor.HasNoAds())
-		{
-			InvokeLoadAdsFinished(true);
-			return completionSource.Task;
-		}
-		
 		if (!Advertisement.isSupported)
 		{
 			Debug.LogError("[AdsProcessor] Load ads failed. Ads not supported.");
@@ -57,9 +51,9 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		return completionSource.Task;
 	}
 
-	public async Task<bool> Interstitial()
+	public async Task<bool> Interstitial(bool _Force = false)
 	{
-		if (m_ProfileProcessor.HasNoAds())
+		if (!_Force && m_ProfileProcessor.HasNoAds())
 			return true;
 		
 		return await Show(InterstitialID);

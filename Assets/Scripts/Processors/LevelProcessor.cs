@@ -63,6 +63,7 @@ public class LevelProcessor
 	string m_LevelID;
 
 	readonly SignalBus        m_SignalBus;
+	readonly ProfileProcessor m_ProfileProcessor;
 	readonly StorageProcessor m_StorageProcessor;
 	readonly Level.Factory    m_LevelFactory;
 
@@ -75,11 +76,13 @@ public class LevelProcessor
 	[Inject]
 	public LevelProcessor(
 		SignalBus        _SignalBus,
+		ProfileProcessor _ProfileProcessor,
 		StorageProcessor _StorageProcessor,
 		Level.Factory    _LevelFactory
 	)
 	{
 		m_SignalBus        = _SignalBus;
+		m_ProfileProcessor = _ProfileProcessor;
 		m_StorageProcessor = _StorageProcessor;
 		m_LevelFactory     = _LevelFactory;
 	}
@@ -212,6 +215,9 @@ public class LevelProcessor
 
 	public LevelMode GetMode(string _LevelID)
 	{
+		if (m_ProfileProcessor.HasNoAds())
+			return LevelMode.Free;
+		
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
 		if (levelSnapshot == null)

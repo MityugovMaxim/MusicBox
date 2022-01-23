@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -20,10 +21,11 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	SignalBus        m_SignalBus;
+	ProfileProcessor m_ProfileProcessor;
 	LevelProcessor   m_LevelProcessor;
+	LevelManager     m_LevelManager;
 	AdsProcessor     m_AdsProcessor;
 	MenuProcessor    m_MenuProcessor;
-	ProfileProcessor m_ProfileProcessor;
 	ScoreProcessor   m_ScoreProcessor;
 	HapticProcessor  m_HapticProcessor;
 
@@ -32,20 +34,22 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	[Inject]
 	public void Construct(
-		SignalBus         _SignalBus,
-		LevelProcessor    _LevelProcessor,
-		AdsProcessor      _AdsProcessor,
-		MenuProcessor     _MenuProcessor,
+		SignalBus        _SignalBus,
+		LevelProcessor   _LevelProcessor,
+		LevelManager     _LevelManager,
+		AdsProcessor     _AdsProcessor,
+		MenuProcessor    _MenuProcessor,
 		ProfileProcessor _ProfileProcessor,
-		HapticProcessor   _HapticProcessor
+		HapticProcessor  _HapticProcessor
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_LevelProcessor    = _LevelProcessor;
-		m_AdsProcessor      = _AdsProcessor;
-		m_MenuProcessor     = _MenuProcessor;
+		m_SignalBus        = _SignalBus;
+		m_LevelProcessor   = _LevelProcessor;
+		m_LevelManager     = _LevelManager;
+		m_AdsProcessor     = _AdsProcessor;
+		m_MenuProcessor    = _MenuProcessor;
 		m_ProfileProcessor = _ProfileProcessor;
-		m_HapticProcessor   = _HapticProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -97,7 +101,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	string GetLevelID(int _Offset)
 	{
-		List<string> levelIDs = m_ProfileProcessor.GetVisibleLevelIDs();
+		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
 		
 		int index = levelIDs.IndexOf(m_LevelID);
 		if (index >= 0 && index < levelIDs.Count)
@@ -117,7 +121,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		bool success = await m_ProfileProcessor.UnlockLevel(m_LevelID);
+		bool success = await UnlockLevel(m_LevelID);
 		
 		if (success)
 		{
@@ -142,9 +146,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		LevelMode levelMode = m_ProfileProcessor.HasNoAds()
-			? LevelMode.Free
-			: m_LevelProcessor.GetMode(m_LevelID);
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
 		
 		m_PreviewSource.Stop();
 		
@@ -216,20 +218,50 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		m_Label.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
 		
-		bool levelUnlocked = m_ProfileProcessor.IsLevelUnlocked(m_LevelID);
-		if (levelUnlocked)
+		if (m_LevelManager.IsLevelLockedByCoins(m_LevelID))
+		{
+			m_UnlockGroup.Show(true);
+			m_PlayGroup.Hide(true);
+		}
+		else
 		{
 			m_PlayGroup.Show(true);
 			m_UnlockGroup.Hide(true);
 		}
-		else
-		{
-			m_PlayGroup.Hide(true);
-			m_UnlockGroup.Show(true);
-		}
+		
 		m_LoaderGroup.Hide(true);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);
+	}
+
+	async Task<bool> UnlockLevel(string _LevelID)
+	{
+		long coins = m_LevelProcessor.GetPrice(_LevelID);
+		
+		if (!await m_ProfileProcessor.CheckCoins(coins))
+			return false;
+		
+		HttpsCallableReference unlockLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("unlockLevel");
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		data["level_id"] = _LevelID;
+		
+		bool success;
+		
+		try
+		{
+			HttpsCallableResult result = await unlockLevel.CallAsync(data);
+			
+			success = (bool)result.Data;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+			
+			success = false;
+		}
+		
+		return success;
 	}
 }

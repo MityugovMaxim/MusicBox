@@ -25,36 +25,35 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	ScoreProcessor    m_ScoreProcessor;
 	ProfileProcessor  m_ProfileProcessor;
+	ScoreProcessor    m_ScoreProcessor;
 	ProgressProcessor m_ProgressProcessor;
-	LevelProcessor    m_LevelProcessor;
 	StorageProcessor  m_StorageProcessor;
+	LevelManager      m_LevelManager;
 	MenuProcessor     m_MenuProcessor;
 	HapticProcessor   m_HapticProcessor;
 	UIUnlockItem.Pool m_ItemPool;
 
 	readonly Queue<ProgressData> m_ProgressData = new Queue<ProgressData>();
-	readonly List<string>        m_LevelIDs     = new List<string>();
 	readonly List<UIUnlockItem>  m_Items        = new List<UIUnlockItem>();
 
 	[Inject]
 	public void Construct(
-		ScoreProcessor    _ScoreProcessor,
 		ProfileProcessor  _ProfileProcessor,
+		ScoreProcessor    _ScoreProcessor,
 		ProgressProcessor _ProgressProcessor,
-		LevelProcessor    _LevelProcessor,
 		StorageProcessor  _StorageProcessor,
+		LevelManager      _LevelManager,
 		MenuProcessor     _MenuProcessor,
 		HapticProcessor   _HapticProcessor,
 		UIUnlockItem.Pool _ItemPool
 	)
 	{
-		m_ScoreProcessor    = _ScoreProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
+		m_ScoreProcessor    = _ScoreProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
-		m_LevelProcessor    = _LevelProcessor;
 		m_StorageProcessor  = _StorageProcessor;
+		m_LevelManager      = _LevelManager;
 		m_MenuProcessor     = _MenuProcessor;
 		m_HapticProcessor   = _HapticProcessor;
 		m_ItemPool          = _ItemPool;
@@ -142,14 +141,9 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	void CreateItems(int _Level)
 	{
-		m_LevelIDs.Clear();
-		foreach (string levelID in m_ProfileProcessor.GetVisibleLevelIDs())
-		{
-			if (_Level == m_LevelProcessor.GetLevel(levelID))
-				m_LevelIDs.Add(levelID);
-		}
+		List<string> levelIDs = m_LevelManager.GetLockedLevelIDs(_Level);
 		
-		foreach (string levelID in m_LevelIDs)
+		foreach (string levelID in levelIDs)
 		{
 			UIUnlockItem item = m_ItemPool.Spawn();
 			

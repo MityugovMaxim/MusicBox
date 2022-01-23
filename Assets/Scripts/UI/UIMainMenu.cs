@@ -40,7 +40,13 @@ public class UIMainMenu : UIMenu
 		m_UrlProcessor     = _UrlProcessor;
 	}
 
-	public void Select(MainMenuPageType _PageType, bool _Instant = false)
+	public void Select(MainMenuPageType _PageType)
+	{
+		// ReSharper disable once IntroduceOptionalParameters.Global
+		Select(_PageType, false);
+	}
+
+	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
 		if (m_PageType == _PageType)
 			return;

@@ -9,19 +9,22 @@ public class UILevelModeButton : UIEntity
 	[SerializeField] Image  m_LockIcon;
 
 	LevelProcessor   m_LevelProcessor;
-	ProfileProcessor m_ProfileProcessor;
+	LevelManager     m_LevelManager;
 
 	[Inject]
-	public void Construct(LevelProcessor _LevelProcessor, ProfileProcessor _ProfileProcessor)
+	public void Construct(
+		LevelProcessor _LevelProcessor,
+		LevelManager   _LevelManager
+	)
 	{
-		m_LevelProcessor   = _LevelProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
+		m_LevelProcessor = _LevelProcessor;
+		m_LevelManager   = _LevelManager;
 	}
 
 	public void Setup(string _LevelID)
 	{
-		LevelMode levelMode      = m_ProfileProcessor.HasNoAds() ? LevelMode.Free : m_LevelProcessor.GetMode(_LevelID);
-		bool      levelAvailable = m_ProfileProcessor.HasLevel(_LevelID);
+		LevelMode levelMode      = m_LevelProcessor.GetMode(_LevelID);
+		bool      levelAvailable = m_LevelManager.IsLevelAvailable(_LevelID);
 		
 		if (m_FreeButton != null)
 			m_FreeButton.gameObject.SetActive(levelAvailable && levelMode == LevelMode.Free);

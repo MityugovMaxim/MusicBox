@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -49,7 +53,7 @@ public class UIReviveMenu : UIMenu
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_ProfileProcessor.ReviveLevel(m_LevelID, m_ReviveCount);
+		bool success = await ReviveLevel(m_LevelID, m_ReviveCount);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -153,5 +157,36 @@ public class UIReviveMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+	}
+
+	async Task<bool> ReviveLevel(string _LevelID, int _ReviveCount)
+	{
+		long coins = m_LevelProcessor.GetRevivePrice(_LevelID);
+		
+		if (!await m_ProfileProcessor.CheckCoins(coins))
+			return false;
+		
+		HttpsCallableReference revive = FirebaseFunctions.DefaultInstance.GetHttpsCallable("reviveLevel");
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		data["level_id"]     = _LevelID;
+		data["revive_count"] = _ReviveCount;
+		
+		bool success;
+		
+		try
+		{
+			HttpsCallableResult result = await revive.CallAsync(data);
+			
+			success = (bool)result.Data;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+			
+			success = false;
+		}
+		
+		return success;
 	}
 }

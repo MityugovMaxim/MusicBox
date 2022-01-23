@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -35,7 +36,6 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
-	ProfileProcessor  m_ProfileProcessor;
 	ScoreProcessor    m_ScoreProcessor;
 	LevelProcessor    m_LevelProcessor;
 	MenuProcessor     m_MenuProcessor;
@@ -58,7 +58,6 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	[Inject]
 	public void Construct(
-		ProfileProcessor  _ProfileProcessor,
 		ScoreProcessor    _ScoreProcessor,
 		LevelProcessor    _LevelProcessor,
 		MenuProcessor     _MenuProcessor,
@@ -66,7 +65,6 @@ public class UIResultRewardPage : UIResultMenuPage
 		LanguageProcessor _LanguageProcessor
 	)
 	{
-		m_ProfileProcessor  = _ProfileProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_MenuProcessor     = _MenuProcessor;
@@ -155,12 +153,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_Loader.Restore();
 		m_Loader.Play();
 		
-		await m_ProfileProcessor.CompleteLevel(
-			m_LevelID,
-			m_TargetRank,
-			m_Score,
-			m_TargetAccuracy
-		);
+		await FinishLevel();
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
@@ -332,5 +325,33 @@ public class UIResultRewardPage : UIResultMenuPage
 		_Label.Value = (long)_Value;
 		
 		_Finished?.Invoke();
+	}
+
+	async Task<bool> FinishLevel()
+	{
+		HttpsCallableReference finishLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("FinishLevel");
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		data["level_id"] = m_LevelID;
+		data["rank"]     = (int)m_ScoreProcessor.Rank;
+		data["accuracy"] = m_ScoreProcessor.Accuracy;
+		data["score"]    = m_ScoreProcessor.Score;
+		
+		bool success;
+		
+		try
+		{
+			HttpsCallableResult result = await finishLevel.CallAsync(data);
+			
+			success = (bool)result.Data;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+			
+			success = false;
+		}
+		
+		return success;
 	}
 }

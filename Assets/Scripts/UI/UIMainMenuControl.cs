@@ -52,7 +52,12 @@ public class UIMainMenuControl : UIEntity
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(ProcessStoreBadge);
 	}
 
-	public void Select(MainMenuPageType _PageType, bool _Instant = false)
+	public void Select(MainMenuPageType _PageType)
+	{
+		Select(_PageType, false);
+	}
+
+	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
 		m_PageType = _PageType;
 		

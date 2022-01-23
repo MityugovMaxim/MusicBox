@@ -23,6 +23,8 @@ public class GameInstaller : MonoInstaller
 		
 		InstallProcessors();
 		
+		InstallManagers();
+		
 		InstallFactories();
 		
 		InstallAudioManager();
@@ -115,11 +117,14 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
 	}
 
+	void InstallManagers()
+	{
+		Container.BindInterfacesAndSelfTo<LevelManager>().FromNew().AsSingle();
+	}
+
 	void InstallSignals()
 	{
 		SignalBusInstaller.Install(Container);
-		
-		Container.DeclareSignal<PurchaseSignal>();
 		
 		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();

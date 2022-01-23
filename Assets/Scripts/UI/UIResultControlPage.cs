@@ -19,26 +19,22 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UILevelLikeButton m_LikeButton;
 	[SerializeField] UILevelModeButton m_RestartButton;
 
-	ScoreProcessor   m_ScoreProcessor;
-	ProfileProcessor m_ProfileProcessor;
-	LevelProcessor   m_LevelProcessor;
-	AdsProcessor     m_AdsProcessor;
-	MenuProcessor    m_MenuProcessor;
-	HapticProcessor  m_HapticProcessor;
+	LevelManager    m_LevelManager;
+	LevelProcessor  m_LevelProcessor;
+	AdsProcessor    m_AdsProcessor;
+	MenuProcessor   m_MenuProcessor;
+	HapticProcessor m_HapticProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
 	int m_RestartAdsCount;
 	int m_RateUsCount;
 
-	string    m_LevelID;
-	ScoreRank m_Rank;
-	int       m_Accuracy;
-	long      m_Score;
+	string m_LevelID;
 
 	[Inject]
 	public void Construct(
-		ScoreProcessor   _ScoreProcessor,
+		LevelManager     _LevelManager,
 		ProfileProcessor _ProfileProcessor,
 		LevelProcessor   _LevelProcessor,
 		AdsProcessor     _AdsProcessor,
@@ -46,20 +42,16 @@ public class UIResultControlPage : UIResultMenuPage
 		HapticProcessor  _HapticProcessor
 	)
 	{
-		m_ScoreProcessor   = _ScoreProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_LevelProcessor   = _LevelProcessor;
-		m_AdsProcessor     = _AdsProcessor;
-		m_MenuProcessor    = _MenuProcessor;
-		m_HapticProcessor  = _HapticProcessor;
+		m_LevelManager    = _LevelManager;
+		m_LevelProcessor  = _LevelProcessor;
+		m_AdsProcessor    = _AdsProcessor;
+		m_MenuProcessor   = _MenuProcessor;
+		m_HapticProcessor = _HapticProcessor;
 	}
 
 	public override void Setup(string _LevelID)
 	{
-		m_LevelID  = _LevelID;
-		m_Rank     = m_ScoreProcessor.Rank;
-		m_Accuracy = m_ScoreProcessor.Accuracy;
-		m_Score    = m_ScoreProcessor.Score;
+		m_LevelID = _LevelID;
 		
 		m_Thumbnail.Setup(m_LevelID);
 		m_Discs.Setup(m_LevelID);
@@ -68,18 +60,7 @@ public class UIResultControlPage : UIResultMenuPage
 		m_RestartButton.Setup(m_LevelID);
 	}
 
-	public override async void Play()
-	{
-		await m_ProfileProcessor.FinishLevel(
-			m_LevelID,
-			m_Rank,
-			m_Accuracy,
-			m_Score
-		);
-		
-		// TODO: Block menu while function running
-		// TODO: Loader on next button
-	}
+	public override void Play() { }
 
 	public async void Leave()
 	{
@@ -185,9 +166,7 @@ public class UIResultControlPage : UIResultMenuPage
 
 	string GetLevelID(int _Offset)
 	{
-		List<string> levelIDs = m_ProfileProcessor.GetVisibleLevelIDs()
-			.Where(m_ProfileProcessor.HasLevel)
-			.ToList();
+		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
 		
 		int index = levelIDs.IndexOf(m_LevelID);
 		if (index >= 0 && index < levelIDs.Count)

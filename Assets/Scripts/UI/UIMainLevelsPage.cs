@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -10,14 +9,10 @@ public class UIMainLevelsPage : UIMainMenuPage
 	[SerializeField] RectTransform m_Container;
 
 	SignalBus         m_SignalBus;
+	LevelManager      m_LevelManager;
 	LanguageProcessor m_LanguageProcessor;
-	LevelProcessor    m_LevelProcessor;
-	ProfileProcessor  m_ProfileProcessor;
-	ProductProcessor  m_ProductProcessor;
 	UILevelItem.Pool  m_ItemPool;
 	UILevelGroup.Pool m_GroupPool;
-
-	List<string> m_LevelIDs = new List<string>();
 
 	readonly List<UILevelItem>  m_Items  = new List<UILevelItem>();
 	readonly List<UILevelGroup> m_Groups = new List<UILevelGroup>();
@@ -25,19 +20,15 @@ public class UIMainLevelsPage : UIMainMenuPage
 	[Inject]
 	public void Construct(
 		SignalBus         _SignalBus,
+		LevelManager      _LevelManager,
 		LanguageProcessor _LanguageProcessor,
-		LevelProcessor    _LevelProcessor,
-		ProfileProcessor  _ProfileProcessor,
-		ProductProcessor  _ProductProcessor,
 		UILevelItem.Pool  _ItemPool,
 		UILevelGroup.Pool _GroupPool
 	)
 	{
 		m_SignalBus         = _SignalBus;
+		m_LevelManager      = _LevelManager;
 		m_LanguageProcessor = _LanguageProcessor;
-		m_LevelProcessor    = _LevelProcessor;
-		m_ProfileProcessor  = _ProfileProcessor;
-		m_ProductProcessor  = _ProductProcessor;
 		m_ItemPool          = _ItemPool;
 		m_GroupPool         = _GroupPool;
 	}
@@ -70,8 +61,6 @@ public class UIMainLevelsPage : UIMainMenuPage
 			m_GroupPool.Despawn(group);
 		m_Groups.Clear();
 		
-		m_LevelIDs = m_ProfileProcessor.GetVisibleLevelIDs();
-		
 		CreateLibrary();
 		
 		CreateProducts();
@@ -81,33 +70,24 @@ public class UIMainLevelsPage : UIMainMenuPage
 
 	void CreateLibrary()
 	{
-		string[] levelIDs = m_LevelIDs
-			.Where(m_ProfileProcessor.HasLevel)
-			.ToArray();
+		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
 		
 		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_LIBRARY"), levelIDs);
 	}
 
 	void CreateProducts()
 	{
-		string[] levelIDs = m_LevelIDs
-			.Where(m_ProductProcessor.HasLevel)
-			.SkipWhile(m_ProfileProcessor.HasLevel)
-			.ToArray();
+		List<string> levelIDs = m_LevelManager.GetProductLevelIDs();
 		
 		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_PRODUCTS"), levelIDs);
 	}
 
 	void CreateLocked()
 	{
-		Dictionary<int, string[]> groups = m_LevelIDs
-			.Where(_LevelID => !m_ProfileProcessor.HasLevel(_LevelID))
-			.GroupBy(m_LevelProcessor.GetLevel)
-			.OrderBy(_LevelGroup => _LevelGroup.Key)
-			.ToDictionary(_LevelGroup => _LevelGroup.Key, _LevelGroup => _LevelGroup.ToArray());
+		Dictionary<int, string[]> levelsGroups = m_LevelManager.GetLockedLevelIDs();
 		
-		foreach (var entry in groups)
-			CreateItemsGroup(m_LanguageProcessor.Format("TRACKS_LEVEL", $"<sprite name=level_{entry.Key}>"), entry.Value);
+		foreach (var levelsGroup in levelsGroups)
+			CreateItemsGroup(m_LanguageProcessor.Format("TRACKS_LEVEL", $"<sprite name=level_{levelsGroup.Key}>"), levelsGroup.Value);
 	}
 
 	void CreateItemsGroup(string _Title, IReadOnlyCollection<string> _LevelIDs)
