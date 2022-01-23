@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +5,7 @@ using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.ProductMenu)]
-public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
+public class UIProductMenu : UISlideMenu
 {
 	[SerializeField] UIProductMenuItem       m_Item;
 	[SerializeField] GameObject              m_ItemsGroup;
@@ -54,21 +53,6 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 		m_MenuProcessor    = _MenuProcessor;
 		m_HapticProcessor  = _HapticProcessor;
 		m_ItemFactory      = _ItemFactory;
-	}
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<PurchaseSignal>(RegisterPurchase);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<PurchaseSignal>(RegisterPurchase);
-	}
-
-	void RegisterPurchase()
-	{
-		Hide();
 	}
 
 	public void Setup(string _ProductID)
@@ -159,6 +143,9 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 			item.Stop();
 		
 		Refresh();
+		
+		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
@@ -167,6 +154,9 @@ public class UIProductMenu : UISlideMenu, IInitializable, IDisposable
 		
 		foreach (UIProductMenuItem item in m_Items)
 			item.Stop();
+		
+		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()

@@ -32,12 +32,14 @@ public class UIMainStorePage : UIMainMenuPage
 	{
 		Refresh();
 		
-		m_SignalBus.Subscribe<PurchaseSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_SignalBus.Unsubscribe<PurchaseSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()
