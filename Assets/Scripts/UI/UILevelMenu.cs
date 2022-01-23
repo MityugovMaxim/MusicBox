@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -10,6 +13,10 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] UILevelDiscs            m_Discs;
 	[SerializeField] UILevelLabel            m_Label;
 	[SerializeField] UILevelModeButton       m_PlayButton;
+	[SerializeField] UIGroup                 m_PlayGroup;
+	[SerializeField] UIGroup                 m_UnlockGroup;
+	[SerializeField] UIGroup                 m_LoaderGroup;
+	[SerializeField] UILoader                m_Loader;
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	SignalBus        m_SignalBus;
@@ -17,6 +24,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	AdsProcessor     m_AdsProcessor;
 	MenuProcessor    m_MenuProcessor;
 	ProfileProcessor m_ProfileProcessor;
+	ScoreProcessor   m_ScoreProcessor;
 	HapticProcessor  m_HapticProcessor;
 
 	string      m_LevelID;
@@ -79,42 +87,95 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	public void Next()
 	{
-		string levelID = m_LevelProcessor.GetNextLevelID(m_LevelID);
-		
-		Select(levelID);
+		Select(GetLevelID(1));
 	}
 
 	public void Previous()
 	{
-		string levelID = m_LevelProcessor.GetPreviousLevelID(m_LevelID);
+		Select(GetLevelID(-1));
+	}
+
+	string GetLevelID(int _Offset)
+	{
+		List<string> levelIDs = m_ProfileProcessor.GetVisibleLevelIDs();
 		
-		Select(levelID);
+		int index = levelIDs.IndexOf(m_LevelID);
+		if (index >= 0 && index < levelIDs.Count)
+			return levelIDs[MathUtility.Repeat(index + _Offset, levelIDs.Count)];
+		else if (levelIDs.Count > 0)
+			return levelIDs.FirstOrDefault();
+		else
+			return m_LevelID;
+	}
+
+	public async void Unlock()
+	{
+		if (m_ProfileProcessor.HasLevel(m_LevelID))
+			return;
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		bool success = await m_ProfileProcessor.UnlockLevel(m_LevelID);
+		
+		if (success)
+		{
+			m_PlayGroup.Show();
+			m_UnlockGroup.Hide();
+			m_LoaderGroup.Hide();
+		}
+		else
+		{
+			m_PlayGroup.Hide();
+			m_UnlockGroup.Show();
+			m_LoaderGroup.Hide();
+		}
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	public async void Play()
 	{
-		if (m_ProfileProcessor.IsLevelLocked(m_LevelID))
+		if (!m_ProfileProcessor.HasLevel(m_LevelID))
 			return;
-		
-		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
-		
-		m_PreviewSource.Stop();
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		LevelMode levelMode = m_ProfileProcessor.HasNoAds()
+			? LevelMode.Free
+			: m_LevelProcessor.GetMode(m_LevelID);
+		
+		m_PreviewSource.Stop();
+		
 		if (levelMode == LevelMode.Ads)
 		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.BlockMenu);
 			
-			bool success = await m_AdsProcessor.ShowRewardedAsync(this);
+			m_PlayGroup.Hide();
+			m_LoaderGroup.Show();
 			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			m_Loader.Restore();
+			m_Loader.Play();
+			
+			#if UNITY_EDITOR
+			await Task.Delay(5000);
+			#endif
+			
+			bool success = await m_AdsProcessor.Rewarded();
+			
+			await Task.Delay(250);
 			
 			if (!success)
 			{
 				Debug.LogErrorFormat("[UILevelMenu] Play failed. Rewarded video error occured. Level ID: {0}.", m_LevelID);
 				
 				Setup(m_LevelID);
+				
+				m_PlayGroup.Show();
+				m_LoaderGroup.Hide();
+				
+				await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 				
 				return;
 			}
@@ -125,6 +186,11 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 			loadingMenu.Setup(m_LevelID);
 		
 		await m_MenuProcessor.Show(MenuType.LoadingMenu);
+		
+		await m_PlayGroup.ShowAsync(true);
+		await m_LoaderGroup.HideAsync(true);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.LevelMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
@@ -149,6 +215,19 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		m_Discs.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
+		
+		bool levelUnlocked = m_ProfileProcessor.IsLevelUnlocked(m_LevelID);
+		if (levelUnlocked)
+		{
+			m_PlayGroup.Show(true);
+			m_UnlockGroup.Hide(true);
+		}
+		else
+		{
+			m_PlayGroup.Hide(true);
+			m_UnlockGroup.Show(true);
+		}
+		m_LoaderGroup.Hide(true);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);

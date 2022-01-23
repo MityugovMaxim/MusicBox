@@ -89,7 +89,7 @@ public class GameInstaller : MonoInstaller
 	void InstallProcessors()
 	{
 		#if UNITY_IOS
-		Container.Bind(typeof(AdsProcessor), typeof(IInitializable)).To<iOSAdsProcessor>().FromNew().AsSingle();
+		Container.Bind<AdsProcessor>().To<iOSAdsProcessor>().FromNew().AsSingle();
 		Container.Bind(typeof(MessageProcessor), typeof(IInitializable)).To<iOSMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
@@ -100,6 +100,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ProductProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<StoreProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<HealthProcessor>().FromNew().AsSingle();
@@ -125,7 +126,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<LevelDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProductDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<PurchaseDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<StoreDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<OfferDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();

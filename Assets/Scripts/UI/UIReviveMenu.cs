@@ -67,7 +67,7 @@ public class UIReviveMenu : UIMenu
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_AdsProcessor.ShowRewardedAsync(this, true);
+		bool success = await m_AdsProcessor.Rewarded(true);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -85,13 +85,13 @@ public class UIReviveMenu : UIMenu
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
 		
 		if (levelMode == LevelMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			await m_AdsProcessor.ShowRewardedAsync(this);
+			await m_AdsProcessor.Rewarded();
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
@@ -105,7 +105,7 @@ public class UIReviveMenu : UIMenu
 				
 				await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 				
-				await m_AdsProcessor.ShowInterstitialAsync(this);
+				await m_AdsProcessor.Interstitial();
 				
 				await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 			}
@@ -133,7 +133,7 @@ public class UIReviveMenu : UIMenu
 			
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			await m_AdsProcessor.ShowInterstitialAsync(this);
+			await m_AdsProcessor.Interstitial();
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}

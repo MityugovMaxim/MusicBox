@@ -4,14 +4,10 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-[RequireComponent(typeof(Animator))]
 public class UIOfferItem : UIEntity
 {
 	[Preserve]
 	public class Pool : MonoMemoryPool<UIOfferItem> { }
-
-	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
-	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 
 	[SerializeField] UIRemoteImage    m_Icon;
 	[SerializeField] TMP_Text         m_Title;
@@ -23,10 +19,9 @@ public class UIOfferItem : UIEntity
 	AdsProcessor      m_AdsProcessor;
 	MenuProcessor     m_MenuProcessor;
 
-	Animator m_Animator;
-	string   m_OfferID;
-	int      m_Progress;
-	int      m_Target;
+	string m_OfferID;
+	int    m_Progress;
+	int    m_Target;
 
 	[Inject]
 	public void Construct(
@@ -46,8 +41,6 @@ public class UIOfferItem : UIEntity
 
 	public void Setup(string _OfferID)
 	{
-		Restore();
-		
 		m_OfferID  = _OfferID;
 		m_Target   = m_OffersProcessor.GetAdsCount(m_OfferID);
 		m_Progress = GetProgress(m_OfferID);
@@ -67,20 +60,11 @@ public class UIOfferItem : UIEntity
 			await ProgressOffer();
 	}
 
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		m_Animator = GetComponent<Animator>();
-		
-		m_Animator.keepAnimatorControllerStateOnDisable = true;
-	}
-
 	async Task ProgressOffer()
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_AdsProcessor.ShowRewardedAsync(this);
+		bool success = await m_AdsProcessor.Rewarded();
 		
 		if (success)
 		{
@@ -111,20 +95,7 @@ public class UIOfferItem : UIEntity
 
 	async Task CollectOffer()
 	{
-		bool success = await m_OffersProcessor.CollectOffer(m_OfferID);
-		
-		if (success)
-			Collect();
-	}
-
-	void Collect()
-	{
-		m_Animator.SetTrigger(m_CollectParameterID);
-	}
-
-	void Restore()
-	{
-		m_Animator.SetTrigger(m_RestoreParameterID);
+		await m_OffersProcessor.CollectOffer(m_OfferID);
 	}
 
 	static int GetProgress(string _OfferID)

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -8,14 +7,11 @@ public class UIMainOffersPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 
 	[SerializeField] RectTransform m_Container;
-	[SerializeField] UILoader      m_Loader;
 	[SerializeField] UIGroup       m_ItemsGroup;
-	[SerializeField] UIGroup       m_LoaderGroup;
-	[SerializeField] UIGroup       m_ErrorGroup;
 	[SerializeField] UIGroup       m_EmptyGroup;
 
 	SignalBus        m_SignalBus;
-	OffersProcessor  m_OffersProcessor;
+	ProfileProcessor m_ProfileProcessor;
 	UIOfferItem.Pool m_ItemPool;
 
 	List<string> m_OfferIDs;
@@ -24,64 +20,25 @@ public class UIMainOffersPage : UIMainMenuPage
 
 	[Inject]
 	public void Construct(
-		SignalBus            _SignalBus,
-		OffersProcessor       _OffersProcessor,
+		SignalBus        _SignalBus,
+		ProfileProcessor _ProfileProcessor,
 		UIOfferItem.Pool _ItemPool
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_OffersProcessor = _OffersProcessor;
-		m_ItemPool       = _ItemPool;
-	}
-
-	public async void Reload(bool _Instant = false)
-	{
-		if (m_OffersProcessor.Loaded)
-		{
-			m_LoaderGroup.Hide(true);
-			m_ErrorGroup.Hide(true);
-			m_ItemsGroup.Show(true);
-			Refresh();
-			return;
-		}
-		
-		m_ItemsGroup.Hide(_Instant);
-		m_ErrorGroup.Hide(_Instant);
-		m_LoaderGroup.Show(_Instant);
-		
-		m_Loader.Restore();
-		m_Loader.Play();
-		
-		try
-		{
-			await m_OffersProcessor.LoadOffers();
-			
-			Refresh();
-			
-			m_LoaderGroup.Hide();
-			m_ErrorGroup.Hide();
-			m_ItemsGroup.Show();
-			
-		}
-		catch
-		{
-			await Task.Delay(1500);
-			
-			m_ItemsGroup.Hide();
-			m_LoaderGroup.Hide();
-			m_ErrorGroup.Show();
-		}
+		m_SignalBus        = _SignalBus;
+		m_ProfileProcessor = _ProfileProcessor;
+		m_ItemPool         = _ItemPool;
 	}
 
 	protected override void OnShowStarted()
 	{
-		Reload(true);
+		Refresh();
 		
 		m_SignalBus.Subscribe<OfferDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 	}
 
-	protected override void OnHideFinished()
+	protected override void OnHideStarted()
 	{
 		m_SignalBus.Unsubscribe<OfferDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
@@ -93,7 +50,7 @@ public class UIMainOffersPage : UIMainMenuPage
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		m_OfferIDs = m_OffersProcessor.GetOfferIDs();
+		m_OfferIDs = m_ProfileProcessor.GetVisibleOfferIDs();
 		
 		if (m_OfferIDs == null || m_OfferIDs.Count == 0)
 		{

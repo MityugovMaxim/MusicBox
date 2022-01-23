@@ -8,10 +8,12 @@ public class UILoginMenu : UIMenu
 	[SerializeField] UILoader m_Loader;
 
 	SocialProcessor   m_SocialProcessor;
+	AdsProcessor      m_AdsProcessor;
 	LevelProcessor    m_LevelProcessor;
 	ScoreProcessor    m_ScoreProcessor;
 	NewsProcessor     m_NewsProcessor;
 	OffersProcessor   m_OffersProcessor;
+	ProductProcessor  m_ProductProcessor;
 	StoreProcessor    m_StoreProcessor;
 	ProgressProcessor m_ProgressProcessor;
 	MessageProcessor  m_MessageProcessor;
@@ -22,10 +24,12 @@ public class UILoginMenu : UIMenu
 	[Inject]
 	public void Construct(
 		SocialProcessor   _SocialProcessor,
+		AdsProcessor      _AdsProcessor,
 		LevelProcessor    _LevelProcessor,
 		ScoreProcessor    _ScoreProcessor,
 		NewsProcessor     _NewsProcessor,
 		OffersProcessor   _OffersProcessor,
+		ProductProcessor  _ProductProcessor,
 		StoreProcessor    _StoreProcessor,
 		ProgressProcessor _ProgressProcessor,
 		MessageProcessor  _MessageProcessor,
@@ -35,10 +39,12 @@ public class UILoginMenu : UIMenu
 	)
 	{
 		m_SocialProcessor   = _SocialProcessor;
+		m_AdsProcessor      = _AdsProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
 		m_NewsProcessor     = _NewsProcessor;
 		m_OffersProcessor   = _OffersProcessor;
+		m_ProductProcessor  = _ProductProcessor;
 		m_StoreProcessor    = _StoreProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
 		m_MessageProcessor  = _MessageProcessor;
@@ -62,20 +68,25 @@ public class UILoginMenu : UIMenu
 	{
 		await m_SocialProcessor.Login();
 		
-		Task[] tasks =
-		{
+		await Task.Delay(250);
+		
+		await Task.WhenAll(
 			m_LanguageProcessor.LoadLocalization(),
+			m_ProductProcessor.LoadProducts(),
+			m_OffersProcessor.LoadOffers(),
+			m_NewsProcessor.LoadNews(),
 			m_ProgressProcessor.LoadProgress(),
-			m_ProfileProcessor.LoadProfile(),
 			m_LevelProcessor.LoadLevels(),
 			m_ScoreProcessor.LoadScores(),
-			m_NewsProcessor.LoadNews(),
-			m_OffersProcessor.LoadOffers(),
-			m_StoreProcessor.LoadProducts(),
-			m_StoreProcessor.LoadPurchases(),
-		};
+			m_ProfileProcessor.LoadProfile()
+		);
 		
-		await Task.WhenAll(tasks);
+		await Task.WhenAll(
+			m_StoreProcessor.LoadStore(),
+			m_AdsProcessor.LoadAds()
+		);
+		
+		await m_StoreProcessor.Restore();
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		

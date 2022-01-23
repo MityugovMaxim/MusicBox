@@ -13,6 +13,8 @@ public class MenuPrebuild
 	/// PREBUILD_START
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()
 	{
+		{ typeof(UIBlockMenu), MenuType.BlockMenu },
+		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
 		{ typeof(UILatencyMenu), MenuType.LatencyMenu },
 		{ typeof(UILevelMenu), MenuType.LevelMenu },
@@ -23,7 +25,8 @@ public class MenuPrebuild
 		{ typeof(UIProcessingMenu), MenuType.ProcessingMenu },
 		{ typeof(UIProductMenu), MenuType.ProductMenu },
 		{ typeof(UIResultMenu), MenuType.ResultMenu },
-		{ typeof(UIShopMenu), MenuType.ShopMenu },
+		{ typeof(UIReviveMenu), MenuType.ReviveMenu },
+		{ typeof(UIRewardMenu), MenuType.RewardMenu },
 	};
 	/// PREBUILD_END
 	#endif

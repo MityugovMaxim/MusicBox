@@ -143,7 +143,7 @@ public class UIResultLevelPage : UIResultMenuPage
 	void CreateItems(int _Level)
 	{
 		m_LevelIDs.Clear();
-		foreach (string levelID in m_LevelProcessor.GetLevelIDs())
+		foreach (string levelID in m_ProfileProcessor.GetVisibleLevelIDs())
 		{
 			if (_Level == m_LevelProcessor.GetLevel(levelID))
 				m_LevelIDs.Add(levelID);

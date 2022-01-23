@@ -48,10 +48,13 @@ public class UIRemoteImage : UIEntity
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Image.sprite = sprite;
-		m_Image.gameObject.SetActive(true);
-		
-		m_LoaderGroup.Hide(frame == Time.frameCount || !gameObject.activeInHierarchy);
+		if (sprite != null)
+		{
+			m_Image.sprite = sprite;
+			m_Image.gameObject.SetActive(true);
+			
+			m_LoaderGroup.Hide(frame == Time.frameCount || !gameObject.activeInHierarchy);
+		}
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;

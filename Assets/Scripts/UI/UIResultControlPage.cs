@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.iOS;
 using Zenject;
@@ -68,12 +70,15 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public override async void Play()
 	{
-		await m_ProfileProcessor.CompleteLevel(
+		await m_ProfileProcessor.FinishLevel(
 			m_LevelID,
 			m_Rank,
 			m_Accuracy,
 			m_Score
 		);
+		
+		// TODO: Block menu while function running
+		// TODO: Loader on next button
 	}
 
 	public async void Leave()
@@ -88,7 +93,7 @@ public class UIResultControlPage : UIResultMenuPage
 			
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			await m_AdsProcessor.ShowInterstitialAsync(this);
+			await m_AdsProcessor.Interstitial();
 			
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		}
@@ -117,7 +122,7 @@ public class UIResultControlPage : UIResultMenuPage
 			
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			await m_AdsProcessor.ShowInterstitialAsync(this);
+			await m_AdsProcessor.Interstitial();
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
@@ -130,7 +135,7 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
 		if (levelMenu != null)
-			levelMenu.Setup(m_LevelProcessor.GetNextLevelID(m_LevelID));
+			levelMenu.Setup(GetLevelID(1));
 		
 		await m_MenuProcessor.Show(MenuType.LevelMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
@@ -143,13 +148,13 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		LevelMode levelMode = m_LevelProcessor.GetLevelMode(m_LevelID);
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
 		
 		if (levelMode == LevelMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			await m_AdsProcessor.ShowRewardedAsync(this);
+			await m_AdsProcessor.Rewarded();
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}
@@ -163,7 +168,7 @@ public class UIResultControlPage : UIResultMenuPage
 				
 				await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 				
-				await m_AdsProcessor.ShowInterstitialAsync(this);
+				await m_AdsProcessor.Interstitial();
 				
 				await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 			}
@@ -176,6 +181,20 @@ public class UIResultControlPage : UIResultMenuPage
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 		
 		m_LevelProcessor.Play();
+	}
+
+	string GetLevelID(int _Offset)
+	{
+		List<string> levelIDs = m_ProfileProcessor.GetVisibleLevelIDs()
+			.Where(m_ProfileProcessor.HasLevel)
+			.ToList();
+		
+		int index = levelIDs.IndexOf(m_LevelID);
+		if (index >= 0 && index < levelIDs.Count)
+			return levelIDs[MathUtility.Repeat(index + _Offset, levelIDs.Count)];
+		else if (levelIDs.Count > 0)
+			return levelIDs.FirstOrDefault();
+		else return m_LevelID;
 	}
 
 	protected override void OnShowFinished()

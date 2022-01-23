@@ -11,25 +11,25 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 	[SerializeField] UIProductPrice     m_Price;
 	[SerializeField] UIProductThumbnail m_Thumbnail;
 
-	StoreProcessor  m_StoreProcessor;
-	HapticProcessor m_HapticProcessor;
-	MenuProcessor   m_MenuProcessor;
+	ProfileProcessor m_ProfileProcessor;
+	HapticProcessor  m_HapticProcessor;
+	MenuProcessor    m_MenuProcessor;
 
 	string m_ProductID;
 
 	[Inject]
 	public void Construct(
-		StoreProcessor  _StoreProcessor,
-		MenuProcessor   _MenuProcessor,
-		HapticProcessor _HapticProcessor
+		ProfileProcessor _ProfileProcessor,
+		MenuProcessor    _MenuProcessor,
+		HapticProcessor  _HapticProcessor
 	)
 	{
-		m_StoreProcessor  = _StoreProcessor;
-		m_MenuProcessor   = _MenuProcessor;
-		m_HapticProcessor = _HapticProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
+		m_MenuProcessor    = _MenuProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 	}
 
-	public async void Setup(string _ProductID)
+	public void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
 		
@@ -39,25 +39,14 @@ public class UIProductPromo : UIGroup, IPointerClickHandler
 			return;
 		}
 		
-		if (m_StoreProcessor.IsProductPurchased(m_ProductID))
+		if (m_ProfileProcessor.HasProduct(m_ProductID))
 		{
 			Hide();
 			return;
 		}
 		
-		if (m_StoreProcessor.Loaded)
-		{
-			m_Label.Setup(m_ProductID);
-			m_Price.Setup(m_ProductID);
-			m_Thumbnail.Setup(m_ProductID);
-			Show();
-			return;
-		}
-		
 		try
 		{
-			await m_StoreProcessor.LoadStore();
-			
 			m_Label.Setup(m_ProductID);
 			m_Price.Setup(m_ProductID);
 			m_Thumbnail.Setup(m_ProductID);

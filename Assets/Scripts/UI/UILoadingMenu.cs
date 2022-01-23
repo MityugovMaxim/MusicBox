@@ -32,15 +32,12 @@ public class UILoadingMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
-		if (m_Loader != null)
-			m_Loader.Restore();
+		m_Loader.Restore();
+		m_Loader.Play();
 	}
 
 	protected override async void OnShowFinished()
 	{
-		if (m_Loader != null)
-			m_Loader.Play();
-		
 		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
 		if (gameMenu != null)
 			gameMenu.Setup(m_LevelID);
@@ -66,6 +63,8 @@ public class UILoadingMenu : UIMenu
 	{
 		m_MusicProcessor.StopMusic();
 		m_MusicProcessor.StopAmbient();
+		
+		// TODO: Introduce level controls then play level
 		
 		m_LevelProcessor.Play();
 	}

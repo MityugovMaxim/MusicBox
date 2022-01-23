@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -8,10 +7,7 @@ public class UIMainNewsPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.News;
 
 	[SerializeField] RectTransform m_Container;
-	[SerializeField] UILoader      m_Loader;
 	[SerializeField] UIGroup       m_ItemsGroup;
-	[SerializeField] UIGroup       m_LoaderGroup;
-	[SerializeField] UIGroup       m_ErrorGroup;
 	[SerializeField] UIGroup       m_EmptyGroup;
 
 	SignalBus       m_SignalBus;
@@ -24,8 +20,8 @@ public class UIMainNewsPage : UIMainMenuPage
 
 	[Inject]
 	public void Construct(
-		SignalBus           _SignalBus,
-		NewsProcessor       _NewsProcessor,
+		SignalBus       _SignalBus,
+		NewsProcessor   _NewsProcessor,
 		UINewsItem.Pool _ItemPool
 	)
 	{
@@ -34,52 +30,14 @@ public class UIMainNewsPage : UIMainMenuPage
 		m_ItemPool      = _ItemPool;
 	}
 
-	public async void Reload(bool _Instant = false)
-	{
-		if (m_NewsProcessor.Loaded)
-		{
-			m_LoaderGroup.Hide(true);
-			m_ErrorGroup.Hide(true);
-			m_ItemsGroup.Show(true);
-			Refresh();
-			return;
-		}
-		
-		m_ItemsGroup.Hide(_Instant);
-		m_ErrorGroup.Hide(_Instant);
-		m_LoaderGroup.Show(_Instant);
-		
-		m_Loader.Restore();
-		m_Loader.Play();
-		
-		try
-		{
-			await m_NewsProcessor.LoadNews();
-			
-			Refresh();
-			
-			m_LoaderGroup.Hide();
-			m_ErrorGroup.Hide();
-			m_ItemsGroup.Show();
-		}
-		catch
-		{
-			await Task.Delay(1500);
-			
-			m_ItemsGroup.Hide();
-			m_LoaderGroup.Hide();
-			m_ErrorGroup.Show();
-		}
-	}
-
 	protected override void OnShowStarted()
 	{
-		Reload(true);
+		Refresh();
 		
 		m_SignalBus.Subscribe<NewsDataUpdateSignal>(Refresh);
 	}
 
-	protected override void OnHideFinished()
+	protected override void OnHideStarted()
 	{
 		m_SignalBus.Unsubscribe<NewsDataUpdateSignal>(Refresh);
 	}

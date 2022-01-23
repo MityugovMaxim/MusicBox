@@ -8,25 +8,49 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 	[Preserve]
 	public class Pool : MonoMemoryPool<UILevelItem> { }
 
-	public string LevelID { get; private set; }
-
 	[SerializeField] UILevelThumbnail m_Thumbnail;
 	[SerializeField] UILevelDiscs     m_Discs;
+	[SerializeField] UIGroup          m_NewBadge;
+	[SerializeField] UIGroup          m_HotBadge;
 
-	MenuProcessor m_MenuProcessor;
+	string m_LevelID;
+
+	LevelProcessor m_LevelProcessor;
+	MenuProcessor  m_MenuProcessor;
 
 	[Inject]
-	public void Construct(MenuProcessor _MenuProcessor)
+	public void Construct(
+		LevelProcessor _LevelProcessor,
+		MenuProcessor  _MenuProcessor
+	)
 	{
-		m_MenuProcessor = _MenuProcessor;
+		m_LevelProcessor = _LevelProcessor;
+		m_MenuProcessor  = _MenuProcessor;
 	}
 
 	public void Setup(string _LevelID)
 	{
-		LevelID = _LevelID;
+		m_LevelID = _LevelID;
 		
-		m_Thumbnail.Setup(LevelID);
-		m_Discs.Setup(LevelID);
+		LevelBadge badge = m_LevelProcessor.GetBadge(m_LevelID);
+		if (badge == LevelBadge.Hot)
+		{
+			m_HotBadge.Show();
+			m_NewBadge.Hide();
+		}
+		else if (badge == LevelBadge.New)
+		{
+			m_NewBadge.Show();
+			m_HotBadge.Hide();
+		}
+		else
+		{
+			m_NewBadge.Hide();
+			m_HotBadge.Hide();
+		}
+		
+		m_Thumbnail.Setup(m_LevelID);
+		m_Discs.Setup(m_LevelID);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
@@ -36,7 +60,7 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 		if (levelMenu == null)
 			return;
 		
-		levelMenu.Setup(LevelID);
+		levelMenu.Setup(m_LevelID);
 		levelMenu.Show();
 	}
 }

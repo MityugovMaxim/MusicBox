@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -20,9 +19,7 @@ public class UIMainMenuControl : UIEntity
 	SignalBus        m_SignalBus;
 	SocialProcessor  m_SocialProcessor;
 	ProfileProcessor m_ProfileProcessor;
-	OffersProcessor  m_OffersProcessor;
 	NewsProcessor    m_NewsProcessor;
-	StoreProcessor   m_StoreProcessor;
 
 	IEnumerator m_MoveRoutine;
 
@@ -41,17 +38,13 @@ public class UIMainMenuControl : UIEntity
 		SignalBus        _SignalBus,
 		SocialProcessor  _SocialProcessor,
 		ProfileProcessor _ProfileProcessor,
-		OffersProcessor  _OffersProcessor,
-		NewsProcessor    _NewsProcessor,
-		StoreProcessor   _StoreProcessor
+		NewsProcessor    _NewsProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_SocialProcessor  = _SocialProcessor;
 		m_ProfileProcessor = _ProfileProcessor;
-		m_OffersProcessor  = _OffersProcessor;
 		m_NewsProcessor    = _NewsProcessor;
-		m_StoreProcessor   = _StoreProcessor;
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Subscribe<OfferDataUpdateSignal>(ProcessOffersBadge);
@@ -115,9 +108,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		string[] offerIDs = m_OffersProcessor.GetOfferIDs()
-			.Except(m_ProfileProcessor.Offers.Select(_Offer => _Offer.ID))
-			.ToArray();
+		List<string> offerIDs = m_ProfileProcessor.GetVisibleOfferIDs();
 		
 		m_OffersBadge.Value = GetUnreadCount(OFFERS_KEY, offerIDs);
 	}
@@ -141,16 +132,14 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		string[] productIDs = m_StoreProcessor.GetProductIDs()
-			.Except(m_ProfileProcessor.Products.Select(_Product => _Product.ID))
-			.ToArray();
+		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
 		
 		m_StoreBadge.Value = GetUnreadCount(STORE_KEY, productIDs);
 	}
 
 	void ReadOffers()
 	{
-		Read(OFFERS_KEY, m_OffersProcessor.GetOfferIDs());
+		Read(OFFERS_KEY, m_ProfileProcessor.GetVisibleOfferIDs());
 		
 		m_OffersBadge.Value = 0;
 	}
@@ -164,7 +153,7 @@ public class UIMainMenuControl : UIEntity
 
 	void ReadStore()
 	{
-		Read(STORE_KEY, m_StoreProcessor.GetProductIDs());
+		Read(STORE_KEY, m_ProfileProcessor.GetVisibleProductIDs());
 		
 		m_StoreBadge.Value = 0;
 	}

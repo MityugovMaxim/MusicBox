@@ -12,23 +12,24 @@ public class LevelDataUpdateSignal { }
 
 public class LevelSnapshot
 {
-	public string    ID             { get; }
-	public int       Level          { get; }
-	public string    Title          { get; }
-	public string    Artist         { get; }
-	public LevelMode Mode           { get; }
-	public float     Length         { get; }
-	public float     BPM            { get; }
-	public float     Speed          { get; }
-	public float     Invincibility  { get; }
-	public long      DefaultPayout  { get; }
-	public long      BronzePayout   { get; }
-	public long      SilverPayout   { get; }
-	public long      GoldPayout     { get; }
-	public long      PlatinumPayout { get; }
-	public long      Price          { get; }
-	public long      RevivePrice    { get; }
-	public string    Skin           { get; }
+	public string     ID             { get; }
+	public int        Level          { get; }
+	public string     Title          { get; }
+	public string     Artist         { get; }
+	public LevelMode  Mode           { get; }
+	public LevelBadge Badge          { get; }
+	public float      Length         { get; }
+	public float      BPM            { get; }
+	public float      Speed          { get; }
+	public float      Invincibility  { get; }
+	public long       DefaultPayout  { get; }
+	public long       BronzePayout   { get; }
+	public long       SilverPayout   { get; }
+	public long       GoldPayout     { get; }
+	public long       PlatinumPayout { get; }
+	public long       Price          { get; }
+	public long       RevivePrice    { get; }
+	public string     Skin           { get; }
 
 	public LevelSnapshot(DataSnapshot _Data)
 	{
@@ -37,6 +38,7 @@ public class LevelSnapshot
 		Title          = _Data.GetString("title", string.Empty);
 		Artist         = _Data.GetString("artist", string.Empty);
 		Mode           = _Data.GetEnum<LevelMode>("mode");
+		Badge          = _Data.GetEnum<LevelBadge>("badge");
 		Length         = _Data.GetFloat("length");
 		BPM            = _Data.GetFloat("bpm");
 		Speed          = _Data.GetFloat("speed");
@@ -55,13 +57,12 @@ public class LevelSnapshot
 [Preserve]
 public class LevelProcessor
 {
-	public bool Loaded { get; private set; }
+	bool Loaded { get; set; }
 
 	Level  m_Level;
 	string m_LevelID;
 
 	readonly SignalBus        m_SignalBus;
-	readonly StoreProcessor   m_StoreProcessor;
 	readonly StorageProcessor m_StorageProcessor;
 	readonly Level.Factory    m_LevelFactory;
 
@@ -74,13 +75,11 @@ public class LevelProcessor
 	[Inject]
 	public LevelProcessor(
 		SignalBus        _SignalBus,
-		StoreProcessor   _StoreProcessor,
 		StorageProcessor _StorageProcessor,
 		Level.Factory    _LevelFactory
 	)
 	{
 		m_SignalBus        = _SignalBus;
-		m_StoreProcessor   = _StoreProcessor;
 		m_StorageProcessor = _StorageProcessor;
 		m_LevelFactory     = _LevelFactory;
 	}
@@ -88,21 +87,19 @@ public class LevelProcessor
 	public async Task LoadLevels()
 	{
 		if (m_LevelsData == null)
-			m_LevelsData = FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
+		{
+			m_LevelsData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("levels");
+			m_LevelsData.ValueChanged += OnLevelsUpdate;
+		}
 		
 		await FetchLevels();
 		
-		if (Loaded)
-			return;
-		
 		Loaded = true;
-		
-		m_LevelsData.ValueChanged += OnLevelsUpdate;
 	}
 
 	public List<string> GetLevelIDs()
 	{
-		return m_LevelIDs.Where(_LevelID => m_StoreProcessor.IsLevelPurchased(_LevelID)).ToList();
+		return m_LevelIDs.ToList();
 	}
 
 	public bool Contains(string _LevelID)
@@ -213,45 +210,8 @@ public class LevelProcessor
 		return levelSnapshot.Level;
 	}
 
-	public string GetNextLevelID(string _LevelID)
+	public LevelMode GetMode(string _LevelID)
 	{
-		List<string> levelIDs = GetLevelIDs();
-		
-		if (levelIDs == null || levelIDs.Count == 0)
-			return _LevelID;
-		
-		int index = levelIDs.IndexOf(_LevelID);
-		
-		if (index < 0)
-			return _LevelID;
-		
-		index = MathUtility.Repeat(index + 1, levelIDs.Count);
-		
-		return levelIDs[index];
-	}
-
-	public string GetPreviousLevelID(string _LevelID)
-	{
-		List<string> levelIDs = GetLevelIDs();
-		
-		if (levelIDs == null || levelIDs.Count == 0)
-			return _LevelID;
-		
-		int index = levelIDs.IndexOf(_LevelID);
-		
-		if (index < 0)
-			return _LevelID;
-		
-		index = MathUtility.Repeat(index - 1, levelIDs.Count);
-		
-		return levelIDs[index];
-	}
-
-	public LevelMode GetLevelMode(string _LevelID)
-	{
-		if (m_StoreProcessor.IsNoAdsPurchased())
-			return LevelMode.Free;
-		
 		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
 		
 		if (levelSnapshot == null)
@@ -261,6 +221,19 @@ public class LevelProcessor
 		}
 		
 		return levelSnapshot.Mode;
+	}
+
+	public LevelBadge GetBadge(string _LevelID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get badge failed. Level info with ID '{0}' is null.", _LevelID);
+			return LevelBadge.None;
+		}
+		
+		return levelSnapshot.Badge;
 	}
 
 	public async Task Load(string _LevelID)
@@ -376,6 +349,9 @@ public class LevelProcessor
 
 	async void OnLevelsUpdate(object _Sender, EventArgs _Args)
 	{
+		if (!Loaded)
+			return;
+		
 		Debug.Log("[LevelProcessor] Updating levels data...");
 		
 		await FetchLevels();

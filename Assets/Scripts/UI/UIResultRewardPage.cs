@@ -28,11 +28,14 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] UIDiscProgress[]   m_DiscsProgress;
 	[SerializeField] UIDiscs            m_Discs;
 	[SerializeField] UIGroup            m_ContinueGroup;
+	[SerializeField] UIGroup            m_LoaderGroup;
+	[SerializeField] UILoader           m_Loader;
 	[SerializeField] UICascadeUnitLabel m_ScoreLabel;
 	[SerializeField] UICascadeUnitLabel m_CoinsLabel;
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
+	ProfileProcessor  m_ProfileProcessor;
 	ScoreProcessor    m_ScoreProcessor;
 	LevelProcessor    m_LevelProcessor;
 	MenuProcessor     m_MenuProcessor;
@@ -55,6 +58,7 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	[Inject]
 	public void Construct(
+		ProfileProcessor  _ProfileProcessor,
 		ScoreProcessor    _ScoreProcessor,
 		LevelProcessor    _LevelProcessor,
 		MenuProcessor     _MenuProcessor,
@@ -62,6 +66,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		LanguageProcessor _LanguageProcessor
 	)
 	{
+		m_ProfileProcessor  = _ProfileProcessor;
 		m_ScoreProcessor    = _ScoreProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_MenuProcessor     = _MenuProcessor;
@@ -118,13 +123,18 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		m_Discs.Hide(true);
 		m_ContinueGroup.Hide(true);
+		m_LoaderGroup.Hide(true);
 	}
 
 	public override async void Play()
 	{
 		await PlayRank();
 		
+		await Task.Delay(250);
+		
 		await PlayScore();
+		
+		await Task.Delay(250);
 		
 		await PlayCoins();
 		
@@ -137,7 +147,22 @@ public class UIResultRewardPage : UIResultMenuPage
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
 		m_ContinueGroup.Hide();
+		m_LoaderGroup.Show();
+		
+		m_Loader.Restore();
+		m_Loader.Play();
+		
+		await m_ProfileProcessor.CompleteLevel(
+			m_LevelID,
+			m_TargetRank,
+			m_Score,
+			m_TargetAccuracy
+		);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
 		if (resultMenu == null)
@@ -159,7 +184,7 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	async Task PlayRank()
 	{
-		m_Title.Play();
+		await m_Title.PlayAsync();
 		
 		while (m_ProgressData.Count > 0)
 		{
@@ -284,7 +309,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		if (_Value > 0 && m_Duration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 8, m_Duration);
+			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 20, m_Duration);
 			
 			float time = 0;
 			while (time < m_Duration)

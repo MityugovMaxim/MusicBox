@@ -220,7 +220,15 @@ public static class WebRequest
 			return null;
 		}
 		
-		Texture2D texture = await LoadTexture(_URL, _Token);
+		Texture2D texture;
+		try
+		{
+			texture = await LoadTexture(_URL, _Token);
+		}
+		catch
+		{
+			texture = null;
+		}
 		
 		if (texture == null)
 		{

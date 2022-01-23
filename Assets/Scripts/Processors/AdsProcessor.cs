@@ -1,11 +1,10 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Advertisements;
-using Zenject;
 
-public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationListener, IUnityAdsListener
+public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
 {
 	static bool TestMode
 	{
@@ -20,345 +19,183 @@ public abstract class AdsProcessor : IInitializable, IUnityAdsInitializationList
 	protected abstract string InterstitialID { get; }
 	protected abstract string RewardedID     { get; }
 
-	StoreProcessor m_StoreProcessor;
+	readonly ProfileProcessor m_ProfileProcessor;
 
-	bool m_InterstitialLoaded;
-	bool m_RewardedLoaded;
+	readonly Dictionary<string, Action<bool>> m_LoadFinished = new Dictionary<string, Action<bool>>();
+	readonly Dictionary<string, Action<bool>> m_ShowFinished  = new Dictionary<string, Action<bool>>();
 
-	Action m_OnInterstitialLoaded;
-	Action m_OnRewardedLoaded;
-	Action m_InterstitialFinished;
-	Action m_RewardedSuccess;
-	Action m_RewardedFailed;
+	Action<bool> m_LoadAdsFinished;
+	Action<bool> m_InterstitialFinished;
+	Action<bool> m_RewardedFinished;
 
-	[Inject]
-	public void Construct(StoreProcessor _StoreProcessor)
+	protected AdsProcessor(ProfileProcessor _ProfileProcessor)
 	{
-		m_StoreProcessor = _StoreProcessor;
+		m_ProfileProcessor = _ProfileProcessor;
 	}
 
-	void IInitializable.Initialize()
+	public Task<bool> LoadAds()
 	{
-		Reload();
-	}
-
-	public void Reload()
-	{
-		if (m_StoreProcessor.IsNoAdsPurchased())
-			return;
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_LoadAdsFinished = _Success => completionSource.TrySetResult(_Success);
+		
+		if (m_ProfileProcessor.HasNoAds())
+		{
+			InvokeLoadAdsFinished(true);
+			return completionSource.Task;
+		}
 		
 		if (!Advertisement.isSupported)
 		{
-			Debug.LogError("[AdsProcessor] Ads initialization failed. Ads not supported.");
-			return;
+			Debug.LogError("[AdsProcessor] Load ads failed. Ads not supported.");
+			InvokeLoadAdsFinished(false);
+			return completionSource.Task;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, true, this);
-		Advertisement.AddListener(this);
+		Advertisement.Initialize(GameID, TestMode, this);
+		
+		return completionSource.Task;
 	}
 
-	public void ShowInterstitial(Action _Finished = null)
+	public async Task<bool> Interstitial()
 	{
-		if (m_StoreProcessor.IsNoAdsPurchased())
-		{
-			_Finished?.Invoke();
-			return;
-		}
+		if (m_ProfileProcessor.HasNoAds())
+			return true;
 		
+		return await Show(InterstitialID);
+	}
+
+	public async Task<bool> Rewarded(bool _Force = false)
+	{
+		if (!_Force && m_ProfileProcessor.HasNoAds())
+			return true;
+		
+		return await Show(RewardedID);
+	}
+
+	Task<bool> Load(string _PlacementID)
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_LoadFinished[_PlacementID] = _Success => completionSource.TrySetResult(_Success);
+		
+		Advertisement.Load(_PlacementID, this);
+		
+		return completionSource.Task;
+	}
+
+	async Task<bool> Show(string _PlacementID)
+	{
 		if (!Advertisement.isInitialized)
+			await LoadAds();
+		
+		bool loaded = await Load(_PlacementID);
+		
+		if (!loaded)
 		{
-			Debug.LogError("[AdsProcessor] Show interstitial failed. Ads not initialized.");
-			_Finished?.Invoke();
-			return;
+			Debug.LogFormat("[AdsProcessor] Second attempt to load placement. Placement: {0}.", _PlacementID);
+			
+			await Task.Delay(250);
+			
+			loaded = await Load(_PlacementID);
 		}
 		
-		if (!m_InterstitialLoaded)
-		{
-			Debug.LogError("[AdsProcessor] Show interstitial failed. Interstitial not loaded.");
-			_Finished?.Invoke();
-			return;
-		}
+		if (!loaded)
+			return false;
 		
-		if (Advertisement.isShowing)
-		{
-			Debug.LogError("[AdsProcessor] Show interstitial failed. Ads already showing.");
-			_Finished?.Invoke();
-			return;
-		}
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		InvokeInterstitialFinished();
+		m_ShowFinished[_PlacementID] = _Success => completionSource.TrySetResult(_Success);
 		
-		m_InterstitialFinished = _Finished;
+		Advertisement.Show(_PlacementID, this);
 		
-		Advertisement.Show(InterstitialID);
-	}
-
-	public void ShowRewarded(Action _Success = null, Action _Failed = null)
-	{
-		if (m_StoreProcessor.IsNoAdsPurchased())
-		{
-			_Success?.Invoke();
-			return;
-		}
+		await completionSource.Task;
 		
-		if (!Advertisement.isInitialized)
-		{
-			Debug.LogError("[AdsProcessor] Show rewarded failed. Ads not initialized.");
-			_Failed?.Invoke();
-			return;
-		}
+		await Task.Yield();
 		
-		if (!m_RewardedLoaded)
-		{
-			Debug.LogError("[AdsProcessor] Show rewarded failed. Rewarded not loaded.");
-			return;
-		}
+		AudioManager.SetAudioActive(true);
 		
-		if (Advertisement.isShowing)
-		{
-			Debug.LogError("[AdsProcessor] Show rewarded failed. Ads already showing.");
-			return;
-		}
+		await Task.Yield();
 		
-		InvokeRewardedFailed();
-		
-		m_RewardedSuccess = _Success;
-		m_RewardedFailed  = _Failed;
-		
-		Advertisement.Show(RewardedID);
-	}
-
-	public Task ShowInterstitialAsync(MonoBehaviour _Context)
-	{
-		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-		
-		ShowInterstitial(_Context, () => taskSource.TrySetResult(true));
-		
-		return taskSource.Task;
-	}
-
-	public Task<bool> ShowRewardedAsync(MonoBehaviour _Context, bool _Force = false)
-	{
-		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-		
-		ShowRewarded(
-			_Context,
-			_Force,
-			() => taskSource.TrySetResult(true),
-			() => taskSource.TrySetResult(false),
-			() => taskSource.TrySetCanceled()
-		);
-		
-		return taskSource.Task;
-	}
-
-	public void ShowInterstitial(
-		MonoBehaviour _Context,
-		Action        _Finished = null
-	)
-	{
-		if (m_StoreProcessor.IsNoAdsPurchased())
-		{
-			_Finished?.Invoke();
-			return;
-		}
-		
-		_Context.StartCoroutine(ShowInterstitialRoutine(_Finished));
-	}
-
-	public void ShowRewarded(
-		MonoBehaviour _Context,
-		bool          _Force   = false,
-		Action        _Success = null,
-		Action        _Failed  = null,
-		Action        _Cancel  = null
-	)
-	{
-		if (!_Force || m_StoreProcessor.IsNoAdsPurchased())
-		{
-			_Success?.Invoke();
-			return;
-		}
-		
-		_Context.StartCoroutine(ShowRewardedRoutine(_Success, _Failed, _Cancel));
+		return completionSource.Task.Result;
 	}
 
 	void IUnityAdsInitializationListener.OnInitializationComplete()
 	{
-		Debug.Log("[AdsProcessor] Ads initialized.");
+		Debug.Log("[AdsProcessor] Load ads success.");
+		
+		InvokeLoadAdsFinished(true);
 	}
 
 	void IUnityAdsInitializationListener.OnInitializationFailed(UnityAdsInitializationError _Error, string _Message)
 	{
-		Debug.LogErrorFormat("[AdsProcessor] Ads initialization failed. Error: {0} Message: {1}.", _Error, _Message);
+		Debug.LogErrorFormat("[AdsProcessor] Load ads failed. Error: {0} Message: {1}.", _Error, _Message);
+		
+		InvokeLoadAdsFinished(false);
 	}
 
-	void IUnityAdsListener.OnUnityAdsReady(string _PlacementID)
+	void IUnityAdsLoadListener.OnUnityAdsAdLoaded(string _PlacementID)
 	{
-		Debug.LogFormat("[AdsProcessor] Ads placement ready. Placement: {0}.", _PlacementID);
+		Debug.LogFormat("[AdsProcessor] Load placement success. Placement: {0}.", _PlacementID);
 		
-		if (_PlacementID == InterstitialID)
-			m_InterstitialLoaded = true;
-		else if (_PlacementID == RewardedID)
-			m_RewardedLoaded = true;
+		InvokeLoadFinished(_PlacementID, true);
 	}
 
-	void IUnityAdsListener.OnUnityAdsDidError(string _Message)
+	void IUnityAdsLoadListener.OnUnityAdsFailedToLoad(string _PlacementID, UnityAdsLoadError _Error, string _Message)
 	{
-		Debug.LogErrorFormat("[AdsProcessor] Ads placement error. {0}.", _Message);
+		Debug.LogErrorFormat("[AdsProcessor] Load placement failed. Placement: {0} Error: {1} Message: {2}.", _PlacementID, _Error, _Message);
 		
-		Reload();
+		InvokeLoadFinished(_PlacementID, false);
 	}
 
-	void IUnityAdsListener.OnUnityAdsDidStart(string _PlacementID)
+	void IUnityAdsShowListener.OnUnityAdsShowStart(string _PlacementID)
 	{
-		Debug.LogFormat("[AdsProcessor] Ads started. Placement: {0}.", _PlacementID);
+		Debug.LogFormat("[AdsProcessor] Show placement. Placement: {0}.", _PlacementID);
 	}
 
-	void IUnityAdsListener.OnUnityAdsDidFinish(string _PlacementID, ShowResult _Result)
+	void IUnityAdsShowListener.OnUnityAdsShowClick(string _PlacementID)
 	{
-		Debug.LogFormat("[AdsProcessor] Ads finished. Placement: {0} Result: {1}.", _PlacementID, _Result);
-		
-		if (_PlacementID == RewardedID)
-		{
-			switch (_Result)
-			{
-				case ShowResult.Finished:
-					InvokeRewardedSuccess();
-					break;
-				default:
-					Debug.LogError("[AdsProcessor] Placement state: " + Advertisement.GetPlacementState(_PlacementID));
-					InvokeRewardedFailed();
-					break;
-			}
-		}
-		else if (_PlacementID == InterstitialID)
-		{
-			if (_Result != ShowResult.Finished)
-				Debug.LogError("[AdsProcessor] Placement state: " + Advertisement.GetPlacementState(_PlacementID));
-			InvokeInterstitialFinished();
-		}
+		Debug.LogFormat("[AdsProcessor] Click placement. Placement: {0}.", _PlacementID);
 	}
 
-	IEnumerator ShowInterstitialRoutine(Action _Finished)
+	void IUnityAdsShowListener.OnUnityAdsShowComplete(string _PlacementID, UnityAdsShowCompletionState _State)
 	{
-		const float timeout = 30;
+		Debug.LogFormat("[AdsProcessor] Show placement success. Placement: {0} State: {1}.", _PlacementID, _State);
 		
-		float time = 0;
-		
-		m_InterstitialLoaded = false;
-		
-		Advertisement.Load(InterstitialID);
-		
-		yield return new WaitForSeconds(0.5f);
-		
-		while (time < timeout)
-		{
-			if (Advertisement.isInitialized && m_InterstitialLoaded)
-			{
-				yield return WaitInterstitialRoutine(_Finished);
-				yield break;
-			}
-			
-			time += Time.deltaTime;
-			
-			yield return null;
-		}
-		
-		Reload();
-		
-		_Finished?.Invoke();
+		InvokeShowFinished(_PlacementID, _State == UnityAdsShowCompletionState.COMPLETED);
 	}
 
-	IEnumerator WaitInterstitialRoutine(Action _Finished)
+	void IUnityAdsShowListener.OnUnityAdsShowFailure(string _PlacementID, UnityAdsShowError _Error, string _Message)
 	{
-		bool finished = false;
+		Debug.LogErrorFormat("[AdsProcessor] Show placement failed. Placement: {0} Error: {1} Message: {2}.", _PlacementID, _Error, _Message);
 		
-		ShowInterstitial(() => finished = true);
-		
-		yield return new WaitUntil(() => finished);
-		
-		yield return null;
-		
-		AudioManager.SetAudioActive(true);
-		
-		yield return null;
-		
-		_Finished?.Invoke();
+		InvokeShowFinished(_PlacementID, false);
 	}
 
-	IEnumerator ShowRewardedRoutine(Action _Success, Action _Failed, Action _Cancel)
+	void InvokeLoadAdsFinished(bool _Success)
 	{
-		const float timeout = 30;
-		
-		float time = 0;
-		
-		m_RewardedLoaded = false;
-		
-		Advertisement.Load(RewardedID);
-		
-		yield return new WaitForSeconds(0.5f);
-		
-		while (time < timeout)
-		{
-			if (Advertisement.isInitialized && m_RewardedLoaded)
-			{
-				yield return WaitRewardedRoutine(_Success, _Failed);
-				yield break;
-			}
-			
-			time += Time.deltaTime;
-			
-			yield return null;
-		}
-		
-		Reload();
-		
-		_Cancel?.Invoke();
+		Action<bool> action = m_LoadAdsFinished;
+		m_LoadAdsFinished = null;
+		action?.Invoke(_Success);
 	}
 
-	IEnumerator WaitRewardedRoutine(Action _Success, Action _Failed)
+	void InvokeLoadFinished(string _PlacementID, bool _Success)
 	{
-		bool success = false;
-		bool failed  = false;
+		if (!m_LoadFinished.TryGetValue(_PlacementID, out Action<bool> action))
+			return;
 		
-		ShowRewarded(() => success = true, () => failed = true);
+		m_LoadFinished.Remove(_PlacementID);
 		
-		yield return new WaitUntil(() => success || failed);
-		
-		yield return null;
-		
-		AudioManager.SetAudioActive(true);
-		
-		yield return null;
-		
-		if (success)
-			_Success?.Invoke();
-		
-		if (failed)
-			_Failed?.Invoke();
+		action?.Invoke(_Success);
 	}
 
-	void InvokeRewardedSuccess()
+	void InvokeShowFinished(string _PlacementID, bool _Success)
 	{
-		Action action = m_RewardedSuccess;
-		m_RewardedFailed = null;
-		m_RewardedSuccess = null;
-		action?.Invoke();
-	}
-
-	void InvokeRewardedFailed()
-	{
-		Action action = m_RewardedFailed;
-		m_RewardedSuccess = null;
-		m_RewardedFailed = null;
-		action?.Invoke();
-	}
-
-	void InvokeInterstitialFinished()
-	{
-		Action action = m_InterstitialFinished;
-		m_InterstitialFinished = null;
-		action?.Invoke();
+		if (!m_ShowFinished.TryGetValue(_PlacementID, out Action<bool> action))
+			return;
+		
+		m_ShowFinished.Remove(_PlacementID);
+		
+		action?.Invoke(_Success);
 	}
 }

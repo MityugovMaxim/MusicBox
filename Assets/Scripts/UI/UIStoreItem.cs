@@ -8,11 +8,12 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 	[Preserve]
 	public class Pool : MonoMemoryPool<UIStoreItem> { }
 
-	public string ProductID { get; private set; }
-
 	[SerializeField] UIProductThumbnail m_Thumbnail;
+	[SerializeField] UIProductDiscount  m_Discount;
 
 	MenuProcessor m_MenuProcessor;
+
+	string m_ProductID;
 
 	[Inject]
 	public void Construct(MenuProcessor _MenuProcessor)
@@ -22,9 +23,10 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 
 	public void Setup(string _ProductID)
 	{
-		ProductID = _ProductID;
+		m_ProductID = _ProductID;
 		
 		m_Thumbnail.Setup(_ProductID);
+		m_Discount.Setup(_ProductID);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
@@ -34,7 +36,7 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 		if (productMenu == null)
 			return;
 		
-		productMenu.Setup(ProductID);
+		productMenu.Setup(m_ProductID);
 		productMenu.Show();
 	}
 }

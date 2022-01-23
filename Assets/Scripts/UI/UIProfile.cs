@@ -64,7 +64,7 @@ public class UIProfile : UIEntity
 		
 		m_Avatar.Load(m_SocialProcessor.Photo);
 		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
-		m_Level.Level = m_ProfileProcessor.GetLevel();
+		m_Level.Level = m_ProfileProcessor.Level;
 		
 		Vector2 size = m_Progress.sizeDelta;
 		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_ProfileProcessor.GetProgress());
@@ -73,11 +73,13 @@ public class UIProfile : UIEntity
 
 	void ProcessDiscs()
 	{
-		int level        = m_ProfileProcessor.GetLevel();
+		int level        = m_ProfileProcessor.Level;
 		int currentDiscs = m_ProfileProcessor.Discs;
 		int targetDiscs  = m_ProgressProcessor.GetMaxLimit(level);
 		
-		m_Discs.text = $"{currentDiscs}/{targetDiscs}";
+		m_Discs.text = level < m_ProgressProcessor.GetMaxLevel()
+			? $"{currentDiscs}/{targetDiscs}"
+			: currentDiscs.ToString();
 	}
 
 	void ProcessUsername()

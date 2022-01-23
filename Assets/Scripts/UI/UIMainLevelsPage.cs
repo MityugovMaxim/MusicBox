@@ -13,8 +13,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 	LanguageProcessor m_LanguageProcessor;
 	LevelProcessor    m_LevelProcessor;
 	ProfileProcessor  m_ProfileProcessor;
-	ScoreProcessor    m_ScoreProcessor;
-	StoreProcessor    m_StoreProcessor;
+	ProductProcessor  m_ProductProcessor;
 	UILevelItem.Pool  m_ItemPool;
 	UILevelGroup.Pool m_GroupPool;
 
@@ -29,8 +28,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 		LanguageProcessor _LanguageProcessor,
 		LevelProcessor    _LevelProcessor,
 		ProfileProcessor  _ProfileProcessor,
-		ScoreProcessor    _ScoreProcessor,
-		StoreProcessor    _StoreProcessor,
+		ProductProcessor  _ProductProcessor,
 		UILevelItem.Pool  _ItemPool,
 		UILevelGroup.Pool _GroupPool
 	)
@@ -39,8 +37,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 		m_LanguageProcessor = _LanguageProcessor;
 		m_LevelProcessor    = _LevelProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
-		m_ScoreProcessor    = _ScoreProcessor;
-		m_StoreProcessor    = _StoreProcessor;
+		m_ProductProcessor  = _ProductProcessor;
 		m_ItemPool          = _ItemPool;
 		m_GroupPool         = _GroupPool;
 	}
@@ -54,7 +51,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
 	}
 
-	protected override void OnHideFinished()
+	protected override void OnHideStarted()
 	{
 		m_SignalBus.Unsubscribe<LevelDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
@@ -71,7 +68,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 			m_GroupPool.Despawn(group);
 		m_Groups.Clear();
 		
-		m_LevelIDs = m_LevelProcessor.GetLevelIDs();
+		m_LevelIDs = m_ProfileProcessor.GetVisibleLevelIDs();
 		
 		CreateLibrary();
 		
@@ -83,8 +80,7 @@ public class UIMainLevelsPage : UIMainMenuPage
 	void CreateLibrary()
 	{
 		string[] levelIDs = m_LevelIDs
-			.Where(m_ProfileProcessor.IsLevelUnlocked)
-			.OrderBy(m_ScoreProcessor.GetRank)
+			.Where(m_ProfileProcessor.HasLevel)
 			.ToArray();
 		
 		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_LIBRARY"), levelIDs);
@@ -93,8 +89,8 @@ public class UIMainLevelsPage : UIMainMenuPage
 	void CreateProducts()
 	{
 		string[] levelIDs = m_LevelIDs
-			.Where(m_StoreProcessor.ContainsLevel)
-			.Where(m_ProfileProcessor.IsLevelLocked)
+			.Where(m_ProductProcessor.HasLevel)
+			.SkipWhile(m_ProfileProcessor.HasLevel)
 			.ToArray();
 		
 		CreateItemsGroup(m_LanguageProcessor.Get("TRACKS_PRODUCTS"), levelIDs);
@@ -103,8 +99,8 @@ public class UIMainLevelsPage : UIMainMenuPage
 	void CreateLocked()
 	{
 		Dictionary<int, string[]> groups = m_LevelIDs
-			.Where(m_ProfileProcessor.IsLevelLocked)
-			.SkipWhile(m_StoreProcessor.ContainsLevel)
+			.Where(_LevelID => !m_ProfileProcessor.HasLevel(_LevelID))
+			//.SkipWhile(m_ProductProcessor.HasLevel)
 			.GroupBy(m_LevelProcessor.GetLevel)
 			.OrderBy(_LevelGroup => _LevelGroup.Key)
 			.ToDictionary(_LevelGroup => _LevelGroup.Key, _LevelGroup => _LevelGroup.ToArray());

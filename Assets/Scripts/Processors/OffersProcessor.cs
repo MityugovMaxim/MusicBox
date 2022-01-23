@@ -29,12 +29,11 @@ public class OfferSnapshot
 
 public class OffersProcessor
 {
-	public bool Loaded { get; private set; }
+	bool Loaded { get; set; }
 
 	readonly SignalBus         m_SignalBus;
 	readonly LanguageProcessor m_LanguageProcessor;
 	readonly StorageProcessor  m_StorageProcessor;
-	readonly ProfileProcessor  m_ProfileProcessor;
 	readonly MenuProcessor     m_MenuProcessor;
 
 	readonly List<string>                      m_OfferIDs       = new List<string>();
@@ -47,35 +46,31 @@ public class OffersProcessor
 		SignalBus         _SignalBus,
 		LanguageProcessor _LanguageProcessor,
 		StorageProcessor  _StorageProcessor,
-		ProfileProcessor  _ProfileProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
 		m_SignalBus         = _SignalBus;
 		m_LanguageProcessor = _LanguageProcessor;
 		m_StorageProcessor  = _StorageProcessor;
-		m_ProfileProcessor  = _ProfileProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
 	public async Task LoadOffers()
 	{
 		if (m_OffersData == null)
-			m_OffersData = FirebaseDatabase.DefaultInstance.RootReference.Child("offers");
+		{
+			m_OffersData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("offers");
+			m_OffersData.ValueChanged += OnOffersUpdate;
+		}
 		
 		await FetchOffers();
 		
-		if (Loaded)
-			return;
-		
 		Loaded = true;
-		
-		m_OffersData.ValueChanged += OnOffersUpdate;
 	}
 
 	public async Task<bool> CollectOffer(string _OfferID)
 	{
-		HttpsCallableReference collectOffer = FirebaseFunctions.DefaultInstance.GetHttpsCallable("collectOffer");
+		HttpsCallableReference collectOffer = FirebaseFunctions.DefaultInstance.GetHttpsCallable("CollectOffer");
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		data["offer_id"] = _OfferID;
@@ -147,7 +142,7 @@ public class OffersProcessor
 
 	public List<string> GetOfferIDs()
 	{
-		return m_OfferIDs.Where(_OfferID => m_ProfileProcessor.Offers == null || m_ProfileProcessor.Offers.All(_Offer => _Offer.ID != _OfferID)).ToList();
+		return m_OfferIDs.ToList();
 	}
 
 	public string GetTitle(string _OfferID)
@@ -204,6 +199,9 @@ public class OffersProcessor
 
 	async void OnOffersUpdate(object _Sender, EventArgs _Args)
 	{
+		if (!Loaded)
+			return;
+		
 		Debug.Log("[OfferProcessor] Updating offers data...");
 		
 		await FetchOffers();

@@ -8,7 +8,7 @@ public class TimeProcessor
 	{
 		try
 		{
-			HttpsCallableReference getServerTime = FirebaseFunctions.DefaultInstance.GetHttpsCallable("getServerTime");
+			HttpsCallableReference getServerTime = FirebaseFunctions.DefaultInstance.GetHttpsCallable("GetServerTime");
 			
 			HttpsCallableResult result = await getServerTime.CallAsync();
 			

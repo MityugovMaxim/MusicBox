@@ -13,28 +13,29 @@ public class LevelDatabaseEntry : DatabaseEntry
 {
 	public override string Key => m_ID;
 
-	[SerializeField] string    m_ID;
-	[SerializeField] bool      m_Active;
-	[SerializeField] string    m_Title;
-	[SerializeField] string    m_Artist;
-	[SerializeField] LevelMode m_Mode;
-	[SerializeField] int       m_Level;
-	[SerializeField] long      m_Price;
-	[SerializeField] long      m_DefaultPayout;
-	[SerializeField] long      m_BronzePayout;
-	[SerializeField] long      m_SilverPayout;
-	[SerializeField] long      m_GoldPayout;
-	[SerializeField] long      m_PlatinumPayout;
-	[SerializeField] float     m_Length;
-	[SerializeField] float     m_BPM;
-	[SerializeField] float     m_Speed;
-	[SerializeField] string    m_Skin;
-	[SerializeField] Texture2D m_Thumbnail;
-	[SerializeField] AudioClip m_Preview;
-	[SerializeField] bool      m_PayoutsFoldout;
-	[SerializeField] bool      m_SettingsFoldout;
-	[SerializeField] Object    m_SkinAsset;
-	[SerializeField] bool      m_Remove;
+	[SerializeField] string     m_ID;
+	[SerializeField] bool       m_Active;
+	[SerializeField] string     m_Title;
+	[SerializeField] string     m_Artist;
+	[SerializeField] LevelMode  m_Mode;
+	[SerializeField] LevelBadge m_Badge;
+	[SerializeField] int        m_Level;
+	[SerializeField] long       m_Price;
+	[SerializeField] long       m_DefaultPayout;
+	[SerializeField] long       m_BronzePayout;
+	[SerializeField] long       m_SilverPayout;
+	[SerializeField] long       m_GoldPayout;
+	[SerializeField] long       m_PlatinumPayout;
+	[SerializeField] float      m_Length;
+	[SerializeField] float      m_BPM;
+	[SerializeField] float      m_Speed;
+	[SerializeField] string     m_Skin;
+	[SerializeField] Texture2D  m_Thumbnail;
+	[SerializeField] AudioClip  m_Preview;
+	[SerializeField] bool       m_PayoutsFoldout;
+	[SerializeField] bool       m_SettingsFoldout;
+	[SerializeField] Object     m_SkinAsset;
+	[SerializeField] bool       m_Remove;
 
 	async void LoadThumbnail()
 	{
@@ -139,6 +140,8 @@ public class LevelDatabaseEntry : DatabaseEntry
 		
 		m_Mode = (LevelMode)EditorGUILayout.EnumPopup("Mode:", m_Mode);
 		
+		m_Badge = (LevelBadge)EditorGUILayout.EnumPopup("Badge:", m_Badge);
+		
 		m_Level = EditorGUILayout.IntField("Level:", m_Level);
 		
 		m_Price = EditorGUILayout.LongField("Price:", m_Price);
@@ -201,6 +204,7 @@ public class LevelDatabaseEntry : DatabaseEntry
 		m_Level          = _DataSnapshot.GetInt("level");
 		m_Price          = _DataSnapshot.GetLong("price");
 		m_Mode           = _DataSnapshot.GetEnum<LevelMode>("mode");
+		m_Badge          = _DataSnapshot.GetEnum<LevelBadge>("badge");
 		m_Length         = _DataSnapshot.GetFloat("length");
 		m_BPM            = _DataSnapshot.GetFloat("bpm");
 		m_Speed          = _DataSnapshot.GetFloat("speed");
@@ -229,6 +233,7 @@ public class LevelDatabaseEntry : DatabaseEntry
 		data["title"]           = m_Title;
 		data["artist"]          = m_Artist;
 		data["mode"]            = (int)m_Mode;
+		data["badge"]           = (int)m_Badge;
 		data["level"]           = m_Level;
 		data["price"]           = m_Price;
 		data["default_payout"]  = m_DefaultPayout;

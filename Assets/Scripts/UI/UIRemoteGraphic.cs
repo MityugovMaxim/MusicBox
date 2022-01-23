@@ -39,24 +39,18 @@ public class UIRemoteGraphic : UIEntity
 		
 		int frame = Time.frameCount;
 		
-		Sprite sprite;
-		
-		try
-		{
-			sprite = await _Task;
-		}
-		catch
-		{
-			sprite = null;
-		}
+		Sprite sprite = await _Task;
 		
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Image.Sprite = sprite != null ? sprite : m_Default;
-		m_Image.gameObject.SetActive(true);
-		
-		m_LoaderGroup.Hide(frame == Time.frameCount || !gameObject.activeInHierarchy);
+		if (sprite != null || m_Default != null)
+		{
+			m_Image.Sprite = sprite != null ? sprite : m_Default;
+			m_Image.gameObject.SetActive(true);
+			
+			m_LoaderGroup.Hide(frame == Time.frameCount || !gameObject.activeInHierarchy);
+		}
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;

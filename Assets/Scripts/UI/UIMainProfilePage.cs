@@ -60,15 +60,30 @@ public class UIMainProfilePage : UIMainMenuPage
 		
 		await m_MenuProcessor.Show(MenuType.LoginMenu);
 		
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		bool success = await m_SocialProcessor.AttachAppleID();
 		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
-		await m_SocialProcessor.AttachAppleID();
-		
-		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-		if (loginMenu != null)
-			await loginMenu.Login();
+		if (success)
+		{
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+			if (loginMenu != null)
+				await loginMenu.Login();
+		}
+		else
+		{
+			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
+			if (errorMenu != null)
+				errorMenu.Setup("LOGIN WITH APPLE FAILED.", "CHECK YOUR INTERNET CONNECTION AND TRY AGAIN LATER.");
+			
+			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.LoginMenu);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu);
+		}
 	}
 
 	public async void SignInGoogle()
@@ -77,15 +92,30 @@ public class UIMainProfilePage : UIMainMenuPage
 		
 		await m_MenuProcessor.Show(MenuType.LoginMenu);
 		
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		bool success = await m_SocialProcessor.AttachGoogleID();
 		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
-		await m_SocialProcessor.AttachGoogleID();
-		
-		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-		if (loginMenu != null)
-			await loginMenu.Login();
+		if (success)
+		{
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+			if (loginMenu != null)
+				await loginMenu.Login();
+		}
+		else
+		{
+			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
+			if (errorMenu != null)
+				errorMenu.Setup("LOGIN WITH GOOGLE FAILED.", "CHECK YOUR INTERNET CONNECTION AND TRY AGAIN LATER.");
+			
+			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.LoginMenu);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
 	}
 
 	public async void Logout()
@@ -136,7 +166,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		
 		m_Avatar.Load(m_SocialProcessor.Photo);
 		
-		m_Level.Level = m_ProfileProcessor.GetLevel();
+		m_Level.Level = m_ProfileProcessor.Level;
 		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
 		
 		string username = m_SocialProcessor.Name;

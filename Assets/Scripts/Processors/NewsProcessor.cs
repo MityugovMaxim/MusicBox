@@ -28,7 +28,7 @@ public class NewsSnapshot
 
 public class NewsProcessor
 {
-	public bool Loaded { get; private set; }
+	bool Loaded { get; set; }
 
 	readonly SignalBus         m_SignalBus;
 	readonly LanguageProcessor m_LanguageProcessor;
@@ -51,16 +51,14 @@ public class NewsProcessor
 	public async Task LoadNews()
 	{
 		if (m_NewsData == null)
-			m_NewsData = FirebaseDatabase.DefaultInstance.RootReference.Child("news");
+		{
+			m_NewsData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("news");
+			m_NewsData.ValueChanged += OnNewsUpdate;
+		}
 		
 		await FetchNews();
 		
-		if (Loaded)
-			return;
-		
 		Loaded = true;
-		
-		m_NewsData.ValueChanged += OnNewsUpdate;
 	}
 
 	public List<string> GetNewsIDs()
@@ -116,6 +114,9 @@ public class NewsProcessor
 
 	async void OnNewsUpdate(object _Sender, EventArgs _Args)
 	{
+		if (!Loaded)
+			return;
+		
 		Debug.Log("[NewsProcessor] Updating news data...");
 		
 		await FetchNews();

@@ -39,6 +39,8 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 	public void Toggle(bool _Value, bool _Instant = false)
 	{
 		Animator.SetBool(m_InstantParameterID, _Instant);
+		Animator.ResetTrigger(m_EnabledParameterID);
+		Animator.ResetTrigger(m_DisabledParameterID);
 		Animator.SetTrigger(_Value ? m_EnabledParameterID : m_DisabledParameterID);
 	}
 

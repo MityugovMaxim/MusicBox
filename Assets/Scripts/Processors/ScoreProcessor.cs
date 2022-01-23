@@ -59,7 +59,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 	const int X4_COMBO = 60;
 	const int X2_COMBO = 20;
 
-	public bool Loaded { get; private set; }
+	bool Loaded { get; set; }
 
 	public long Score => m_Score;
 
@@ -253,16 +253,14 @@ public class ScoreProcessor : IInitializable, IDisposable
 		}
 		
 		if (m_ScoresData == null)
-			m_ScoresData = FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
+		{
+			m_ScoresData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
+			m_ScoresData.ValueChanged += OnScoresUpdate;
+		}
 		
 		await FetchScores();
 		
-		if (Loaded)
-			return;
-		
 		Loaded = true;
-		
-		m_ScoresData.ValueChanged += OnScoresUpdate;
 	}
 
 	public int GetAccuracy(string _LevelID)
@@ -416,6 +414,9 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	async void OnScoresUpdate(object _Sender, EventArgs _Args)
 	{
+		if (!Loaded)
+			return;
+		
 		Debug.Log("[Score processor] Updating scores data...");
 		
 		await FetchScores();

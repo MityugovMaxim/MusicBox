@@ -24,7 +24,7 @@ public class ProgressDataUpdateSignal { }
 
 public class ProgressProcessor
 {
-	public bool Loaded { get; private set; }
+	bool Loaded { get; set; }
 
 	readonly SignalBus m_SignalBus;
 
@@ -41,16 +41,14 @@ public class ProgressProcessor
 	public async Task LoadProgress()
 	{
 		if (m_ProgressData == null)
-			m_ProgressData = FirebaseDatabase.DefaultInstance.RootReference.Child("progress");
+		{
+			m_ProgressData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("progress");
+			m_ProgressData.ValueChanged += OnProgressUpdate;
+		}
 		
 		await FetchProgress();
 		
-		if (Loaded)
-			return;
-		
 		Loaded = true;
-		
-		m_ProgressData.ValueChanged += OnProgressUpdate;
 	}
 
 	public int GetLevel(int _Discs)
@@ -60,7 +58,7 @@ public class ProgressProcessor
 		
 		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
 			.Where(_Snapshot => _Snapshot.MinLimit <= _Discs)
-			.Aggregate((_A, _B) => _A.MaxLimit > _B.MaxLimit ? _A : _B);
+			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
 		
 		return progressSnapshot?.Level ?? 1;
 	}
@@ -126,6 +124,9 @@ public class ProgressProcessor
 
 	async void OnProgressUpdate(object _Sender, EventArgs _Args)
 	{
+		if (!Loaded)
+			return;
+		
 		Debug.Log("[ProgressProcessor] Updating progress data...");
 		
 		await FetchProgress();

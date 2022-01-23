@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
@@ -48,7 +49,15 @@ public abstract class MessageProcessor : IInitializable
 
 	public async Task ProcessPermission()
 	{
-		await FirebaseMessaging.RequestPermissionAsync();
+		try
+		{
+			await FirebaseMessaging.RequestPermissionAsync();
+		}
+		catch (Exception exception)
+		{
+			Debug.LogError("[MessageProcessor] Process permission failed.");
+			Debug.LogException(exception);
+		}
 		
 		FirebaseMessaging.TokenReceived   += OnTokenReceived;
 		FirebaseMessaging.MessageReceived += OnMessageReceived;

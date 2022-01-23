@@ -121,7 +121,8 @@ public class UIGroup : UIEntity
 		InvokeShowStarted();
 		InvokeShowFinished();
 		
-		gameObject.SetActive(true);
+		if (!gameObject.activeSelf)
+			gameObject.SetActive(true);
 		
 		Shown          = false;
 		m_HideStarted  = _Started;
@@ -147,7 +148,8 @@ public class UIGroup : UIEntity
 			
 			InvokeHideFinished();
 			
-			gameObject.SetActive(true);
+			if (gameObject.activeSelf)
+				gameObject.SetActive(false);
 		}
 	}
 
@@ -245,7 +247,8 @@ public class UIGroup : UIEntity
 		
 		InvokeHideFinished();
 		
-		gameObject.SetActive(true);
+		if (gameObject.activeSelf)
+			gameObject.SetActive(true);
 	}
 
 	protected virtual IEnumerator ShowAnimationRoutine(CanvasGroup _CanvasGroup, float _Duration)
