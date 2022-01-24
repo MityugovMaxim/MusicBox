@@ -118,7 +118,7 @@ Shader "UI/Pattern"
 				const half fadeIn = smoothstep(0, 0.2, time);
 				const half fadeOut = smoothstep(1, 0.8, time);
 				const float radius = time * 40;
-				const float ring = getRing(id, radius, radius - 10, _Smooth) * fadeIn * fadeOut;
+				const float ring = getRing(id + half2(0.5, 0.5), radius, radius - 10, _Smooth) * fadeIn * fadeOut;
 				const float size = lerp(2, 0.25, ring);
 				
 				fixed4 color = tex2D(_MainTex, scale(uv, half2(0.5, 0.5), size)) * IN.color;
