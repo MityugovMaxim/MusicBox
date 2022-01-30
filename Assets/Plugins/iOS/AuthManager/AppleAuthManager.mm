@@ -1,102 +1,167 @@
+#import "UnityBridge.h"
 #import <Foundation/Foundation.h>
 #import <AuthenticationServices/AuthenticationServices.h>
 #import <CommonCrypto/CommonCrypto.h>
 
-#define MakeStringCopy( _x_ ) ( _x_ != NULL && [_x_ isKindOfClass:[NSString class]] ) ? strdup( [_x_ UTF8String] ) : NULL
-#define GetStringParam( _x_ ) ( _x_ != NULL ) ? [NSString stringWithUTF8String:_x_] : [NSString stringWithUTF8String:""]
+typedef void (*AppleAuthSuccessCallback)(const char* idToken, const char* nonce, const char* displayName);
+typedef void (*AppleAuthFailedCallback)(const char* error);
 
-typedef void (*AppleAuthCallback)(const char* tokenID);
+@interface AppleAuthManager : NSObject
++ (instancetype) sharedManager;
+@end
 
 API_AVAILABLE(ios(13.0))
-@interface AppleAuthManager : NSObject <ASAuthorizationControllerDelegate>
-@property (nonatomic, assign) AppleAuthCallback loginSuccess;
-@property (nonatomic, assign) AppleAuthCallback loginFailed;
+@interface AppleAuthManager () <ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding>
 @end
 
 @implementation AppleAuthManager
-+ (instancetype) sharedInstance
+NSString* nonce;
+AppleAuthSuccessCallback success;
+AppleAuthFailedCallback failed;
+
++ (instancetype) sharedManager
 {
-    static AppleAuthManager* defaultInstance = nil;
-    static dispatch_once_t defaultInstanceInitialization;
+    static AppleAuthManager *_defaultManager = nil;
+    static dispatch_once_t defaultManagerInitialization;
     
-    dispatch_once(&defaultInstanceInitialization, ^{
-        defaultInstance = [[AppleAuthManager alloc] init];
+    dispatch_once(&defaultManagerInitialization, ^{
+        _defaultManager = [[AppleAuthManager alloc] init];
     });
     
-    return defaultInstance;
+    return _defaultManager;
 }
 
 - (instancetype) init
 {
     self = [super init];
+    
     return self;
 }
 
-- (void) loginWithAppleWithNonce:(NSString*)nonce
+- (void) signInWithSuccessCallback:(AppleAuthSuccessCallback) _Success failedCallback:(AppleAuthFailedCallback) _Failed API_AVAILABLE(ios(13.0))
 {
+    nonce = [self generateNonceWithLength:32];
+    success = _Success;
+    failed = _Failed;
+    
     ASAuthorizationAppleIDProvider* provider = [[ASAuthorizationAppleIDProvider alloc] init];
     ASAuthorizationAppleIDRequest* request = [provider createRequest];
     
-    [request setRequestedScopes:@[ASAuthorizationScopeFullName, ASAuthorizationScopeEmail]];
-    [request setNonce: [self stringBySha256HashingString:nonce]];
+    request.requestedScopes = @[ASAuthorizationScopeFullName, ASAuthorizationScopeEmail];
+    request.nonce = [self generateHashWithString:nonce];
     
     ASAuthorizationController* authController = [[ASAuthorizationController alloc] initWithAuthorizationRequests:@[request]];
     
     [authController setDelegate:self];
+    [authController setPresentationContextProvider:self];
     [authController performRequests];
 }
 
-- (void) authorizationController:(ASAuthorizationController*)controller didCompleteWithAuthorization:(ASAuthorization*)authorization
+- (void)authorizationController:(ASAuthorizationController *)controller
+   didCompleteWithAuthorization:(ASAuthorization *)authorization API_AVAILABLE(ios(13.0))
 {
     if ([[authorization credential] isKindOfClass:[ASAuthorizationAppleIDCredential class]])
     {
         ASAuthorizationAppleIDCredential* credential = (ASAuthorizationAppleIDCredential*)[authorization credential];
         
-        NSString* identityToken = [[NSString alloc] initWithData:[credential identityToken] encoding:NSUTF8StringEncoding];
+        NSString* idToken = [[NSString alloc] initWithData:[credential identityToken] encoding:NSUTF8StringEncoding];
         
-        if (self.loginSuccess != nil)
-            self.loginSuccess(MakeStringCopy(identityToken));
+        NSString* displayName = [NSString stringWithFormat:@"%@ %@", credential.fullName.givenName, credential.fullName.familyName];
+        
+        [self invokeSuccessWithIDToken:idToken nonce:nonce displayName:displayName];
     }
 }
 
-- (void) authorizationController:(ASAuthorizationController*)controller didCompleteWithError:(NSError*)error
+- (void) authorizationController:(ASAuthorizationController*) controller didCompleteWithError:(NSError*) error API_AVAILABLE(ios(13.0))
 {
-    NSString* message = [error localizedDescription];
-    
-    if (self.loginFailed != nil)
-        self.loginFailed(MakeStringCopy(message));
+    [self invokeFailedWithError:error];
 }
 
-- (NSString *)stringBySha256HashingString:(NSString *)input
+- (ASPresentationAnchor) presentationAnchorForAuthorizationController:(ASAuthorizationController *)controller API_AVAILABLE(ios(13.0))
 {
-    const char *string = [input UTF8String];
+    return UnityGetMainWindow();
+}
+
+- (void) invokeSuccessWithIDToken:(NSString*) idToken nonce:(NSString*) nonce displayName:(NSString*)displayName
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (success != nil)
+            success(CString(idToken), CString(nonce), CString(displayName));
+    });
+}
+
+- (void) invokeFailedWithError:(NSError*) error
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (failed != nil)
+            failed(CString(error.localizedDescription));
+    });
+}
+
+- (NSString*) generateNonceWithLength:(NSInteger) length
+{
+  NSAssert(length > 0, @"[AppleAuthManager] Generate nonce failed. Nonce length must be greater than zero.");
+  
+  NSString* charset = @"0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
+  NSMutableString* nonce = [NSMutableString string];
+  
+  NSInteger index = length;
+  while (index > 0)
+  {
+    NSMutableArray* buffer = [NSMutableArray arrayWithCapacity:16];
+    for (NSInteger i = 0; i < 16; i++)
+    {
+      uint8_t random = 0;
+      int errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random);
+      NSAssert(errorCode == errSecSuccess, @"[AppleAuthManager] Generate nonce failed. Unable to generate nonce: OSStatus %i", errorCode);
+      [buffer addObject:@(random)];
+    }
+
+    for (NSNumber* value in buffer)
+    {
+      if (index == 0)
+        break;
+
+      if (value.unsignedIntValue < charset.length)
+      {
+        unichar character = [charset characterAtIndex:value.unsignedIntValue];
+        [nonce appendFormat:@"%C", character];
+        index--;
+      }
+    }
+  }
+
+  return [nonce copy];
+}
+
+- (NSString*) generateHashWithString:(NSString*) input
+{
+    const char* string = [input UTF8String];
     unsigned char result[CC_SHA256_DIGEST_LENGTH];
     CC_SHA256(string, (CC_LONG)strlen(string), result);
 
-    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    NSMutableString* hash = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
     for (NSInteger i = 0; i < CC_SHA256_DIGEST_LENGTH; i++)
-        [hashed appendFormat:@"%02x", result[i]];
-    return hashed;
+        [hash appendFormat:@"%02x", result[i]];
+    
+    return hash;
 }
 @end
 
 extern "C"
 {
-    void AppleAuthManager_Login(const char* _Nonce, AppleAuthCallback _Success, AppleAuthCallback _Failed)
+    void AppleAuthManager_Login(AppleAuthSuccessCallback _Success, AppleAuthFailedCallback _Failed)
     {
         if (@available(iOS 13.0, *))
         {
-            NSString* nonce = GetStringParam(_Nonce);
-            
-            AppleAuthManager* authManager = [AppleAuthManager sharedInstance];
-            [authManager setLoginSuccess:_Success];
-            [authManager setLoginFailed:_Failed];
-            [authManager loginWithAppleWithNonce:nonce];
+            [[AppleAuthManager sharedManager] signInWithSuccessCallback:_Success failedCallback:_Failed];
         }
         else
         {
-            if (_Failed != nil)
-                _Failed("Sign in with Apple not supported");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (failed != nil)
+                    failed(CString(@"Sign in with Apple is not supported."));
+            });
         }
     }
 }
