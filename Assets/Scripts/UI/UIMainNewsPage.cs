@@ -48,7 +48,7 @@ public class UIMainNewsPage : UIMainMenuPage
 		Refresh(true);
 	}
 
-	void Refresh(bool _Instant)
+	async void Refresh(bool _Instant)
 	{
 		foreach (UINewsItem item in m_Items)
 		{
@@ -85,7 +85,7 @@ public class UIMainNewsPage : UIMainMenuPage
 			m_Items[i].Show(_Instant);
 			
 			if (!_Instant)
-				Task.Delay(150);
+				await Task.Delay(150);
 		}
 	}
 }

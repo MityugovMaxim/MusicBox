@@ -10,19 +10,23 @@ public class UIRemoteGraphic : UIEntity
 	[SerializeField] UIGroup  m_LoaderGroup;
 	[SerializeField] UILoader m_Loader;
 
+	Uri  m_Uri;
+	bool m_Loaded;
+
 	CancellationTokenSource m_TokenSource;
 
 	public void Load(Uri _Uri)
 	{
-		Load(WebRequest.LoadSprite(_Uri?.ToString()));
+		if (m_Uri == _Uri && m_Loaded)
+			return;
+		
+		m_Uri    = _Uri;
+		m_Loaded = false;
+		
+		Load(WebRequest.LoadSprite(m_Uri?.ToString()));
 	}
 
-	public void Load(string _URL)
-	{
-		Load(WebRequest.LoadSprite(_URL));
-	}
-
-	public async void Load(Task<Sprite> _Task)
+	async void Load(Task<Sprite> _Task)
 	{
 		m_TokenSource?.Cancel();
 		
@@ -46,6 +50,8 @@ public class UIRemoteGraphic : UIEntity
 		
 		if (sprite != null || m_Default != null)
 		{
+			m_Loaded = true;
+			
 			m_Image.Sprite = sprite != null ? sprite : m_Default;
 			m_Image.gameObject.SetActive(true);
 			

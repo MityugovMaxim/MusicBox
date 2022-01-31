@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -43,22 +44,26 @@ public class HapticProcessor : IInitializable, IDisposable
 			m_Haptic.Process(_HapticType);
 	}
 
-	public async void Play(Haptic.Type _HapticType, int _Frequency, float _Duration)
+	public void Play(MonoBehaviour _Context, Haptic.Type _HapticType, int _Frequency, float _Duration)
 	{
-		int delay = 1000 / Mathf.Max(1, _Frequency);
-		
-		if (!m_HapticEnabled)
+		if (_Context == null || _Frequency <= 0 || Mathf.Approximately(_Duration, 0))
 			return;
 		
-		int time     = 0;
-		int duration = (int)(_Duration * 1000);
-		while (time < duration)
+		IEnumerator routine = HapticRoutine(_HapticType, _Frequency, _Duration);
+		
+		_Context.StartCoroutine(routine);
+	}
+
+	IEnumerator HapticRoutine(Haptic.Type _HapticType, int _Frequency, float _Duration)
+	{
+		float duration = Mathf.Abs(_Duration);
+		float delay    = 1.0f / _Frequency;
+		int   count    = Mathf.FloorToInt(duration * _Frequency);
+		for (int i = 0; i < count; i++)
 		{
 			Process(_HapticType);
 			
-			await Task.Delay(delay);
-			
-			time += delay;
+			yield return new WaitForSeconds(delay);
 		}
 	}
 

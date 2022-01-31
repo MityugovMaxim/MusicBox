@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -35,87 +37,31 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
-	public async void SignInEmail()
+	public void SignInApple()
 	{
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
-		#if UNITY_EDITOR
-		await m_SocialProcessor.AttachEmail("mityugovmaxim@gmail.com", "123456");
-		#endif
-		
-		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-		if (loginMenu != null)
-			await loginMenu.Login();
+		SignIn(
+			m_SocialProcessor.AttachAppleID,
+			m_LanguageProcessor.Get("APPLE_SIGN_IN_ERROR_TITLE"),
+			m_LanguageProcessor.Get("APPLE_SING_IN_ERROR_MESSAGE")
+		);
 	}
 
-	public async void SignInApple()
+	public void SignInGoogle()
 	{
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		
-		bool success = await m_SocialProcessor.AttachAppleID();
-		
-		if (success)
-		{
-			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-			
-			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-			if (loginMenu != null)
-				await loginMenu.Login();
-		}
-		else
-		{
-			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
-			if (errorMenu != null)
-				errorMenu.Setup("LOGIN WITH APPLE FAILED.", "CHECK YOUR INTERNET CONNECTION AND TRY AGAIN LATER.");
-			
-			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
-			
-			await m_MenuProcessor.Hide(MenuType.LoginMenu);
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu);
-		}
+		SignIn(
+			m_SocialProcessor.AttachGoogleID,
+			m_LanguageProcessor.Get("GOOGLE_SIGN_IN_ERROR_TITLE"),
+			m_LanguageProcessor.Get("GOOGLE_SIGN_IN_ERROR_MESSAGE")
+		);
 	}
 
-	public async void SignInGoogle()
+	public void SignInFacebook()
 	{
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		
-		bool success = await m_SocialProcessor.AttachGoogleID();
-		
-		if (success)
-		{
-			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-			
-			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-			if (loginMenu != null)
-				await loginMenu.Login();
-		}
-		else
-		{
-			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
-			if (errorMenu != null)
-				errorMenu.Setup("LOGIN WITH GOOGLE FAILED.", "CHECK YOUR INTERNET CONNECTION AND TRY AGAIN LATER.");
-			
-			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
-			
-			await m_MenuProcessor.Hide(MenuType.LoginMenu);
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
+		SignIn(
+			m_SocialProcessor.AttachFacebookID,
+			m_LanguageProcessor.Get("FACEBOOK_SIGN_IN_ERROR_TITLE"),
+			m_LanguageProcessor.Get("FACEBOOK_SIGN_IN_ERROR_MESSAGE")
+		);
 	}
 
 	public async void Logout()
@@ -135,12 +81,16 @@ public class UIMainProfilePage : UIMainMenuPage
 			await loginMenu.Login();
 	}
 
-	public void ChangeUsername(string _Username)
+	public async void ChangeUsername(string _Username)
 	{
 		if (string.IsNullOrEmpty(_Username))
 			m_Username.text = m_SocialProcessor.Name;
 		
-		m_SocialProcessor.SetUsername(_Username);
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_SocialProcessor.SetUsername(_Username);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	protected override void OnShowStarted()
@@ -159,39 +109,51 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
 	}
 
+	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)
+	{
+		if (_SignInTask == null)
+			return;
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		bool success = await _SignInTask();
+		
+		if (success)
+		{
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+			if (loginMenu != null)
+				await loginMenu.Login();
+		}
+		else
+		{
+			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
+			if (errorMenu != null)
+				errorMenu.Setup(_Title, _Message);
+			
+			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.LoginMenu);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
+	}
+
 	void Refresh()
 	{
-		m_LoginControls.SetActive(m_SocialProcessor.Online && m_SocialProcessor.Guest);
-		m_LogoutControls.SetActive(m_SocialProcessor.Online && !m_SocialProcessor.Guest);
+		m_LoginControls.SetActive(m_SocialProcessor.Guest);
+		m_LogoutControls.SetActive(!m_SocialProcessor.Guest);
 		
 		m_Avatar.Load(m_SocialProcessor.Photo);
 		
 		m_Level.Level = m_ProfileProcessor.Level;
-		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
+		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite name=coins_icon>";
 		
-		string username = m_SocialProcessor.Name;
-		if (!string.IsNullOrEmpty(username))
-		{
-			m_Username.text = username;
-			return;
-		}
-		
-		string email = m_SocialProcessor.Email;
-		if (!string.IsNullOrEmpty(email))
-		{
-			m_Username.text = email.Split('@')[0];
-			return;
-		}
-		
-		string device = SystemInfo.deviceName;
-		if (!string.IsNullOrEmpty(device))
-		{
-			m_Username.text = device;
-			return;
-		}
-		
-		m_Username.text = m_SocialProcessor.Guest
-			? m_LanguageProcessor.Get("PROFILE_GUEST")
-			: SystemInfo.deviceModel;
+		m_Username.text = m_SocialProcessor.GetUsername();
 	}
 }

@@ -87,6 +87,8 @@ public class ProfileProcessor
 	{
 		if (m_ProfileData != null && m_ProfileData.Key != m_SocialProcessor.UserID)
 		{
+			Debug.LogFormat("[ProfileProcessor] Change user. From: {0} To: {1}.", m_ProfileData.Key, m_SocialProcessor.UserID);
+			
 			Loaded                     =  false;
 			m_ProfileData.ValueChanged -= OnProfileUpdate;
 			m_ProfileData              =  null;
@@ -151,7 +153,12 @@ public class ProfileProcessor
 		
 		long requiredCoins = _Coins - Coins;
 		
-		string productID = GetVisibleProductIDs()
+		List<string> productIDs = GetVisibleProductIDs();
+		
+		if (productIDs == null || productIDs.Count == 0)
+			return false;
+		
+		string productID = productIDs
 			.Where(_ProductID => m_ProductProcessor.GetCoins(_ProductID) >= requiredCoins)
 			.Aggregate((_A, _B) => m_ProductProcessor.GetCoins(_A) < m_ProductProcessor.GetCoins(_B) ? _A : _B);
 		
@@ -169,7 +176,7 @@ public class ProfileProcessor
 
 	async void OnProfileUpdate(object _Sender, EventArgs _Args)
 	{
-		if (!Loaded)
+		if (!Loaded || m_ProfileData.Key != m_SocialProcessor.UserID)
 			return;
 		
 		Debug.Log("[ProfileProcessor] Updating profile data...");
@@ -183,7 +190,7 @@ public class ProfileProcessor
 
 	async Task FetchProfile()
 	{
-		DataSnapshot profileSnapshot = await m_ProfileData.GetValueAsync(15000, 2);
+		DataSnapshot profileSnapshot = await m_ProfileData.GetValueAsync(15000, 4);
 		
 		if (profileSnapshot == null)
 		{

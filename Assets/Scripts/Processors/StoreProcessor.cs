@@ -154,6 +154,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetTitle(string _ProductID)
 	{
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Debug.LogError("[StoreProcessor] Get title failed. Product ID is null or empty.");
+			return "-";
+		}
+		
 		Product product = m_Controller.products.WithID(_ProductID);
 		
 		if (product == null)
@@ -167,6 +173,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetDescription(string _ProductID)
 	{
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Debug.LogError("[StoreProcessor] Get description failed. Product ID is null or empty.");
+			return "-";
+		}
+		
 		Product product = m_Controller.products.WithID(_ProductID);
 		
 		if (product == null)
@@ -180,6 +192,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetPrice(string _ProductID)
 	{
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Debug.LogErrorFormat("[StoreProcessor] Get price failed. Product ID is null or empty.");
+			return "-";
+		}
+		
 		Product product = m_Controller.products.WithID(_ProductID);
 		
 		if (product == null)

@@ -12,47 +12,47 @@ public class SocialDataUpdateSignal { }
 [Preserve]
 public class SocialProcessor : IInitializable, IDisposable
 {
-	public bool Online
-	{
-		get => m_Online && Application.internetReachability != NetworkReachability.NotReachable;
-		private set => m_Online = value;
-	}
-
 	public bool   Guest  => m_User?.IsAnonymous ?? true;
 	public string UserID => m_User?.UserId;
 	public string Email  => m_User?.Email;
 	public string Name   => m_User?.DisplayName;
 	public Uri    Photo  => m_User?.PhotoUrl;
 
-	readonly SignalBus m_SignalBus;
+	readonly SignalBus         m_SignalBus;
+	readonly LanguageProcessor m_LanguageProcessor;
 
 	FirebaseAuth m_Auth;
 	FirebaseUser m_User;
 	bool         m_Online;
 
 	[Inject]
-	public SocialProcessor(SignalBus _SignalBus)
+	public SocialProcessor(
+		SignalBus         _SignalBus,
+		LanguageProcessor _LanguageProcessor
+	)
 	{
-		m_SignalBus = _SignalBus;
+		m_SignalBus         = _SignalBus;
+		m_LanguageProcessor = _LanguageProcessor;
 	}
 
-	public async Task Login()
+	public async Task<bool> Login()
 	{
 		try
 		{
-			if (m_User == null)
-				await m_Auth.SignInAnonymouslyAsync();
+			m_User = m_Auth.CurrentUser;
 			
 			if (m_User != null)
 				await m_User.ReloadAsync();
+			else
+				await AuthAnonymously();
 			
-			Online = true;
+			return true;
 		}
-		catch (Exception)
+		catch (Exception exception)
 		{
-			Debug.LogWarning("[SocialProcessor] Login failed. Entering offline mode.");
+			Debug.LogErrorFormat("[SocialProcessor] Login failed. Error: {0}.", exception.Message);
 			
-			Online = false;
+			return false;
 		}
 	}
 
@@ -60,12 +60,10 @@ public class SocialProcessor : IInitializable, IDisposable
 	{
 		m_User = null;
 		
-		Online = false;
-		
 		m_Auth.SignOut();
 	}
 
-	public void SetUsername(string _Username)
+	public async Task SetUsername(string _Username)
 	{
 		if (m_User == null)
 			return;
@@ -74,167 +72,269 @@ public class SocialProcessor : IInitializable, IDisposable
 		profile.DisplayName = _Username;
 		profile.PhotoUrl    = m_User.PhotoUrl;
 		
-		m_User.UpdateUserProfileAsync(profile);
+		await m_User.UpdateUserProfileAsync(profile);
 		
 		m_SignalBus.Fire<SocialDataUpdateSignal>();
+	}
+
+	public string GetUsername()
+	{
+		string username = Name;
+		if (!string.IsNullOrEmpty(username))
+			return username;
+		
+		string email = Email;
+		if (!string.IsNullOrEmpty(email))
+			return email.Split('@')[0];
+		
+		string device = SystemInfo.deviceName;
+		if (!string.IsNullOrEmpty(device))
+			return device;
+		
+		return Guest
+			? m_LanguageProcessor.Get("PROFILE_GUEST")
+			: SystemInfo.deviceModel;
 	}
 
 	public async Task<bool> AttachEmail(string _Email, string _Password)
 	{
 		try
 		{
-			await EmailAuth(_Email, _Password);
+			Credential credential = EmailAuthProvider.GetCredential(_Email, _Password);
 			
-			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			m_User = await Link(credential, _Credential => credential = _Credential);
+			
+			if (m_User == null)
+				m_User = await Auth(credential);
+			
+			if (m_User == null)
+				m_User = await m_Auth.SignInAnonymouslyAsync();
+			
+			credential.Dispose();
 			
 			return true;
 		}
 		catch (Exception exception)
 		{
-			Debug.LogErrorFormat("[SocialManager] Login with email failed. Error: {0}", exception.Message);
-			
-			return false;
+			Debug.LogErrorFormat("[SocialProcessor] Login with email failed. Error: {0}", exception.Message);
 		}
+		
+		return false;
 	}
 
 	public async Task<bool> AttachAppleID()
 	{
 		try
 		{
-			string nonce = Guid.NewGuid().ToString();
+			(string idToken, string nonce) = await AppleAuth.LoginAsync();
 			
-			string token = await AppleAuthManager.LoginAsync(nonce);
+			UserProfile profile = AppleAuth.GetProfile();
 			
-			await AppleAuth(token, nonce);
+			Credential credential = OAuthProvider.GetCredential("apple.com", idToken, nonce, null);
 			
-			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			m_User = await Link(credential, _Credential => credential = _Credential);
+			
+			if (m_User == null)
+				m_User = await Auth(credential);
+			
+			if (m_User == null)
+				m_User = await m_Auth.SignInAnonymouslyAsync();
+			
+			await Merge(profile);
+			
+			credential.Dispose();
+			
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			Debug.Log("[SocialProcessor] Login with Apple ID canceled.");
 			
 			return true;
 		}
 		catch (Exception exception)
 		{
-			Debug.LogErrorFormat("[SocialManager] Login with Apple ID failed. Error: {0}", exception.Message);
-			
-			return false;
+			Debug.LogErrorFormat("[SocialProcessor] Login with Apple ID failed. Error: {0}", exception.Message);
 		}
+		
+		return false;
 	}
 
 	public async Task<bool> AttachGoogleID()
 	{
 		try
 		{
-			string clientID = "266200973318-r1sbm8gud1amf7rvd04u8shn2mqkt3ci.apps.googleusercontent.com";
+			(string idToken, string accessToken) = await GoogleAuth.LoginAsync();
 			
-			string token = await GoogleAuthManager.LoginAsync(clientID);
+			Credential credential = GoogleAuthProvider.GetCredential(idToken, accessToken);
 			
-			await GoogleAuth(clientID, token);
+			m_User = await Link(credential, _Credential => credential = _Credential);
 			
-			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			if (m_User == null)
+				m_User = await Auth(credential);
+			
+			if (m_User == null)
+				m_User = await m_Auth.SignInAnonymouslyAsync();
+			
+			credential.Dispose();
+			
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			Debug.Log("[SocialProcessor] Login with Google ID canceled.");
 			
 			return true;
 		}
 		catch (Exception exception)
 		{
-			Debug.LogErrorFormat("[SocialManager] Login with Google ID failed. Error: {0}", exception.Message);
-			
-			return false;
+			Debug.LogErrorFormat("[SocialProcessor] Login with Google ID failed. Error: {0}", exception.Message);
 		}
+		
+		return false;
+	}
+
+	public async Task<bool> AttachFacebookID()
+	{
+		try
+		{
+			string accessToken = await FacebookAuth.LoginAsync();
+			
+			UserProfile profile = FacebookAuth.GetProfile();
+			
+			Credential credential = FacebookAuthProvider.GetCredential(accessToken);
+			
+			m_User = await Link(credential, _Credential => credential = _Credential);
+			
+			if (m_User == null)
+				m_User = await Auth(credential);
+			
+			if (m_User == null)
+				m_User = await m_Auth.SignInAnonymouslyAsync();
+			
+			await Merge(profile);
+			
+			credential.Dispose();
+			
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			Debug.Log("[SocialProcessor] Login with Facebook ID canceled.");
+			
+			return true;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[SocialProcessor] Login with Facebook ID failed. Error: {0}", exception.Message);
+		}
+		
+		return false;
 	}
 
 	void IInitializable.Initialize()
 	{
 		m_Auth = FirebaseAuth.DefaultInstance;
-		
-		m_Auth.StateChanged += StateChanged;
-		
-		StateChanged(this, null);
+		m_User = m_Auth.CurrentUser;
 	}
 
-	void IDisposable.Dispose()
+	void IDisposable.Dispose() { }
+
+	async Task AuthAnonymously()
 	{
-		m_Auth.StateChanged -= StateChanged;
+		m_User = await m_Auth.SignInAnonymouslyAsync();
+		
+		if (m_User == null)
+			Debug.LogError("[SocialProcessor] Login anonymously failed. Unknown error.");
+		else
+			Debug.LogFormat("[SocialProcessor] Login anonymously success. Username: {0}. User ID: {1}", (await m_Auth.SignInAnonymouslyAsync()).DisplayName, (await m_Auth.SignInAnonymouslyAsync()).UserId);
 	}
 
-	void StateChanged(object _Sender, EventArgs _Args)
+	async Task Merge(UserProfile _Profile)
 	{
-		FirebaseUser user = m_Auth.CurrentUser;
-		
-		if (m_User == user)
+		if (m_User == null || _Profile == null)
 			return;
 		
-		if (user != null)
+		if (string.IsNullOrEmpty(_Profile.DisplayName))
+			_Profile.DisplayName = m_User.DisplayName;
+		
+		if (_Profile.PhotoUrl == null)
+			_Profile.PhotoUrl = m_User.PhotoUrl;
+		
+		try
 		{
-			Debug.LogFormat("[SocialProcessor] User login. User ID: {0}.", user.UserId);
-			m_User = user;
-			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			await m_User.UpdateUserProfileAsync(_Profile);
 		}
-		else
+		catch (Exception exception)
 		{
-			Debug.LogFormat("[SocialProcessor] User logout. User ID: {0}.", m_User.UserId);
-			m_User = null;
-			m_SignalBus.Fire<SocialDataUpdateSignal>();
+			Debug.LogWarningFormat("[SocialProcessor] Merge failed. Error: {0}.", exception.Message);
 		}
 	}
 
-	async Task EmailAuth(string _Email, string _Password)
+	Task<FirebaseUser> Link(Credential _Credential, Action<Credential> _UpdateCredential = null)
 	{
-		Credential credential = EmailAuthProvider.GetCredential(_Email, _Password);
+		TaskCompletionSource<FirebaseUser> completionSource = new TaskCompletionSource<FirebaseUser>();
 		
-		FirebaseUser user = await Auth(credential);
+		if (m_User == null || !m_User.IsAnonymous)
+		{
+			completionSource.SetResult(null);
+			return completionSource.Task;
+		}
 		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with email failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with email success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
-	}
-
-	async Task AppleAuth(string _Token, string _Nonce)
-	{
-		Credential credential = OAuthProvider.GetCredential("apple.com", _Token, _Nonce, null);
+		m_User.LinkAndRetrieveDataWithCredentialAsync(_Credential).ContinueWith(
+			task =>
+			{
+				if (task.Exception != null)
+				{
+					foreach (Exception innerException in task.Exception.Flatten().InnerExceptions)
+					{
+						if (innerException is FirebaseAccountLinkException linkException && linkException.UserInfo.UpdatedCredential.IsValid())
+						{
+							Debug.LogWarning("[SocialProcessor] Link failed. Received credential.");
+							_UpdateCredential?.Invoke(linkException.UserInfo.UpdatedCredential);
+							break;
+						}
+					}
+					
+					completionSource.SetResult(null);
+				}
+				else if (task.IsCompleted)
+				{
+					Debug.LogFormat("[SocialProcessor] Link success. UserID: {0} Name: {1} Provider: {2}.", m_User.UserId, m_User.DisplayName, _Credential.Provider);
+					completionSource.SetResult(m_User);
+				}
+				else
+				{
+					Debug.LogFormat("[SocialProcessor] Link failed. UserID: {0} Name: {1} Provider: {2}.", m_User.UserId, m_User.DisplayName, _Credential.Provider);
+					completionSource.SetResult(null);
+				}
+			}
+		);
 		
-		FirebaseUser user = await Auth(credential);
-		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with Apple ID failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with Apple ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
-	}
-
-	async Task GoogleAuth(string _IDToken, string _AccessToken)
-	{
-		Credential credential = GoogleAuthProvider.GetCredential(_IDToken, _AccessToken);
-		
-		FirebaseUser user = await Auth(credential);
-		
-		if (user == null)
-			Debug.LogError("[SocialProcessor] Login with Google ID failed. Unknown error.");
-		else
-			Debug.LogFormat("[SocialProcessor] Login with Google ID success. Username: {0}. User ID: {1}", user.DisplayName, user.UserId);
+		return completionSource.Task;
 	}
 
 	async Task<FirebaseUser> Auth(Credential _Credential)
 	{
-		FirebaseUser user;
-		if (m_User != null)
+		try
 		{
-			try
-			{
-				user = await m_User.LinkWithCredentialAsync(_Credential);
-			}
-			catch (FirebaseException exception)
-			{
-				Debug.LogWarningFormat("[SocialProcessor] Link account failed. Error: {0}.", exception.Message);
-				
-				user = await m_Auth.SignInWithCredentialAsync(_Credential);
-			}
+			FirebaseUser user = await m_Auth.SignInWithCredentialAsync(_Credential);
+			
+			Debug.LogFormat("[SocialProcessor] Auth success. UserID: {0} Name: {1} Provider: {2}.", user.UserId, user.DisplayName,_Credential.Provider);
+			
+			return user;
 		}
-		else
+		catch (FirebaseException exception)
 		{
-			user = await m_Auth.SignInWithCredentialAsync(_Credential);
+			Debug.LogErrorFormat("[SocialProcessor] Auth failed. Error: {0}.", exception.Message);
+			Debug.LogException(exception);
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[SocialProcessor] Auth failed. Error: {0}.", exception.Message);
+			Debug.LogException(exception);
 		}
 		
-		m_User = user;
-		
-		return user;
+		return null;
 	}
 }

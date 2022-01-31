@@ -13,8 +13,6 @@ public class UIProfile : UIEntity
 	[SerializeField] float           m_MinProgress;
 	[SerializeField] float           m_MaxProgress;
 
-	SignalBus         m_SignalBus;
-	LanguageProcessor m_LanguageProcessor;
 	ProfileProcessor  m_ProfileProcessor;
 	ProgressProcessor m_ProgressProcessor;
 	SocialProcessor   m_SocialProcessor;
@@ -22,48 +20,24 @@ public class UIProfile : UIEntity
 	[Inject]
 	public void Construct(
 		SignalBus         _SignalBus,
-		LanguageProcessor _LanguageProcessor,
 		ProfileProcessor  _ProfileProcessor,
 		ProgressProcessor _ProgressProcessor,
 		SocialProcessor   _SocialProcessor
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
 		m_SocialProcessor   = _SocialProcessor;
-		
-		Refresh();
-		
-		m_SignalBus.Subscribe<SocialDataUpdateSignal>(RegisterSocialDataUpdate);
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
-		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(RegisterProgressDataUpdate);
 	}
 
-	void RegisterSocialDataUpdate()
-	{
-		Refresh();
-	}
-
-	void RegisterProfileDataUpdate()
-	{
-		Refresh();
-	}
-
-	void RegisterProgressDataUpdate()
-	{
-		Refresh();
-	}
-
-	void Refresh()
+	public void Setup()
 	{
 		ProcessUsername();
 		
 		ProcessDiscs();
 		
 		m_Avatar.Load(m_SocialProcessor.Photo);
-		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=1 name=unit_font_coins>";
+		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite name=coins_icon>";
 		m_Level.Level = m_ProfileProcessor.Level;
 		
 		Vector2 size = m_Progress.sizeDelta;
@@ -84,29 +58,6 @@ public class UIProfile : UIEntity
 
 	void ProcessUsername()
 	{
-		string username = m_SocialProcessor.Name;
-		if (!string.IsNullOrEmpty(username))
-		{
-			m_Username.text = username;
-			return;
-		}
-		
-		string email = m_SocialProcessor.Email;
-		if (!string.IsNullOrEmpty(email))
-		{
-			m_Username.text = email.Split('@')[0];
-			return;
-		}
-		
-		string device = SystemInfo.deviceName;
-		if (!string.IsNullOrEmpty(device))
-		{
-			m_Username.text = device;
-			return;
-		}
-		
-		m_Username.text = m_SocialProcessor.Guest
-			? m_LanguageProcessor.Get("PROFILE_GUEST")
-			: SystemInfo.deviceModel;
+		m_Username.text = m_SocialProcessor.GetUsername();
 	}
 }

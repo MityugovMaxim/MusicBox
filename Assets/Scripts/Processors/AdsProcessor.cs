@@ -39,6 +39,12 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		
 		m_LoadAdsFinished = _Success => completionSource.TrySetResult(_Success);
 		
+		if (Advertisement.isInitialized)
+		{
+			InvokeLoadAdsFinished(true);
+			return completionSource.Task;
+		}
+		
 		if (!Advertisement.isSupported)
 		{
 			Debug.LogError("[AdsProcessor] Load ads failed. Ads not supported.");

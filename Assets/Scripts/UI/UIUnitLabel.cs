@@ -114,7 +114,7 @@ public class UIUnitLabel : UIEntity
 			case '%': return "<sprite tint=1 name=unit_font_percent>";
 			case '*': return "<sprite tint=1 name=unit_font_multiplier>";
 			case 'p': return "<sprite tint=1 name=unit_font_points>";
-			case 'c': return "<sprite tint=1 name=unit_font_coins>";
+			case 'c': return "<sprite name=coins_icon>";
 			default:  return _Symbol.ToString();
 		}
 	}

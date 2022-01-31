@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Facebook.Unity;
 using Firebase.Auth;
-using UnityEngine;
 
 public static class FacebookAuth
 {
@@ -38,9 +37,6 @@ public static class FacebookAuth
 	{
 		await InitializeFacebook();
 		
-		if (AccessToken.CurrentAccessToken != null && AccessToken.CurrentAccessToken.ExpirationTime < DateTime.UtcNow)
-			return AccessToken.CurrentAccessToken.TokenString;
-		
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
 		FB.LogInWithReadPermissions(
@@ -48,14 +44,11 @@ public static class FacebookAuth
 			_Result =>
 			{
 				if (_Result.Cancelled)
-					completionSource.SetCanceled();
+					completionSource.TrySetCanceled();
 				else if (!string.IsNullOrEmpty(_Result.Error))
-					completionSource.SetException(new Exception($"[FacebookAuthManager] Login failed. Error: {_Result.Error}."));
+					completionSource.TrySetException(new Exception($"[FacebookAuthManager] Login failed. Error: {_Result.Error}."));
 				else
-				{
-					Debug.LogFormat("[FacebookAuthManager] Login success. Access Token: {0}.", _Result.AccessToken.TokenString);
-					completionSource.SetResult(_Result.AccessToken.TokenString);
-				}
+					completionSource.TrySetResult(_Result.AccessToken.TokenString);
 			}
 		);
 		

@@ -15,6 +15,7 @@ public enum MainMenuPageType
 [Menu(MenuType.MainMenu)]
 public class UIMainMenu : UIMenu
 {
+	[SerializeField] UIProfile         m_Profile;
 	[SerializeField] UIProductPromo    m_ProductPromo;
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
@@ -42,7 +43,6 @@ public class UIMainMenu : UIMenu
 
 	public void Select(MainMenuPageType _PageType)
 	{
-		// ReSharper disable once IntroduceOptionalParameters.Global
 		Select(_PageType, false);
 	}
 
@@ -78,13 +78,20 @@ public class UIMainMenu : UIMenu
 		m_Control.Select(m_PageType, true);
 		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
 		
 		Application.deepLinkActivated += ProcessDeepLink;
 	}
 
 	protected override void OnHideStarted()
 	{
+		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProgressDataUpdateSignal>(Refresh);
+		
 		Application.deepLinkActivated -= ProcessDeepLink;
 	}
 
@@ -92,15 +99,13 @@ public class UIMainMenu : UIMenu
 	{
 		foreach (UIMainMenuPage page in m_Pages)
 			page.Hide(true);
-		
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()
 	{
 		string productID = m_ProfileProcessor.GetVisibleProductIDs().FirstOrDefault(m_ProductProcessor.IsPromo);
 		
+		m_Profile.Setup();
 		m_ProductPromo.Setup(productID);
 	}
 

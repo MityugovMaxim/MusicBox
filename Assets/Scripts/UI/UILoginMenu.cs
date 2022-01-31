@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Facebook.Unity;
 using UnityEngine;
 using Zenject;
 
@@ -66,6 +67,8 @@ public class UILoginMenu : UIMenu
 
 	public async Task Login()
 	{
+		Debug.LogError("---> LOGIN STARTED");
+		
 		await m_SocialProcessor.Login();
 		
 		await Task.WhenAll(
@@ -79,10 +82,9 @@ public class UILoginMenu : UIMenu
 			m_ProfileProcessor.LoadProfile()
 		);
 		
-		await Task.WhenAll(
-			m_StoreProcessor.LoadStore(),
-			m_AdsProcessor.LoadAds()
-		);
+		await m_StoreProcessor.LoadStore();
+		
+		await m_AdsProcessor.LoadAds();
 		
 		await m_StoreProcessor.Restore();
 		
@@ -95,5 +97,7 @@ public class UILoginMenu : UIMenu
 		await m_MessageProcessor.ProcessLaunchURL();
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
+		
+		Debug.LogError("---> LOGIN FINISHED");
 	}
 }

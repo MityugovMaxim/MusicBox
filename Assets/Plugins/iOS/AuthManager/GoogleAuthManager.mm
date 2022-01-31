@@ -4,6 +4,7 @@
 #import <objc/runtime.h>
 
 typedef void (*GoogleAuthSuccessCallback)(const char* idToken, const char* accessToken);
+typedef void (*GoogleAuthCanceledCallback)();
 typedef void (*GoogleAuthFailedCallback)(const char* error);
 
 @interface UnityAppController (GoogleAppController)
@@ -33,11 +34,11 @@ typedef void (*GoogleAuthFailedCallback)(const char* error);
 @end
 
 @interface GoogleAuthManager : NSObject
-- (void)signInWithSuccessCallback:(GoogleAuthSuccessCallback)_Succes failedCallback:(GoogleAuthFailedCallback) _Failed;
+- (void)signInWithSuccessCallback:(GoogleAuthSuccessCallback) _Succes canceledCallback:(GoogleAuthCanceledCallback) _Canceled failedCallback:(GoogleAuthFailedCallback) _Failed;
 @end
 
 @implementation GoogleAuthManager
-- (void)signInWithSuccessCallback:(GoogleAuthSuccessCallback)_Success failedCallback:(GoogleAuthFailedCallback) _Failed
+- (void)signInWithSuccessCallback:(GoogleAuthSuccessCallback) _Success canceledCallback:(GoogleAuthCanceledCallback) _Canceled failedCallback:(GoogleAuthFailedCallback) _Failed
 {
     NSString* path = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
     NSString* clientID = [[[NSDictionary alloc] initWithContentsOfFile:path] valueForKey:@"CLIENT_ID"];
@@ -47,20 +48,42 @@ typedef void (*GoogleAuthFailedCallback)(const char* error);
     [[GIDSignIn sharedInstance] signInWithConfiguration:config
                                presentingViewController:UnityGetGLViewController()
                                                callback:^(GIDGoogleUser * _Nullable user, NSError * _Nullable error) {
-        if (user == nil)
+        if (error != nil)
+        {
+            switch (error.code)
+            {
+                case kGIDSignInErrorCodeKeychain:
+                    _Failed(CString(@"Keychain access denied."));
+                    break;
+                case kGIDSignInErrorCodeHasNoAuthInKeychain:
+                    _Failed(CString(@"There are no valid auth tokens in the keychain."));
+                    break;
+                case kGIDSignInErrorCodeCanceled:
+                    _Canceled();
+                    break;
+                case kGIDSignInErrorCodeEMM:
+                    _Failed(CString(@"Enterprise Mobility Management related error has occurred."));
+                    break;
+                case kGIDSignInErrorCodeNoCurrentUser:
+                    _Failed(CString(@"There is no current user."));
+                    break;
+                case kGIDSignInErrorCodeScopesAlreadyGranted:
+                    _Failed(CString(@"Requested scopes have already been granted."));
+                    break;
+                default:
+                    _Failed(CString(@"Unknown error."));
+                    break;
+            }
+        }
+        else if (user == nil)
         {
             if (_Failed != nil)
-                _Failed(CString(@"[GoogleAuthManager] Sign in failed. User is null."));
+                _Failed(CString(@"User is null."));
         }
         else if (user.authentication == nil)
         {
             if (_Failed != nil)
-                _Failed(CString(@"[GoogleAuthManager] Sign in failed. User authentication is null."));
-        }
-        else if (error != nil)
-        {
-            if (_Failed != nil)
-                _Failed(CString(@"[GoogleAuthManager] Sign in failed. Error occurred."));
+                _Failed(CString(@"User authentication is null."));
         }
         else
         {
@@ -73,8 +96,8 @@ typedef void (*GoogleAuthFailedCallback)(const char* error);
 
 extern "C"
 {
-    void GoogleAuthManager_Login(GoogleAuthSuccessCallback _Success, GoogleAuthFailedCallback _Failed)
+    void GoogleAuthManager_Login(GoogleAuthSuccessCallback _Success, GoogleAuthCanceledCallback _Canceled, GoogleAuthFailedCallback _Failed)
     {
-        [[GoogleAuthManager alloc] signInWithSuccessCallback:_Success failedCallback:_Failed];
+        [[GoogleAuthManager alloc] signInWithSuccessCallback:_Success canceledCallback:_Canceled failedCallback:_Failed];
     }
 }

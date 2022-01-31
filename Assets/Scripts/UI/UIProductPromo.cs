@@ -29,16 +29,18 @@ public class UIProductPromo : UIGroupLayout, IPointerClickHandler
 	public async void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
+		
+		if (string.IsNullOrEmpty(m_ProductID) || m_ProfileProcessor.HasProduct(m_ProductID))
+		{
+			await HideAsync();
+			return;
+		}
+		
 		m_Label.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
 		m_Thumbnail.Setup(m_ProductID);
 		
-		if (string.IsNullOrEmpty(m_ProductID))
-			await HideAsync();
-		else if (m_ProfileProcessor.HasProduct(m_ProductID))
-			await HideAsync();
-		else
-			await ShowAsync();
+		await ShowAsync();
 	}
 
 	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

@@ -4,6 +4,7 @@
 #import <CommonCrypto/CommonCrypto.h>
 
 typedef void (*AppleAuthSuccessCallback)(const char* idToken, const char* nonce, const char* displayName);
+typedef void (*AppleAuthCanceledCallback)();
 typedef void (*AppleAuthFailedCallback)(const char* error);
 
 @interface AppleAuthManager : NSObject
@@ -17,6 +18,7 @@ API_AVAILABLE(ios(13.0))
 @implementation AppleAuthManager
 NSString* nonce;
 AppleAuthSuccessCallback success;
+AppleAuthCanceledCallback canceled;
 AppleAuthFailedCallback failed;
 
 + (instancetype) sharedManager
@@ -38,10 +40,11 @@ AppleAuthFailedCallback failed;
     return self;
 }
 
-- (void) signInWithSuccessCallback:(AppleAuthSuccessCallback) _Success failedCallback:(AppleAuthFailedCallback) _Failed API_AVAILABLE(ios(13.0))
+- (void) signInWithSuccessCallback:(AppleAuthSuccessCallback) _Success canceledCallback:(AppleAuthCanceledCallback) _Canceled failedCallback:(AppleAuthFailedCallback) _Failed API_AVAILABLE(ios(13.0))
 {
     nonce = [self generateNonceWithLength:32];
     success = _Success;
+    canceled = _Canceled;
     failed = _Failed;
     
     ASAuthorizationAppleIDProvider* provider = [[ASAuthorizationAppleIDProvider alloc] init];
@@ -74,7 +77,10 @@ AppleAuthFailedCallback failed;
 
 - (void) authorizationController:(ASAuthorizationController*) controller didCompleteWithError:(NSError*) error API_AVAILABLE(ios(13.0))
 {
-    [self invokeFailedWithError:error];
+    if (error.code == ASAuthorizationErrorCanceled)
+        [self invokeCanceled];
+    else
+        [self invokeFailedWithError:error];
 }
 
 - (ASPresentationAnchor) presentationAnchorForAuthorizationController:(ASAuthorizationController *)controller API_AVAILABLE(ios(13.0))
@@ -87,6 +93,14 @@ AppleAuthFailedCallback failed;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (success != nil)
             success(CString(idToken), CString(nonce), CString(displayName));
+    });
+}
+
+- (void) invokeCanceled
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (canceled != nil)
+            canceled();
     });
 }
 
@@ -150,11 +164,11 @@ AppleAuthFailedCallback failed;
 
 extern "C"
 {
-    void AppleAuthManager_Login(AppleAuthSuccessCallback _Success, AppleAuthFailedCallback _Failed)
+    void AppleAuthManager_Login(AppleAuthSuccessCallback _Success, AppleAuthCanceledCallback _Canceled, AppleAuthFailedCallback _Failed)
     {
         if (@available(iOS 13.0, *))
         {
-            [[AppleAuthManager sharedManager] signInWithSuccessCallback:_Success failedCallback:_Failed];
+            [[AppleAuthManager sharedManager] signInWithSuccessCallback:_Success canceledCallback:_Canceled failedCallback:_Failed];
         }
         else
         {

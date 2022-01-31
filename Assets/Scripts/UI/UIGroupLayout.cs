@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,60 +31,59 @@ public class UIGroupLayout : UIGroup
 	[SerializeField] Mode           m_ResizeMode;
 	[SerializeField] Vector2        m_Size;
 
-	CanvasGroup   m_CanvasGroup;
 	LayoutElement m_LayoutElement;
 
 	IEnumerator m_SizeRoutine;
 
 	Action m_SizeFinished;
 
-	protected override async Task ShowAnimation(float _Duration, bool _Instant = false)
+	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		await ResizeAnimation(m_Size, m_ShowResizeDuration, _Instant);
+		await ResizeAnimation(m_Size, m_ShowResizeDuration, _Instant, _Token);
 		
-		await base.ShowAnimation(_Duration, _Instant);
+		await base.ShowAnimation(_Duration, _Instant, _Token);
 	}
 
-	protected override async Task HideAnimation(float _Duration, bool _Instant = false)
+	protected override async Task HideAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		await base.HideAnimation(_Duration, _Instant);
+		await base.HideAnimation(_Duration, _Instant, _Token);
 		
-		await ResizeAnimation(Vector2.zero, m_HideResizeDuration, _Instant);
+		await ResizeAnimation(Vector2.zero, m_HideResizeDuration, _Instant, _Token);
 	}
 
-	Task ResizeAnimation(Vector2 _Size, float _Duration, bool _Instant)
+	Task ResizeAnimation(Vector2 _Size, float _Duration, bool _Instant, CancellationToken _Token = default)
 	{
 		switch (m_ResizeMode)
 		{
 			case Mode.Both:
-				return SizeAnimation(_Size, _Duration, m_ResizeCurve, _Instant);
+				return SizeAnimation(_Size, _Duration, m_ResizeCurve, _Instant, _Token);
 			
 			case Mode.Width:
-				return WidthAnimation(_Size.x, _Duration, m_ResizeCurve, _Instant);
+				return WidthAnimation(_Size.x, _Duration, m_ResizeCurve, _Instant, _Token);
 			
 			case Mode.Height:
-				return HeightAnimation(_Size.y, _Duration, m_ResizeCurve, _Instant);
+				return HeightAnimation(_Size.y, _Duration, m_ResizeCurve, _Instant, _Token);
 			
 			default:
 				return null;
 		}
 	}
 
-	Task WidthAnimation(float _Width, float _Duration, AnimationCurve _Curve, bool _Instant = false)
+	Task WidthAnimation(float _Width, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
 	{
 		Vector2 size = new Vector2(_Width, LayoutElement.preferredHeight);
 		
-		return SizeAnimation(size, _Duration, _Curve, _Instant);
+		return SizeAnimation(size, _Duration, _Curve, _Instant, _Token);
 	}
 
-	Task HeightAnimation(float _Height, float _Duration, AnimationCurve _Curve, bool _Instant = false)
+	Task HeightAnimation(float _Height, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
 	{
 		Vector2 size = new Vector2(LayoutElement.preferredWidth, _Height);
 		
-		return SizeAnimation(size, _Duration, _Curve, _Instant);
+		return SizeAnimation(size, _Duration, _Curve, _Instant, _Token);
 	}
 
-	Task SizeAnimation(Vector2 _Size, float _Duration, AnimationCurve _Curve, bool _Instant = false)
+	Task SizeAnimation(Vector2 _Size, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
 	{
 		if (m_SizeRoutine != null)
 			StopCoroutine(m_SizeRoutine);
@@ -93,6 +93,22 @@ public class UIGroupLayout : UIGroup
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		m_SizeFinished = () => completionSource.TrySetResult(true);
+		
+		if (_Token.IsCancellationRequested)
+		{
+			InvokeSizeFinished();
+			return completionSource.Task;
+		}
+		
+		_Token.Register(
+			() =>
+			{
+				if (m_SizeRoutine != null)
+					StopCoroutine(m_SizeRoutine);
+				
+				InvokeSizeFinished();
+			}
+		);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{

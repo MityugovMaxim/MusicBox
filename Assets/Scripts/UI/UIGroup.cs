@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -28,7 +29,20 @@ public class UIGroup : UIEntity
 
 	Action m_AlphaFinished;
 
-	TaskCompletionSource<bool> m_TaskSource;
+	CancellationTokenSource m_TokenSource;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		if (Shown)
+			return;
+		
+		CanvasGroup.alpha          = 0;
+		CanvasGroup.interactable   = false;
+		CanvasGroup.blocksRaycasts = false;
+		gameObject.SetActive(false);
+	}
 
 	public async Task ShowAsync(bool _Instant = false)
 	{
@@ -37,6 +51,10 @@ public class UIGroup : UIEntity
 		
 		Shown = true;
 		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = new CancellationTokenSource();
+		
 		gameObject.SetActive(true);
 		
 		CanvasGroup.interactable   = m_Interactable;
@@ -44,7 +62,7 @@ public class UIGroup : UIEntity
 		
 		OnShowStarted();
 		
-		await ShowAnimation(m_ShowDuration, _Instant);
+		await ShowAnimation(m_ShowDuration, _Instant, m_TokenSource.Token);
 		
 		OnShowFinished();
 	}
@@ -56,9 +74,13 @@ public class UIGroup : UIEntity
 		
 		Shown = false;
 		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = new CancellationTokenSource();
+		
 		OnHideStarted();
 		
-		await HideAnimation(m_HideDuration, _Instant);
+		await HideAnimation(m_HideDuration, _Instant, m_TokenSource.Token);
 		
 		OnHideFinished();
 		
@@ -90,17 +112,17 @@ public class UIGroup : UIEntity
 
 	protected virtual void OnHideFinished() { }
 
-	protected virtual Task ShowAnimation(float _Duration, bool _Instant = false)
+	protected virtual Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		return AlphaAnimation(1, _Duration, _Instant);
+		return AlphaAnimation(1, _Duration, _Instant, _Token);
 	}
 
-	protected virtual Task HideAnimation(float _Duration, bool _Instant = false)
+	protected virtual Task HideAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		return AlphaAnimation(0, _Duration, _Instant);
+		return AlphaAnimation(0, _Duration, _Instant, _Token);
 	}
 
-	protected Task AlphaAnimation(float _Alpha, float _Duration, bool _Instant = false)
+	protected Task AlphaAnimation(float _Alpha, float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
 		if (m_AlphaRoutine != null)
 			StopCoroutine(m_AlphaRoutine);
@@ -110,6 +132,22 @@ public class UIGroup : UIEntity
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		m_AlphaFinished = () => completionSource.TrySetResult(true);
+		
+		if (_Token.IsCancellationRequested)
+		{
+			InvokeAlphaFinished();
+			return completionSource.Task;
+		}
+		
+		_Token.Register(
+			() =>
+			{
+				if (m_AlphaRoutine != null)
+					StopCoroutine(m_AlphaRoutine);
+				
+				InvokeAlphaFinished();
+			}
+		);
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{

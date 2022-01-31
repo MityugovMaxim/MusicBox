@@ -153,7 +153,10 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_Loader.Restore();
 		m_Loader.Play();
 		
-		await FinishLevel();
+		bool success = await FinishLevel();
+		
+		if (!success)
+			await FinishLevel();
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
@@ -302,7 +305,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		if (_Value > 0 && m_Duration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 30, m_Duration);
+			m_HapticProcessor.Play(this, Haptic.Type.Selection, 30, m_Duration);
 			
 			float time = 0;
 			while (time < m_Duration)

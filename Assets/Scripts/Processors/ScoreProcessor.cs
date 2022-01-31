@@ -247,6 +247,8 @@ public class ScoreProcessor : IInitializable, IDisposable
 	{
 		if (m_ScoresData != null && m_ScoresData.Key != m_SocialProcessor.UserID)
 		{
+			Debug.LogFormat("[ScoreProcessor] Change user. From: {0} To: {1}.", m_ScoresData.Key, m_SocialProcessor.UserID);
+			
 			Loaded                    =  false;
 			m_ScoresData.ValueChanged -= OnScoresUpdate;
 			m_ScoresData              =  null;
@@ -414,14 +416,14 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	async void OnScoresUpdate(object _Sender, EventArgs _Args)
 	{
-		if (!Loaded)
+		if (!Loaded || m_ScoresData.Key != m_SocialProcessor.UserID)
 			return;
 		
-		Debug.Log("[Score processor] Updating scores data...");
+		Debug.Log("[ScoreProcessor] Updating scores data...");
 		
 		await FetchScores();
 		
-		Debug.Log("[Score processor] Update scores data complete.");
+		Debug.Log("[ScoreProcessor] Update scores data complete.");
 		
 		m_SignalBus.Fire<ScoreDataUpdateSignal>();
 	}

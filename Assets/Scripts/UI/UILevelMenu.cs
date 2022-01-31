@@ -114,7 +114,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	public async void Unlock()
 	{
-		if (m_ProfileProcessor.HasLevel(m_LevelID))
+		if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
 			return;
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
@@ -141,7 +141,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	public async void Play()
 	{
-		if (!m_ProfileProcessor.HasLevel(m_LevelID))
+		if (!m_LevelManager.IsLevelAvailable(m_LevelID))
 			return;
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
@@ -242,7 +242,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		if (!await m_ProfileProcessor.CheckCoins(coins))
 			return false;
 		
-		HttpsCallableReference unlockLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("unlockLevel");
+		HttpsCallableReference unlockLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("UnlockLevel");
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		data["level_id"] = _LevelID;

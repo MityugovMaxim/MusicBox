@@ -150,7 +150,7 @@ public class UILevelProgress : UIGroup
 		
 		if (!Mathf.Approximately(m_SourceProgress, m_TargetProgress) && m_ProgressDuration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(Haptic.Type.ImpactLight, 30, m_ProgressDuration);
+			m_HapticProcessor.Play(this, Haptic.Type.Selection, 30, m_ProgressDuration);
 			
 			float time = 0;
 			while (time < m_ProgressDuration)
