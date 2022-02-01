@@ -13,11 +13,12 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public override ResultMenuPageType Type => ResultMenuPageType.Control;
 
-	[SerializeField] UILevelThumbnail  m_Thumbnail;
-	[SerializeField] UILevelDiscs      m_Discs;
-	[SerializeField] UILevelLabel      m_Label;
-	[SerializeField] UILevelLikeButton m_LikeButton;
-	[SerializeField] UILevelModeButton m_RestartButton;
+	[SerializeField] UILevelThumbnail        m_Thumbnail;
+	[SerializeField] UILevelDiscs            m_Discs;
+	[SerializeField] UILevelLabel            m_Label;
+	[SerializeField] UILevelLikeButton       m_LikeButton;
+	[SerializeField] UILevelModeButton       m_RestartButton;
+	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
 	LevelManager    m_LevelManager;
 	LevelProcessor  m_LevelProcessor;
@@ -58,6 +59,7 @@ public class UIResultControlPage : UIResultMenuPage
 		m_Label.Setup(m_LevelID);
 		m_LikeButton.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
+		m_PreviewSource.Stop();
 	}
 
 	public override void Play() { }
@@ -184,6 +186,13 @@ public class UIResultControlPage : UIResultMenuPage
 			
 			Device.RequestStoreReview();
 		}
+		
+		m_PreviewSource.Play(m_LevelID);
+	}
+
+	protected override void OnHideStarted()
+	{
+		m_PreviewSource.Stop();
 	}
 
 	protected override void OnHideFinished()
