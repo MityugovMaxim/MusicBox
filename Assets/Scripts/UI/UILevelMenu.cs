@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Functions;
+using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -17,6 +18,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] UIGroup                 m_PlayGroup;
 	[SerializeField] UIGroup                 m_UnlockGroup;
 	[SerializeField] UIGroup                 m_LoaderGroup;
+	[SerializeField] TMP_Text                m_PriceLabel;
 	[SerializeField] UILoader                m_Loader;
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
@@ -216,6 +218,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		m_Discs.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
 		m_PlayButton.Setup(m_LevelID);
+		
+		m_PriceLabel.text = m_LevelProcessor.GetPrice(m_LevelID).ToString();
 		
 		if (m_LevelManager.IsLevelLockedByCoins(m_LevelID))
 		{
