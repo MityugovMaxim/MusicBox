@@ -29,11 +29,13 @@ public class UIProductDiscount : UIGroup
 		
 		float discount = m_ProductProcessor.GetDiscount(m_ProductID);
 		
-		if (discount > float.Epsilon)
-			Show();
-		else
+		if (Mathf.Approximately(discount, 0))
 			Hide();
+		else
+			Show();
 		
-		m_Label.text = $"+{discount}%";
+		string sign = discount > 0 ? "+" : string.Empty;
+		
+		m_Label.text = $"{sign}{discount}%";
 	}
 }
