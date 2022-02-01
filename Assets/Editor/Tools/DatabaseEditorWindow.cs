@@ -93,7 +93,21 @@ public abstract class DatabaseEditorWindow<T> : EditorWindow where T : DatabaseE
 		
 		for (int i = 0; i < Entries.Count; i++)
 		{
+			EditorGUILayout.BeginHorizontal();
 			Entries[i].Draw();
+			EditorGUILayout.BeginVertical();
+			if (GUILayout.Button("+", GUILayout.Width(20)) && i > 0)
+			{
+				(m_Entries[i - 1], m_Entries[i]) = (m_Entries[i], m_Entries[i - 1]);
+				EditorGUIUtility.ExitGUI();
+			}
+			if (GUILayout.Button("-", GUILayout.Width(20)) && i < Entries.Count - 1)
+			{
+				(m_Entries[i + 1], m_Entries[i]) = (m_Entries[i], m_Entries[i + 1]);
+				EditorGUIUtility.ExitGUI();
+			}
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.EndHorizontal();
 			
 			if (i >= Entries.Count - 1)
 				continue;

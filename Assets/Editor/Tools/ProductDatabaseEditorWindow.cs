@@ -26,6 +26,13 @@ public class ProductDatabaseEntry : DatabaseEntry
 
 	ReorderableList m_LevelIDsList;
 
+	public ProductDatabaseEntry()
+	{
+		m_LevelIDs = new List<string>();
+		
+		CreateLevelIDs();
+	}
+
 	async void LoadThumbnail()
 	{
 		m_Thumbnail = await LoadTexture($"Thumbnails/Products/{m_ID}.jpg");
@@ -94,16 +101,8 @@ public class ProductDatabaseEntry : DatabaseEntry
 		EditorGUILayout.EndHorizontal();
 	}
 
-	public override void Deserialize(DataSnapshot _DataSnapshot)
+	void CreateLevelIDs()
 	{
-		m_ID       = _DataSnapshot.Key;
-		m_Active   = _DataSnapshot.GetBool("active");
-		m_Promo    = _DataSnapshot.GetBool("promo");
-		m_NoAds    = _DataSnapshot.GetBool("no_ads");
-		m_Coins    = _DataSnapshot.GetLong("coins");
-		m_Discount = _DataSnapshot.GetFloat("discount");
-		m_LevelIDs = _DataSnapshot.GetChildKeys("levels");
-		
 		m_LevelIDsList = new ReorderableList(m_LevelIDs, typeof(string), true, true, true, true);
 		
 		m_LevelIDsList.drawHeaderCallback += _Rect =>
@@ -120,6 +119,17 @@ public class ProductDatabaseEntry : DatabaseEntry
 		{
 			m_LevelIDs.Add(string.Empty);
 		};
+	}
+
+	public override void Deserialize(DataSnapshot _DataSnapshot)
+	{
+		m_ID       = _DataSnapshot.Key;
+		m_Active   = _DataSnapshot.GetBool("active");
+		m_Promo    = _DataSnapshot.GetBool("promo");
+		m_NoAds    = _DataSnapshot.GetBool("no_ads");
+		m_Coins    = _DataSnapshot.GetLong("coins");
+		m_Discount = _DataSnapshot.GetFloat("discount");
+		m_LevelIDs = _DataSnapshot.GetChildKeys("levels");
 		
 		LoadThumbnail();
 	}
