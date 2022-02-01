@@ -88,6 +88,7 @@ public class UIResultLevelPage : UIResultMenuPage
 		
 		m_LevelProgress.Hide(true);
 		m_ItemsGroup.Hide(true);
+		m_ContinueGroup.Hide(true);
 	}
 
 	public override async void Play()

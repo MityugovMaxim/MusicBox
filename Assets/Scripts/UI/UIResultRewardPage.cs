@@ -79,6 +79,8 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_SourceAccuracy = m_ScoreProcessor.GetAccuracy(m_LevelID);
 		m_TargetRank     = m_ScoreProcessor.Rank;
 		m_TargetAccuracy = m_ScoreProcessor.Accuracy;
+		m_Score          = m_ScoreProcessor.Score;
+		m_Coins          = m_LevelProcessor.GetPayout(m_LevelID, m_TargetRank);
 		
 		m_ProgressData.Clear();
 		for (ScoreRank rank = m_SourceRank; rank <= m_TargetRank; rank++)
@@ -111,14 +113,13 @@ public class UIResultRewardPage : UIResultMenuPage
 			sourceDiscProgress.Show(true);
 		}
 		
-		m_Score = m_ScoreProcessor.Score;
-		m_Coins = m_LevelProcessor.GetPayout(m_LevelID, m_TargetRank);
+		ProcessTitle();
+		
+		foreach (UIDiscProgress discProgress in m_DiscsProgress)
+			discProgress.Hide(true);
 		
 		m_ScoreLabel.Value = 0;
 		m_CoinsLabel.Value = 0;
-		
-		ProcessTitle();
-		
 		m_Discs.Hide(true);
 		m_ContinueGroup.Hide(true);
 		m_LoaderGroup.Hide(true);
