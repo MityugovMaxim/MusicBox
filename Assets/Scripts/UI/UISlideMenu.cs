@@ -146,7 +146,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 	void IDropHandler.OnDrop(PointerEventData _EventData)
 	{
 		const float anchorThreshold = 0.7f;
-		const float speedThreshold  = 0.7f;
+		const float speedThreshold  = 0.6f;
 		
 		float speed = _EventData.delta.y / Screen.height / Time.deltaTime;
 		
