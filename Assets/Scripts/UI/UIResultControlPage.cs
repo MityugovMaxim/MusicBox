@@ -68,6 +68,8 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		m_PreviewSource.Stop();
+		
 		m_LeaveAdsCount++;
 		
 		if (m_LeaveAdsCount >= LEAVE_ADS_COUNT)
@@ -96,6 +98,8 @@ public class UIResultControlPage : UIResultMenuPage
 	public async void Next()
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		m_PreviewSource.Stop();
 		
 		m_NextAdsCount++;
 		
@@ -130,6 +134,8 @@ public class UIResultControlPage : UIResultMenuPage
 	public async void Restart()
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		m_PreviewSource.Stop();
 		
 		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
 		
@@ -190,11 +196,6 @@ public class UIResultControlPage : UIResultMenuPage
 		}
 		
 		m_PreviewSource.Play(m_LevelID);
-	}
-
-	protected override void OnHideStarted()
-	{
-		m_PreviewSource.Stop();
 	}
 
 	protected override void OnHideFinished()
