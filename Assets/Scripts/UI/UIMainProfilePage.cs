@@ -19,6 +19,7 @@ public class UIMainProfilePage : UIMainMenuPage
 	LanguageProcessor m_LanguageProcessor;
 	SocialProcessor   m_SocialProcessor;
 	ProfileProcessor  m_ProfileProcessor;
+	StoreProcessor    m_StoreProcessor;
 	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
@@ -27,6 +28,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		LanguageProcessor _LanguageProcessor,
 		SocialProcessor   _SocialProcessor,
 		ProfileProcessor  _ProfileProcessor,
+		StoreProcessor    _StoreProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
@@ -34,6 +36,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_LanguageProcessor = _LanguageProcessor;
 		m_SocialProcessor   = _SocialProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
+		m_StoreProcessor    = _StoreProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
@@ -62,6 +65,19 @@ public class UIMainProfilePage : UIMainMenuPage
 			m_LanguageProcessor.Get("FACEBOOK_SIGN_IN_ERROR_TITLE"),
 			m_LanguageProcessor.Get("FACEBOOK_SIGN_IN_ERROR_MESSAGE")
 		);
+	}
+
+	public async void RestorePurchases()
+	{
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		
+		await m_StoreProcessor.Restore();
+		
+		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 	}
 
 	public async void Logout()

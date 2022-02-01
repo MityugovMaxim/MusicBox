@@ -89,9 +89,6 @@ public class UILoginMenu : UIMenu
 			m_AdsProcessor.LoadAds()
 		);
 		
-		// TODO: Move to button in profile
-		await m_StoreProcessor.Restore();
-		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.BannerMenu, true);
