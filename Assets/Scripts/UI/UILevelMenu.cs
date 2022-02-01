@@ -158,7 +158,6 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 			m_LoaderGroup.Show();
 			
 			m_Loader.Restore();
-			m_Loader.Play();
 			
 			#if UNITY_EDITOR
 			await Task.Delay(5000);

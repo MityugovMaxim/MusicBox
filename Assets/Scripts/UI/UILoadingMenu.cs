@@ -33,7 +33,6 @@ public class UILoadingMenu : UIMenu
 	protected override void OnShowStarted()
 	{
 		m_Loader.Restore();
-		m_Loader.Play();
 	}
 
 	protected override async void OnShowFinished()

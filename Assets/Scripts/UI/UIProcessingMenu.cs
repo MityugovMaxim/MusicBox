@@ -10,10 +10,4 @@ public class UIProcessingMenu : UIMenu
 		if (m_Loader != null)
 			m_Loader.Restore();
 	}
-
-	protected override void OnShowFinished()
-	{
-		if (m_Loader != null)
-			m_Loader.Play();
-	}
 }

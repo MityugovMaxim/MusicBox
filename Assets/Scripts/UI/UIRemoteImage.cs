@@ -35,7 +35,6 @@ public class UIRemoteImage : UIEntity
 		CancellationToken token = m_TokenSource.Token;
 		
 		m_Loader.Restore();
-		m_Loader.Play();
 		
 		m_Image.sprite = null;
 		m_Image.gameObject.SetActive(false);

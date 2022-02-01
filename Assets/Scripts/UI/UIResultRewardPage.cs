@@ -154,7 +154,6 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_LoaderGroup.Show();
 		
 		m_Loader.Restore();
-		m_Loader.Play();
 		
 		bool success = await FinishLevel();
 		

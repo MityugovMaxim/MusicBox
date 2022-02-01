@@ -99,7 +99,6 @@ public class UIProductMenu : UISlideMenu
 		m_SuccessGroup.Hide();
 		
 		m_Loader.Restore();
-		m_Loader.Play();
 		
 		#if UNITY_EDITOR
 		await Task.Delay(5000);
