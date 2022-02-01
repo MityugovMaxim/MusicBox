@@ -275,6 +275,11 @@ public class StorageProcessor
 		return await LoadSprite($"Thumbnails/Levels/{_LevelID}.jpg", _Token);
 	}
 
+	public async Task<Sprite> LoadBannerThumbnail(string _BannerID, CancellationToken _Token = default)
+	{
+		return await LoadSprite($"Thumbnails/Banners/{_BannerID}.jpg", _Token);
+	}
+
 	public async Task<Sprite> LoadOfferThumbnail(string _OfferID, CancellationToken _Token = default)
 	{
 		return await LoadSprite($"Thumbnails/Offers/{_OfferID}.jpg", _Token);

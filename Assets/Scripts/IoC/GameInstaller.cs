@@ -97,6 +97,7 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<MusicProcessor>().To<MusicProcessor>().FromInstance(m_MusicProcessor).AsSingle();
 		
+		Container.BindInterfacesAndSelfTo<ApplicationProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LanguageProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<TimeProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
@@ -126,6 +127,7 @@ public class GameInstaller : MonoInstaller
 	{
 		SignalBusInstaller.Install(Container);
 		
+		Container.DeclareSignal<ApplicationDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LevelDataUpdateSignal>().OptionalSubscriber();
