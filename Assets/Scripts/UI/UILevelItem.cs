@@ -12,18 +12,22 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 	[SerializeField] UILevelDiscs     m_Discs;
 	[SerializeField] UIGroup          m_NewBadge;
 	[SerializeField] UIGroup          m_HotBadge;
+	[SerializeField] GameObject       m_Lock;
 
 	string m_LevelID;
 
+	LevelManager   m_LevelManager;
 	LevelProcessor m_LevelProcessor;
 	MenuProcessor  m_MenuProcessor;
 
 	[Inject]
 	public void Construct(
+		LevelManager   _LevelManager,
 		LevelProcessor _LevelProcessor,
 		MenuProcessor  _MenuProcessor
 	)
 	{
+		m_LevelManager   = _LevelManager;
 		m_LevelProcessor = _LevelProcessor;
 		m_MenuProcessor  = _MenuProcessor;
 	}
@@ -32,22 +36,23 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 	{
 		m_LevelID = _LevelID;
 		
-		LevelBadge badge = m_LevelProcessor.GetBadge(m_LevelID);
-		if (badge == LevelBadge.Hot)
+		switch (m_LevelProcessor.GetBadge(m_LevelID))
 		{
-			m_HotBadge.Show();
-			m_NewBadge.Hide();
+			case LevelBadge.Hot:
+				m_HotBadge.Show();
+				m_NewBadge.Hide();
+				break;
+			case LevelBadge.New:
+				m_NewBadge.Show();
+				m_HotBadge.Hide();
+				break;
+			default:
+				m_NewBadge.Hide();
+				m_HotBadge.Hide();
+				break;
 		}
-		else if (badge == LevelBadge.New)
-		{
-			m_NewBadge.Show();
-			m_HotBadge.Hide();
-		}
-		else
-		{
-			m_NewBadge.Hide();
-			m_HotBadge.Hide();
-		}
+		
+		m_Lock.SetActive(m_LevelManager.IsLevelLockedByLevel(m_LevelID));
 		
 		m_Thumbnail.Setup(m_LevelID);
 		m_Discs.Setup(m_LevelID);
