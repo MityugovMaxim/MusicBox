@@ -41,11 +41,6 @@ public class UIMainMenu : UIMenu
 		m_UrlProcessor     = _UrlProcessor;
 	}
 
-	public void SelectProfile()
-	{
-		Select(MainMenuPageType.Profile, false);
-	}
-
 	public void Select(MainMenuPageType _PageType)
 	{
 		Select(_PageType, false);
