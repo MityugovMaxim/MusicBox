@@ -126,17 +126,19 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	public override async void Play()
 	{
-		await PlayRank();
-		
-		await Task.Delay(250);
+		await PlayTitle();
 		
 		await PlayScore();
 		
-		await Task.Delay(250);
+		await Task.Delay(500);
+		
+		await PlayRank();
+		
+		await Task.Delay(500);
 		
 		await PlayCoins();
 		
-		await Task.Delay(250);
+		await Task.Delay(500);
 		
 		m_ContinueGroup.Show();
 	}
@@ -178,10 +180,13 @@ public class UIResultRewardPage : UIResultMenuPage
 		return m_DiscsProgress.FirstOrDefault(_DiscProgress => _DiscProgress.Rank == _Rank);
 	}
 
+	Task PlayTitle()
+	{
+		return m_Title.PlayAsync();
+	}
+
 	async Task PlayRank()
 	{
-		await m_Title.PlayAsync();
-		
 		while (m_ProgressData.Count > 0)
 		{
 			ProgressData progressData = m_ProgressData.Dequeue();
@@ -322,8 +327,6 @@ public class UIResultRewardPage : UIResultMenuPage
 			_Label.RectTransform.SetAsLastSibling();
 			_Label.Play();
 		}
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		_Label.Value = (long)_Value;
 		

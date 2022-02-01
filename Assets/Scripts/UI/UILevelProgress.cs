@@ -11,7 +11,9 @@ public class UILevelProgress : UIGroup
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	[SerializeField] UISplineProgress  m_Progress;
+	[SerializeField] RectTransform     m_Progress;
+	[SerializeField] float             m_MinProgress;
+	[SerializeField] float             m_MaxProgress;
 	[SerializeField] UICascadeTMPLabel m_Label;
 	[SerializeField] UILevel           m_SourceLevel;
 	[SerializeField] UILevel           m_TargetLevel;
@@ -72,8 +74,9 @@ public class UILevelProgress : UIGroup
 		m_SourceProgress = _SourceProgress;
 		m_TargetProgress = _TargetProgress;
 		
-		m_Progress.Min = 0;
-		m_Progress.Max = m_SourceProgress;
+		Vector2 size = m_Progress.sizeDelta;
+		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_SourceProgress);
+		m_Progress.sizeDelta = size;
 		
 		m_Label.Text = m_LanguageProcessor.Get("RESULT_LEVEL_UP");
 	}
@@ -148,6 +151,8 @@ public class UILevelProgress : UIGroup
 		if (m_ProgressDelay > float.Epsilon)
 			yield return new WaitForSeconds(m_ProgressDelay);
 		
+		Vector2 size = m_Progress.sizeDelta;
+		
 		if (!Mathf.Approximately(m_SourceProgress, m_TargetProgress) && m_ProgressDuration > float.Epsilon)
 		{
 			m_HapticProcessor.Play(this, Haptic.Type.Selection, 30, m_ProgressDuration);
@@ -161,13 +166,17 @@ public class UILevelProgress : UIGroup
 				
 				float phase = m_ProgressCurve.Evaluate(time / m_ProgressDuration);
 				
-				m_Progress.Min = 0;
-				m_Progress.Max = Mathf.Lerp(m_SourceProgress, m_TargetProgress, phase);
+				float progress = Mathf.Lerp(m_SourceProgress, m_TargetProgress, phase);
+				
+				size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, progress);
+				
+				m_Progress.sizeDelta = size;
 			}
 		}
 		
-		m_Progress.Min = 0;
-		m_Progress.Max = m_TargetProgress;
+		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_TargetProgress);
+		
+		m_Progress.sizeDelta = size;
 		
 		InvokeProgressFinished();
 	}
