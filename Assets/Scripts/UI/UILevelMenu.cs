@@ -18,6 +18,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] UIGroup                 m_PlayGroup;
 	[SerializeField] UIGroup                 m_UnlockGroup;
 	[SerializeField] UIGroup                 m_LoaderGroup;
+	[SerializeField] UIGroup                 m_CompleteGroup;
 	[SerializeField] TMP_Text                m_PriceLabel;
 	[SerializeField] UILoader                m_Loader;
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
@@ -116,26 +117,55 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	public async void Unlock()
 	{
-		if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
-			return;
+		// TODO: Uncomment
+		//if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
+		//	return;
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		bool success = await UnlockLevel(m_LevelID);
+		await Task.WhenAll(
+			m_UnlockGroup.HideAsync(),
+			m_LoaderGroup.ShowAsync()
+		);
+		
+		// TODO: Uncomment
+		// bool success = await UnlockLevel(m_LevelID);
+		
+		// TODO: Remove
+		bool success = true;
+		
+		#if UNITY_EDITOR
+		await Task.Delay(2500);
+		#endif
 		
 		if (success)
 		{
+			await m_LoaderGroup.HideAsync();
+			
+			m_HapticProcessor.Process(Haptic.Type.Success);
+			
+			await m_CompleteGroup.ShowAsync();
+			
+			await Task.WhenAll(
+				m_ProfileProcessor.LoadProfile(),
+				Task.Delay(1500)
+			);
+			
 			m_PlayGroup.Show();
-			m_UnlockGroup.Hide();
-			m_LoaderGroup.Hide();
+			m_CompleteGroup.Hide();
 		}
 		else
 		{
-			m_PlayGroup.Hide();
-			m_UnlockGroup.Show();
-			m_LoaderGroup.Hide();
+			m_HapticProcessor.Process(Haptic.Type.Failure);
+			
+			await Task.WhenAll(
+				m_UnlockGroup.ShowAsync(),
+				m_CompleteGroup.HideAsync(),
+				m_LoaderGroup.HideAsync(),
+				m_PlayGroup.HideAsync()
+			);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
@@ -221,7 +251,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_PriceLabel.text = m_LevelProcessor.GetPrice(m_LevelID).ToString();
 		
-		if (m_LevelManager.IsLevelLockedByCoins(m_LevelID))
+		// TODO: Remote 'true' from condition
+		if (true || m_LevelManager.IsLevelLockedByCoins(m_LevelID))
 		{
 			m_UnlockGroup.Show(true);
 			m_PlayGroup.Hide(true);
@@ -233,6 +264,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		}
 		
 		m_LoaderGroup.Hide(true);
+		m_CompleteGroup.Hide(true);
 		
 		if (Shown)
 			m_PreviewSource.Play(m_LevelID);

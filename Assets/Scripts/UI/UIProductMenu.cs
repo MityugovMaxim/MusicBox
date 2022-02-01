@@ -16,7 +16,7 @@ public class UIProductMenu : UISlideMenu
 	[SerializeField] UIProductPrice          m_Price;
 	[SerializeField] UIGroup                 m_PurchaseGroup;
 	[SerializeField] UIGroup                 m_LoaderGroup;
-	[SerializeField] UIGroup                 m_SuccessGroup;
+	[SerializeField] UIGroup                 m_CompleteGroup;
 	[SerializeField] UILoader                m_Loader;
 	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
 
@@ -94,29 +94,33 @@ public class UIProductMenu : UISlideMenu
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		m_PurchaseGroup.Hide();
-		m_LoaderGroup.Show();
-		m_SuccessGroup.Hide();
+		await Task.WhenAll(
+			m_PurchaseGroup.HideAsync(),
+			m_LoaderGroup.ShowAsync()
+		);
 		
-		m_Loader.Restore();
+		// TODO: Uncomment
+		// bool success = await m_StoreProcessor.Purchase(m_ProductID);
+		
+		// TODO: Remove
+		bool success = true;
 		
 		#if UNITY_EDITOR
-		await Task.Delay(5000);
+		await Task.Delay(2500);
 		#endif
-		
-		bool success = await m_StoreProcessor.Purchase(m_ProductID);
 		
 		if (success)
 		{
+			await m_LoaderGroup.HideAsync();
+			
 			m_HapticProcessor.Process(Haptic.Type.Success);
 			
-			await Task.WhenAll(
-				m_PurchaseGroup.HideAsync(),
-				m_LoaderGroup.HideAsync(),
-				m_SuccessGroup.ShowAsync()
-			);
+			await m_CompleteGroup.ShowAsync();
 			
-			await m_ProfileProcessor.LoadProfile();
+			await Task.WhenAll(
+				m_ProfileProcessor.LoadProfile(),
+				Task.Delay(1500)
+			);
 			
 			await m_MenuProcessor.Hide(MenuType.ProductMenu);
 		}
@@ -126,8 +130,9 @@ public class UIProductMenu : UISlideMenu
 			
 			await Task.WhenAll(
 				m_PurchaseGroup.ShowAsync(),
+				m_CompleteGroup.HideAsync(),
 				m_LoaderGroup.HideAsync(),
-				m_SuccessGroup.HideAsync()
+				m_CompleteGroup.HideAsync()
 			);
 		}
 		
@@ -239,7 +244,7 @@ public class UIProductMenu : UISlideMenu
 		
 		m_PurchaseGroup.Show(true);
 		m_LoaderGroup.Hide(true);
-		m_SuccessGroup.Hide(true);
+		m_CompleteGroup.Hide(true);
 		
 		m_PreviewSource.Stop();
 		
