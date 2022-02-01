@@ -16,18 +16,24 @@ public class UIProfile : UIEntity
 	ProfileProcessor  m_ProfileProcessor;
 	ProgressProcessor m_ProgressProcessor;
 	SocialProcessor   m_SocialProcessor;
+	MenuProcessor     m_MenuProcessor;
+	HapticProcessor   m_HapticProcessor;
 
 	[Inject]
 	public void Construct(
 		SignalBus         _SignalBus,
 		ProfileProcessor  _ProfileProcessor,
 		ProgressProcessor _ProgressProcessor,
-		SocialProcessor   _SocialProcessor
+		SocialProcessor   _SocialProcessor,
+		MenuProcessor     _MenuProcessor,
+		HapticProcessor   _HapticProcessor
 	)
 	{
 		m_ProfileProcessor  = _ProfileProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
 		m_SocialProcessor   = _SocialProcessor;
+		m_MenuProcessor     = _MenuProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 	}
 
 	public void Setup()
@@ -43,6 +49,15 @@ public class UIProfile : UIEntity
 		Vector2 size = m_Progress.sizeDelta;
 		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_ProfileProcessor.GetProgress());
 		m_Progress.sizeDelta = size;
+	}
+
+	public void Open()
+	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		if (mainMenu != null && mainMenu.Shown)
+			mainMenu.Select(MainMenuPageType.Profile);
 	}
 
 	void ProcessDiscs()
