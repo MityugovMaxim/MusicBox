@@ -15,7 +15,9 @@ public class UIFXHighlight : UIEntity
 	}
 
 	[SerializeField] float          m_Duration;
-	[SerializeField] AnimationCurve m_Curve;
+	[SerializeField] float          m_Source = 1;
+	[SerializeField] float          m_Target = 0;
+	[SerializeField] AnimationCurve m_Curve  = AnimationCurve.Linear(0, 0, 1, 1);
 
 	CanvasGroup m_CanvasGroup;
 
@@ -29,15 +31,17 @@ public class UIFXHighlight : UIEntity
 		if (!gameObject.activeInHierarchy)
 			return;
 		
-		m_PlayRoutine = PlayRoutine(CanvasGroup, m_Duration, m_Curve);
+		m_PlayRoutine = PlayRoutine(CanvasGroup, m_Source, m_Target, m_Duration, m_Curve);
 		
 		StartCoroutine(m_PlayRoutine);
 	}
 
-	static IEnumerator PlayRoutine(CanvasGroup _CanvasGroup, float _Duration, AnimationCurve _Curve)
+	static IEnumerator PlayRoutine(CanvasGroup _CanvasGroup, float _Source, float _Target, float _Duration, AnimationCurve _Curve)
 	{
 		if (_CanvasGroup == null)
 			yield break;
+		
+		_CanvasGroup.alpha = _Source;
 		
 		float time = 0;
 		while (time < _Duration)
@@ -48,7 +52,7 @@ public class UIFXHighlight : UIEntity
 			
 			float phase = _Curve.Evaluate(time / _Duration);
 			
-			_CanvasGroup.alpha = Mathf.Lerp(1, 0, phase);
+			_CanvasGroup.alpha = Mathf.Lerp(_Source, _Target, phase);
 		}
 		
 		_CanvasGroup.alpha = 0;
