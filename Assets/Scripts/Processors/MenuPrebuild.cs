@@ -13,6 +13,7 @@ public class MenuPrebuild
 	/// PREBUILD_START
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()
 	{
+		{ typeof(UIBannerMenu), MenuType.BannerMenu },
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
 		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
