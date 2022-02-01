@@ -46,9 +46,6 @@ public class UrlProcessor
 			case "profile":
 				await ProcessProfile();
 				break;
-			default:
-				Application.OpenURL(_URL);
-				break;
 		}
 	}
 
