@@ -28,6 +28,7 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 
 	[SerializeField] AspectMode    m_AspectMode;
 	[SerializeField] float         m_Scale = 1;
+	[SerializeField] bool          m_Limit;
 	[NonSerialized]  RectTransform m_RectTransform;
 
 	bool m_DelayedUpdateScale;
@@ -96,6 +97,8 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 					targetSize.x / sourceSize.x,
 					targetSize.y / sourceSize.y
 				);
+				if (m_Limit)
+					scale = Mathf.Min(scale, 1);
 				break;
 			
 			case AspectMode.Fill:
@@ -103,6 +106,8 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 					targetSize.x / sourceSize.x,
 					targetSize.y / sourceSize.y
 				);
+				if (m_Limit)
+					scale = Mathf.Min(scale, 1);
 				break;
 			default:
 				scale = 1;
