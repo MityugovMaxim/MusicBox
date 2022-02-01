@@ -180,6 +180,8 @@ public class UIResultControlPage : UIResultMenuPage
 
 	protected override void OnShowFinished()
 	{
+		m_RateUsCount++;
+		
 		if (m_RateUsCount >= RATE_US_COUNT)
 		{
 			m_RateUsCount = 0;
