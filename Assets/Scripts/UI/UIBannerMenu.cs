@@ -8,15 +8,18 @@ public class UIBannerMenu : UIMenu
 {
 	[SerializeField] UIBannerItem m_BannerItem;
 
+	SocialProcessor      m_SocialProcessor;
 	ApplicationProcessor m_ApplicationProcessor;
 	UrlProcessor         m_UrlProcessor;
 
 	[Inject]
 	public void Construct(
+		SocialProcessor      _SocialProcessor,
 		ApplicationProcessor _ApplicationProcessor,
 		UrlProcessor         _UrlProcessor
 	)
 	{
+		m_SocialProcessor      = _SocialProcessor;
 		m_ApplicationProcessor = _ApplicationProcessor;
 		m_UrlProcessor         = _UrlProcessor;
 	}
@@ -30,6 +33,9 @@ public class UIBannerMenu : UIMenu
 		
 		foreach (string bannerID in bannerIDs)
 		{
+			if (CheckBanner(bannerID))
+				continue;
+			
 			bool permanent = m_ApplicationProcessor.IsPermanent(bannerID);
 			
 			m_BannerItem.Setup(bannerID);
@@ -50,6 +56,8 @@ public class UIBannerMenu : UIMenu
 						await Task.Delay(10000);
 				}
 				
+				ViewBanner(bannerID);
+				
 				break;
 			}
 			
@@ -60,5 +68,19 @@ public class UIBannerMenu : UIMenu
 	protected override void OnShowStarted()
 	{
 		m_BannerItem.Hide(true);
+	}
+
+	bool CheckBanner(string _BannerID)
+	{
+		string userID = m_SocialProcessor.UserID;
+		
+		return PlayerPrefs.HasKey($"BANNER_{userID}_{_BannerID}");
+	}
+
+	void ViewBanner(string _BannerID)
+	{
+		string userID = m_SocialProcessor.UserID;
+		
+		PlayerPrefs.SetInt($"BANNER_{userID}_{_BannerID}", 1);
 	}
 }
