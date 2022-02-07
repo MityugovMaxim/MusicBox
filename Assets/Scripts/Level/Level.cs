@@ -6,6 +6,8 @@ using Zenject;
 [RequireComponent(typeof(Sequencer))]
 public class Level : MonoBehaviour
 {
+	public bool Playing => m_Sequencer != null && m_Sequencer.Playing;
+
 	Sequencer      m_Sequencer;
 	AudioProcessor m_AudioProcessor;
 	ColorProcessor m_ColorProcessor;
