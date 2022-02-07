@@ -8,6 +8,8 @@ public class UIBannerMenu : UIMenu
 {
 	[SerializeField] UIBannerItem m_BannerItem;
 
+	readonly HashSet<string> m_BannerIDs = new HashSet<string>();
+
 	SocialProcessor      m_SocialProcessor;
 	ApplicationProcessor m_ApplicationProcessor;
 	UrlProcessor         m_UrlProcessor;
@@ -74,12 +76,14 @@ public class UIBannerMenu : UIMenu
 	{
 		string userID = m_SocialProcessor.UserID;
 		
-		return PlayerPrefs.HasKey($"BANNER_{userID}_{_BannerID}");
+		return m_BannerIDs.Contains(_BannerID) || PlayerPrefs.HasKey($"BANNER_{userID}_{_BannerID}");
 	}
 
 	void ViewBanner(string _BannerID)
 	{
 		string userID = m_SocialProcessor.UserID;
+		
+		m_BannerIDs.Add(_BannerID);
 		
 		PlayerPrefs.SetInt($"BANNER_{userID}_{_BannerID}", 1);
 	}
