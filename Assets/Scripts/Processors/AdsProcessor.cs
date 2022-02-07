@@ -111,11 +111,7 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		
 		await completionSource.Task;
 		
-		await Task.Yield();
-		
-		AudioManager.SetAudioActive(true);
-		
-		await Task.Yield();
+		await Task.Delay(250);
 		
 		return completionSource.Task.Result;
 	}
