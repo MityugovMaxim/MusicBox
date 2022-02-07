@@ -42,7 +42,10 @@ public abstract class Tween<T> : UIEntity
 		if (m_PlayRoutine != null)
 			StopCoroutine(m_PlayRoutine);
 		
-		Process(0);
+		if (m_Cycles != null && m_Cycles.Length > 0)
+			Process(m_Cycles[0].Curve.Evaluate(0));
+		else
+			Process(0);
 		
 		if (m_AutoPlay)
 			Play();
