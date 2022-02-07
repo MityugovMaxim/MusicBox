@@ -45,7 +45,7 @@ public class LanguageProcessor
 
 	public bool SupportsLanguage(string _Language)
 	{
-		return string.IsNullOrEmpty(_Language) || Language == _Language || Application.systemLanguage.GetCode() == _Language;
+		return string.IsNullOrEmpty(_Language) || Language == _Language;
 	}
 
 	public string Get(string _Key)
