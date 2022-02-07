@@ -32,8 +32,6 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
 		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-		m_SignalBus.Subscribe<AudioPlaySignal>(RegisterAudioPlaySignal);
-		m_SignalBus.Subscribe<AudioPauseSignal>(RegisterAudioPauseSignal);
 		
 		m_LevelProcessor.AddSampleReceiver(m_Progress);
 		m_LevelProcessor.AddSampleReceiver(m_Timer);
@@ -44,8 +42,6 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
 		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-		m_SignalBus.Unsubscribe<AudioPlaySignal>(RegisterAudioPlaySignal);
-		m_SignalBus.Unsubscribe<AudioPauseSignal>(RegisterAudioPauseSignal);
 		
 		m_LevelProcessor.RemoveSampleReceiver(m_Progress);
 		m_LevelProcessor.RemoveSampleReceiver(m_Timer);
@@ -74,25 +70,19 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 
 	void RegisterAudioSourceChanged()
 	{
-		if (Shown)
-			m_PauseButton.Pause();
-	}
-
-	void RegisterAudioPlaySignal()
-	{
-		if (Shown)
-			m_PauseButton.Pause();
-	}
-
-	void RegisterAudioPauseSignal()
-	{
-		if (Shown)
+		if (Shown && m_LevelProcessor.Playing)
 			m_PauseButton.Pause();
 	}
 
 	void OnApplicationPause(bool _Paused)
 	{
-		if (Shown && _Paused)
+		if (Shown && m_LevelProcessor.Playing && _Paused)
+			m_PauseButton.Pause();
+	}
+
+	void OnApplicationFocus(bool _Focus)
+	{
+		if (Shown && m_LevelProcessor.Playing && !_Focus)
 			m_PauseButton.Pause();
 	}
 
