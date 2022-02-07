@@ -10,8 +10,8 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 
 	[SerializeField] UILevelThumbnail m_Thumbnail;
 	[SerializeField] UILevelDiscs     m_Discs;
-	[SerializeField] UIGroup          m_NewBadge;
-	[SerializeField] UIGroup          m_HotBadge;
+	[SerializeField] GameObject       m_NewBadge;
+	[SerializeField] GameObject       m_HotBadge;
 	[SerializeField] GameObject       m_Lock;
 
 	string m_LevelID;
@@ -36,21 +36,9 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 	{
 		m_LevelID = _LevelID;
 		
-		switch (m_LevelProcessor.GetBadge(m_LevelID))
-		{
-			case LevelBadge.Hot:
-				m_HotBadge.Show();
-				m_NewBadge.Hide();
-				break;
-			case LevelBadge.New:
-				m_NewBadge.Show();
-				m_HotBadge.Hide();
-				break;
-			default:
-				m_NewBadge.Hide();
-				m_HotBadge.Hide();
-				break;
-		}
+		LevelBadge badge = m_LevelProcessor.GetBadge(m_LevelID);
+		m_HotBadge.SetActive(badge == LevelBadge.Hot);
+		m_NewBadge.SetActive(badge == LevelBadge.New);
 		
 		m_Lock.SetActive(m_LevelManager.IsLevelLockedByLevel(m_LevelID));
 		
