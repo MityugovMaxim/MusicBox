@@ -53,7 +53,10 @@ public class UIGroup : UIEntity
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		
 		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
 		
 		gameObject.SetActive(true);
 		
@@ -62,9 +65,12 @@ public class UIGroup : UIEntity
 		
 		OnShowStarted();
 		
-		await ShowAnimation(m_ShowDuration, _Instant, m_TokenSource.Token);
+		await ShowAnimation(m_ShowDuration, _Instant, token);
 		
 		OnShowFinished();
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
 	public async Task HideAsync(bool _Instant = false)
@@ -76,11 +82,14 @@ public class UIGroup : UIEntity
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		
 		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
 		
 		OnHideStarted();
 		
-		await HideAnimation(m_HideDuration, _Instant, m_TokenSource.Token);
+		await HideAnimation(m_HideDuration, _Instant, token);
 		
 		OnHideFinished();
 		
@@ -88,6 +97,9 @@ public class UIGroup : UIEntity
 		CanvasGroup.blocksRaycasts = false;
 		
 		gameObject.SetActive(false);
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
 	public async void Show(bool _Instant = false, Action _Finished = null)
