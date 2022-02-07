@@ -8,12 +8,14 @@ using Zenject;
 
 public class ProgressSnapshot
 {
-	public int Level    { get; }
-	public int MinLimit { get; }
-	public int MaxLimit { get; }
+	public bool Active   { get; }
+	public int  Level    { get; }
+	public int  MinLimit { get; }
+	public int  MaxLimit { get; }
 
 	public ProgressSnapshot(DataSnapshot _Data)
 	{
+		Active   = _Data.GetBool("active");
 		Level    = _Data.GetInt("level");
 		MinLimit = _Data.GetInt("min_limit");
 		MaxLimit = _Data.GetInt("max_limit");
@@ -57,6 +59,7 @@ public class ProgressProcessor
 			return 1;
 		
 		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.MinLimit <= _Discs)
 			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
 		
@@ -69,6 +72,7 @@ public class ProgressProcessor
 			return 0;
 		
 		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.MinLimit <= _Discs)
 			.Aggregate((_A, _B) => _A.MaxLimit > _B.MaxLimit ? _A : _B);
 		
@@ -78,12 +82,23 @@ public class ProgressProcessor
 		return Mathf.InverseLerp(minDiscs, maxDiscs, _Discs);
 	}
 
+	public int ClampLevel(int _Level)
+	{
+		int minLevel = GetMinLevel();
+		int maxLevel = GetMaxLevel();
+		return Mathf.Clamp(_Level, minLevel, maxLevel);
+	}
+
 	public int GetMinLevel()
 	{
 		if (m_ProgressSnapshots.Count == 0)
 			return 1;
 		
-		return m_ProgressSnapshots.Min(_Snapshot => _Snapshot.Level);
+		return m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.Level)
+			.DefaultIfEmpty(1)
+			.Min();
 	}
 
 	public int GetMaxLevel()
@@ -91,7 +106,11 @@ public class ProgressProcessor
 		if (m_ProgressSnapshots.Count == 0)
 			return 1;
 		
-		return m_ProgressSnapshots.Max(_Snapshot => _Snapshot.Level);
+		return m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.Level)
+			.DefaultIfEmpty(1)
+			.Max();
 	}
 
 	public int GetMinLimit(int _Level)
@@ -99,9 +118,10 @@ public class ProgressProcessor
 		if (m_ProgressSnapshots.Count == 0)
 			return 0;
 		
-		int level = Mathf.Clamp(_Level, GetMinLevel(), GetMaxLevel());
+		int level = ClampLevel(_Level);
 		
 		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		
@@ -113,9 +133,10 @@ public class ProgressProcessor
 		if (m_ProgressSnapshots.Count == 0)
 			return 0;
 		
-		int level = Mathf.Clamp(_Level, GetMinLevel(), GetMaxLevel());
+		int level = ClampLevel(_Level);
 		
 		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		
