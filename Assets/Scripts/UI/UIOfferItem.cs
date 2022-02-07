@@ -18,6 +18,7 @@ public class UIOfferItem : UIGroupLayout
 	LanguageProcessor m_LanguageProcessor;
 	AdsProcessor      m_AdsProcessor;
 	MenuProcessor     m_MenuProcessor;
+	HapticProcessor   m_HapticProcessor;
 
 	string m_OfferID;
 	int    m_Progress;
@@ -29,7 +30,8 @@ public class UIOfferItem : UIGroupLayout
 		StorageProcessor  _StorageProcessor,
 		LanguageProcessor _LanguageProcessor,
 		AdsProcessor      _AdsProcessor,
-		MenuProcessor     _MenuProcessor
+		MenuProcessor     _MenuProcessor,
+		HapticProcessor   _HapticProcessor
 	)
 	{
 		m_OffersProcessor   = _OffersProcessor;
@@ -37,6 +39,7 @@ public class UIOfferItem : UIGroupLayout
 		m_LanguageProcessor = _LanguageProcessor;
 		m_AdsProcessor      = _AdsProcessor;
 		m_MenuProcessor     = _MenuProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 	}
 
 	public void Setup(string _OfferID)
@@ -54,6 +57,8 @@ public class UIOfferItem : UIGroupLayout
 
 	public async void Progress()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		if (m_Progress >= m_Target)
 			await CollectOffer();
 		else
@@ -98,6 +103,8 @@ public class UIOfferItem : UIGroupLayout
 		await HideAsync();
 		
 		await m_OffersProcessor.CollectOffer(m_OfferID);
+		
+		m_HapticProcessor.Process(Haptic.Type.Success);
 	}
 
 	static int GetProgress(string _OfferID)
