@@ -70,7 +70,7 @@ public class UIReviveMenu : UIMenu
 			
 			await Task.Delay(1000);
 			
-			m_HealthProcessor.Restore(2);
+			m_HealthProcessor.Restore();
 			
 			m_LevelProcessor.Play();
 		}
@@ -96,7 +96,7 @@ public class UIReviveMenu : UIMenu
 			
 			await Task.Delay(1000);
 			
-			m_HealthProcessor.Restore(2);
+			m_HealthProcessor.Restore();
 			
 			m_LevelProcessor.Play();
 		}

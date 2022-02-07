@@ -1,23 +1,14 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class HealthDamageSignal
+public class HealthChangedSignal
 {
 	public int Health { get; }
 
-	public HealthDamageSignal(int _Health)
-	{
-		Health = _Health;
-	}
-}
-
-public class HealthRestoreSignal
-{
-	public int Health { get; }
-
-	public HealthRestoreSignal(int _Health)
+	public HealthChangedSignal(int _Health)
 	{
 		Health = _Health;
 	}
@@ -33,11 +24,11 @@ public class HealthProcessor : IInitializable, IDisposable
 	readonly MenuProcessor  m_MenuProcessor;
 
 	string m_LevelID;
-	int    m_Combo;
 	int    m_Health;
 	float  m_InvincibilityDuration;
 	float  m_InvincibilityTime;
 
+	[Inject]
 	public HealthProcessor(
 		SignalBus      _SignalBus,
 		LevelProcessor _LevelProcessor,
@@ -49,85 +40,56 @@ public class HealthProcessor : IInitializable, IDisposable
 		m_MenuProcessor  = _MenuProcessor;
 	}
 
+	public void Restore()
+	{
+		m_Health = MAX_HEALTH;
+		
+		m_InvincibilityTime = Time.time + m_InvincibilityDuration;
+		
+		m_SignalBus.Fire(new HealthChangedSignal(m_Health));
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelComboSignal>(RegisterLevelCombo);
-		m_SignalBus.Subscribe<LevelReviveSignal>(RegisterLevelRevive);
 		
-		m_SignalBus.Subscribe<TapFailSignal>(RegisterDoubleFail);
-		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterTapFail);
-		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Subscribe<TapFailSignal>(HealthDamage);
+		m_SignalBus.Subscribe<DoubleFailSignal>(HealthDamage);
+		m_SignalBus.Subscribe<HoldFailSignal>(HealthDamage);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
 		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelComboSignal>(RegisterLevelCombo);
-		m_SignalBus.Unsubscribe<LevelReviveSignal>(RegisterLevelRevive);
 		
-		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterDoubleFail);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterTapFail);
-		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Unsubscribe<TapFailSignal>(HealthDamage);
+		m_SignalBus.Unsubscribe<DoubleFailSignal>(HealthDamage);
+		m_SignalBus.Unsubscribe<HoldFailSignal>(HealthDamage);
 	}
 
 	void RegisterLevelStart(LevelStartSignal _Signal)
 	{
 		m_LevelID               = _Signal.LevelID;
 		m_Health                = MAX_HEALTH;
-		m_Combo                 = 0;
 		m_InvincibilityTime     = 0;
 		m_InvincibilityDuration = m_LevelProcessor.GetInvincibility(m_LevelID);
 		
-		m_SignalBus.Fire(new HealthRestoreSignal(m_Health));
+		m_SignalBus.Fire(new HealthChangedSignal(m_Health));
 	}
 
 	void RegisterLevelRestart(LevelRestartSignal _Signal)
 	{
 		m_LevelID               = _Signal.LevelID;
 		m_Health                = MAX_HEALTH;
-		m_Combo                 = 0;
 		m_InvincibilityTime     = 0;
 		m_InvincibilityDuration = m_LevelProcessor.GetInvincibility(m_LevelID);
 		
-		m_SignalBus.Fire(new HealthRestoreSignal(m_Health));
+		m_SignalBus.Fire(new HealthChangedSignal(m_Health));
 	}
 
-	void RegisterDoubleFail()
-	{
-		HealthDamage();
-	}
-
-	void RegisterTapFail()
-	{
-		HealthDamage();
-	}
-
-	void RegisterHoldFail()
-	{
-		HealthDamage();
-	}
-
-	void RegisterLevelCombo(LevelComboSignal _Signal)
-	{
-		if (m_Combo < _Signal.Multiplier)
-			HealthRestore();
-		
-		m_Combo = _Signal.Multiplier;
-	}
-
-	void RegisterLevelRevive()
-	{
-		m_Health = Mathf.Clamp(m_Health, 1, MAX_HEALTH);
-		
-		m_InvincibilityTime = Time.time + m_InvincibilityDuration * 2;
-		
-		m_SignalBus.Fire(new HealthRestoreSignal(m_Health));
-	}
-
-	void HealthDamage()
+	async void HealthDamage()
 	{
 		if (Time.time < m_InvincibilityTime)
 			return;
@@ -136,23 +98,19 @@ public class HealthProcessor : IInitializable, IDisposable
 		
 		m_InvincibilityTime = Time.time + m_InvincibilityDuration;
 		
-		m_SignalBus.Fire(new HealthDamageSignal(m_Health));
+		m_SignalBus.Fire(new HealthChangedSignal(m_Health));
 		
 		if (m_Health > 0)
 			return;
 		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
 		m_LevelProcessor.Pause();
 		
-		m_MenuProcessor.Show(MenuType.ReviveMenu);
-	}
-
-	void HealthRestore()
-	{
-		if (m_Health >= MAX_HEALTH)
-			return;
+		await Task.Delay(500);
 		
-		m_Health++;
+		await m_MenuProcessor.Show(MenuType.ReviveMenu);
 		
-		m_SignalBus.Fire(new HealthRestoreSignal(m_Health));
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 }
