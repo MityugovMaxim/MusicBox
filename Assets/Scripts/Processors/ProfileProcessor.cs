@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
-using Firebase.Functions;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Purchasing;
@@ -45,7 +44,7 @@ public class ProfileSnapshot
 
 public class ProfileProcessor
 {
-	public int                   Level      => m_ProfileSnapshot?.Level ?? 1;
+	public int                   Level      => m_ProgressProcessor.ClampLevel(m_ProfileSnapshot?.Level ?? 1);
 	public int                   Discs      => m_ProfileSnapshot?.Discs ?? 0;
 	public long                  Coins      => m_ProfileSnapshot?.Coins ?? 0;
 	public IReadOnlyList<string> LevelIDs   => m_ProfileSnapshot?.LevelIDs;
@@ -114,7 +113,7 @@ public class ProfileProcessor
 	{
 		return m_ProductProcessor.GetProductIDs()
 			.Where(_ProductID => !HasProduct(_ProductID))
-			.OrderByDescending(m_ProductProcessor.GetDiscount)
+			.OrderByDescending(_ProductID => Mathf.Abs(m_ProductProcessor.GetDiscount(_ProductID)))
 			.ToList();
 	}
 
