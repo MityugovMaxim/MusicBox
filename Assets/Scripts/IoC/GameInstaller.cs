@@ -5,15 +5,15 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] Canvas         m_Canvas;
-	[SerializeField] MusicProcessor m_MusicProcessor;
+	[SerializeField] Canvas m_Canvas;
 
-	[SerializeField] UILevelItem  m_LevelItem;
-	[SerializeField] UILevelGroup m_LevelGroup;
-	[SerializeField] UIStoreItem  m_StoreItem;
-	[SerializeField] UIOfferItem  m_OfferItem;
-	[SerializeField] UINewsItem   m_NewsItem;
-	[SerializeField] UIUnlockItem m_UnlockItem;
+	[SerializeField] UILevelItem   m_LevelItem;
+	[SerializeField] UILevelGroup  m_LevelGroup;
+	[SerializeField] UIStoreItem   m_StoreItem;
+	[SerializeField] UIOfferItem   m_OfferItem;
+	[SerializeField] UINewsItem    m_NewsItem;
+	[SerializeField] UIUnlockItem  m_UnlockItem;
+	[SerializeField] UIProductItem m_ProductItem;
 
 	public override void InstallBindings()
 	{
@@ -60,6 +60,11 @@ public class GameInstaller : MonoInstaller
 			.WithInitialSize(5)
 			.FromComponentInNewPrefab(m_UnlockItem)
 			.UnderTransformGroup("[UIUnlockItem] Pool");
+		
+		Container.BindMemoryPool<UIProductItem, UIProductItem.Pool>()
+			.WithInitialSize(5)
+			.FromComponentInNewPrefab(m_ProductItem)
+			.UnderTransformGroup("[UIProductItem] Pool");
 	}
 
 	void InstallCulture()
@@ -83,8 +88,6 @@ public class GameInstaller : MonoInstaller
 	{
 		Container.BindFactory<Level, Level, Level.Factory>().FromFactory<PrefabFactory<Level>>();
 		
-		Container.BindFactory<UIProductMenuItem, UIProductMenuItem, UIProductMenuItem.Factory>().FromFactory<PrefabFactory<UIProductMenuItem>>();
-		
 		Container.BindFactory<UIMenu, UIMenu, UIMenu.Factory>().FromFactory<PrefabFactory<UIMenu>>();
 	}
 
@@ -95,7 +98,19 @@ public class GameInstaller : MonoInstaller
 		Container.Bind(typeof(MessageProcessor), typeof(IInitializable)).To<iOSMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
-		Container.Bind<MusicProcessor>().To<MusicProcessor>().FromInstance(m_MusicProcessor).AsSingle();
+		Container.Bind<MusicProcessor>()
+			.To<MusicProcessor>()
+			.FromNewComponentOnNewGameObject()
+			.WithGameObjectName("MusicProcessor")
+			.UnderTransform(transform)
+			.AsSingle();
+		
+		Container.Bind<AmbientProcessor>()
+			.To<AmbientProcessor>()
+			.FromNewComponentOnNewGameObject()
+			.WithGameObjectName("AmbientProcessor")
+			.UnderTransform(transform)
+			.AsSingle();
 		
 		Container.BindInterfacesAndSelfTo<ApplicationProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LanguageProcessor>().FromNew().AsSingle();
@@ -146,7 +161,6 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<LevelUnlockSignal>();
 		Container.DeclareSignal<LevelScoreSignal>();
 		Container.DeclareSignal<LevelComboSignal>();
-		Container.DeclareSignal<LevelReviveSignal>();
 		
 		Container.DeclareSignal<HoldHitSignal>();
 		Container.DeclareSignal<HoldMissSignal>();
@@ -159,8 +173,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<DoubleSuccessSignal>();
 		Container.DeclareSignal<DoubleFailSignal>();
 		
-		Container.DeclareSignal<HealthDamageSignal>();
-		Container.DeclareSignal<HealthRestoreSignal>();
+		Container.DeclareSignal<HealthChangedSignal>();
 	}
 
 	void InstallAudioManager()
