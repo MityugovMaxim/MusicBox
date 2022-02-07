@@ -15,6 +15,7 @@ public class ProductDataUpdateSignal { }
 public class ProductSnapshot
 {
 	public string                ID       { get; }
+	public bool                  Active   { get; }
 	public ProductType           Type     { get; }
 	public bool                  Promo    { get; }
 	public bool                  NoAds    { get; }
@@ -25,6 +26,7 @@ public class ProductSnapshot
 	public ProductSnapshot(DataSnapshot _Data)
 	{
 		ID       = _Data.Key;
+		Active   = _Data.GetBool("active");
 		Type     = _Data.GetEnum<ProductType>("type");
 		Promo    = _Data.GetBool("promo");
 		Coins    = _Data.GetLong("coins");
@@ -40,8 +42,7 @@ public class ProductProcessor
 
 	readonly SignalBus m_SignalBus;
 
-	readonly List<string>                        m_ProductIDs       = new List<string>();
-	readonly Dictionary<string, ProductSnapshot> m_ProductSnapshots = new Dictionary<string, ProductSnapshot>();
+	readonly List<ProductSnapshot> m_ProductSnapshots = new List<ProductSnapshot>();
 
 	DatabaseReference      m_ProductsData;
 	HttpsCallableReference m_ReceiptValidation;
@@ -67,7 +68,10 @@ public class ProductProcessor
 
 	public List<string> GetProductIDs()
 	{
-		return m_ProductIDs.ToList();
+		return m_ProductSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
 	}
 
 	public ProductType GetType(string _ProductID)
@@ -94,6 +98,16 @@ public class ProductProcessor
 		}
 		
 		return productSnapshot.Coins;
+	}
+
+	public string GetCoinsProductID(long _Coins)
+	{
+		ProductSnapshot productSnapshot = m_ProductSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.OrderBy(_Snapshot => _Snapshot.Coins)
+			.Aggregate((_A, _B) => _A.Coins < _B.Coins && _A.Coins >= _Coins ? _A : _B);
+		
+		return productSnapshot?.ID;
 	}
 
 	public float GetDiscount(string _ProductID)
@@ -126,17 +140,14 @@ public class ProductProcessor
 
 	public bool HasLevel(string _LevelID)
 	{
-		foreach (string productID in m_ProductIDs)
-		{
-			ProductSnapshot productSnapshot = GetProductSnapshot(productID);
-			
-			if (productSnapshot == null || productSnapshot.LevelIDs == null)
-				continue;
-			
-			if (productSnapshot.LevelIDs.Contains(_LevelID))
-				return true;
-		}
-		return false;
+		if (m_ProductSnapshots.Count == 0)
+			return false;
+		
+		return m_ProductSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.LevelIDs != null)
+			.SelectMany(_Snapshot => _Snapshot.LevelIDs)
+			.Contains(_LevelID);
 	}
 
 	public bool IsPromo(string _ProductID)
@@ -181,10 +192,9 @@ public class ProductProcessor
 
 	async Task FetchProducts()
 	{
-		m_ProductIDs.Clear();
 		m_ProductSnapshots.Clear();
 		
-		DataSnapshot productSnapshots = await m_ProductsData.GetValueAsync(15000, 2);
+		DataSnapshot productSnapshots = await m_ProductsData.OrderByChild("order").GetValueAsync(15000, 2);
 		
 		if (productSnapshots == null)
 		{
@@ -194,32 +204,22 @@ public class ProductProcessor
 		
 		foreach (DataSnapshot productSnapshot in productSnapshots.Children)
 		{
-			bool active = productSnapshot.GetBool("active");
-			
-			if (!active)
-				continue;
-			
 			ProductSnapshot product = new ProductSnapshot(productSnapshot);
-			
-			m_ProductIDs.Add(product.ID);
-			m_ProductSnapshots[product.ID] = product;
+			m_ProductSnapshots.Add(product);
 		}
 	}
 
 	ProductSnapshot GetProductSnapshot(string _ProductID)
 	{
+		if (m_ProductSnapshots.Count == 0)
+			return null;
+		
 		if (string.IsNullOrEmpty(_ProductID))
 		{
 			Debug.LogError("[PurchaseProcessor] Get product snapshot failed. Product ID is null or empty.");
 			return null;
 		}
 		
-		if (!m_ProductSnapshots.ContainsKey(_ProductID))
-		{
-			Debug.LogErrorFormat("[PurchaseProcessor] Get product snapshot failed. Product snapshot not found for product with ID '{0}'.", _ProductID);
-			return null;
-		}
-		
-		return m_ProductSnapshots[_ProductID];
+		return m_ProductSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ProductID);
 	}
 }
