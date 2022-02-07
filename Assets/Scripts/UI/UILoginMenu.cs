@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
@@ -21,6 +22,7 @@ public class UILoginMenu : UIMenu
 	ProfileProcessor     m_ProfileProcessor;
 	MenuProcessor        m_MenuProcessor;
 	LanguageProcessor    m_LanguageProcessor;
+	AmbientProcessor     m_AmbientProcessor;
 
 	[Inject]
 	public void Construct(
@@ -37,7 +39,8 @@ public class UILoginMenu : UIMenu
 		MessageProcessor     _MessageProcessor,
 		ProfileProcessor     _ProfileProcessor,
 		LanguageProcessor    _LanguageProcessor,
-		MenuProcessor        _MenuProcessor
+		MenuProcessor        _MenuProcessor,
+		AmbientProcessor     _AmbientProcessor
 	)
 	{
 		m_SocialProcessor      = _SocialProcessor;
@@ -54,6 +57,7 @@ public class UILoginMenu : UIMenu
 		m_ProfileProcessor     = _ProfileProcessor;
 		m_LanguageProcessor    = _LanguageProcessor;
 		m_MenuProcessor        = _MenuProcessor;
+		m_AmbientProcessor     = _AmbientProcessor;
 	}
 
 	protected override void OnShowStarted()
@@ -66,11 +70,24 @@ public class UILoginMenu : UIMenu
 		m_Loader.Restore();
 	}
 
+	IEnumerator RecRoutine(int _CallCount)
+	{
+		Debug.LogError("---> CALL COUNT: " + _CallCount);
+		
+		yield return null;
+		
+		yield return RecRoutine(_CallCount++);
+	}
+
 	public async Task Login()
 	{
 		await m_SocialProcessor.Login();
 		
+		StartCoroutine(RecRoutine(1));
+		
 		await m_ApplicationProcessor.LoadApplication();
+		
+		await m_AmbientProcessor.LoadAmbient();
 		
 		await Task.WhenAll(
 			m_LanguageProcessor.LoadLocalization(),

@@ -7,42 +7,41 @@ using Zenject;
 [Menu(MenuType.ProductMenu)]
 public class UIProductMenu : UISlideMenu
 {
-	[SerializeField] UIProductMenuItem       m_Item;
-	[SerializeField] GameObject              m_ItemsGroup;
-	[SerializeField] RectTransform           m_Container;
-	[SerializeField] UIProductBackground     m_Background;
-	[SerializeField] UIProductThumbnail      m_Thumbnail;
-	[SerializeField] UIProductLabel          m_Label;
-	[SerializeField] UIProductPrice          m_Price;
-	[SerializeField] UIGroup                 m_PurchaseGroup;
-	[SerializeField] UIGroup                 m_LoaderGroup;
-	[SerializeField] UIGroup                 m_CompleteGroup;
-	[SerializeField] UILoader                m_Loader;
-	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
+	[SerializeField] UIUnitLabel         m_CoinsLabel;
+	[SerializeField] GameObject          m_ItemsGroup;
+	[SerializeField] RectTransform       m_Container;
+	[SerializeField] UIProductBackground m_Background;
+	[SerializeField] UIProductThumbnail  m_Thumbnail;
+	[SerializeField] UIProductLabel      m_Label;
+	[SerializeField] UIProductPrice      m_Price;
+	[SerializeField] UIGroup             m_PurchaseGroup;
+	[SerializeField] UIGroup             m_LoaderGroup;
+	[SerializeField] UIGroup             m_CompleteGroup;
+	[SerializeField] LevelPreview        m_PreviewSource;
 
-	SignalBus                 m_SignalBus;
-	ProductProcessor          m_ProductProcessor;
-	StoreProcessor            m_StoreProcessor;
-	ProfileProcessor          m_ProfileProcessor;
-	LevelProcessor            m_LevelProcessor;
-	MenuProcessor             m_MenuProcessor;
-	HapticProcessor           m_HapticProcessor;
-	UIProductMenuItem.Factory m_ItemFactory;
+	SignalBus          m_SignalBus;
+	ProductProcessor   m_ProductProcessor;
+	StoreProcessor     m_StoreProcessor;
+	ProfileProcessor   m_ProfileProcessor;
+	LevelProcessor     m_LevelProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	UIProductItem.Pool m_ItemPool;
 
 	string m_ProductID;
 
-	readonly List<UIProductMenuItem> m_Items = new List<UIProductMenuItem>();
+	readonly List<UIProductItem> m_Items = new List<UIProductItem>();
 
 	[Inject]
 	public void Construct(
-		SignalBus                 _SignalBus,
-		ProductProcessor          _ProductProcessor,
-		StoreProcessor            _StoreProcessor,
-		ProfileProcessor          _ProfileProcessor,
-		LevelProcessor            _LevelProcessor,
-		MenuProcessor             _MenuProcessor,
-		HapticProcessor           _HapticProcessor,
-		UIProductMenuItem.Factory _ItemFactory
+		SignalBus          _SignalBus,
+		ProductProcessor   _ProductProcessor,
+		StoreProcessor     _StoreProcessor,
+		ProfileProcessor   _ProfileProcessor,
+		LevelProcessor     _LevelProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		UIProductItem.Pool _ItemPool
 	)
 	{
 		m_SignalBus        = _SignalBus;
@@ -52,7 +51,7 @@ public class UIProductMenu : UISlideMenu
 		m_LevelProcessor   = _LevelProcessor;
 		m_MenuProcessor    = _MenuProcessor;
 		m_HapticProcessor  = _HapticProcessor;
-		m_ItemFactory      = _ItemFactory;
+		m_ItemPool         = _ItemPool;
 	}
 
 	public void Setup(string _ProductID)
@@ -89,7 +88,7 @@ public class UIProductMenu : UISlideMenu
 		
 		m_PreviewSource.Stop();
 		
-		foreach (UIProductMenuItem item in m_Items)
+		foreach (UIProductItem item in m_Items)
 			item.Stop();
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
@@ -143,7 +142,7 @@ public class UIProductMenu : UISlideMenu
 	{
 		m_PreviewSource.Stop();
 		
-		foreach (UIProductMenuItem item in m_Items)
+		foreach (UIProductItem item in m_Items)
 			item.Stop();
 		
 		Refresh();
@@ -156,7 +155,7 @@ public class UIProductMenu : UISlideMenu
 	{
 		m_PreviewSource.Stop();
 		
-		foreach (UIProductMenuItem item in m_Items)
+		foreach (UIProductItem item in m_Items)
 			item.Stop();
 		
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
@@ -165,61 +164,49 @@ public class UIProductMenu : UISlideMenu
 
 	void Refresh()
 	{
-		string[] levelIDs = m_ProductProcessor.GetLevelIDs(m_ProductID)
-			.Where(m_LevelProcessor.Contains)
-			.ToArray();
-		
-		if (levelIDs.Length == 0)
+		foreach (UIProductItem item in m_Items)
 		{
-			m_ItemsGroup.SetActive(false);
-			return;
-		}
-		
-		m_ItemsGroup.SetActive(true);
-		
-		foreach (UIProductMenuItem item in m_Items)
 			item.Stop();
-		
-		int delta = levelIDs.Length - m_Items.Count;
-		int count = Mathf.Abs(delta);
-		
-		if (delta > 0)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				UIProductMenuItem item = m_ItemFactory.Create(m_Item);
-				item.RectTransform.SetParent(m_Container, false);
-				m_Items.Add(item);
-			}
+			m_ItemPool.Despawn(item);
 		}
-		else if (delta < 0)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				int               index = m_Items.Count - 1;
-				UIProductMenuItem item  = m_Items[index];
-				Destroy(item.gameObject);
-				m_Items.RemoveAt(index);
-			}
-		}
+		m_Items.Clear();
 		
-		foreach (UIProductMenuItem item in m_Items)
-			item.gameObject.SetActive(false);
+		List<string> levelIDs = m_ProductProcessor.GetLevelIDs(m_ProductID)
+			.Where(m_LevelProcessor.HasLevelID)
+			.ToList();
 		
-		for (var i = 0; i < levelIDs.Length; i++)
+		m_ItemsGroup.SetActive(levelIDs.Count > 0);
+		
+		foreach (string levelID in levelIDs)
 		{
-			UIProductMenuItem item    = m_Items[i];
-			string            levelID = levelIDs[i];
+			UIProductItem item = m_ItemPool.Spawn();
 			
 			item.Setup(levelID, PlayPreview, StopPreview);
 			
-			item.gameObject.SetActive(true);
+			item.RectTransform.SetParent(m_Container, false);
+			
+			m_Items.Add(item);
 		}
+		
+		m_Background.Setup(m_ProductID, !Shown);
+		m_Thumbnail.Setup(m_ProductID);
+		m_Label.Setup(m_ProductID);
+		m_Price.Setup(m_ProductID);
+		
+		long coins = m_ProductProcessor.GetCoins(m_ProductID);
+		m_CoinsLabel.Value = coins;
+		m_CoinsLabel.gameObject.SetActive(coins != 0);
+		
+		m_PurchaseGroup.Show(true);
+		m_LoaderGroup.Hide(true);
+		m_CompleteGroup.Hide(true);
+		
+		m_PreviewSource.Stop();
 	}
 
 	void PlayPreview(string _LevelID)
 	{
-		foreach (UIProductMenuItem item in m_Items)
+		foreach (UIProductItem item in m_Items)
 		{
 			if (item.LevelID != _LevelID)
 				item.Stop();
@@ -237,18 +224,6 @@ public class UIProductMenu : UISlideMenu
 	{
 		m_ProductID = _ProductID;
 		
-		m_Background.Setup(m_ProductID, !Shown);
-		m_Thumbnail.Setup(m_ProductID);
-		m_Label.Setup(m_ProductID);
-		m_Price.Setup(m_ProductID);
-		
-		m_PurchaseGroup.Show(true);
-		m_LoaderGroup.Hide(true);
-		m_CompleteGroup.Hide(true);
-		
-		m_PreviewSource.Stop();
-		
-		foreach (UIProductMenuItem item in m_Items)
-			item.Stop();
+		Refresh();
 	}
 }

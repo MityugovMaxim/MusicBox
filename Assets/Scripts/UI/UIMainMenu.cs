@@ -77,6 +77,7 @@ public class UIMainMenu : UIMenu
 		}
 		m_Control.Select(m_PageType, true);
 		
+		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
@@ -87,6 +88,7 @@ public class UIMainMenu : UIMenu
 
 	protected override void OnHideStarted()
 	{
+		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);

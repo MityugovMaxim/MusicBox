@@ -10,18 +10,18 @@ using Zenject;
 [Menu(MenuType.LevelMenu)]
 public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 {
-	[SerializeField] UILevelBackground       m_Background;
-	[SerializeField] UILevelThumbnail        m_Thumbnail;
-	[SerializeField] UILevelDiscs            m_Discs;
-	[SerializeField] UILevelLabel            m_Label;
-	[SerializeField] UILevelModeButton       m_PlayButton;
-	[SerializeField] UIGroup                 m_PlayGroup;
-	[SerializeField] UIGroup                 m_UnlockGroup;
-	[SerializeField] UIGroup                 m_LoaderGroup;
-	[SerializeField] UIGroup                 m_CompleteGroup;
-	[SerializeField] TMP_Text                m_PriceLabel;
-	[SerializeField] UILoader                m_Loader;
-	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
+	[SerializeField] UILevelBackground m_Background;
+	[SerializeField] UILevelThumbnail  m_Thumbnail;
+	[SerializeField] UILevelDiscs      m_Discs;
+	[SerializeField] UILevelLabel      m_Label;
+	[SerializeField] UILevelModeButton m_PlayButton;
+	[SerializeField] UIGroup           m_PlayGroup;
+	[SerializeField] UIGroup           m_UnlockGroup;
+	[SerializeField] UIGroup           m_LoaderGroup;
+	[SerializeField] UIGroup           m_CompleteGroup;
+	[SerializeField] TMP_Text          m_PriceLabel;
+	[SerializeField] UILoader          m_Loader;
+	[SerializeField] LevelPreview      m_PreviewSource;
 
 	SignalBus        m_SignalBus;
 	ProfileProcessor m_ProfileProcessor;

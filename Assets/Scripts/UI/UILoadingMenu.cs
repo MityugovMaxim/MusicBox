@@ -7,22 +7,25 @@ public class UILoadingMenu : UIMenu
 {
 	[SerializeField] UILoader m_Loader;
 
-	LevelProcessor m_LevelProcessor;
-	MenuProcessor  m_MenuProcessor;
-	MusicProcessor m_MusicProcessor;
+	LevelProcessor   m_LevelProcessor;
+	MenuProcessor    m_MenuProcessor;
+	AmbientProcessor m_AmbientProcessor;
+	MusicProcessor   m_MusicProcessor;
 
 	string m_LevelID;
 
 	[Inject]
 	public void Construct(
-		LevelProcessor _LevelProcessor,
-		MenuProcessor  _MenuProcessor,
-		MusicProcessor _MusicProcessor
+		LevelProcessor   _LevelProcessor,
+		MenuProcessor    _MenuProcessor,
+		AmbientProcessor _AmbientProcessor,
+		MusicProcessor   _MusicProcessor
 	)
 	{
-		m_LevelProcessor = _LevelProcessor;
-		m_MenuProcessor  = _MenuProcessor;
-		m_MusicProcessor = _MusicProcessor;
+		m_LevelProcessor   = _LevelProcessor;
+		m_MenuProcessor    = _MenuProcessor;
+		m_AmbientProcessor = _AmbientProcessor;
+		m_MusicProcessor   = _MusicProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -60,10 +63,10 @@ public class UILoadingMenu : UIMenu
 
 	protected override void OnHideFinished()
 	{
-		m_MusicProcessor.StopMusic();
-		m_MusicProcessor.StopAmbient();
+		m_AmbientProcessor.Pause();
+		m_MusicProcessor.StopPreview();
 		
-		// TODO: Introduce level controls then play level
+		// TODO: Introduce song ui elements before playing sequencer
 		
 		m_LevelProcessor.Play();
 	}

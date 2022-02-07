@@ -20,6 +20,7 @@ public class UIMainProfilePage : UIMainMenuPage
 	SocialProcessor   m_SocialProcessor;
 	ProfileProcessor  m_ProfileProcessor;
 	StoreProcessor    m_StoreProcessor;
+	ProductProcessor  m_ProductProcessor;
 	MenuProcessor     m_MenuProcessor;
 
 	[Inject]
@@ -29,6 +30,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		SocialProcessor   _SocialProcessor,
 		ProfileProcessor  _ProfileProcessor,
 		StoreProcessor    _StoreProcessor,
+		ProductProcessor  _ProductProcessor,
 		MenuProcessor     _MenuProcessor
 	)
 	{
@@ -37,6 +39,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_SocialProcessor   = _SocialProcessor;
 		m_ProfileProcessor  = _ProfileProcessor;
 		m_StoreProcessor    = _StoreProcessor;
+		m_ProductProcessor  = _ProductProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
 
@@ -109,6 +112,23 @@ public class UIMainProfilePage : UIMainMenuPage
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
+	public void OpenCoins()
+	{
+		string productID = m_ProductProcessor.GetCoinsProductID(m_ProfileProcessor.Coins);
+		
+		if (string.IsNullOrEmpty(productID))
+			return;
+		
+		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
+		
+		if (productMenu == null)
+			return;
+		
+		productMenu.Setup(productID);
+		
+		m_MenuProcessor.Show(MenuType.ProductMenu);
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();
@@ -168,7 +188,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_Avatar.Load(m_SocialProcessor.Photo);
 		
 		m_Level.Level = m_ProfileProcessor.Level;
-		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite name=coins_icon>";
+		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite tint=0 name=coins_icon>";
 		
 		m_Username.text = m_SocialProcessor.GetUsername();
 	}

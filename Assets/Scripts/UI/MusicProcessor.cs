@@ -1,235 +1,101 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public class MusicProcessor : MonoBehaviour
 {
-	[SerializeField] AudioSource m_MusicSource;
-	[SerializeField] AudioSource m_AmbientSource;
-	[SerializeField] AudioClip   m_Ambient;
+	const float PLAY_FADE_DURATION = 0.5f;
+	const float STOP_FADE_DURATION = 0.25f;
 
-	readonly Dictionary<AudioSource, IEnumerator> m_PlayRoutines  = new Dictionary<AudioSource, IEnumerator>();
-	readonly Dictionary<AudioSource, IEnumerator> m_StopRoutines  = new Dictionary<AudioSource, IEnumerator>();
-	readonly Dictionary<AudioSource, IEnumerator> m_PauseRoutines = new Dictionary<AudioSource, IEnumerator>();
+	AudioSource m_AudioSource;
 
-	void Awake()
+	StorageProcessor m_StorageProcessor;
+
+	CancellationTokenSource m_TokenSource;
+
+	[Inject]
+	public void Construct(StorageProcessor _StorageProcessor)
 	{
-		PlayAmbient();
+		m_StorageProcessor = _StorageProcessor;
+		
+		m_AudioSource             = gameObject.AddComponent<AudioSource>();
+		m_AudioSource.loop        = true;
+		m_AudioSource.playOnAwake = false;
+		m_AudioSource.volume      = 0;
 	}
 
-	public Task StopAmbient(CancellationToken _Token = default)
+	public async void PlayPreview(string _LevelID)
 	{
-		return Stop(m_AmbientSource, _Token);
+		await PlayPreviewAsync(_LevelID);
 	}
 
-	public Task PlayAmbient(CancellationToken _Token = default)
+	public async void StopPreview()
 	{
-		return Play(m_AmbientSource, m_Ambient, 0.5f, _Token);
+		await StopPreviewAsync();
 	}
 
-	public Task PauseAmbient(CancellationToken _Token = default)
+	public Task PlayPreviewAsync(string _LevelID)
 	{
-		return Pause(m_AmbientSource, _Token);
+		string path = $"Previews/{_LevelID}.ogg";
+		
+		return PlayMusicAsync(path);
 	}
 
-	public Task StopMusic(CancellationToken _Token = default)
+	public Task StopPreviewAsync()
 	{
-		return Stop(m_MusicSource, _Token);
+		return StopMusicAsync();
 	}
 
-	public Task PlayMusic(AudioClip _AudioClip, CancellationToken _Token = default)
+	public async Task PlayMusicAsync(string _Path)
 	{
-		return Play(m_MusicSource, _AudioClip, 1, _Token);
+		if (string.IsNullOrEmpty(_Path))
+			return;
+		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		AudioClip audioClip = await m_StorageProcessor.LoadAudioClip(_Path, token);
+		
+		if (audioClip == null || token.IsCancellationRequested)
+			return;
+		
+		m_AudioSource.Stop();
+		m_AudioSource.clip = audioClip;
+		m_AudioSource.Play();
+		
+		await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+		
+		await m_AudioSource.SetVolumeAsync(1, PLAY_FADE_DURATION, token);
+		
+		if (token.IsCancellationRequested)
+			return;
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
-	public Task PauseMusic(CancellationToken _Token = default)
+	public async Task StopMusicAsync()
 	{
-		return Pause(m_MusicSource, _Token);
-	}
-
-	Task Stop(AudioSource _AudioSource, CancellationToken _Token = default)
-	{
-		StopAudioRoutines(_AudioSource);
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
 		
-		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+		m_TokenSource = new CancellationTokenSource();
 		
-		if (_Token.IsCancellationRequested)
-		{
-			taskSource.TrySetCanceled();
-			return taskSource.Task;
-		}
+		CancellationToken token = m_TokenSource.Token;
 		
-		_Token.Register(
-			() =>
-			{
-				StopAudioRoutines(_AudioSource);
-				
-				taskSource.TrySetCanceled();
-			}
-		);
+		await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
 		
-		IEnumerator routine = StopRoutine(_AudioSource, 0.4f, taskSource);
+		if (token.IsCancellationRequested)
+			return;
 		
-		m_StopRoutines[_AudioSource] = routine;
+		m_AudioSource.Stop();
 		
-		StartCoroutine(routine);
-		
-		return taskSource.Task;
-	}
-
-	Task Play(AudioSource _AudioSource, AudioClip _AudioClip, float _Volume, CancellationToken _Token = default)
-	{
-		StopAudioRoutines(_AudioSource);
-		
-		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-		
-		if (_Token.IsCancellationRequested)
-		{
-			taskSource.TrySetCanceled();
-			return taskSource.Task;
-		}
-		
-		_Token.Register(
-			() =>
-			{
-				StopAudioRoutines(_AudioSource);
-				
-				taskSource.TrySetCanceled();
-			}
-		);
-		
-		IEnumerator routine = PlayRoutine(_AudioSource, 0.4f, _AudioClip, _Volume, taskSource);
-		
-		m_PlayRoutines[_AudioSource] = routine;
-		
-		StartCoroutine(routine);
-		
-		return taskSource.Task;
-	}
-
-	Task Pause(AudioSource _AudioSource, CancellationToken _Token = default)
-	{
-		StopAudioRoutines(_AudioSource);
-		
-		TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-		
-		if (_Token.IsCancellationRequested)
-		{
-			taskSource.TrySetCanceled();
-			return taskSource.Task;
-		}
-		
-		_Token.Register(
-			() =>
-			{
-				StopAudioRoutines(_AudioSource);
-				
-				taskSource.TrySetCanceled();
-			}
-		);
-		
-		IEnumerator routine = PauseRoutine(_AudioSource, 0.4f, taskSource);
-		
-		m_PauseRoutines[_AudioSource] = routine;
-		
-		StartCoroutine(routine);
-		
-		return taskSource.Task;
-	}
-
-	void StopAudioRoutines(AudioSource _AudioSource)
-	{
-		if (m_StopRoutines.TryGetValue(_AudioSource, out IEnumerator stopRoutine))
-			StopCoroutine(stopRoutine);
-		m_StopRoutines.Remove(_AudioSource);
-		
-		if (m_PlayRoutines.TryGetValue(_AudioSource, out IEnumerator playRoutine))
-			StopCoroutine(playRoutine);
-		m_PlayRoutines.Remove(_AudioSource);
-		
-		if (m_PauseRoutines.TryGetValue(_AudioSource, out IEnumerator pauseRoutine))
-			StopCoroutine(pauseRoutine);
-		m_PauseRoutines.Remove(_AudioSource);
-	}
-
-	static IEnumerator StopRoutine(AudioSource _AudioSource, float _Duration, TaskCompletionSource<bool> _TaskSource)
-	{
-		if (_AudioSource == null)
-		{
-			_TaskSource?.SetException(new NullReferenceException("[MusicProcessor] AudioSource is null."));
-			yield break;
-		}
-		
-		yield return VolumeRoutine(_AudioSource, 0, _Duration);
-		
-		_AudioSource.Stop();
-		_AudioSource.clip   = null;
-		
-		if (!_TaskSource.Task.IsCompleted)
-			_TaskSource.TrySetResult(true);
-	}
-
-	static IEnumerator PlayRoutine(AudioSource _AudioSource, float _Duration, AudioClip _AudioClip, float _Volume, TaskCompletionSource<bool> _TaskSource)
-	{
-		if (_AudioSource == null)
-		{
-			_TaskSource?.SetException(new NullReferenceException("[MusicProcessor] AudioSource is null."));
-			yield break;
-		}
-		
-		if (_AudioSource.clip != _AudioClip)
-			_AudioSource.clip = _AudioClip;
-		
-		if (!_AudioSource.isPlaying)
-			_AudioSource.Play();
-		
-		yield return VolumeRoutine(_AudioSource, _Volume, _Duration);
-		
-		if (!_TaskSource.Task.IsCompleted)
-			_TaskSource.TrySetResult(true);
-	}
-
-	static IEnumerator PauseRoutine(AudioSource _AudioSource, float _Duration, TaskCompletionSource<bool> _TaskSource)
-	{
-		if (_AudioSource == null)
-		{
-			_TaskSource?.SetException(new NullReferenceException("[MusicProcessor] AudioSource is null."));
-			yield break;
-		}
-		
-		yield return VolumeRoutine(_AudioSource, 0, _Duration);
-		
-		_AudioSource.Pause();
-		
-		if (!_TaskSource.Task.IsCompleted)
-			_TaskSource.SetResult(true);
-	}
-
-	static IEnumerator VolumeRoutine(AudioSource _AudioSource, float _Volume, float _Duration)
-	{
-		if (_AudioSource == null)
-			yield break;
-		
-		float source = _AudioSource.volume;
-		float target = Mathf.Clamp01(_Volume);
-		
-		if (!Mathf.Approximately(source, target))
-		{
-			float time     = 0;
-			float duration = _Duration * Mathf.Abs(target - source);
-			while (time < duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				_AudioSource.volume = Mathf.Lerp(source, target, time / duration);
-			}
-		}
-		
-		_AudioSource.volume = target;
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 }

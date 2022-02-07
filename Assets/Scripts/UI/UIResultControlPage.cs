@@ -13,18 +13,20 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public override ResultMenuPageType Type => ResultMenuPageType.Control;
 
-	[SerializeField] UILevelThumbnail        m_Thumbnail;
-	[SerializeField] UILevelDiscs            m_Discs;
-	[SerializeField] UILevelLabel            m_Label;
-	[SerializeField] UILevelLikeButton       m_LikeButton;
-	[SerializeField] UILevelModeButton       m_RestartButton;
-	[SerializeField] LevelPreviewAudioSource m_PreviewSource;
+	[SerializeField] UILevelThumbnail  m_Thumbnail;
+	[SerializeField] UILevelDiscs      m_Discs;
+	[SerializeField] UILevelLabel      m_Label;
+	[SerializeField] UILevelLikeButton m_LikeButton;
+	[SerializeField] UILevelModeButton m_RestartButton;
+	[SerializeField] LevelPreview      m_PreviewSource;
 
-	LevelManager    m_LevelManager;
-	LevelProcessor  m_LevelProcessor;
-	AdsProcessor    m_AdsProcessor;
-	MenuProcessor   m_MenuProcessor;
-	HapticProcessor m_HapticProcessor;
+	LevelManager     m_LevelManager;
+	LevelProcessor   m_LevelProcessor;
+	AdsProcessor     m_AdsProcessor;
+	MenuProcessor    m_MenuProcessor;
+	AmbientProcessor m_AmbientProcessor;
+	MusicProcessor   m_MusicProcessor;
+	HapticProcessor  m_HapticProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
@@ -40,14 +42,18 @@ public class UIResultControlPage : UIResultMenuPage
 		LevelProcessor   _LevelProcessor,
 		AdsProcessor     _AdsProcessor,
 		MenuProcessor    _MenuProcessor,
+		AmbientProcessor _AmbientProcessor,
+		MusicProcessor   _MusicProcessor,
 		HapticProcessor  _HapticProcessor
 	)
 	{
-		m_LevelManager    = _LevelManager;
-		m_LevelProcessor  = _LevelProcessor;
-		m_AdsProcessor    = _AdsProcessor;
-		m_MenuProcessor   = _MenuProcessor;
-		m_HapticProcessor = _HapticProcessor;
+		m_LevelManager     = _LevelManager;
+		m_LevelProcessor   = _LevelProcessor;
+		m_AdsProcessor     = _AdsProcessor;
+		m_MenuProcessor    = _MenuProcessor;
+		m_AmbientProcessor = _AmbientProcessor;
+		m_MusicProcessor   = _MusicProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 	}
 
 	public override void Setup(string _LevelID)
@@ -135,7 +141,8 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		m_PreviewSource.Stop();
+		m_AmbientProcessor.Pause();
+		m_MusicProcessor.StopPreview();
 		
 		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
 		

@@ -15,17 +15,26 @@ public class UIMainMenuControl : UIEntity
 	[SerializeField] UIBadge            m_NewsBadge;
 	[SerializeField] UIBadge            m_StoreBadge;
 
-	MainMenuPageType m_PageType;
+	readonly HashSet<string> m_NewsIDs    = new HashSet<string>();
+	readonly HashSet<string> m_OfferIDs   = new HashSet<string>();
+	readonly HashSet<string> m_ProductIDs = new HashSet<string>();
+
 	SignalBus        m_SignalBus;
 	SocialProcessor  m_SocialProcessor;
 	ProfileProcessor m_ProfileProcessor;
 	NewsProcessor    m_NewsProcessor;
+	HapticProcessor  m_HapticProcessor;
+
+	MainMenuPageType m_PageType;
 
 	IEnumerator m_MoveRoutine;
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
+		
+		if (m_SignalBus == null)
+			return;
 		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Unsubscribe<OfferDataUpdateSignal>(ProcessOffersBadge);
@@ -38,13 +47,15 @@ public class UIMainMenuControl : UIEntity
 		SignalBus        _SignalBus,
 		SocialProcessor  _SocialProcessor,
 		ProfileProcessor _ProfileProcessor,
-		NewsProcessor    _NewsProcessor
+		NewsProcessor    _NewsProcessor,
+		HapticProcessor  _HapticProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_SocialProcessor  = _SocialProcessor;
 		m_ProfileProcessor = _ProfileProcessor;
 		m_NewsProcessor    = _NewsProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Subscribe<OfferDataUpdateSignal>(ProcessOffersBadge);
@@ -54,6 +65,8 @@ public class UIMainMenuControl : UIEntity
 
 	public void Select(MainMenuPageType _PageType)
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		Select(_PageType, false);
 	}
 
@@ -115,7 +128,7 @@ public class UIMainMenuControl : UIEntity
 		
 		List<string> offerIDs = m_ProfileProcessor.GetVisibleOfferIDs();
 		
-		m_OffersBadge.Value = GetUnreadCount(OFFERS_KEY, offerIDs);
+		m_OffersBadge.Value = GetUnreadCount(OFFERS_KEY, offerIDs, m_OfferIDs);
 	}
 
 	void ProcessNewsBadge()
@@ -126,7 +139,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		m_NewsBadge.Value = GetUnreadCount(NEWS_KEY, m_NewsProcessor.GetNewsIDs());
+		m_NewsBadge.Value = GetUnreadCount(NEWS_KEY, m_NewsProcessor.GetNewsIDs(), m_NewsIDs);
 	}
 
 	void ProcessStoreBadge()
@@ -139,46 +152,49 @@ public class UIMainMenuControl : UIEntity
 		
 		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
 		
-		m_StoreBadge.Value = GetUnreadCount(STORE_KEY, productIDs);
+		m_StoreBadge.Value = GetUnreadCount(STORE_KEY, productIDs, m_ProductIDs);
 	}
 
 	void ReadOffers()
 	{
-		Read(OFFERS_KEY, m_ProfileProcessor.GetVisibleOfferIDs());
+		Read(OFFERS_KEY, m_ProfileProcessor.GetVisibleOfferIDs(), m_OfferIDs);
 		
 		m_OffersBadge.Value = 0;
 	}
 
 	void ReadNews()
 	{
-		Read(NEWS_KEY, m_NewsProcessor.GetNewsIDs());
+		Read(NEWS_KEY, m_NewsProcessor.GetNewsIDs(), m_NewsIDs);
 		
 		m_NewsBadge.Value = 0;
 	}
 
 	void ReadStore()
 	{
-		Read(STORE_KEY, m_ProfileProcessor.GetVisibleProductIDs());
+		Read(STORE_KEY, m_ProfileProcessor.GetVisibleProductIDs(), m_ProductIDs);
 		
 		m_StoreBadge.Value = 0;
 	}
 
-	int GetUnreadCount(string _Key, IEnumerable<string> _IDs)
+	int GetUnreadCount(string _Key, IEnumerable<string> _IDs, HashSet<string> _CachedIDs)
 	{
 		string userID = m_SocialProcessor.UserID;
 		int count = 0;
 		foreach (string id in _IDs)
 		{
-			if (!PlayerPrefs.HasKey($"{_Key}_{userID}_{id}"))
+			if (!PlayerPrefs.HasKey($"{_Key}_{userID}_{id}") && !_CachedIDs.Contains(id))
 				count++;
 		}
 		return count;
 	}
 
-	void Read(string _Key, IEnumerable<string> _IDs)
+	void Read(string _Key, IEnumerable<string> _IDs, HashSet<string> _CachedIDs)
 	{
 		string userID = m_SocialProcessor.UserID;
 		foreach (string id in _IDs)
+		{
 			PlayerPrefs.SetInt($"{_Key}_{userID}_{id}", 1);
+			_CachedIDs.Add(id);
+		}
 	}
 }

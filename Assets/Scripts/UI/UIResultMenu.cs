@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public enum ResultMenuPageType
 {
@@ -15,7 +16,20 @@ public class UIResultMenu : UIMenu
 	[SerializeField] UILevelBackground  m_Background;
 	[SerializeField] UIResultMenuPage[] m_Pages;
 
+	AmbientProcessor m_AmbientProcessor;
+	MusicProcessor   m_MusicProcessor;
+
 	string m_LevelID;
+
+	[Inject]
+	public void Construct(
+		AmbientProcessor _AmbientProcessor,
+		MusicProcessor   _MusicProcessor
+	)
+	{
+		m_AmbientProcessor = _AmbientProcessor;
+		m_MusicProcessor   = _MusicProcessor;
+	}
 
 	public void Setup(string _LevelID)
 	{
@@ -52,6 +66,9 @@ public class UIResultMenu : UIMenu
 	protected override void OnShowStarted()
 	{
 		Select(ResultMenuPageType.Reward, true);
+		
+		m_AmbientProcessor.Resume();
+		m_MusicProcessor.StopPreview();
 	}
 
 	protected override void OnShowFinished()

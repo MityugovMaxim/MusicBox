@@ -4,16 +4,16 @@ using UnityEngine.UI;
 using Zenject;
 using Zenject.Internal;
 
-public class UIProductMenuItem : UIEntity
+public class UIProductItem : UIEntity
 {
 	public string LevelID { get; private set; }
 
-	[UnityEngine.Scripting.Preserve]
-	public class Factory : PlaceholderFactory<UIProductMenuItem, UIProductMenuItem> { }
+	[Preserve]
+	public class Pool : MonoMemoryPool<UIProductItem> { }
 
 	[SerializeField] UILevelThumbnail m_Thumbnail;
-	[SerializeField] Button                  m_PlayButton;
-	[SerializeField] Button                  m_PauseButton;
+	[SerializeField] Button           m_PlayButton;
+	[SerializeField] Button           m_PauseButton;
 
 	Action<string> m_Play;
 	Action<string> m_Stop;

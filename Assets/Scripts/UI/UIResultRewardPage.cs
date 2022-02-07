@@ -47,7 +47,8 @@ public class UIResultRewardPage : UIResultMenuPage
 	ScoreRank   m_TargetRank;
 	int         m_SourceAccuracy;
 	int         m_TargetAccuracy;
-	long        m_Score;
+	long        m_SourceScore;
+	long        m_TargetScore;
 	long        m_Coins;
 	IEnumerator m_ScoreRoutine;
 	IEnumerator m_CoinsRoutine;
@@ -77,9 +78,10 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_LevelID        = _LevelID;
 		m_SourceRank     = m_ScoreProcessor.GetRank(m_LevelID);
 		m_SourceAccuracy = m_ScoreProcessor.GetAccuracy(m_LevelID);
+		m_SourceScore    = m_ScoreProcessor.GetScore(m_LevelID);
 		m_TargetRank     = m_ScoreProcessor.Rank;
 		m_TargetAccuracy = m_ScoreProcessor.Accuracy;
-		m_Score          = m_ScoreProcessor.Score;
+		m_TargetScore    = m_ScoreProcessor.Score;
 		m_Coins          = m_LevelProcessor.GetPayout(m_LevelID, m_TargetRank);
 		
 		m_ProgressData.Clear();
@@ -113,14 +115,17 @@ public class UIResultRewardPage : UIResultMenuPage
 			sourceDiscProgress.Show(true);
 		}
 		
-		ProcessTitle();
+		if (m_SourceRank >= ScoreRank.Platinum)
+			m_Discs.Show(true);
+		else
+			m_Discs.Hide(true);
 		
-		foreach (UIDiscProgress discProgress in m_DiscsProgress)
-			discProgress.Hide(true);
+		m_Discs.Rank = m_TargetRank > m_SourceRank ? m_TargetRank : m_SourceRank;
+		
+		ProcessTitle();
 		
 		m_ScoreLabel.Value = 0;
 		m_CoinsLabel.Value = 0;
-		m_Discs.Hide(true);
 		m_ContinueGroup.Hide(true);
 		m_LoaderGroup.Hide(true);
 	}
@@ -205,18 +210,14 @@ public class UIResultRewardPage : UIResultMenuPage
 			if (m_TargetRank <= progressData.Rank)
 				break;
 			
-			discProgress.Collect();
+			await Task.WhenAny(
+				discProgress.CollectAsync().ContinueWith(_Task => discProgress.Hide(true)),
+				Task.Delay(250)
+			);
 		}
 		
-		if (m_TargetRank > ScoreRank.None)
-		{
-			foreach (UIDiscProgress discProgress in m_DiscsProgress)
-				discProgress.Hide();
-			
-			m_Discs.Rank = m_TargetRank;
-			
+		if (m_SourceRank > ScoreRank.None || m_TargetRank > ScoreRank.None)
 			await m_Discs.ShowAsync();
-		}
 	}
 
 	Task PlayScore()
@@ -232,13 +233,13 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		if (gameObject.activeInHierarchy)
 		{
-			m_ScoreRoutine = UnitRoutine(m_ScoreLabel, m_Score, InvokeScoreFinished);
+			m_ScoreRoutine = UnitRoutine(m_ScoreLabel, m_TargetScore, InvokeScoreFinished);
 			
 			StartCoroutine(m_ScoreRoutine);
 		}
 		else
 		{
-			m_ScoreLabel.Value = m_Score;
+			m_ScoreLabel.Value = m_TargetScore;
 			
 			InvokeScoreFinished();
 		}
@@ -275,7 +276,7 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	void ProcessTitle()
 	{
-		m_Title.Text = m_TargetAccuracy > m_SourceAccuracy
+		m_Title.Text = m_SourceScore > m_TargetScore
 			? m_LanguageProcessor.Get("RESULT_NEW_RECORD")
 			: m_LanguageProcessor.Get("RESULT_TITLE");
 	}
@@ -310,7 +311,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		if (_Value > 0 && m_Duration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(this, Haptic.Type.Selection, 30, m_Duration);
+			m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
 			
 			float time = 0;
 			while (time < m_Duration)

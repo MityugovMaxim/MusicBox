@@ -17,6 +17,7 @@ public class UIReviveMenu : UIMenu
 	AdsProcessor     m_AdsProcessor;
 	ProfileProcessor m_ProfileProcessor;
 	LevelProcessor   m_LevelProcessor;
+	HealthProcessor  m_HealthProcessor;
 	MenuProcessor    m_MenuProcessor;
 	HapticProcessor  m_HapticProcessor;
 
@@ -30,6 +31,7 @@ public class UIReviveMenu : UIMenu
 		AdsProcessor     _AdsProcessor,
 		ProfileProcessor _ProfileProcessor,
 		LevelProcessor   _LevelProcessor,
+		HealthProcessor  _HealthProcessor,
 		MenuProcessor    _MenuProcessor,
 		HapticProcessor  _HapticProcessor
 	)
@@ -37,6 +39,7 @@ public class UIReviveMenu : UIMenu
 		m_AdsProcessor     = _AdsProcessor;
 		m_ProfileProcessor = _ProfileProcessor;
 		m_LevelProcessor   = _LevelProcessor;
+		m_HealthProcessor  = _HealthProcessor;
 		m_MenuProcessor    = _MenuProcessor;
 		m_HapticProcessor  = _HapticProcessor;
 	}
@@ -51,38 +54,54 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveCoins()
 	{
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
 		bool success = await ReviveLevel(m_LevelID, m_ReviveCount);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
-		if (!success)
-			return;
+		if (success)
+		{
+			m_ReviveCount++;
+			
+			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
+			
+			await Task.Delay(1000);
+			
+			m_HealthProcessor.Restore(2);
+			
+			m_LevelProcessor.Play();
+		}
 		
-		m_ReviveCount++;
-		
-		await m_MenuProcessor.Hide(MenuType.ReviveMenu);
-		
-		m_LevelProcessor.Revive();
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	public async void ReviveAds()
 	{
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
 		bool success = await m_AdsProcessor.Rewarded(true);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
-		if (!success)
-			return;
+		if (success)
+		{
+			m_ReviveCount++;
+			
+			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
+			
+			await Task.Delay(1000);
+			
+			m_HealthProcessor.Restore(2);
+			
+			m_LevelProcessor.Play();
+		}
 		
-		m_ReviveCount++;
-		
-		await m_MenuProcessor.Hide(MenuType.ReviveMenu);
-		
-		m_LevelProcessor.Revive();
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	public async void Restart()
@@ -166,7 +185,7 @@ public class UIReviveMenu : UIMenu
 		if (!await m_ProfileProcessor.CheckCoins(coins))
 			return false;
 		
-		HttpsCallableReference revive = FirebaseFunctions.DefaultInstance.GetHttpsCallable("reviveLevel");
+		HttpsCallableReference revive = FirebaseFunctions.DefaultInstance.GetHttpsCallable("ReviveLevel");
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		data["level_id"]     = _LevelID;

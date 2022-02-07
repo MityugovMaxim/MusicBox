@@ -21,7 +21,6 @@ public class UIProfile : UIEntity
 
 	[Inject]
 	public void Construct(
-		SignalBus         _SignalBus,
 		ProfileProcessor  _ProfileProcessor,
 		ProgressProcessor _ProgressProcessor,
 		SocialProcessor   _SocialProcessor,
@@ -62,7 +61,9 @@ public class UIProfile : UIEntity
 
 	void ProcessDiscs()
 	{
-		int level        = m_ProfileProcessor.Level;
+		int minLevel     = m_ProgressProcessor.GetMinLevel();
+		int maxLevel     = m_ProgressProcessor.GetMaxLevel();
+		int level        = Mathf.Clamp(m_ProfileProcessor.Level, minLevel, maxLevel);
 		int currentDiscs = m_ProfileProcessor.Discs;
 		int targetDiscs  = m_ProgressProcessor.GetMaxLimit(level);
 		

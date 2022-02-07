@@ -83,11 +83,13 @@ public class UIDiscProgress : UIGroup
 		return completionSource.Task;
 	}
 
-	public void Collect()
+	public Task CollectAsync()
 	{
 		InvokeCollectFinished();
 		
-		m_CollectFinished = () => Hide();
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_CollectFinished = () => completionSource.TrySetResult(true);
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
@@ -95,6 +97,8 @@ public class UIDiscProgress : UIGroup
 			m_Animator.SetTrigger(m_CollectParameterID);
 		else
 			InvokeCollectFinished();
+		
+		return completionSource.Task;
 	}
 
 	protected override void OnShowStarted()
@@ -111,7 +115,7 @@ public class UIDiscProgress : UIGroup
 		
 		if (!Mathf.Approximately(m_SourceProgress, m_TargetProgress) && m_ProgressDuration > float.Epsilon)
 		{
-			m_HapticProcessor.Play(this, Haptic.Type.Selection, 30, m_ProgressDuration);
+			m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_ProgressDuration);
 			
 			float time = 0;
 			while (time < m_ProgressDuration)

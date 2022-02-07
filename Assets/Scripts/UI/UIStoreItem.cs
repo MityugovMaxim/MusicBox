@@ -10,6 +10,7 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 
 	[SerializeField] UIProductThumbnail m_Thumbnail;
 	[SerializeField] UIProductDiscount  m_Discount;
+	[SerializeField] UIProductPrice     m_Price;
 
 	MenuProcessor m_MenuProcessor;
 
@@ -25,8 +26,9 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 	{
 		m_ProductID = _ProductID;
 		
-		m_Thumbnail.Setup(_ProductID);
-		m_Discount.Setup(_ProductID);
+		m_Thumbnail.Setup(m_ProductID);
+		m_Discount.Setup(m_ProductID);
+		m_Price.Setup(m_ProductID);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
