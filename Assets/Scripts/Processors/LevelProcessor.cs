@@ -42,7 +42,7 @@ public class LevelSnapshot
 		Length         = _Data.GetFloat("length");
 		BPM            = _Data.GetFloat("bpm");
 		Speed          = _Data.GetFloat("speed");
-		Invincibility  = _Data.GetFloat("invincibility", 0.5f);
+		Invincibility  = _Data.GetFloat("invincibility", 0.75f);
 		DefaultPayout  = _Data.GetLong("default_payout");
 		BronzePayout   = _Data.GetLong("bronze_payout");
 		SilverPayout   = _Data.GetLong("silver_payout");
@@ -57,6 +57,8 @@ public class LevelSnapshot
 [Preserve]
 public class LevelProcessor
 {
+	public bool Playing => m_Level != null && m_Level.Playing;
+
 	bool Loaded { get; set; }
 
 	Level  m_Level;
@@ -105,9 +107,9 @@ public class LevelProcessor
 		return m_LevelIDs.ToList();
 	}
 
-	public bool Contains(string _LevelID)
+	public bool HasLevelID(string _LevelID)
 	{
-		return m_LevelSnapshots.ContainsKey(_LevelID);
+		return m_LevelIDs.Contains(_LevelID);
 	}
 
 	public string GetArtist(string _LevelID)
@@ -330,19 +332,6 @@ public class LevelProcessor
 		m_SignalBus.Fire(new LevelRestartSignal(m_LevelID));
 	}
 
-	public void Revive()
-	{
-		if (m_Level == null)
-		{
-			Debug.LogError("[LevelProcessor] Revive level failed. Level is null.");
-			return;
-		}
-		
-		m_SignalBus.Fire(new LevelReviveSignal(m_LevelID));
-		
-		m_Level.Play();
-	}
-
 	public void AddSampleReceiver(ISampleReceiver _SampleReceiver)
 	{
 		m_SampleReceivers.Add(_SampleReceiver);
@@ -372,7 +361,7 @@ public class LevelProcessor
 		m_LevelIDs.Clear();
 		m_LevelSnapshots.Clear();
 		
-		DataSnapshot levelSnapshots = await m_LevelsData.GetValueAsync(15000, 2);
+		DataSnapshot levelSnapshots = await m_LevelsData.OrderByChild("order").GetValueAsync(15000, 2);
 		
 		if (levelSnapshots == null)
 		{
