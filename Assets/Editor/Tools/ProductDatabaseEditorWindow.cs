@@ -141,13 +141,14 @@ public class ProductDatabaseEntry : DatabaseEntry
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		
-		data["active"]      = m_Active;
-		data["type"]        = (int)m_Type;
-		data["promo"]       = m_Promo;
-		data["no_ads"]      = m_NoAds;
-		data["coins"]       = m_Coins;
-		data["discount"]    = m_Discount;
-		data["levels"]      = m_LevelIDs.SkipWhile(string.IsNullOrEmpty).ToDictionary(_LevelID => _LevelID, _LevelID => true);
+		data["active"]   = m_Active;
+		data["type"]     = (int)m_Type;
+		data["promo"]    = m_Promo;
+		data["no_ads"]   = m_NoAds;
+		data["coins"]    = m_Coins;
+		data["discount"] = m_Discount;
+		data["levels"]   = m_LevelIDs.SkipWhile(string.IsNullOrEmpty).ToDictionary(_LevelID => _LevelID, _LevelID => true);
+		data["order"]    = Order;
 		
 		return data;
 	}

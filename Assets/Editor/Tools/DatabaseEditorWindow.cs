@@ -9,7 +9,9 @@ using UnityEngine;
 
 public abstract class DatabaseEntry
 {
-	public abstract string Key { get; }
+	public abstract string Key   { get; }
+
+	public int Order { get; set; }
 
 	public abstract void Draw();
 
@@ -94,16 +96,20 @@ public abstract class DatabaseEditorWindow<T> : EditorWindow where T : DatabaseE
 		for (int i = 0; i < Entries.Count; i++)
 		{
 			EditorGUILayout.BeginHorizontal();
-			Entries[i].Draw();
 			EditorGUILayout.BeginVertical();
-			if (GUILayout.Button("+", GUILayout.Width(20)) && i > 0)
+			Entries[i].Draw();
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.BeginVertical(GUILayout.Width(20), GUILayout.ExpandHeight(true));
+			if (GUILayout.Button("+", GUILayout.ExpandHeight(true)) && i > 0)
 			{
 				(m_Entries[i - 1], m_Entries[i]) = (m_Entries[i], m_Entries[i - 1]);
+				Reorder();
 				EditorGUIUtility.ExitGUI();
 			}
-			if (GUILayout.Button("-", GUILayout.Width(20)) && i < Entries.Count - 1)
+			if (GUILayout.Button("-", GUILayout.ExpandHeight(true)) && i < Entries.Count - 1)
 			{
 				(m_Entries[i + 1], m_Entries[i]) = (m_Entries[i], m_Entries[i + 1]);
+				Reorder();
 				EditorGUIUtility.ExitGUI();
 			}
 			EditorGUILayout.EndVertical();
@@ -128,6 +134,14 @@ public abstract class DatabaseEditorWindow<T> : EditorWindow where T : DatabaseE
 			EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), new Color(0, 0, 0, 0.75f));
 	}
 
+	void Reorder()
+	{
+		for (int i = 0; i < Entries.Count; i++)
+		{
+			Entries[i].Order = i;
+		}
+	}
+
 	async void Fetch()
 	{
 		m_Locked = true;
@@ -136,12 +150,14 @@ public abstract class DatabaseEditorWindow<T> : EditorWindow where T : DatabaseE
 		
 		await FirebaseAdmin.Login();
 		
-		DataSnapshot dataSnapshot = await DatabaseReference.GetValueAsync();
+		DataSnapshot dataSnapshot = await DatabaseReference.OrderByChild("order").GetValueAsync();
 		
 		m_Entries.Clear();
 		m_Entries.AddRange(Deserialize(dataSnapshot));
 		
 		m_Locked = false;
+		
+		Reorder();
 		
 		Repaint();
 	}

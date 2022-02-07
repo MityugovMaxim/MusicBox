@@ -11,6 +11,7 @@ public class ProgressDatabaseEntry : DatabaseEntry
 	public override string Key => m_ID;
 
 	[SerializeField] string m_ID;
+	[SerializeField] bool   m_Active;
 	[SerializeField] int    m_Level;
 	[SerializeField] int    m_MinLimit;
 	[SerializeField] int    m_MaxLimit;
@@ -19,6 +20,8 @@ public class ProgressDatabaseEntry : DatabaseEntry
 	public override void Draw()
 	{
 		EditorGUILayout.BeginHorizontal();
+		
+		m_Active = EditorGUILayout.Toggle(m_Active, GUILayout.Width(16));
 		
 		EditorGUILayout.SelectableLabel(m_ID, GUILayout.Height(18));
 		
@@ -41,6 +44,7 @@ public class ProgressDatabaseEntry : DatabaseEntry
 	public override void Deserialize(DataSnapshot _DataSnapshot)
 	{
 		m_ID       = _DataSnapshot.Key;
+		m_Active   = _DataSnapshot.GetBool("active");
 		m_Level    = _DataSnapshot.GetInt("level");
 		m_MinLimit = _DataSnapshot.GetInt("min_limit");
 		m_MaxLimit = _DataSnapshot.GetInt("max_limit");
@@ -53,9 +57,11 @@ public class ProgressDatabaseEntry : DatabaseEntry
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		
+		data["active"]    = m_Active;
 		data["level"]     = m_Level;
 		data["min_limit"] = m_MinLimit;
 		data["max_limit"] = m_MaxLimit;
+		data["order"]     = Order;
 		
 		return data;
 	}

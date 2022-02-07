@@ -111,6 +111,7 @@ public class OfferDatabaseEntry : DatabaseEntry
 		data["level_id"]  = m_LevelID;
 		data["coins"]     = m_Coins;
 		data["ads_count"] = m_AdsCount;
+		data["order"]     = Order;
 		
 		return data;
 	}

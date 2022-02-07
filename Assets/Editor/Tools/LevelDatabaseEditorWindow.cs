@@ -26,9 +26,11 @@ public class LevelDatabaseEntry : DatabaseEntry
 	[SerializeField] long       m_SilverPayout;
 	[SerializeField] long       m_GoldPayout;
 	[SerializeField] long       m_PlatinumPayout;
+	[SerializeField] long       m_RevivePrice;
 	[SerializeField] float      m_Length;
 	[SerializeField] float      m_BPM;
 	[SerializeField] float      m_Speed;
+	[SerializeField] float      m_Invincibility;
 	[SerializeField] string     m_Skin;
 	[SerializeField] Texture2D  m_Thumbnail;
 	[SerializeField] AudioClip  m_Preview;
@@ -146,6 +148,8 @@ public class LevelDatabaseEntry : DatabaseEntry
 		
 		m_Price = EditorGUILayout.LongField("Price:", m_Price);
 		
+		m_RevivePrice = EditorGUILayout.LongField("Revive price:", m_RevivePrice);
+		
 		m_Preview = EditorGUILayout.ObjectField("Preview:", m_Preview, typeof(AudioClip), false) as AudioClip;
 		
 		m_PayoutsFoldout = EditorGUILayout.Foldout(m_PayoutsFoldout, "Payouts", true);
@@ -167,10 +171,11 @@ public class LevelDatabaseEntry : DatabaseEntry
 		if (m_SettingsFoldout)
 		{
 			EditorGUI.indentLevel++;
-			m_Length    = EditorGUILayout.FloatField("Length:", m_Length);
-			m_BPM       = EditorGUILayout.FloatField("BPM:", m_BPM);
-			m_Speed     = EditorGUILayout.FloatField("Speed:", m_Speed);
-			m_SkinAsset = EditorGUILayout.ObjectField("Skin:", m_SkinAsset, typeof(Level), false) as Level;
+			m_Length        = EditorGUILayout.FloatField("Length:", m_Length);
+			m_BPM           = EditorGUILayout.FloatField("BPM:", m_BPM);
+			m_Speed         = EditorGUILayout.FloatField("Speed:", m_Speed);
+			m_Invincibility = EditorGUILayout.FloatField("Invincibility:", m_Invincibility);
+			m_SkinAsset     = EditorGUILayout.ObjectField("Skin:", m_SkinAsset, typeof(Level), false) as Level;
 			EditorGUI.indentLevel--;
 		}
 		
@@ -203,16 +208,18 @@ public class LevelDatabaseEntry : DatabaseEntry
 		m_Artist         = _DataSnapshot.GetString("artist");
 		m_Level          = _DataSnapshot.GetInt("level");
 		m_Price          = _DataSnapshot.GetLong("price");
-		m_Mode           = _DataSnapshot.GetEnum<LevelMode>("mode");
-		m_Badge          = _DataSnapshot.GetEnum<LevelBadge>("badge");
-		m_Length         = _DataSnapshot.GetFloat("length");
-		m_BPM            = _DataSnapshot.GetFloat("bpm");
-		m_Speed          = _DataSnapshot.GetFloat("speed");
 		m_DefaultPayout  = _DataSnapshot.GetLong("default_payout");
 		m_BronzePayout   = _DataSnapshot.GetLong("bronze_payout");
 		m_SilverPayout   = _DataSnapshot.GetLong("silver_payout");
 		m_GoldPayout     = _DataSnapshot.GetLong("gold_payout");
 		m_PlatinumPayout = _DataSnapshot.GetLong("platinum_payout");
+		m_RevivePrice    = _DataSnapshot.GetLong("revive_price", 1);
+		m_Mode           = _DataSnapshot.GetEnum<LevelMode>("mode");
+		m_Badge          = _DataSnapshot.GetEnum<LevelBadge>("badge");
+		m_Length         = _DataSnapshot.GetFloat("length");
+		m_BPM            = _DataSnapshot.GetFloat("bpm");
+		m_Speed          = _DataSnapshot.GetFloat("speed");
+		m_Invincibility  = _DataSnapshot.GetFloat("invincibility", 0.75f);
 		m_Skin           = _DataSnapshot.GetString("skin", "default");
 		
 		LoadThumbnail();
@@ -241,10 +248,13 @@ public class LevelDatabaseEntry : DatabaseEntry
 		data["gold_payout"]     = m_GoldPayout;
 		data["silver_payout"]   = m_SilverPayout;
 		data["platinum_payout"] = m_PlatinumPayout;
+		data["revive_price"]    = m_RevivePrice;
 		data["length"]          = m_Length;
 		data["bpm"]             = m_BPM;
 		data["speed"]           = m_Speed;
+		data["invincibility"]   = m_Invincibility;
 		data["skin"]            = m_SkinAsset != null ? m_SkinAsset.name : "default";
+		data["order"]           = Order;
 		
 		return data;
 	}

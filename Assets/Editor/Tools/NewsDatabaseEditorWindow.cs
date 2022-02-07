@@ -112,6 +112,7 @@ public class NewsDatabaseEntry : DatabaseEntry
 		data["title"]       = m_Title;
 		data["description"] = m_Description;
 		data["url"]         = m_URL;
+		data["order"]       = Order;
 		
 		return data;
 	}
