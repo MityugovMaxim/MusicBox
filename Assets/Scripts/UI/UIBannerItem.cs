@@ -49,8 +49,6 @@ public class UIBannerItem : UIGroup
 
 	public void Open()
 	{
-		Debug.LogError("---> OPEN");
-		
 		InvokeProcessFinished(BannerState.Open);
 	}
 
