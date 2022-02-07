@@ -166,18 +166,18 @@ extern "C"
 	{
 		AVAudioSession* session = [AVAudioSession sharedInstance];
 		
-		UnitySetAudioSessionActive(true);
-		[session setActive:YES error:nil];
+		//[session setActive:YES error:nil];
 		[session setCategory:AVAudioSessionCategoryPlayback
 			mode:AVAudioSessionModeSpokenAudio
 			options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
 			error:nil];
+		UnitySetAudioSessionActive(true);
 	}
 
 	void AudioManager_DisableAudio()
 	{
 		UnitySetAudioSessionActive(false);
-		[AVAudioSession.sharedInstance setActive:NO error:nil];
+		//[AVAudioSession.sharedInstance setActive:NO error:nil];
 	}
 
 	void AudioManager_UnregisterRemoteCommands()
