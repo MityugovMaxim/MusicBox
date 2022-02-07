@@ -15,24 +15,17 @@ public class UIHealthIndicator : UIEntity, IInitializable, IDisposable
 		m_SignalBus = _SignalBus;
 	}
 
-	public void Initialize()
+	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<HealthDamageSignal>(RegisterHealthDamage);
-		m_SignalBus.Subscribe<HealthRestoreSignal>(RegisterHealthRestore);
+		m_SignalBus.Subscribe<HealthChangedSignal>(RegisterHealthChanged);
 	}
 
-	public void Dispose()
+	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<HealthDamageSignal>(RegisterHealthDamage);
-		m_SignalBus.Unsubscribe<HealthRestoreSignal>(RegisterHealthRestore);
+		m_SignalBus.Unsubscribe<HealthChangedSignal>(RegisterHealthChanged);
 	}
 
-	void RegisterHealthDamage(HealthDamageSignal _Signal)
-	{
-		ProcessHealth(_Signal.Health);
-	}
-
-	void RegisterHealthRestore(HealthRestoreSignal _Signal)
+	void RegisterHealthChanged(HealthChangedSignal _Signal)
 	{
 		ProcessHealth(_Signal.Health);
 	}
