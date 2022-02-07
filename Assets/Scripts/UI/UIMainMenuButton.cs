@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
@@ -32,9 +33,17 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 	[SerializeField] MainMenuPageType    m_PageType;
 	[SerializeField] MainMenuButtonEvent m_Click;
 
+	HapticProcessor m_HapticProcessor;
+
 	Animator m_Animator;
 
 	bool m_Pressed;
+
+	[Inject]
+	public void Construct(HapticProcessor _HapticProcessor)
+	{
+		m_HapticProcessor = _HapticProcessor;
+	}
 
 	public void Toggle(bool _Value, bool _Instant = false)
 	{
@@ -73,5 +82,7 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 		Animator.SetBool(m_PressedParameterID, false);
 		
 		m_Click?.Invoke(m_PageType);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 	}
 }

@@ -22,6 +22,7 @@ public class UIMainProfilePage : UIMainMenuPage
 	StoreProcessor    m_StoreProcessor;
 	ProductProcessor  m_ProductProcessor;
 	MenuProcessor     m_MenuProcessor;
+	HapticProcessor   m_HapticProcessor;
 
 	[Inject]
 	public void Construct(
@@ -31,7 +32,8 @@ public class UIMainProfilePage : UIMainMenuPage
 		ProfileProcessor  _ProfileProcessor,
 		StoreProcessor    _StoreProcessor,
 		ProductProcessor  _ProductProcessor,
-		MenuProcessor     _MenuProcessor
+		MenuProcessor     _MenuProcessor,
+		HapticProcessor   _HapticProcessor
 	)
 	{
 		m_SignalBus         = _SignalBus;
@@ -41,6 +43,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_StoreProcessor    = _StoreProcessor;
 		m_ProductProcessor  = _ProductProcessor;
 		m_MenuProcessor     = _MenuProcessor;
+		m_HapticProcessor   = _HapticProcessor;
 	}
 
 	public void SignInApple()
@@ -72,19 +75,23 @@ public class UIMainProfilePage : UIMainMenuPage
 
 	public async void RestorePurchases()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
 		await m_StoreProcessor.Restore();
 		
-		await m_MenuProcessor.Hide(MenuType.LoginMenu);
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
 	public async void Logout()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.LoginMenu);
@@ -110,10 +117,14 @@ public class UIMainProfilePage : UIMainMenuPage
 		await m_SocialProcessor.SetUsername(_Username);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		
+		m_HapticProcessor.Process(Haptic.Type.Success);
 	}
 
 	public void OpenCoins()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		string productID = m_ProductProcessor.GetCoinsProductID(m_ProfileProcessor.Coins);
 		
 		if (string.IsNullOrEmpty(productID))
@@ -149,6 +160,8 @@ public class UIMainProfilePage : UIMainMenuPage
 	{
 		if (_SignInTask == null)
 			return;
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		

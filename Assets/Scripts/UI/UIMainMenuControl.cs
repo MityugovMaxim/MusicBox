@@ -63,13 +63,6 @@ public class UIMainMenuControl : UIEntity
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(ProcessStoreBadge);
 	}
 
-	public void Select(MainMenuPageType _PageType)
-	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		Select(_PageType, false);
-	}
-
 	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
 		m_PageType = _PageType;
