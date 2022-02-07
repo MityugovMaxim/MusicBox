@@ -15,6 +15,7 @@ public class UINewsItem : UIGroupLayout
 	NewsProcessor    m_NewsProcessor;
 	StorageProcessor m_StorageProcessor;
 	UrlProcessor     m_UrlProcessor;
+	HapticProcessor  m_HapticProcessor;
 
 	string m_NewsID;
 	string m_URL;
@@ -23,12 +24,14 @@ public class UINewsItem : UIGroupLayout
 	public void Construct(
 		NewsProcessor    _NewsProcessor,
 		StorageProcessor _StorageProcessor,
-		UrlProcessor     _UrlProcessor
+		UrlProcessor     _UrlProcessor,
+		HapticProcessor  _HapticProcessor
 	)
 	{
 		m_NewsProcessor    = _NewsProcessor;
 		m_StorageProcessor = _StorageProcessor;
 		m_UrlProcessor     = _UrlProcessor;
+		m_HapticProcessor  = _HapticProcessor;
 	}
 
 	public void Setup(string _NewsID)
@@ -44,6 +47,8 @@ public class UINewsItem : UIGroupLayout
 
 	public async void Open()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		await m_UrlProcessor.ProcessURL(m_URL);
 	}
 }
