@@ -37,8 +37,7 @@ public class LevelManager
 	public List<string> GetProductLevelIDs()
 	{
 		return m_LevelProcessor.GetLevelIDs()
-			.Where(_LevelID => !m_ProfileProcessor.HasLevel(_LevelID))
-			.Where(_LevelID => m_ProductProcessor.HasLevel(_LevelID))
+			.Where(IsLevelLockedByProduct)
 			.OrderByDescending(m_LevelProcessor.GetBadge)
 			.ToList();
 	}
@@ -60,6 +59,25 @@ public class LevelManager
 			.ToList();
 	}
 
+	public bool IsLevelLockedByProduct(string _LevelID)
+	{
+		if (m_ProfileProcessor.HasLevel(_LevelID))
+			return false;
+		
+		return m_ProductProcessor.HasLevel(_LevelID);
+	}
+
+	public bool IsLevelLockedByLevel(string _LevelID)
+	{
+		if (m_ProfileProcessor.HasLevel(_LevelID))
+			return false;
+		
+		int currentLevel  = m_ProfileProcessor.Level;
+		int requiredLevel = m_LevelProcessor.GetLevel(_LevelID);
+		
+		return currentLevel < requiredLevel;
+	}
+
 	public bool IsLevelLockedByCoins(string _LevelID)
 	{
 		if (m_ProfileProcessor.HasLevel(_LevelID))
@@ -72,17 +90,6 @@ public class LevelManager
 			return false;
 		
 		return m_LevelProcessor.GetPrice(_LevelID) > 0;
-	}
-
-	public bool IsLevelLockedByLevel(string _LevelID)
-	{
-		if (m_ProfileProcessor.HasLevel(_LevelID))
-			return false;
-		
-		int currentLevel  = m_ProfileProcessor.Level;
-		int requiredLevel = m_LevelProcessor.GetLevel(_LevelID);
-		
-		return currentLevel < requiredLevel;
 	}
 
 	public bool IsLevelAvailable(string _LevelID)
