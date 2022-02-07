@@ -211,9 +211,18 @@ public class StorageProcessor
 			Debug.LogWarningFormat("[StorageProcessor] Load audio clip '{0}' failed. Try to load it from cache.", _RemotePath);
 		}
 		
-		m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
+		try
+		{
+			m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
+			
+			return m_AudioClipCache[_RemotePath];
+		}
+		catch (Exception exception)
+		{
+			Debug.LogErrorFormat("[StorageProcessor] Load audio clip '{0}' failed. Error: {1}.", _RemotePath, exception.Message);
+		}
 		
-		return m_AudioClipCache[_RemotePath];
+		return null;
 	}
 
 	public async Task<AssetBundle> LoadAssetBundle(string _RemotePath, CancellationToken _Token = default)
@@ -263,11 +272,6 @@ public class StorageProcessor
 		}
 		
 		return await WebRequest.LoadAssetBundle(url, _Token);
-	}
-
-	public async Task<AudioClip> LoadLevelPreview(string _LevelID, CancellationToken _Token = default)
-	{
-		return await LoadAudioClip($"Previews/{_LevelID}.ogg", _Token);
 	}
 
 	public async Task<Sprite> LoadLevelThumbnail(string _LevelID, CancellationToken _Token = default)
