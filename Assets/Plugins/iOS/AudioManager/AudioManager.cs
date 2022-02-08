@@ -120,7 +120,7 @@ public class AudioManager : IInitializable
 	public static OutputType GetAudioOutputType()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		return AudioManager_GetOutputType();
+		return (OutputType)AudioManager_GetOutputType();
 		#else
 		return OutputType.BuiltIn;
 		#endif

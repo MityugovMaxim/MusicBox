@@ -26,6 +26,7 @@ public class MenuPrebuild
 		{ typeof(UIProcessingMenu), MenuType.ProcessingMenu },
 		{ typeof(UIProductMenu), MenuType.ProductMenu },
 		{ typeof(UIResultMenu), MenuType.ResultMenu },
+		{ typeof(UIRetryMenu), MenuType.RetryMenu },
 		{ typeof(UIReviveMenu), MenuType.ReviveMenu },
 		{ typeof(UIRewardMenu), MenuType.RewardMenu },
 	};
