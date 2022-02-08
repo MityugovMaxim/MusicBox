@@ -1,43 +1,34 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 public class MenuProcessor : IInitializable
 {
-	readonly Dictionary<MenuType, UIMenu>   m_MenuCache = new Dictionary<MenuType, UIMenu>();
-	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos = new Dictionary<MenuType, MenuInfo>();
-	readonly List<MenuType>                 m_MenuOrder = new List<MenuType>();
+	readonly Canvas                         m_Canvas;
+	readonly UIMenu.Factory                 m_MenuFactory;
+	readonly Dictionary<MenuType, UIMenu>   m_MenuCache;
+	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos;
+	readonly List<MenuType>                 m_MenuOrder;
 
-	readonly Canvas         m_Canvas;
-	readonly UIMenu.Factory m_MenuFactory;
 
 	[Inject]
 	public MenuProcessor(
 		Canvas         _Canvas,
+		MenuInfo[]     _MenuInfos,
 		UIMenu.Factory _MenuFactory
 	)
 	{
 		m_Canvas      = _Canvas;
 		m_MenuFactory = _MenuFactory;
+		m_MenuCache   = new Dictionary<MenuType, UIMenu>();
+		m_MenuInfos   = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
+		m_MenuOrder   = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
 	}
 
 	async void IInitializable.Initialize()
 	{
-		MenuRegistry menuRegistry = Registry.Load<MenuRegistry>("menu_registry");
-		
-		if (menuRegistry != null)
-		{
-			foreach (MenuInfo menuInfo in menuRegistry)
-			{
-				if (menuInfo == null || !menuInfo.Active)
-					continue;
-				
-				m_MenuInfos[menuInfo.Type] = menuInfo;
-				m_MenuOrder.Add(menuInfo.Type);
-			}
-		}
-		
 		await Show(MenuType.LoginMenu, true);
 		
 		UILoginMenu loginMenu = GetMenu<UILoginMenu>();

@@ -4,8 +4,8 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-[CustomEditor(typeof(Registry), true)]
-public class RegistryEditor : Editor
+[CustomEditor(typeof(MenuRegistry), true)]
+public class MenuRegistryEditor : Editor
 {
 	bool            m_Initialized;
 	ReorderableList m_RegistryList;
@@ -43,7 +43,7 @@ public class RegistryEditor : Editor
 		
 		m_Initialized = true;
 		
-		Registry registry = target as Registry;
+		MenuRegistry registry = target as MenuRegistry;
 		
 		if (registry == null)
 			return;
@@ -54,14 +54,13 @@ public class RegistryEditor : Editor
 		
 		m_RegistryList.drawHeaderCallback += _Rect =>
 		{
-			EditorGUI.DropShadowLabel(_Rect, registry.Name);
+			EditorGUI.DropShadowLabel(_Rect, "Menus");
 		};
 		
 		m_RegistryList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
 		{
-			Rect indexRect  = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
-			Rect toggleRect = new Rect(_Rect.x + 25, _Rect.y, 25, _Rect.height);
-			Rect entryRect  = new Rect(_Rect.x + 50, _Rect.y, _Rect.width - 50, _Rect.height);
+			Rect indexRect = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
+			Rect entryRect = new Rect(_Rect.x + 25, _Rect.y, _Rect.width - 25, _Rect.height);
 			
 			EditorGUI.LabelField(indexRect, _Index.ToString());
 			
@@ -70,16 +69,6 @@ public class RegistryEditor : Editor
 				return;
 			
 			EditorGUI.PropertyField(entryRect, entryProperty, GUIContent.none);
-			
-			if (entryProperty.objectReferenceValue == null)
-				return;
-			
-			using (SerializedObject entryObject = new SerializedObject(entryProperty.objectReferenceValue))
-			{
-				SerializedProperty activeProperty = entryObject.FindProperty("m_Active");
-				activeProperty.boolValue = EditorGUI.Toggle(toggleRect, activeProperty.boolValue);
-				entryObject.ApplyModifiedProperties();
-			}
 		};
 		
 		m_RegistryList.onSelectCallback += _List =>
@@ -106,12 +95,12 @@ public class RegistryEditor : Editor
 
 	void FindLevels()
 	{
-		Registry registry = target as Registry;
+		MenuRegistry registry = target as MenuRegistry;
 		
 		if (registry == null)
 			return;
 		
-		List<ScriptableObject> entries = AssetDatabase.FindAssets($"t:{registry.AssetType.Name}")
+		List<ScriptableObject> entries = AssetDatabase.FindAssets($"t:{nameof(MenuInfo)}")
 			.Select(AssetDatabase.GUIDToAssetPath)
 			.Select(AssetDatabase.LoadAssetAtPath<ScriptableObject>)
 			.ToList();

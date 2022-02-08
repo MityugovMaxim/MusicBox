@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Menu Info", menuName = "Registry/Menu Info")]
-public class MenuInfo : RegistryEntry
+public class MenuInfo : ScriptableObject
 {
 	public MenuType Type => m_Type;
 	public string   Path => m_Path;
