@@ -56,7 +56,7 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 	{
 		m_StatisticProcessor.LogMainMenuLevelPageItemClick(m_LevelID);
 		
-		m_HapticProcessor.Process(Haptic.Type.Selection);
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
 		

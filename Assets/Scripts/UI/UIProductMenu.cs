@@ -219,6 +219,8 @@ public class UIProductMenu : UISlideMenu
 
 	void PlayPreview(string _LevelID)
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		foreach (UIProductItem item in m_Items)
 		{
 			if (item.LevelID != _LevelID)
@@ -230,6 +232,8 @@ public class UIProductMenu : UISlideMenu
 
 	void StopPreview(string _LevelID)
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		m_PreviewSource.Stop();
 	}
 

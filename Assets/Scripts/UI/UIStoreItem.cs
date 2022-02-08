@@ -43,7 +43,7 @@ public class UIStoreItem : UIEntity, IPointerClickHandler
 	{
 		m_StatisticProcessor.LogMainMenuStorePageItemClick(m_ProductID);
 		
-		m_HapticProcessor.Process(Haptic.Type.Selection);
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		
