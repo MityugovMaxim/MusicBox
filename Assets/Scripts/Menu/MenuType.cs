@@ -15,4 +15,5 @@ public enum MenuType
 	RewardMenu     = 12,
 	ReviveMenu     = 13,
 	BannerMenu     = 14,
+	RetryMenu      = 15,
 }

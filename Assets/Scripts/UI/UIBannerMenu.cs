@@ -13,17 +13,23 @@ public class UIBannerMenu : UIMenu
 	SocialProcessor      m_SocialProcessor;
 	ApplicationProcessor m_ApplicationProcessor;
 	UrlProcessor         m_UrlProcessor;
+	HapticProcessor      m_HapticProcessor;
+	StatisticProcessor   m_StatisticProcessor;
 
 	[Inject]
 	public void Construct(
 		SocialProcessor      _SocialProcessor,
 		ApplicationProcessor _ApplicationProcessor,
-		UrlProcessor         _UrlProcessor
+		UrlProcessor         _UrlProcessor,
+		HapticProcessor      _HapticProcessor,
+		StatisticProcessor   _StatisticProcessor
 	)
 	{
 		m_SocialProcessor      = _SocialProcessor;
 		m_ApplicationProcessor = _ApplicationProcessor;
 		m_UrlProcessor         = _UrlProcessor;
+		m_HapticProcessor      = _HapticProcessor;
+		m_StatisticProcessor   = _StatisticProcessor;
 	}
 
 	public async Task Process()
@@ -48,23 +54,40 @@ public class UIBannerMenu : UIMenu
 			
 			if (state == UIBannerItem.BannerState.Open)
 			{
-				string url = m_ApplicationProcessor.GetURL(bannerID);
-				
-				await m_UrlProcessor.ProcessURL(url);
-				
-				if (permanent)
-				{
-					while (true)
-						await Task.Delay(10000);
-				}
-				
-				ViewBanner(bannerID);
-				
+				await OpenBanner(bannerID);
 				break;
 			}
+			else
+			{
+				CloseBanner(bannerID);
+			}
+			
+			await UnityTask.While(() => permanent);
 			
 			await m_BannerItem.HideAsync();
 		}
+	}
+
+	async Task OpenBanner(string _BannerID)
+	{
+		m_StatisticProcessor.LogBannerMenuOpenClick(_BannerID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		string url = m_ApplicationProcessor.GetURL(_BannerID);
+		
+		await m_UrlProcessor.ProcessURL(url);
+		
+		ViewBanner(_BannerID);
+	}
+
+	void CloseBanner(string _BannerID)
+	{
+		m_StatisticProcessor.LogBannerMenuCloseClick(_BannerID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		ViewBanner(_BannerID);
 	}
 
 	protected override void OnShowStarted()

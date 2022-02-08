@@ -89,6 +89,8 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 	public void Setup(string _LevelID)
 	{
 		m_LevelID = _LevelID;
+		
+		m_PauseButton.Setup(m_LevelID);
 	}
 
 	protected override void OnHideFinished()

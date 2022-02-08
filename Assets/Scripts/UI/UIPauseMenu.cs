@@ -10,10 +10,11 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UILevelThumbnail m_Thumbnail;
 	[SerializeField] UIHapticState    m_HapticState;
 
-	MenuProcessor   m_MenuProcessor;
-	LevelProcessor  m_LevelProcessor;
-	AdsProcessor    m_AdsProcessor;
-	HapticProcessor m_HapticProcessor;
+	MenuProcessor      m_MenuProcessor;
+	LevelProcessor     m_LevelProcessor;
+	AdsProcessor       m_AdsProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	string m_LevelID;
 	int    m_RestartAdsCount;
@@ -21,16 +22,18 @@ public class UIPauseMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		MenuProcessor   _MenuProcessor,
-		LevelProcessor  _LevelProcessor,
-		AdsProcessor    _AdsProcessor,
-		HapticProcessor _HapticProcessor
+		MenuProcessor      _MenuProcessor,
+		LevelProcessor     _LevelProcessor,
+		AdsProcessor       _AdsProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_MenuProcessor   = _MenuProcessor;
-		m_LevelProcessor  = _LevelProcessor;
-		m_AdsProcessor    = _AdsProcessor;
-		m_HapticProcessor = _HapticProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_LevelProcessor     = _LevelProcessor;
+		m_AdsProcessor       = _AdsProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -44,6 +47,8 @@ public class UIPauseMenu : UIMenu
 
 	public async void Restart()
 	{
+		m_StatisticProcessor.LogPauseMenuRestartClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_RestartAdsCount++;
@@ -68,6 +73,8 @@ public class UIPauseMenu : UIMenu
 
 	public async void Leave()
 	{
+		m_StatisticProcessor.LogPauseMenuLeaveClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_LeaveAdsCount++;
@@ -101,6 +108,10 @@ public class UIPauseMenu : UIMenu
 
 	public void Latency()
 	{
+		m_StatisticProcessor.LogPauseMenuLatencyClick(m_LevelID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		UILatencyMenu latencyMenu = m_MenuProcessor.GetMenu<UILatencyMenu>();
 		
 		if (latencyMenu != null)

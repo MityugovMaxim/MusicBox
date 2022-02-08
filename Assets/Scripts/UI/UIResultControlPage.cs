@@ -20,13 +20,15 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UILevelModeButton m_RestartButton;
 	[SerializeField] LevelPreview      m_PreviewSource;
 
-	LevelManager     m_LevelManager;
-	LevelProcessor   m_LevelProcessor;
-	AdsProcessor     m_AdsProcessor;
-	MenuProcessor    m_MenuProcessor;
-	AmbientProcessor m_AmbientProcessor;
-	MusicProcessor   m_MusicProcessor;
-	HapticProcessor  m_HapticProcessor;
+	LevelManager       m_LevelManager;
+	LevelProcessor     m_LevelProcessor;
+	AdsProcessor       m_AdsProcessor;
+	MenuProcessor      m_MenuProcessor;
+	AmbientProcessor   m_AmbientProcessor;
+	MusicProcessor     m_MusicProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
+	UrlProcessor       m_UrlProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
@@ -37,23 +39,27 @@ public class UIResultControlPage : UIResultMenuPage
 
 	[Inject]
 	public void Construct(
-		LevelManager     _LevelManager,
-		ProfileProcessor _ProfileProcessor,
-		LevelProcessor   _LevelProcessor,
-		AdsProcessor     _AdsProcessor,
-		MenuProcessor    _MenuProcessor,
-		AmbientProcessor _AmbientProcessor,
-		MusicProcessor   _MusicProcessor,
-		HapticProcessor  _HapticProcessor
+		LevelManager       _LevelManager,
+		ProfileProcessor   _ProfileProcessor,
+		LevelProcessor     _LevelProcessor,
+		AdsProcessor       _AdsProcessor,
+		MenuProcessor      _MenuProcessor,
+		AmbientProcessor   _AmbientProcessor,
+		MusicProcessor     _MusicProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor,
+		UrlProcessor       _UrlProcessor
 	)
 	{
-		m_LevelManager     = _LevelManager;
-		m_LevelProcessor   = _LevelProcessor;
-		m_AdsProcessor     = _AdsProcessor;
-		m_MenuProcessor    = _MenuProcessor;
-		m_AmbientProcessor = _AmbientProcessor;
-		m_MusicProcessor   = _MusicProcessor;
-		m_HapticProcessor  = _HapticProcessor;
+		m_LevelManager       = _LevelManager;
+		m_LevelProcessor     = _LevelProcessor;
+		m_AdsProcessor       = _AdsProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_AmbientProcessor   = _AmbientProcessor;
+		m_MusicProcessor     = _MusicProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
+		m_UrlProcessor       = _UrlProcessor;
 	}
 
 	public override void Setup(string _LevelID)
@@ -72,6 +78,8 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public async void Leave()
 	{
+		m_StatisticProcessor.LogResultMenuControlPageLeaveClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_PreviewSource.Stop();
@@ -103,6 +111,8 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public async void Next()
 	{
+		m_StatisticProcessor.LogResultMenuControlPageNextClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_PreviewSource.Stop();
@@ -139,6 +149,8 @@ public class UIResultControlPage : UIResultMenuPage
 
 	public async void Restart()
 	{
+		m_StatisticProcessor.LogResultMenuControlPageRestartClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_AmbientProcessor.Pause();
@@ -177,6 +189,33 @@ public class UIResultControlPage : UIResultMenuPage
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 		
 		m_LevelProcessor.Play();
+	}
+
+	public void OpenAppleMusic()
+	{
+		OpenPlatform("apple_music");
+	}
+
+	public void OpenSpotify()
+	{
+		OpenPlatform("spotify");
+	}
+
+	public void OpenDeezer()
+	{
+		OpenPlatform("deezer");
+	}
+
+	async void OpenPlatform(string _PlatformID)
+	{
+		m_StatisticProcessor.LogResultMenuControlPagePlatformClick(m_LevelID, _PlatformID);
+		
+		string url = m_LevelProcessor.GetPlatformURL(m_LevelID, _PlatformID);
+		
+		if (string.IsNullOrEmpty(url))
+			return;
+		
+		await m_UrlProcessor.ProcessURL(url);
 	}
 
 	string GetLevelID(int _Offset)

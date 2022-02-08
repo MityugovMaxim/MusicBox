@@ -36,11 +36,12 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
-	ScoreProcessor    m_ScoreProcessor;
-	LevelProcessor    m_LevelProcessor;
-	MenuProcessor     m_MenuProcessor;
-	HapticProcessor   m_HapticProcessor;
-	LanguageProcessor m_LanguageProcessor;
+	ScoreProcessor     m_ScoreProcessor;
+	LevelProcessor     m_LevelProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
+	LanguageProcessor  m_LanguageProcessor;
 
 	string      m_LevelID;
 	ScoreRank   m_SourceRank;
@@ -59,18 +60,20 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	[Inject]
 	public void Construct(
-		ScoreProcessor    _ScoreProcessor,
-		LevelProcessor    _LevelProcessor,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor,
-		LanguageProcessor _LanguageProcessor
+		ScoreProcessor     _ScoreProcessor,
+		LevelProcessor     _LevelProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor,
+		LanguageProcessor  _LanguageProcessor
 	)
 	{
-		m_ScoreProcessor    = _ScoreProcessor;
-		m_LevelProcessor    = _LevelProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
-		m_LanguageProcessor = _LanguageProcessor;
+		m_ScoreProcessor     = _ScoreProcessor;
+		m_LevelProcessor     = _LevelProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
+		m_LanguageProcessor  = _LanguageProcessor;
 	}
 
 	public override void Setup(string _LevelID)
@@ -151,6 +154,8 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	public async void Continue()
 	{
+		m_StatisticProcessor.LogResultMenuRewardPageContinueClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);

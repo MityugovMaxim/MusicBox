@@ -13,12 +13,13 @@ public class UIOfferItem : UIGroupLayout
 	[SerializeField] TMP_Text         m_Title;
 	[SerializeField] TMP_Text         m_Label;
 
-	OffersProcessor   m_OffersProcessor;
-	StorageProcessor  m_StorageProcessor;
-	LanguageProcessor m_LanguageProcessor;
-	AdsProcessor      m_AdsProcessor;
-	MenuProcessor     m_MenuProcessor;
-	HapticProcessor   m_HapticProcessor;
+	OffersProcessor    m_OffersProcessor;
+	StorageProcessor   m_StorageProcessor;
+	LanguageProcessor  m_LanguageProcessor;
+	AdsProcessor       m_AdsProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	string m_OfferID;
 	int    m_Progress;
@@ -26,20 +27,22 @@ public class UIOfferItem : UIGroupLayout
 
 	[Inject]
 	public void Construct(
-		OffersProcessor   _OffersProcessor,
-		StorageProcessor  _StorageProcessor,
-		LanguageProcessor _LanguageProcessor,
-		AdsProcessor      _AdsProcessor,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor
+		OffersProcessor    _OffersProcessor,
+		StorageProcessor   _StorageProcessor,
+		LanguageProcessor  _LanguageProcessor,
+		AdsProcessor       _AdsProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_OffersProcessor   = _OffersProcessor;
-		m_StorageProcessor  = _StorageProcessor;
-		m_LanguageProcessor = _LanguageProcessor;
-		m_AdsProcessor      = _AdsProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
+		m_OffersProcessor    = _OffersProcessor;
+		m_StorageProcessor   = _StorageProcessor;
+		m_LanguageProcessor  = _LanguageProcessor;
+		m_AdsProcessor       = _AdsProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _OfferID)
@@ -57,6 +60,8 @@ public class UIOfferItem : UIGroupLayout
 
 	public async void Progress()
 	{
+		m_StatisticProcessor.LogMainMenuOffersPageItemClick(m_OfferID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		if (m_Progress >= m_Target)
@@ -87,6 +92,7 @@ public class UIOfferItem : UIGroupLayout
 			if (errorMenu != null)
 			{
 				errorMenu.Setup(
+					"offer_progress_error",
 					m_LanguageProcessor.Get("OFFER_PROGRESS_ERROR_TITLE"),
 					m_LanguageProcessor.Get("OFFER_PROGRESS_ERROR_MESSAGE")
 				);

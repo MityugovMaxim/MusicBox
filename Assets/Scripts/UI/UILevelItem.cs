@@ -16,20 +16,26 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 
 	string m_LevelID;
 
-	LevelManager   m_LevelManager;
-	LevelProcessor m_LevelProcessor;
-	MenuProcessor  m_MenuProcessor;
+	LevelManager       m_LevelManager;
+	LevelProcessor     m_LevelProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	[Inject]
 	public void Construct(
-		LevelManager   _LevelManager,
-		LevelProcessor _LevelProcessor,
-		MenuProcessor  _MenuProcessor
+		LevelManager       _LevelManager,
+		LevelProcessor     _LevelProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_LevelManager   = _LevelManager;
-		m_LevelProcessor = _LevelProcessor;
-		m_MenuProcessor  = _MenuProcessor;
+		m_LevelManager       = _LevelManager;
+		m_LevelProcessor     = _LevelProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -48,6 +54,10 @@ public class UILevelItem : UIEntity, IPointerClickHandler
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
+		m_StatisticProcessor.LogMainMenuLevelPageItemClick(m_LevelID);
+		
+		m_HapticProcessor.Process(Haptic.Type.Selection);
+		
 		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
 		
 		if (levelMenu == null)

@@ -149,17 +149,28 @@ extern "C"
 		return MakeStringCopy(portUID);
 	}
 
-	bool AudioManager_IsOutputWireless()
+	int AudioManager_GetOutputType()
 	{
+		// 0 - BuiltIn
+		// 1 - Headphones
+		// 2 - Bluetooth
+		// 3 - Unknown
+		
 		NSString* portType = AVAudioSession.sharedInstance.currentRoute.outputs[0].portType;
 		
+		if ([portType isEqualToString: AVAudioSessionPortBuiltInSpeaker])
+			return 0;
+		
+		if ([portType isEqualToString: AVAudioSessionPortHeadphones])
+			return 1;
+		
 		if ([portType isEqualToString: AVAudioSessionPortBluetoothLE])
-			return true;
+			return 2;
 		
 		if ([portType isEqualToString: AVAudioSessionPortBluetoothA2DP])
-			return true;
+			return 2;
 		
-		return false;
+		return 3;
 	}
 
 	void AudioManager_EnableAudio()

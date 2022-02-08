@@ -26,6 +26,7 @@ public class UIProductMenu : UISlideMenu
 	LevelProcessor     m_LevelProcessor;
 	MenuProcessor      m_MenuProcessor;
 	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 	UIProductItem.Pool m_ItemPool;
 
 	string m_ProductID;
@@ -41,17 +42,19 @@ public class UIProductMenu : UISlideMenu
 		LevelProcessor     _LevelProcessor,
 		MenuProcessor      _MenuProcessor,
 		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor,
 		UIProductItem.Pool _ItemPool
 	)
 	{
-		m_SignalBus        = _SignalBus;
-		m_ProductProcessor = _ProductProcessor;
-		m_StoreProcessor   = _StoreProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_LevelProcessor   = _LevelProcessor;
-		m_MenuProcessor    = _MenuProcessor;
-		m_HapticProcessor  = _HapticProcessor;
-		m_ItemPool         = _ItemPool;
+		m_SignalBus          = _SignalBus;
+		m_ProductProcessor   = _ProductProcessor;
+		m_StoreProcessor     = _StoreProcessor;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_LevelProcessor     = _LevelProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
+		m_ItemPool           = _ItemPool;
 	}
 
 	public void Setup(string _ProductID)
@@ -59,31 +62,10 @@ public class UIProductMenu : UISlideMenu
 		Select(_ProductID);
 	}
 
-	public void Next()
-	{
-		Select(GetProductID(1));
-	}
-
-	public void Previous()
-	{
-		Select(GetProductID(-1));
-	}
-
-	string GetProductID(int _Offset)
-	{
-		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
-		
-		int index = productIDs.IndexOf(m_ProductID);
-		if (index >= 0 && index < productIDs.Count)
-			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];
-		else if (productIDs.Count > 0)
-			return productIDs.FirstOrDefault();
-		else
-			return m_ProductID;
-	}
-
 	public async void Purchase()
 	{
+		m_StatisticProcessor.LogProductMenuPurchaseClick(m_ProductID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_PreviewSource.Stop();
@@ -136,6 +118,37 @@ public class UIProductMenu : UISlideMenu
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	public void Next()
+	{
+		m_StatisticProcessor.LogProductMenuNextClick(m_ProductID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		Select(GetProductID(1));
+	}
+
+	public void Previous()
+	{
+		m_StatisticProcessor.LogProductMenuPreviousClick(m_ProductID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		Select(GetProductID(-1));
+	}
+
+	string GetProductID(int _Offset)
+	{
+		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
+		
+		int index = productIDs.IndexOf(m_ProductID);
+		if (index >= 0 && index < productIDs.Count)
+			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];
+		else if (productIDs.Count > 0)
+			return productIDs.FirstOrDefault();
+		else
+			return m_ProductID;
 	}
 
 	protected override void OnShowStarted()

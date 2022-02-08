@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
@@ -70,20 +69,10 @@ public class UILoginMenu : UIMenu
 		m_Loader.Restore();
 	}
 
-	IEnumerator RecRoutine(int _CallCount)
-	{
-		Debug.LogError("---> CALL COUNT: " + _CallCount);
-		
-		yield return null;
-		
-		yield return RecRoutine(_CallCount++);
-	}
-
 	public async Task Login()
 	{
-		await m_SocialProcessor.Login();
-		
-		StartCoroutine(RecRoutine(1));
+		while (!await m_SocialProcessor.Login())
+			await Task.Delay(2500);
 		
 		await m_ApplicationProcessor.LoadApplication();
 		

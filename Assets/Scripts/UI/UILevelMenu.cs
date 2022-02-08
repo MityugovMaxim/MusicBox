@@ -23,96 +23,57 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] UILoader          m_Loader;
 	[SerializeField] LevelPreview      m_PreviewSource;
 
-	SignalBus        m_SignalBus;
-	ProfileProcessor m_ProfileProcessor;
-	LevelProcessor   m_LevelProcessor;
-	LevelManager     m_LevelManager;
-	AdsProcessor     m_AdsProcessor;
-	MenuProcessor    m_MenuProcessor;
-	ScoreProcessor   m_ScoreProcessor;
-	HapticProcessor  m_HapticProcessor;
+	SignalBus          m_SignalBus;
+	ProfileProcessor   m_ProfileProcessor;
+	LevelProcessor     m_LevelProcessor;
+	LevelManager       m_LevelManager;
+	AdsProcessor       m_AdsProcessor;
+	MenuProcessor      m_MenuProcessor;
+	ScoreProcessor     m_ScoreProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	string      m_LevelID;
 	AudioSource m_AudioSource;
 
 	[Inject]
 	public void Construct(
-		SignalBus        _SignalBus,
-		LevelProcessor   _LevelProcessor,
-		LevelManager     _LevelManager,
-		AdsProcessor     _AdsProcessor,
-		MenuProcessor    _MenuProcessor,
-		ProfileProcessor _ProfileProcessor,
-		HapticProcessor  _HapticProcessor
+		SignalBus          _SignalBus,
+		LevelProcessor     _LevelProcessor,
+		LevelManager       _LevelManager,
+		AdsProcessor       _AdsProcessor,
+		MenuProcessor      _MenuProcessor,
+		ProfileProcessor   _ProfileProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_SignalBus        = _SignalBus;
-		m_LevelProcessor   = _LevelProcessor;
-		m_LevelManager     = _LevelManager;
-		m_AdsProcessor     = _AdsProcessor;
-		m_MenuProcessor    = _MenuProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_HapticProcessor  = _HapticProcessor;
-	}
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
-		m_SignalBus.Subscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
-		m_SignalBus.Unsubscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
-	}
-
-	void RegisterAudioNextTrack()
-	{
-		if (Shown)
-			Next();
-	}
-
-	void RegisterAudioPreviousTrack()
-	{
-		if (Shown)
-			Previous();
-	}
-
-	void RegisterScoreDataUpdate()
-	{
-		if (Shown)
-			Select(m_LevelID);
-	}
-
-	public void Setup(string _LevelID)
-	{
-		Select(_LevelID);
+		m_SignalBus          = _SignalBus;
+		m_LevelProcessor     = _LevelProcessor;
+		m_LevelManager       = _LevelManager;
+		m_AdsProcessor       = _AdsProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Next()
 	{
+		m_StatisticProcessor.LogLevelMenuNextClick(m_LevelID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		Select(GetLevelID(1));
 	}
 
 	public void Previous()
 	{
-		Select(GetLevelID(-1));
-	}
-
-	string GetLevelID(int _Offset)
-	{
-		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
+		m_StatisticProcessor.LogLevelMenuPreviousClick(m_LevelID);
 		
-		int index = levelIDs.IndexOf(m_LevelID);
-		if (index >= 0 && index < levelIDs.Count)
-			return levelIDs[MathUtility.Repeat(index + _Offset, levelIDs.Count)];
-		else if (levelIDs.Count > 0)
-			return levelIDs.FirstOrDefault();
-		else
-			return m_LevelID;
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		Select(GetLevelID(-1));
 	}
 
 	public async void Unlock()
@@ -120,6 +81,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		// TODO: Uncomment
 		//if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
 		//	return;
+		
+		m_StatisticProcessor.LogLevelMenuUnlockClick(m_LevelID);
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
@@ -176,6 +139,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		if (!m_LevelManager.IsLevelAvailable(m_LevelID))
 			return;
 		
+		m_StatisticProcessor.LogLevelMenuPlayClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
@@ -227,6 +192,56 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.LevelMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
+	}
+
+	void IInitializable.Initialize()
+	{
+		m_SignalBus.Subscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
+		m_SignalBus.Subscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
+		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<AudioNextTrackSignal>(RegisterAudioNextTrack);
+		m_SignalBus.Unsubscribe<AudioPreviousTrackSignal>(RegisterAudioPreviousTrack);
+		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+	}
+
+	void RegisterAudioNextTrack()
+	{
+		if (Shown)
+			Next();
+	}
+
+	void RegisterAudioPreviousTrack()
+	{
+		if (Shown)
+			Previous();
+	}
+
+	void RegisterScoreDataUpdate()
+	{
+		if (Shown)
+			Select(m_LevelID);
+	}
+
+	public void Setup(string _LevelID)
+	{
+		Select(_LevelID);
+	}
+
+	string GetLevelID(int _Offset)
+	{
+		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
+		
+		int index = levelIDs.IndexOf(m_LevelID);
+		if (index >= 0 && index < levelIDs.Count)
+			return levelIDs[MathUtility.Repeat(index + _Offset, levelIDs.Count)];
+		else if (levelIDs.Count > 0)
+			return levelIDs.FirstOrDefault();
+		else
+			return m_LevelID;
 	}
 
 	protected override void OnShowFinished()

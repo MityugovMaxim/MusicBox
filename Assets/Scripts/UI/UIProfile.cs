@@ -13,26 +13,29 @@ public class UIProfile : UIEntity
 	[SerializeField] float           m_MinProgress;
 	[SerializeField] float           m_MaxProgress;
 
-	ProfileProcessor  m_ProfileProcessor;
-	ProgressProcessor m_ProgressProcessor;
-	SocialProcessor   m_SocialProcessor;
-	MenuProcessor     m_MenuProcessor;
-	HapticProcessor   m_HapticProcessor;
+	ProfileProcessor   m_ProfileProcessor;
+	ProgressProcessor  m_ProgressProcessor;
+	SocialProcessor    m_SocialProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	[Inject]
 	public void Construct(
-		ProfileProcessor  _ProfileProcessor,
-		ProgressProcessor _ProgressProcessor,
-		SocialProcessor   _SocialProcessor,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor
+		ProfileProcessor   _ProfileProcessor,
+		ProgressProcessor  _ProgressProcessor,
+		SocialProcessor    _SocialProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_ProfileProcessor  = _ProfileProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
-		m_SocialProcessor   = _SocialProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_ProgressProcessor  = _ProgressProcessor;
+		m_SocialProcessor    = _SocialProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup()
@@ -52,6 +55,8 @@ public class UIProfile : UIEntity
 
 	public void Open()
 	{
+		m_StatisticProcessor.LogMainMenuProfileClick();
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();

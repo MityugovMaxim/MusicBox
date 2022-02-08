@@ -104,6 +104,7 @@ public class OffersProcessor
 			if (errorMenu != null)
 			{
 				errorMenu.Setup(
+					"offer_collect_error",
 					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_TITLE"),
 					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_MESSAGE")
 				);

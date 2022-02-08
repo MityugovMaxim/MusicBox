@@ -45,10 +45,7 @@ public class UIHapticState : UIEntity
 		
 		m_HapticProcessor.HapticEnabled = m_Enabled;
 		
-		if (m_Enabled)
-			m_StatisticProcessor.LogHapticEnable();
-		else
-			m_StatisticProcessor.LogHapticDisable();
+		m_StatisticProcessor.LogPauseMenuHaptic(m_Enabled);
 	}
 
 	public void EnableHaptic()

@@ -23,7 +23,6 @@ public class UIMainMenuControl : UIEntity
 	SocialProcessor  m_SocialProcessor;
 	ProfileProcessor m_ProfileProcessor;
 	NewsProcessor    m_NewsProcessor;
-	HapticProcessor  m_HapticProcessor;
 
 	MainMenuPageType m_PageType;
 
@@ -47,15 +46,13 @@ public class UIMainMenuControl : UIEntity
 		SignalBus        _SignalBus,
 		SocialProcessor  _SocialProcessor,
 		ProfileProcessor _ProfileProcessor,
-		NewsProcessor    _NewsProcessor,
-		HapticProcessor  _HapticProcessor
+		NewsProcessor    _NewsProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_SocialProcessor  = _SocialProcessor;
 		m_ProfileProcessor = _ProfileProcessor;
 		m_NewsProcessor    = _NewsProcessor;
-		m_HapticProcessor  = _HapticProcessor;
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Subscribe<OfferDataUpdateSignal>(ProcessOffersBadge);

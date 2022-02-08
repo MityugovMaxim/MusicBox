@@ -29,10 +29,11 @@ public class UIMainMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor,
-		ProductProcessor _ProductProcessor,
-		UrlProcessor     _UrlProcessor
+		SignalBus          _SignalBus,
+		ProfileProcessor   _ProfileProcessor,
+		ProductProcessor   _ProductProcessor,
+		UrlProcessor       _UrlProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
@@ -41,12 +42,7 @@ public class UIMainMenu : UIMenu
 		m_UrlProcessor     = _UrlProcessor;
 	}
 
-	public void Select(MainMenuPageType _PageType)
-	{
-		Select(_PageType, false);
-	}
-
-	public void Select(MainMenuPageType _PageType, bool _Instant)
+	public void Select(MainMenuPageType _PageType, bool _Instant = false)
 	{
 		if (m_PageType == _PageType)
 			return;

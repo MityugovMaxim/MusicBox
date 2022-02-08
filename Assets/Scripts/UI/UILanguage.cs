@@ -23,17 +23,23 @@ public class UILanguage : UIEntity
 
 	[SerializeField] LanguageData[] m_Languages;
 
-	LanguageProcessor m_LanguageProcessor;
-	MenuProcessor     m_MenuProcessor;
+	LanguageProcessor  m_LanguageProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	[Inject]
 	public void Construct(
-		LanguageProcessor _LanguageProcessor,
-		MenuProcessor     _MenuProcessor
+		LanguageProcessor  _LanguageProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_LanguageProcessor = _LanguageProcessor;
-		m_MenuProcessor     = _MenuProcessor;
+		m_LanguageProcessor  = _LanguageProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 		
 		foreach (LanguageData language in m_Languages)
 		{
@@ -64,6 +70,10 @@ public class UILanguage : UIEntity
 	{
 		if (m_LanguageProcessor.Language == _Language.GetCode())
 			return;
+		
+		m_StatisticProcessor.LogMainMenuProfilePageLanguageClick(_Language.GetCode());
+		
+		m_HapticProcessor.Process(Haptic.Type.Success);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		

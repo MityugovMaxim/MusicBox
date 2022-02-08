@@ -31,6 +31,9 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		
+		Container.BindInterfacesTo<StatisticUnity>().FromNew().AsSingle();
+		Container.BindInterfacesTo<StatisticFirebase>().FromNew().AsSingle();
+		
 		Container.BindMemoryPool<UILevelItem, UILevelItem.Pool>()
 			.WithInitialSize(10)
 			.FromComponentInNewPrefab(m_LevelItem)

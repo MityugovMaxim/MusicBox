@@ -7,18 +7,14 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_ShowParameterID    = Animator.StringToHash("Show");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	MenuProcessor  m_MenuProcessor;
-	LevelProcessor m_LevelProcessor;
+	MenuProcessor      m_MenuProcessor;
+	LevelProcessor     m_LevelProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
+	string   m_LevelID;
 	bool     m_Paused;
 	Animator m_Animator;
-
-	[Inject]
-	public void Construct(MenuProcessor _MenuProcessor, LevelProcessor _LevelProcessor)
-	{
-		m_MenuProcessor  = _MenuProcessor;
-		m_LevelProcessor = _LevelProcessor;
-	}
 
 	protected override void Awake()
 	{
@@ -27,6 +23,25 @@ public class UIGamePauseButton : UIEntity
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
+	}
+
+	[Inject]
+	public void Construct(
+		MenuProcessor      _MenuProcessor,
+		LevelProcessor     _LevelProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
+	)
+	{
+		m_MenuProcessor      = _MenuProcessor;
+		m_LevelProcessor     = _LevelProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
+	}
+
+	public void Setup(string _LevelID)
+	{
+		m_LevelID = _LevelID;
 	}
 
 	public void Restore()
@@ -66,9 +81,17 @@ public class UIGamePauseButton : UIEntity
 
 	public void Toggle()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
+		
 		if (m_Paused)
+		{
+			m_StatisticProcessor.LogGameMenuResumeClick(m_LevelID);
 			Resume();
+		}
 		else
+		{
+			m_StatisticProcessor.LogGameMenuPauseClick(m_LevelID);
 			Pause();
+		}
 	}
 }

@@ -13,6 +13,14 @@ public class AudioSourceChangedSignal { }
 
 public class AudioManager : IInitializable
 {
+	public enum OutputType
+	{
+		BuiltIn    = 0,
+		Headphones = 1,
+		Bluetooth  = 2,
+		Unknown    = 3,
+	}
+
 	delegate void RemoteCommandHandler();
 
 	#if UNITY_IOS && !UNITY_EDITOR
@@ -47,7 +55,7 @@ public class AudioManager : IInitializable
 	static extern string AudioManager_GetOutputUID();
 
 	[DllImport("__Internal")]
-	static extern bool AudioManager_IsOutputWireless();
+	static extern int AudioManager_GetOutputType();
 	#endif
 
 	const string MANUAL_LATENCY_KEY = "MANUAL_LATENCY";
@@ -109,12 +117,12 @@ public class AudioManager : IInitializable
 		#endif
 	}
 
-	public static bool IsAudioOutputWireless()
+	public static OutputType GetAudioOutputType()
 	{
 		#if UNITY_IOS && !UNITY_EDITOR
-		return AudioManager_IsOutputWireless();
+		return AudioManager_GetOutputType();
 		#else
-		return false;
+		return OutputType.BuiltIn;
 		#endif
 	}
 

@@ -91,10 +91,19 @@ public static class DataSnapshotExtension
 		return _Default ?? new List<string>();
 	}
 
-	public static Dictionary<string, long> GetLongDictionary(this DataSnapshot _DataSnapshot, string _Name, Dictionary<string, long> _Default = null)
+	public static Dictionary<string, long> GetLongDictionary(this DataSnapshot _DataSnapshot, string _Name)
 	{
-		if (_DataSnapshot.HasChild(_Name))
-			return _DataSnapshot.Child(_Name).GetChildKeys().ToDictionary(_Key => _Key, _Key => _DataSnapshot.GetLong(_Key));
-		return _Default ?? new Dictionary<string, long>();
+		if (!_DataSnapshot.HasChild(_Name))
+			return new Dictionary<string, long>();
+		
+		return _DataSnapshot.Child(_Name).Children.ToDictionary(_Entry => _Entry.Key, _Entry => _Entry.GetLong());
+	}
+
+	public static Dictionary<string, string> GetStringDictionary(this DataSnapshot _DataSnapshot, string _Name)
+	{
+		if (!_DataSnapshot.HasChild(_Name))
+			return new Dictionary<string, string>();
+		
+		return _DataSnapshot.Child(_Name).Children.ToDictionary(_Entry => _Entry.Key, _Entry => _Entry.GetString());
 	}
 }

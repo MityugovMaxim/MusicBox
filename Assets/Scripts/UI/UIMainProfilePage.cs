@@ -15,39 +15,44 @@ public class UIMainProfilePage : UIMainMenuPage
 	[SerializeField] GameObject      m_LoginControls;
 	[SerializeField] GameObject      m_LogoutControls;
 
-	SignalBus         m_SignalBus;
-	LanguageProcessor m_LanguageProcessor;
-	SocialProcessor   m_SocialProcessor;
-	ProfileProcessor  m_ProfileProcessor;
-	StoreProcessor    m_StoreProcessor;
-	ProductProcessor  m_ProductProcessor;
-	MenuProcessor     m_MenuProcessor;
-	HapticProcessor   m_HapticProcessor;
+	SignalBus          m_SignalBus;
+	LanguageProcessor  m_LanguageProcessor;
+	SocialProcessor    m_SocialProcessor;
+	ProfileProcessor   m_ProfileProcessor;
+	StoreProcessor     m_StoreProcessor;
+	ProductProcessor   m_ProductProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	[Inject]
 	public void Construct(
-		SignalBus         _SignalBus,
-		LanguageProcessor _LanguageProcessor,
-		SocialProcessor   _SocialProcessor,
-		ProfileProcessor  _ProfileProcessor,
-		StoreProcessor    _StoreProcessor,
-		ProductProcessor  _ProductProcessor,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor
+		SignalBus          _SignalBus,
+		LanguageProcessor  _LanguageProcessor,
+		SocialProcessor    _SocialProcessor,
+		ProfileProcessor   _ProfileProcessor,
+		StoreProcessor     _StoreProcessor,
+		ProductProcessor   _ProductProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
-		m_SocialProcessor   = _SocialProcessor;
-		m_ProfileProcessor  = _ProfileProcessor;
-		m_StoreProcessor    = _StoreProcessor;
-		m_ProductProcessor  = _ProductProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
+		m_SignalBus          = _SignalBus;
+		m_LanguageProcessor  = _LanguageProcessor;
+		m_SocialProcessor    = _SocialProcessor;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_StoreProcessor     = _StoreProcessor;
+		m_ProductProcessor   = _ProductProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void SignInApple()
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("apple");
+		
 		SignIn(
 			m_SocialProcessor.AttachAppleID,
 			m_LanguageProcessor.Get("APPLE_SIGN_IN_ERROR_TITLE"),
@@ -57,6 +62,8 @@ public class UIMainProfilePage : UIMainMenuPage
 
 	public void SignInGoogle()
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("google");
+		
 		SignIn(
 			m_SocialProcessor.AttachGoogleID,
 			m_LanguageProcessor.Get("GOOGLE_SIGN_IN_ERROR_TITLE"),
@@ -66,6 +73,8 @@ public class UIMainProfilePage : UIMainMenuPage
 
 	public void SignInFacebook()
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("facebook");
+		
 		SignIn(
 			m_SocialProcessor.AttachFacebookID,
 			m_LanguageProcessor.Get("FACEBOOK_SIGN_IN_ERROR_TITLE"),
@@ -73,23 +82,10 @@ public class UIMainProfilePage : UIMainMenuPage
 		);
 	}
 
-	public async void RestorePurchases()
-	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
-		await m_StoreProcessor.Restore();
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-	}
-
 	public async void Logout()
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageSignOutClick(m_SocialProcessor.Provider);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
@@ -107,8 +103,27 @@ public class UIMainProfilePage : UIMainMenuPage
 			await loginMenu.Login();
 	}
 
+	public async void RestorePurchases()
+	{
+		m_StatisticProcessor.LogMainMenuProfilePageRestorePurchasesClick();
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		
+		await m_StoreProcessor.Restore();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
 	public async void ChangeUsername(string _Username)
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageUsernameClick();
+		
 		if (string.IsNullOrEmpty(_Username))
 			m_Username.text = m_SocialProcessor.Name;
 		
@@ -123,6 +138,8 @@ public class UIMainProfilePage : UIMainMenuPage
 
 	public void OpenCoins()
 	{
+		m_StatisticProcessor.LogMainMenuProfilePageCoinsClick();
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		string productID = m_ProductProcessor.GetCoinsProductID(m_ProfileProcessor.Coins);
@@ -183,7 +200,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		{
 			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
 			if (errorMenu != null)
-				errorMenu.Setup(_Title, _Message);
+				errorMenu.Setup("sign_in_error", _Title, _Message);
 			
 			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
 			

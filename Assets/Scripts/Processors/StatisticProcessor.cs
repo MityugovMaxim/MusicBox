@@ -1,121 +1,559 @@
-using System;
 using System.Collections.Generic;
+using Firebase.Analytics;
 using UnityEngine.Analytics;
+using UnityEngine.Scripting;
 using Zenject;
 
-public class StatisticProcessor : IInitializable, IDisposable
+public abstract class StatisticData
 {
-	readonly SignalBus      m_SignalBus;
-	readonly ScoreProcessor m_ScoreProcessor;
+	public abstract Parameter GetParameter();
+	public abstract void Fill(Dictionary<string, object> _Data);
+
+	public static StatisticData Create(string _Key, int _Value)
+	{
+		return new StatisticInteger(_Key, _Value);
+	}
+	
+	public static StatisticData Create(string _Key, string _Value)
+	{
+		return new StatisticString(_Key, _Value);
+	}
+	
+	public static StatisticData Create(string _Key, long _Value)
+	{
+		return new StatisticLong(_Key, _Value);
+	}
+	
+	public static StatisticData Create(string _Key, double _Value)
+	{
+		return new StatisticDouble(_Key, _Value);
+	}
+	
+	public static StatisticData Create(string _Key, bool _Value)
+	{
+		return new StatisticBool(_Key, _Value);
+	}
+}
+
+public abstract class StatisticData<T> : StatisticData
+{
+	protected string Key   { get; }
+	protected T      Value { get; }
+
+	protected StatisticData(string _Key, T _Value)
+	{
+		Key   = _Key;
+		Value = _Value;
+	}
+
+	public override void Fill(Dictionary<string, object> _Data)
+	{
+		_Data[Key] = Value;
+	}
+}
+
+public class StatisticString : StatisticData<string>
+{
+	public StatisticString(string _Key, string _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, Value ?? "null");
+	}
+}
+
+public class StatisticInteger : StatisticData<int>
+{
+	public StatisticInteger(string _Key, int _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, Value);
+	}
+}
+
+public class StatisticLong : StatisticData<long>
+{
+	public StatisticLong(string _Key, long _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, Value);
+	}
+}
+
+public class StatisticDouble : StatisticData<double>
+{
+	public StatisticDouble(string _Key, double _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, Value);
+	}
+}
+
+public class StatisticBool : StatisticData<bool>
+{
+	public StatisticBool(string _Key, bool _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, Value ? 1 : 0);
+	}
+}
+
+public interface IStatisticProvider
+{
+	void LogEvent(string _Name, params StatisticData[] _Parameters);
+}
+
+[Preserve]
+public class StatisticUnity : IStatisticProvider
+{
+	public void LogEvent(string _Name, params StatisticData[] _Parameters)
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		if (_Parameters != null && _Parameters.Length > 0)
+		{
+			foreach (StatisticData parameter in _Parameters)
+				parameter.Fill(data);
+		}
+		
+		Analytics.CustomEvent(_Name, data);
+	}
+}
+
+[Preserve]
+public class StatisticFirebase : IStatisticProvider
+{
+	public void LogEvent(string _Name, params StatisticData[] _Parameters)
+	{
+		List<Parameter> data = new List<Parameter>();
+		
+		if (_Parameters != null && _Parameters.Length > 0)
+		{
+			foreach (StatisticData parameter in _Parameters)
+				data.Add(parameter.GetParameter());
+		}
+		
+		FirebaseAnalytics.LogEvent(_Name, data.ToArray());
+	}
+}
+
+public class StatisticProcessor
+{
+	readonly IStatisticProvider[] m_Providers;
 
 	[Inject]
-	public StatisticProcessor(
-		SignalBus      _SignalBus,
-		ScoreProcessor _ScoreProcessor
-	)
+	public StatisticProcessor(IStatisticProvider[] _Providers)
 	{
-		m_SignalBus      = _SignalBus;
-		m_ScoreProcessor = _ScoreProcessor;
+		m_Providers = _Providers;
 	}
 
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelExitSignal>(RegisterLevelExit);
-	}
+	#region Main Menu
 
-	void IDisposable.Dispose()
+	public void LogMainMenuPageSelect(MainMenuPageType _PageType)
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelExitSignal>(RegisterLevelExit);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		Analytics.CustomEvent(
-			"level_start",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _Signal.LevelID },
-			}
+		LogEvent(
+			"main_menu_control_bar_click",
+			StatisticData.Create("page_type", _PageType.ToString())
 		);
 	}
 
-	void RegisterLevelFinish(LevelFinishSignal _Signal)
+	public void LogMainMenuProfileClick()
 	{
-		Analytics.CustomEvent(
-			"level_finish",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _Signal.LevelID },
-				{ "accuracy", m_ScoreProcessor.Accuracy },
-				{ "score", m_ScoreProcessor.Score },
-				{ "rank", m_ScoreProcessor.Rank.ToString() },
-			}
+		LogEvent("main_menu_profile_click");
+	}
+
+	public void LogMainMenuPromoClick(string _ProductID)
+	{
+		LogEvent(
+			"main_menu_promo_click",
+			StatisticData.Create("product_id", _ProductID)
 		);
 	}
 
-	void RegisterLevelRestart(LevelRestartSignal _Signal)
+	public void LogMainMenuLevelPageItemClick(string _LevelID)
 	{
-		Analytics.CustomEvent(
-			"level_restart",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _Signal.LevelID },
-			}
+		LogEvent(
+			"main_menu_level_page_item_click",
+			StatisticData.Create("level_id", _LevelID)
 		);
 	}
 
-	void RegisterLevelExit(LevelExitSignal _Signal)
+	public void LogMainMenuStorePageItemClick(string _ProductID)
 	{
-		Analytics.CustomEvent(
-			"level_restart",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _Signal.LevelID },
-			}
+		LogEvent(
+			"main_menu_store_page_item_click",
+			StatisticData.Create("product_id", _ProductID)
 		);
 	}
 
-	public void LogLevelLike(string _LevelID)
+	public void LogMainMenuNewsPageItemClick(string _NewsID)
 	{
-		Analytics.CustomEvent(
-			"level_like",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _LevelID },
-				{ "accuracy", m_ScoreProcessor.Accuracy },
-				{ "score", m_ScoreProcessor.Score },
-				{ "rank", m_ScoreProcessor.Rank.ToString() },
-			}
+		LogEvent(
+			"main_menu_news_page_item_click",
+			StatisticData.Create("news_id", _NewsID)
 		);
 	}
 
-	public void LogLevelDislike(string _LevelID)
+	public void LogMainMenuOffersPageItemClick(string _OfferID)
 	{
-		Analytics.CustomEvent(
-			"level_dislike",
-			new Dictionary<string, object>()
-			{
-				{ "level_id", _LevelID },
-				{ "accuracy", m_ScoreProcessor.Accuracy },
-				{ "score", m_ScoreProcessor.Score },
-				{ "rank", m_ScoreProcessor.Rank.ToString() },
-			}
+		LogEvent(
+			"main_menu_offers_page_item_click",
+			StatisticData.Create("offer_id", _OfferID)
 		);
 	}
 
-	public void LogHapticEnable()
+	public void LogMainMenuProfilePageCoinsClick()
 	{
-		Analytics.CustomEvent("haptic_enable");
+		LogEvent("main_menu_profile_page_coins_click");
 	}
 
-	public void LogHapticDisable()
+	public void LogMainMenuProfilePageUsernameClick()
 	{
-		Analytics.CustomEvent("haptic_disable");
+		LogEvent("main_menu_profile_page_username_click");
+	}
+
+	public void LogMainMenuProfilePageLanguageClick(string _Language)
+	{
+		LogEvent(
+			"main_menu_profile_page_language_click",
+			StatisticData.Create("language", _Language)
+		);
+	}
+
+	public void LogMainMenuProfilePageRestorePurchasesClick()
+	{
+		LogEvent("main_menu_profile_page_restore_purchases_click");
+	}
+
+	public void LogMainMenuProfilePageSignInClick(string _ProviderID)
+	{
+		LogEvent(
+			"main_menu_profile_page_sign_in_click",
+			StatisticData.Create("provider_id", _ProviderID)
+		);
+	}
+
+	public void LogMainMenuProfilePageSignOutClick(string _ProviderID)
+	{
+		LogEvent(
+			"main_menu_profile_page_sign_out_click",
+			StatisticData.Create("provider_id", _ProviderID)
+		);
+	}
+
+	#endregion
+
+	#region Level Menu
+
+	public void LogLevelMenuUnlockClick(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_unlock_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogLevelMenuPlayClick(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_play_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogLevelMenuNextClick(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_next_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogLevelMenuPreviousClick(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_previous_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	#endregion
+
+	#region Product Menu
+
+	public void LogProductMenuPurchaseClick(string _ProductID)
+	{
+		LogEvent(
+			"product_menu_purchase_click",
+			StatisticData.Create("product_id", _ProductID)
+		);
+	}
+
+	public void LogProductMenuNextClick(string _ProductID)
+	{
+		LogEvent(
+			"product_menu_next_click",
+			StatisticData.Create("product_id", _ProductID)
+		);
+	}
+
+	public void LogProductMenuPreviousClick(string _ProductID)
+	{
+		LogEvent(
+			"product_menu_previous_click",
+			StatisticData.Create("product_id", _ProductID)
+		);
+	}
+
+	#endregion
+
+	#region Pause Menu
+
+	public void LogPauseMenuLeaveClick(string _LevelID)
+	{
+		LogEvent(
+			"pause_menu_leave_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogPauseMenuRestartClick(string _LevelID)
+	{
+		LogEvent(
+			"pause_menu_restart_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogPauseMenuLatencyClick(string _LevelID)
+	{
+		LogEvent(
+			"pause_menu_latency_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogPauseMenuHaptic(bool _State)
+	{
+		LogEvent(
+			"pause_menu_haptic_state",
+			StatisticData.Create("state", _State)
+		);
+	}
+
+	#endregion
+
+	#region Game Menu
+
+	public void LogGameMenuPauseClick(string _LevelID)
+	{
+		LogEvent(
+			"game_menu_pause_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogGameMenuResumeClick(string _LevelID)
+	{
+		LogEvent(
+			"game_menu_resume_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	#endregion
+
+	#region Result Menu
+
+	public void LogResultMenuRewardPageContinueClick(string _LevelID)
+	{
+		LogEvent(
+			"result_menu_reward_page_continue_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogResultMenuLevelPageContinueClick(string _LevelID)
+	{
+		LogEvent(
+			"result_menu_level_page_continue_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogResultMenuControlPageLeaveClick(string _LevelID)
+	{
+		LogEvent(
+			"result_menu_control_page_leave_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogResultMenuControlPageNextClick(string _LevelID)
+	{
+		LogEvent(
+			"result_menu_control_page_next_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogResultMenuControlPageRestartClick(string _LevelID)
+	{
+		LogEvent(
+			"result_menu_control_page_restart_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogResultMenuControlPagePlatformClick(string _LevelID, string _PlatformID)
+	{
+		LogEvent(
+			"result_menu_control_page_platform_click",
+			StatisticData.Create("level_id", _LevelID),
+			StatisticData.Create("platform_id", _PlatformID)
+		);
+	}
+
+	public void LogResultMenuControlPageRating(string _LevelID, int _Delta)
+	{
+		LogEvent(
+			"result_menu_control_page_rating",
+			StatisticData.Create("level_id", _LevelID),
+			StatisticData.Create("rating", _Delta)
+		);
+	}
+
+	#endregion
+
+	#region Revive Menu
+
+	public void LogReviveMenuShow(string _LevelID)
+	{
+		LogEvent(
+			"revive_menu_show",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogReviveMenuReviveAdsClick(string _LevelID)
+	{
+		LogEvent(
+			"revive_menu_revive_ads_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogReviveMenuReviveCoinsClick(string _LevelID)
+	{
+		LogEvent(
+			"revive_menu_revive_coins_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogReviveMenuLeaveClick(string _LevelID)
+	{
+		LogEvent(
+			"revive_menu_leave_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogReviveMenuRestartClick(string _LevelID)
+	{
+		LogEvent(
+			"revive_menu_restart_click",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	#endregion
+
+	#region Latency Menu
+
+	public void LogLatencyMenuState(string _DeviceName, string _DeviceUID, string _DeviceType, float _Latency)
+	{
+		LogEvent(
+			"latency_menu_state",
+			StatisticData.Create("device_name", _DeviceName),
+			StatisticData.Create("device_uid", _DeviceUID),
+			StatisticData.Create("device_type", _DeviceType),
+			StatisticData.Create("latency", _Latency)
+		);
+	}
+
+	#endregion
+
+	#region Error Menu
+
+	public void LogErrorMenuShow(string _Reason)
+	{
+		LogEvent(
+			"error_menu_show",
+			StatisticData.Create("reason", _Reason)
+		);
+	}
+
+	#endregion
+
+	#region Retry Menu
+
+	public void LogRetryMenuShow(string _Reason)
+	{
+		LogEvent(
+			"retry_menu_show",
+			StatisticData.Create("reason", _Reason)
+		);
+	}
+
+	public void LogRetryMenuRetryClick(string _Reason)
+	{
+		LogEvent(
+			"retry_menu_retry_click",
+			StatisticData.Create("reason", _Reason)
+		);
+	}
+
+	public void LogRetryMenuCancelClick(string _Reason)
+	{
+		LogEvent(
+			"retry_menu_cancel_click",
+			StatisticData.Create("reason", _Reason)
+		);
+	}
+
+	#endregion
+
+	#region Banner Menu
+
+	public void LogBannerMenuCloseClick(string _BannerID)
+	{
+		LogEvent(
+			"banner_menu_close_click",
+			StatisticData.Create("banner_id", _BannerID)
+		);
+	}
+
+	public void LogBannerMenuOpenClick(string _BannerID)
+	{
+		LogEvent(
+			"banner_menu_open_click",
+			StatisticData.Create("banner_id", _BannerID)
+		);
+	}
+
+	#endregion
+
+	void LogEvent(string _Name, params StatisticData[] _Parameters)
+	{
+		if (m_Providers == null || m_Providers.Length == 0)
+			return;
+		
+		foreach (IStatisticProvider provider in m_Providers)
+			provider.LogEvent(_Name, _Parameters);
 	}
 }

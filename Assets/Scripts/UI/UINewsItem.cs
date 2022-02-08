@@ -12,26 +12,29 @@ public class UINewsItem : UIGroupLayout
 	[SerializeField] TMP_Text      m_Title;
 	[SerializeField] TMP_Text      m_Text;
 
-	NewsProcessor    m_NewsProcessor;
-	StorageProcessor m_StorageProcessor;
-	UrlProcessor     m_UrlProcessor;
-	HapticProcessor  m_HapticProcessor;
+	NewsProcessor      m_NewsProcessor;
+	StorageProcessor   m_StorageProcessor;
+	UrlProcessor       m_UrlProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	string m_NewsID;
 	string m_URL;
 
 	[Inject]
 	public void Construct(
-		NewsProcessor    _NewsProcessor,
-		StorageProcessor _StorageProcessor,
-		UrlProcessor     _UrlProcessor,
-		HapticProcessor  _HapticProcessor
+		NewsProcessor      _NewsProcessor,
+		StorageProcessor   _StorageProcessor,
+		UrlProcessor       _UrlProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_NewsProcessor    = _NewsProcessor;
-		m_StorageProcessor = _StorageProcessor;
-		m_UrlProcessor     = _UrlProcessor;
-		m_HapticProcessor  = _HapticProcessor;
+		m_NewsProcessor      = _NewsProcessor;
+		m_StorageProcessor   = _StorageProcessor;
+		m_UrlProcessor       = _UrlProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _NewsID)
@@ -47,6 +50,8 @@ public class UINewsItem : UIGroupLayout
 
 	public async void Open()
 	{
+		m_StatisticProcessor.LogMainMenuNewsPageItemClick(m_NewsID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		await m_UrlProcessor.ProcessURL(m_URL);

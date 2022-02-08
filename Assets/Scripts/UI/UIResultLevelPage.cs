@@ -25,42 +25,49 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	ProfileProcessor  m_ProfileProcessor;
-	ScoreProcessor    m_ScoreProcessor;
-	ProgressProcessor m_ProgressProcessor;
-	StorageProcessor  m_StorageProcessor;
-	LevelManager      m_LevelManager;
-	MenuProcessor     m_MenuProcessor;
-	HapticProcessor   m_HapticProcessor;
-	UIUnlockItem.Pool m_ItemPool;
+	ProfileProcessor   m_ProfileProcessor;
+	ScoreProcessor     m_ScoreProcessor;
+	ProgressProcessor  m_ProgressProcessor;
+	StorageProcessor   m_StorageProcessor;
+	LevelManager       m_LevelManager;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
+	UIUnlockItem.Pool  m_ItemPool;
 
 	readonly Queue<ProgressData> m_ProgressData = new Queue<ProgressData>();
 	readonly List<UIUnlockItem>  m_Items        = new List<UIUnlockItem>();
 
+	string m_LevelID;
+
 	[Inject]
 	public void Construct(
-		ProfileProcessor  _ProfileProcessor,
-		ScoreProcessor    _ScoreProcessor,
-		ProgressProcessor _ProgressProcessor,
-		StorageProcessor  _StorageProcessor,
-		LevelManager      _LevelManager,
-		MenuProcessor     _MenuProcessor,
-		HapticProcessor   _HapticProcessor,
-		UIUnlockItem.Pool _ItemPool
+		ProfileProcessor   _ProfileProcessor,
+		ScoreProcessor     _ScoreProcessor,
+		ProgressProcessor  _ProgressProcessor,
+		StorageProcessor   _StorageProcessor,
+		LevelManager       _LevelManager,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor,
+		UIUnlockItem.Pool  _ItemPool
 	)
 	{
-		m_ProfileProcessor  = _ProfileProcessor;
-		m_ScoreProcessor    = _ScoreProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
-		m_StorageProcessor  = _StorageProcessor;
-		m_LevelManager      = _LevelManager;
-		m_MenuProcessor     = _MenuProcessor;
-		m_HapticProcessor   = _HapticProcessor;
-		m_ItemPool          = _ItemPool;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_ScoreProcessor     = _ScoreProcessor;
+		m_ProgressProcessor  = _ProgressProcessor;
+		m_StorageProcessor   = _StorageProcessor;
+		m_LevelManager       = _LevelManager;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
+		m_ItemPool           = _ItemPool;
 	}
 
 	public override void Setup(string _LevelID)
 	{
+		m_LevelID = _LevelID;
+		
 		int sourceDiscs = m_ProfileProcessor.Discs;
 		int targetDiscs = m_ProfileProcessor.Discs + (int)m_ScoreProcessor.Rank;
 		int minLevel    = m_ProgressProcessor.GetMinLevel();
@@ -158,6 +165,8 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	public async void Continue()
 	{
+		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_ContinueGroup.Hide();

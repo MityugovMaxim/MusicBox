@@ -12,24 +12,25 @@ public class LevelDataUpdateSignal { }
 
 public class LevelSnapshot
 {
-	public string     ID             { get; }
-	public int        Level          { get; }
-	public string     Title          { get; }
-	public string     Artist         { get; }
-	public LevelMode  Mode           { get; }
-	public LevelBadge Badge          { get; }
-	public float      Length         { get; }
-	public float      BPM            { get; }
-	public float      Speed          { get; }
-	public float      Invincibility  { get; }
-	public long       DefaultPayout  { get; }
-	public long       BronzePayout   { get; }
-	public long       SilverPayout   { get; }
-	public long       GoldPayout     { get; }
-	public long       PlatinumPayout { get; }
-	public long       Price          { get; }
-	public long       RevivePrice    { get; }
-	public string     Skin           { get; }
+	public string                              ID             { get; }
+	public int                                 Level          { get; }
+	public string                              Title          { get; }
+	public string                              Artist         { get; }
+	public LevelMode                           Mode           { get; }
+	public LevelBadge                          Badge          { get; }
+	public float                               Length         { get; }
+	public float                               BPM            { get; }
+	public float                               Speed          { get; }
+	public float                               Invincibility  { get; }
+	public long                                DefaultPayout  { get; }
+	public long                                BronzePayout   { get; }
+	public long                                SilverPayout   { get; }
+	public long                                GoldPayout     { get; }
+	public long                                PlatinumPayout { get; }
+	public long                                Price          { get; }
+	public long                                RevivePrice    { get; }
+	public string                              Skin           { get; }
+	public IReadOnlyDictionary<string, string> Platforms      { get; }
 
 	public LevelSnapshot(DataSnapshot _Data)
 	{
@@ -51,6 +52,7 @@ public class LevelSnapshot
 		Price          = _Data.GetLong("price");
 		RevivePrice    = _Data.GetLong("revive_price");
 		Skin           = _Data.GetString("skin", "level");
+		Platforms      = _Data.GetStringDictionary("platforms");
 	}
 }
 
@@ -242,6 +244,25 @@ public class LevelProcessor
 		}
 		
 		return levelSnapshot.Badge;
+	}
+
+	public string GetPlatformURL(string _LevelID, string _PlatformID)
+	{
+		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		
+		if (levelSnapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get platform URL failed. Level info with ID '{0}' is null.", _LevelID);
+			return string.Empty;
+		}
+		
+		if (!levelSnapshot.Platforms.TryGetValue(_PlatformID, out string url))
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get platform URL failed. URL not found. Level: {0} Platform: {1}", _LevelID, _PlatformID);
+			return string.Empty;
+		}
+		
+		return url;
 	}
 
 	public async Task Load(string _LevelID)

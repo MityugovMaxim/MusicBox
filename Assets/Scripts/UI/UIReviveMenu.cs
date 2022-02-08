@@ -14,12 +14,13 @@ public class UIReviveMenu : UIMenu
 	[SerializeField] UILevelThumbnail  m_LevelThumbnail;
 	[SerializeField] UILevelModeButton m_RestartButton;
 
-	AdsProcessor     m_AdsProcessor;
-	ProfileProcessor m_ProfileProcessor;
-	LevelProcessor   m_LevelProcessor;
-	HealthProcessor  m_HealthProcessor;
-	MenuProcessor    m_MenuProcessor;
-	HapticProcessor  m_HapticProcessor;
+	AdsProcessor       m_AdsProcessor;
+	ProfileProcessor   m_ProfileProcessor;
+	LevelProcessor     m_LevelProcessor;
+	HealthProcessor    m_HealthProcessor;
+	MenuProcessor      m_MenuProcessor;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	string m_LevelID;
 	int    m_ReviveCount;
@@ -28,20 +29,22 @@ public class UIReviveMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		AdsProcessor     _AdsProcessor,
-		ProfileProcessor _ProfileProcessor,
-		LevelProcessor   _LevelProcessor,
-		HealthProcessor  _HealthProcessor,
-		MenuProcessor    _MenuProcessor,
-		HapticProcessor  _HapticProcessor
+		AdsProcessor       _AdsProcessor,
+		ProfileProcessor   _ProfileProcessor,
+		LevelProcessor     _LevelProcessor,
+		HealthProcessor    _HealthProcessor,
+		MenuProcessor      _MenuProcessor,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
 	)
 	{
-		m_AdsProcessor     = _AdsProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_LevelProcessor   = _LevelProcessor;
-		m_HealthProcessor  = _HealthProcessor;
-		m_MenuProcessor    = _MenuProcessor;
-		m_HapticProcessor  = _HapticProcessor;
+		m_AdsProcessor       = _AdsProcessor;
+		m_ProfileProcessor   = _ProfileProcessor;
+		m_LevelProcessor     = _LevelProcessor;
+		m_HealthProcessor    = _HealthProcessor;
+		m_MenuProcessor      = _MenuProcessor;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -50,10 +53,16 @@ public class UIReviveMenu : UIMenu
 		m_ReviveCount = 0;
 		m_LevelThumbnail.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
+		
+		m_StatisticProcessor.LogReviveMenuShow(m_LevelID);
 	}
 
 	public async void ReviveCoins()
 	{
+		m_StatisticProcessor.LogReviveMenuReviveCoinsClick(m_LevelID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
@@ -80,6 +89,10 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveAds()
 	{
+		m_StatisticProcessor.LogReviveMenuReviveAdsClick(m_LevelID);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
@@ -106,6 +119,8 @@ public class UIReviveMenu : UIMenu
 
 	public async void Restart()
 	{
+		m_StatisticProcessor.LogReviveMenuRestartClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
@@ -146,6 +161,8 @@ public class UIReviveMenu : UIMenu
 
 	public async void Leave()
 	{
+		m_StatisticProcessor.LogReviveMenuLeaveClick(m_LevelID);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_LeaveAdsCount++;

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
+using OutputType = AudioManager.OutputType;
 
 [Menu(MenuType.LatencyMenu)]
 public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
@@ -22,15 +23,23 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 	[SerializeField] Button            m_IncreaseButton;
 	[SerializeField] Button            m_DecreaseButton;
 
-	SignalBus m_SignalBus;
+	SignalBus          m_SignalBus;
+	HapticProcessor    m_HapticProcessor;
+	StatisticProcessor m_StatisticProcessor;
 
 	int         m_ManualLatency;
 	IEnumerator m_LatencyRoutine;
 
 	[Inject]
-	public void Construct(SignalBus _SignalBus)
+	public void Construct(
+		SignalBus          _SignalBus,
+		HapticProcessor    _HapticProcessor,
+		StatisticProcessor _StatisticProcessor
+	)
 	{
-		m_SignalBus = _SignalBus;
+		m_SignalBus          = _SignalBus;
+		m_HapticProcessor    = _HapticProcessor;
+		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -72,6 +81,13 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 		
 		AudioManager.SetManualLatency(manualLatency);
 		
+		m_StatisticProcessor.LogLatencyMenuState(
+			AudioManager.GetAudioOutputName(),
+			AudioManager.GetAudioOutputUID(),
+			AudioManager.GetAudioOutputType().ToString(),
+			AudioManager.GetManualLatency()
+		);
+		
 		if (m_LatencyRoutine != null)
 			StopCoroutine(m_LatencyRoutine);
 		
@@ -85,20 +101,36 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 
 	void Reload()
 	{
-		float  manualLatency  = AudioManager.GetManualLatency();
-		string outputName     = AudioManager.GetAudioOutputName();
-		bool   wirelessOutput = AudioManager.IsAudioOutputWireless();
+		float      manualLatency = AudioManager.GetManualLatency();
+		string     outputName    = AudioManager.GetAudioOutputName();
+		OutputType outputType    = AudioManager.GetAudioOutputType();
+		string     outputIcon    = GetOutputIcon(outputType);
 		
 		m_ManualLatency        = (int)(manualLatency * 1000);
-		m_OutputNameLabel.text = wirelessOutput
-			? $"<sprite name=\"headphones_icon\"> {outputName}"
-			: $"<sprite name=\"speaker_icon\"> {outputName}";
+		m_OutputNameLabel.text = $"{outputIcon}{outputName}";
 		
 		ProcessManualLatency();
 	}
 
+	static string GetOutputIcon(OutputType _OutputType)
+	{
+		switch (_OutputType)
+		{
+			case OutputType.BuiltIn:
+				return "<sprite name=speaker_icon>";
+			case OutputType.Headphones:
+				return "<sprite name=headphones_icon>";
+			case OutputType.Bluetooth:
+				return "<sprite name=bluetooth_logo>";
+			default:
+				return string.Empty;
+		}
+	}
+
 	void Increase()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		m_ManualLatency += MANUAL_LATENCY_STEP;
 		
 		ProcessManualLatency();
@@ -106,6 +138,8 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 
 	void Decrease()
 	{
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		m_ManualLatency -= MANUAL_LATENCY_STEP;
 		
 		ProcessManualLatency();
