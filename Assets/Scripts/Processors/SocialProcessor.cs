@@ -12,11 +12,12 @@ public class SocialDataUpdateSignal { }
 [Preserve]
 public class SocialProcessor : IInitializable, IDisposable
 {
-	public bool   Guest  => m_User?.IsAnonymous ?? true;
-	public string UserID => m_User?.UserId;
-	public string Email  => m_User?.Email;
-	public string Name   => m_User?.DisplayName;
-	public Uri    Photo  => m_User?.PhotoUrl;
+	public string Provider => m_User?.ProviderId.Replace(".com", string.Empty).ToLowerInvariant() ?? "unkwnown";
+	public bool   Guest    => m_User?.IsAnonymous ?? true;
+	public string UserID   => m_User?.UserId;
+	public string Email    => m_User?.Email;
+	public string Name     => m_User?.DisplayName;
+	public Uri    Photo    => m_User?.PhotoUrl;
 
 	readonly SignalBus         m_SignalBus;
 	readonly LanguageProcessor m_LanguageProcessor;
