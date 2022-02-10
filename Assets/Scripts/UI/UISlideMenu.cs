@@ -9,6 +9,8 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 
 	IEnumerator m_RepositionRoutine;
 
+	Vector2 m_Delta;
+
 	void Expand()
 	{
 		if (m_RepositionRoutine != null)
@@ -133,22 +135,26 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		min.y = Mathf.Clamp(min.y + delta, -1, 0);
 		max.y = Mathf.Clamp(max.y + delta, 0, 1);
 		
+		m_Delta = _EventData.delta;
+		
 		m_Content.anchorMin = min;
 		m_Content.anchorMax = max;
 	}
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
 	{
+		m_Delta = Vector2.zero;
+		
 		if (m_RepositionRoutine != null)
 			StopCoroutine(m_RepositionRoutine);
 	}
 
-	void IDropHandler.OnDrop(PointerEventData _EventData)
+	public void OnDrop(PointerEventData _EventData)
 	{
 		const float anchorThreshold = 0.7f;
-		const float speedThreshold  = 0.3f;
+		const float speedThreshold  = 0.4f;
 		
-		float speed = _EventData.delta.y / Screen.height / Time.deltaTime;
+		float speed = m_Delta.y / Screen.height / Time.deltaTime;
 		
 		Vector2 anchor = m_Content.anchorMax;
 		

@@ -19,9 +19,10 @@ public class HealthProcessor : IInitializable, IDisposable
 {
 	const int MAX_HEALTH = 4;
 
-	readonly SignalBus      m_SignalBus;
-	readonly LevelProcessor m_LevelProcessor;
-	readonly MenuProcessor  m_MenuProcessor;
+	readonly SignalBus       m_SignalBus;
+	readonly LevelProcessor  m_LevelProcessor;
+	readonly LevelController m_LevelController;
+	readonly MenuProcessor   m_MenuProcessor;
 
 	string m_LevelID;
 	int    m_Health;
@@ -30,14 +31,16 @@ public class HealthProcessor : IInitializable, IDisposable
 
 	[Inject]
 	public HealthProcessor(
-		SignalBus      _SignalBus,
-		LevelProcessor _LevelProcessor,
-		MenuProcessor  _MenuProcessor
+		SignalBus       _SignalBus,
+		LevelProcessor  _LevelProcessor,
+		LevelController _LevelController,
+		MenuProcessor   _MenuProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_LevelProcessor = _LevelProcessor;
-		m_MenuProcessor  = _MenuProcessor;
+		m_SignalBus       = _SignalBus;
+		m_LevelProcessor  = _LevelProcessor;
+		m_LevelController = _LevelController;
+		m_MenuProcessor   = _MenuProcessor;
 	}
 
 	public void Restore()
@@ -105,7 +108,7 @@ public class HealthProcessor : IInitializable, IDisposable
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		m_LevelProcessor.Pause();
+		m_LevelController.Pause();
 		
 		await Task.Delay(500);
 		

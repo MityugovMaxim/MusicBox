@@ -5,24 +5,18 @@ using Firebase.Messaging;
 using ModestTree;
 using Unity.Notifications.iOS;
 using UnityEngine;
+using UnityEngine.Purchasing.MiniJSON;
 using Zenject;
 
 public abstract class MessageProcessor : IInitializable
 {
 	const string TOPICS_LANGUAGE_KEY = "TOPICS_LANGUAGE";
 
-	static string TopicsLanguage
+	static string Topic
 	{
 		get => PlayerPrefs.GetString(TOPICS_LANGUAGE_KEY, string.Empty);
 		set => PlayerPrefs.SetString(TOPICS_LANGUAGE_KEY, value);
 	}
-
-	static readonly string[] m_Topics =
-	{
-		"news",
-		"offers",
-		"version",
-	};
 
 	readonly LanguageProcessor m_LanguageProcessor;
 	readonly UrlProcessor      m_UrlProcessor;
@@ -36,15 +30,13 @@ public abstract class MessageProcessor : IInitializable
 		m_UrlProcessor      = _UrlProcessor;
 	}
 
-	protected abstract string GetLaunchURL();
+	protected virtual string GetLaunchURL() => Application.absoluteURL;
 
 	protected abstract void RemoveScheduledNotifications();
 
 	void IInitializable.Initialize()
 	{
 		RemoveScheduledNotifications();
-		
-		iOSNotificationCenter.ApplicationBadge = 0;
 	}
 
 	public async Task ProcessPermission()
@@ -63,31 +55,27 @@ public abstract class MessageProcessor : IInitializable
 		FirebaseMessaging.MessageReceived += OnMessageReceived;
 	}
 
-	public async Task ProcessTopics()
+	public async Task ProcessTopic()
 	{
-		if (TopicsLanguage == m_LanguageProcessor.Language)
+		if (Topic == m_LanguageProcessor.Language)
 			return;
 		
-		TopicsLanguage = m_LanguageProcessor.Language;
+		Topic = m_LanguageProcessor.Language;
 		
 		List<Task> tasks = new List<Task>();
-		foreach (string language in m_LanguageProcessor.SupportedLanguages.Except(TopicsLanguage))
-		foreach (string topic in m_Topics)
-			tasks.Add(FirebaseMessaging.UnsubscribeAsync($"{topic}_{language}"));
+		foreach (string language in m_LanguageProcessor.SupportedLanguages.Except(Topic))
+			tasks.Add(FirebaseMessaging.UnsubscribeAsync(language));
 		
 		await Task.WhenAll(tasks);
 		
-		tasks.Clear();
+		await FirebaseMessaging.SubscribeAsync(Topic);
 		
-		foreach (string topic in m_Topics)
-			tasks.Add(FirebaseMessaging.UnsubscribeAsync($"{topic}_{TopicsLanguage}"));
-		
-		await Task.WhenAll(tasks);
+		Debug.Log("[MessageProcessor] Process topics complete.");
 	}
 
-	public async Task ProcessLaunchURL()
+	public async Task ProcessLaunchURL(bool _Instant = false)
 	{
-		await m_UrlProcessor.ProcessURL(GetLaunchURL());
+		await m_UrlProcessor.ProcessURL(GetLaunchURL(), _Instant);
 	}
 
 	static void OnTokenReceived(object _Sender, TokenReceivedEventArgs _Args)
@@ -95,9 +83,12 @@ public abstract class MessageProcessor : IInitializable
 		Debug.LogFormat("[MessageProcessor] Received notification token: '{0}'.", _Args.Token);
 	}
 
-	static void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
+	async void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
 	{
-		Debug.LogFormat("[MessageProcessor] Received message. Sender: {0}.", _Args.Message.From);
+		if (!_Args.Message.Data.TryGetValue("url", out string url))
+			return;
+		
+		await m_UrlProcessor.ProcessURL(url);
 	}
 }
 
@@ -113,11 +104,20 @@ public class iOSMessageProcessor : MessageProcessor
 	{
 		iOSNotification notification = iOSNotificationCenter.GetLastRespondedNotification();
 		
-		return notification?.Data;
+		if (notification?.Data == null)
+			return Application.absoluteURL;
+		
+		Dictionary<string, object> data = Json.Deserialize(notification.Data) as Dictionary<string, object>;
+		
+		Debug.LogError("---> DATA: " + notification.Data);
+		
+		return data.GetString("url", Application.absoluteURL);
 	}
 
 	protected override void RemoveScheduledNotifications()
 	{
 		iOSNotificationCenter.RemoveAllScheduledNotifications();
+		
+		iOSNotificationCenter.ApplicationBadge = 0;
 	}
 }

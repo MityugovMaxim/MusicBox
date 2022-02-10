@@ -14,7 +14,7 @@ public class UrlProcessor
 		m_MenuProcessor = _MenuProcessor;
 	}
 
-	public async Task ProcessURL(string _URL)
+	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
 		if (string.IsNullOrEmpty(_URL))
 			return;
@@ -32,19 +32,19 @@ public class UrlProcessor
 		switch (uri.Host)
 		{
 			case "news":
-				await ProcessNews();
+				await ProcessNews(parameters, _Instant);
 				break;
 			case "level":
-				await ProcessLevel(parameters);
+				await ProcessLevel(parameters, _Instant);
 				break;
 			case "store":
-				await ProcessProduct(parameters);
+				await ProcessProduct(parameters, _Instant);
 				break;
 			case "offers":
-				await ProcessOffers();
+				await ProcessOffers(parameters, _Instant);
 				break;
 			case "profile":
-				await ProcessProfile();
+				await ProcessProfile(parameters, _Instant);
 				break;
 		}
 	}
@@ -67,90 +67,95 @@ public class UrlProcessor
 		return parameters;
 	}
 
-	Task ProcessNews()
+	async Task ProcessProduct(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.News);
-	}
-
-	async Task ProcessProduct(IReadOnlyDictionary<string, string> _Parameters)
-	{
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		if (mainMenu == null || !mainMenu.Shown)
+			return;
+		
+		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
+		
 		if (_Parameters == null || !_Parameters.TryGetValue("product_id", out string productID))
 			return;
 		
-		UIMainMenu    mainMenu    = m_MenuProcessor.GetMenu<UIMainMenu>();
-		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
-		
-		bool instant = mainMenu == null || !mainMenu.Shown;
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
 		
-		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
 		if (productMenu != null)
 			productMenu.Setup(productID);
 		
-		await m_MenuProcessor.Show(MenuType.ProductMenu, instant);
+		await m_MenuProcessor.Show(MenuType.ProductMenu, _Instant);
 		
-		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Store, true);
+		mainMenu.Select(MainMenuPageType.Store, true);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	async Task ProcessLevel(IReadOnlyDictionary<string, string> _Parameters)
+	async Task ProcessLevel(Dictionary<string, string> _Parameters, bool _Instant)
 	{
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		if (mainMenu == null || !mainMenu.Shown)
+			return;
+		
+		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
+		
 		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
 			return;
 		
-		UIMainMenu  mainMenu  = m_MenuProcessor.GetMenu<UIMainMenu>();
-		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
 		
 		if (levelMenu != null)
 			levelMenu.Setup(levelID);
 		
-		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
-		await m_MenuProcessor.Show(MenuType.LevelMenu, mainMenu == null || !mainMenu.Shown);
+		await m_MenuProcessor.Show(MenuType.LevelMenu, _Instant);
 		
-		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Levels);
+		mainMenu.Select(MainMenuPageType.Levels, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	Task ProcessOffers()
+	Task ProcessNews(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Offers);
+		return SelectMainPage(MainMenuPageType.News, _Instant);
 	}
 
-	Task ProcessProfile()
+	Task ProcessOffers(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Profile);
+		return SelectMainPage(MainMenuPageType.Offers, _Instant);
 	}
 
-	async Task SelectMainPage(MainMenuPageType _PageType)
+	Task ProcessProfile(Dictionary<string, string> _Parameters, bool _Instant)
+	{
+		return SelectMainPage(MainMenuPageType.Profile, _Instant);
+	}
+
+	async Task SelectMainPage(MainMenuPageType _PageType, bool _Instant)
 	{
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		
-		bool instant = mainMenu == null || !mainMenu.Shown;
+		if (mainMenu == null || !mainMenu.Shown)
+			return;
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu);
+		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
 		
-		await m_MenuProcessor.Hide(MenuType.ProductMenu);
+		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		if (mainMenu != null)
-			mainMenu.Select(_PageType, instant);
+			mainMenu.Select(_PageType, _Instant);
 	}
 }

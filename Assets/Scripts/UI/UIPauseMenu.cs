@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.PauseMenu)]
@@ -10,9 +11,11 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UILevelThumbnail m_Thumbnail;
 	[SerializeField] UIHapticState    m_HapticState;
 
-	MenuProcessor      m_MenuProcessor;
+	ProfileProcessor   m_ProfileProcessor;
 	LevelProcessor     m_LevelProcessor;
+	LevelController    m_LevelController;
 	AdsProcessor       m_AdsProcessor;
+	MenuProcessor      m_MenuProcessor;
 	HapticProcessor    m_HapticProcessor;
 	StatisticProcessor m_StatisticProcessor;
 
@@ -22,15 +25,19 @@ public class UIPauseMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		MenuProcessor      _MenuProcessor,
+		ProfileProcessor   _ProfileProcessor,
 		LevelProcessor     _LevelProcessor,
+		LevelController    _LevelController,
 		AdsProcessor       _AdsProcessor,
+		MenuProcessor      _MenuProcessor,
 		HapticProcessor    _HapticProcessor,
 		StatisticProcessor _StatisticProcessor
 	)
 	{
+		m_ProfileProcessor   = _ProfileProcessor;
 		m_MenuProcessor      = _MenuProcessor;
 		m_LevelProcessor     = _LevelProcessor;
+		m_LevelController    = _LevelController;
 		m_AdsProcessor       = _AdsProcessor;
 		m_HapticProcessor    = _HapticProcessor;
 		m_StatisticProcessor = _StatisticProcessor;
@@ -51,24 +58,14 @@ public class UIPauseMenu : UIMenu
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		m_RestartAdsCount++;
+		if (!await ProcessRestartAds())
+			return;
 		
-		if (m_RestartAdsCount >= RESTART_ADS_COUNT)
-		{
-			m_RestartAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		
-		m_LevelProcessor.Restart();
+		m_LevelController.Restart();
 		
 		await m_MenuProcessor.Hide(MenuType.PauseMenu);
 		
-		m_LevelProcessor.Play();
+		m_LevelController.Play();
 	}
 
 	public async void Leave()
@@ -77,20 +74,9 @@ public class UIPauseMenu : UIMenu
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		m_LeaveAdsCount++;
+		await ProcessLeaveAds();
 		
-		if (m_LeaveAdsCount >= LEAVE_ADS_COUNT)
-		{
-			m_LeaveAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		
-		m_LevelProcessor.Remove();
+		m_LevelController.Remove();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -124,5 +110,60 @@ public class UIPauseMenu : UIMenu
 	{
 		if (m_HapticState != null)
 			m_HapticState.Execute();
+	}
+
+	async Task<bool> ProcessRestartAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return true;
+		
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		
+		if (levelMode == LevelMode.Ads)
+		{
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			bool success = await m_AdsProcessor.Rewarded();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return success;
+		}
+		else
+		{
+			m_RestartAdsCount++;
+			
+			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+				return true;
+			
+			m_RestartAdsCount = 0;
+			
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return true;
+		}
+	}
+
+	async Task ProcessLeaveAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return;
+		
+		m_LeaveAdsCount++;
+		
+		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+			return;
+		
+		m_LeaveAdsCount = 0;
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_AdsProcessor.Interstitial();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }

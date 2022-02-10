@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
@@ -17,15 +18,17 @@ public enum ScoreRank
 
 public class ScoreSnapshot
 {
+	public string    LevelID  { get; }
 	public int       Accuracy { get; }
 	public long      Score    { get; }
 	public ScoreRank Rank     { get; }
 
-	public ScoreSnapshot(DataSnapshot _DataSnapshot)
+	public ScoreSnapshot(DataSnapshot _Data)
 	{
-		Accuracy = _DataSnapshot.GetInt("accuracy");
-		Score    = _DataSnapshot.GetLong("score");
-		Rank     = _DataSnapshot.GetEnum<ScoreRank>("rank");
+		LevelID  = _Data.Key;
+		Accuracy = _Data.GetInt("accuracy");
+		Score    = _Data.GetLong("score");
+		Rank     = _Data.GetEnum<ScoreRank>("rank");
 	}
 }
 
@@ -211,11 +214,10 @@ public class ScoreProcessor : IInitializable, IDisposable
 	readonly SignalBus       m_SignalBus;
 	readonly SocialProcessor m_SocialProcessor;
 
-	readonly Dictionary<string, ScoreSnapshot> m_ScoreSnapshots = new Dictionary<string, ScoreSnapshot>();
+	readonly List<ScoreSnapshot> m_ScoreSnapshots = new List<ScoreSnapshot>();
 
 	DatabaseReference m_ScoresData;
 
-	string m_LevelID;
 	long   m_Score;
 	int    m_Combo;
 
@@ -267,23 +269,23 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	public int GetAccuracy(string _LevelID)
 	{
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
 		
-		return scoreSnapshot != null ? scoreSnapshot.Accuracy : 0;
+		return snapshot?.Accuracy ?? 0;
 	}
 
 	public long GetScore(string _LevelID)
 	{
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
 		
-		return scoreSnapshot != null ? scoreSnapshot.Score : 0;
+		return snapshot?.Score ?? 0;
 	}
 
 	public ScoreRank GetRank(string _LevelID)
 	{
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
 		
-		return scoreSnapshot != null ? scoreSnapshot.Rank : ScoreRank.None;
+		return snapshot?.Rank ?? ScoreRank.None;
 	}
 
 	public int GetRankMinAccuracy(ScoreRank _Rank)
@@ -324,52 +326,10 @@ public class ScoreProcessor : IInitializable, IDisposable
 		}
 	}
 
-	public int GetDiscsCount(ScoreRank _Rank)
-	{
-		int count = 0;
-		foreach (ScoreSnapshot scoreSnapshot in m_ScoreSnapshots.Values)
-		{
-			if (scoreSnapshot.Rank >= _Rank)
-				count++;
-		}
-		return count;
-	}
-
-	public async Task SaveScore()
-	{
-		if (string.IsNullOrEmpty(m_LevelID))
-		{
-			Debug.LogError("[ScoreProcessor] Save score failed. Level ID is null or empty.");
-			return;
-		}
-		
-		int  accuracy = Accuracy;
-		long score    = Score;
-		int  rank     = (int)Rank;
-		
-		ScoreSnapshot scoreSnapshot = GetScoreSnapshot(m_LevelID);
-		
-		if (scoreSnapshot != null && scoreSnapshot.Accuracy >= Accuracy)
-			return;
-		
-		Dictionary<string, object> scoreData = new Dictionary<string, object>()
-		{
-			{ "accuracy", accuracy },
-			{ "score", score },
-			{ "rank", rank },
-		};
-		
-		m_LevelID = null;
-		
-		await m_ScoresData.Child(m_LevelID).SetValueAsync(scoreData);
-		
-		Debug.LogFormat("[ScoreProcessor] Save score complete. LevelID: {0}.", m_LevelID);
-	}
-
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Subscribe<LevelStartSignal>(Restore);
+		m_SignalBus.Subscribe<LevelRestartSignal>(Restore);
 		
 		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
 		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
@@ -385,8 +345,8 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Unsubscribe<LevelStartSignal>(Restore);
+		m_SignalBus.Unsubscribe<LevelRestartSignal>(Restore);
 		
 		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
 		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
@@ -398,20 +358,6 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
 		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
-	}
-
-	void RegisterLevelStart(LevelStartSignal _Signal)
-	{
-		m_LevelID = _Signal.LevelID;
-		
-		Restore();
-	}
-
-	void RegisterLevelRestart(LevelRestartSignal _Signal)
-	{
-		m_LevelID = _Signal.LevelID;
-		
-		Restore();
 	}
 
 	async void OnScoresUpdate(object _Sender, EventArgs _Args)
@@ -432,19 +378,18 @@ public class ScoreProcessor : IInitializable, IDisposable
 	{
 		m_ScoreSnapshots.Clear();
 		
-		DataSnapshot scoreSnapshots = await m_ScoresData.GetValueAsync(15000, 2);
+		DataSnapshot data = await m_ScoresData.GetValueAsync(15000, 2);
 		
-		if (scoreSnapshots == null)
+		if (data == null)
 		{
 			Debug.LogError("[ScoreProcessor] Fetch scores failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot scoreSnapshot in scoreSnapshots.Children)
+		foreach (DataSnapshot entry in data.Children)
 		{
-			string levelID = scoreSnapshot.Key;
-			ScoreSnapshot score = new ScoreSnapshot(scoreSnapshot);
-			m_ScoreSnapshots[levelID] = score;
+			ScoreSnapshot snapshot = new ScoreSnapshot(entry);
+			m_ScoreSnapshots.Add(snapshot);
 		}
 	}
 
@@ -583,12 +528,15 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	ScoreSnapshot GetScoreSnapshot(string _LevelID)
 	{
+		if (m_ScoreSnapshots == null || m_ScoreSnapshots.Count == 0)
+			return null;
+		
 		if (string.IsNullOrEmpty(_LevelID))
 		{
 			Debug.LogError("[ScoreProcessor] Get score snapshot failed. Level ID is null or empty.");
 			return null;
 		}
 		
-		return m_ScoreSnapshots.ContainsKey(_LevelID) ? m_ScoreSnapshots[_LevelID] : null;
+		return m_ScoreSnapshots.FirstOrDefault(_Snapshot => _Snapshot.LevelID == _LevelID);
 	}
 }

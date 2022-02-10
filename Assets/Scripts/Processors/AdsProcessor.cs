@@ -1,39 +1,59 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Advertisements;
+using UnityEngine.Scripting;
+using Zenject;
 
-public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
+public interface IAdsProvider
 {
-	static bool TestMode
+	string ID { get; }
+	Task<bool> Initialize();
+	Task<bool> Interstitial();
+	Task<bool> Rewarded();
+}
+
+[Preserve]
+public class AdsProviderAdMob : IAdsProvider
+{
+	string IAdsProvider.ID => "ad_mob";
+
+	public Task<bool> Initialize()
 	{
-		#if DEVELOPMENT_BUILD
-		get => true;
-		#else
-		get => false;
-		#endif
+		return Task.FromResult(false);
 	}
 
-	protected abstract string GameID         { get; }
-	protected abstract string InterstitialID { get; }
-	protected abstract string RewardedID     { get; }
+	Task<bool> IAdsProvider.Interstitial()
+	{
+		return Task.FromResult(false);
+	}
 
-	readonly ProfileProcessor m_ProfileProcessor;
+	Task<bool> IAdsProvider.Rewarded()
+	{
+		return Task.FromResult(false);
+	}
+}
+
+[Preserve]
+public class AdsProviderUnity : IAdsProvider, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
+{
+	static string GameID         => "4234912";
+	static string InterstitialID => "Interstitial_iOS";
+	static string RewardedID     => "Rewarded_iOS";
+
+	string IAdsProvider.ID => "unity_ads";
 
 	readonly Dictionary<string, Action<bool>> m_LoadFinished = new Dictionary<string, Action<bool>>();
-	readonly Dictionary<string, Action<bool>> m_ShowFinished  = new Dictionary<string, Action<bool>>();
+	readonly Dictionary<string, Action<bool>> m_ShowFinished = new Dictionary<string, Action<bool>>();
 
 	Action<bool> m_LoadAdsFinished;
 	Action<bool> m_InterstitialFinished;
 	Action<bool> m_RewardedFinished;
 
-	protected AdsProcessor(ProfileProcessor _ProfileProcessor)
-	{
-		m_ProfileProcessor = _ProfileProcessor;
-	}
-
-	public Task<bool> LoadAds()
+	public Task<bool> Initialize()
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
@@ -47,47 +67,34 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		
 		if (!Advertisement.isSupported)
 		{
-			Debug.LogError("[AdsProcessor] Load ads failed. Ads not supported.");
+			Debug.LogError("[AdsUnity] Initialize failed. Ads not supported.");
 			InvokeLoadAdsFinished(false);
 			return completionSource.Task;
 		}
 		
-		Advertisement.Initialize(GameID, TestMode, this);
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		Advertisement.Initialize(GameID, true, this);
+		#else
+		Advertisement.Initialize(GameID, false, this);
+		#endif
 		
 		return completionSource.Task;
 	}
 
-	public async Task<bool> Interstitial(bool _Force = false)
+	Task<bool> IAdsProvider.Interstitial()
 	{
-		if (!_Force && m_ProfileProcessor.HasNoAds())
-			return true;
-		
-		return await Show(InterstitialID);
+		return Show(InterstitialID);
 	}
 
-	public async Task<bool> Rewarded(bool _Force = false)
+	Task<bool> IAdsProvider.Rewarded()
 	{
-		if (!_Force && m_ProfileProcessor.HasNoAds())
-			return true;
-		
-		return await Show(RewardedID);
-	}
-
-	Task<bool> Load(string _PlacementID)
-	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_LoadFinished[_PlacementID] = _Success => completionSource.TrySetResult(_Success);
-		
-		Advertisement.Load(_PlacementID, this);
-		
-		return completionSource.Task;
+		return Show(RewardedID);
 	}
 
 	async Task<bool> Show(string _PlacementID)
 	{
 		if (!Advertisement.isInitialized)
-			await LoadAds();
+			await Initialize();
 		
 		bool loaded = await Load(_PlacementID);
 		
@@ -115,6 +122,46 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		
 		return completionSource.Task.Result;
 	}
+
+	Task<bool> Load(string _PlacementID)
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_LoadFinished[_PlacementID] = _Success => completionSource.TrySetResult(_Success);
+		
+		Advertisement.Load(_PlacementID, this);
+		
+		return completionSource.Task;
+	}
+
+	void InvokeLoadAdsFinished(bool _Success)
+	{
+		Action<bool> action = m_LoadAdsFinished;
+		m_LoadAdsFinished = null;
+		action?.Invoke(_Success);
+	}
+
+	void InvokeLoadFinished(string _PlacementID, bool _Success)
+	{
+		if (!m_LoadFinished.TryGetValue(_PlacementID, out Action<bool> action))
+			return;
+		
+		m_LoadFinished.Remove(_PlacementID);
+		
+		action?.Invoke(_Success);
+	}
+
+	void InvokeShowFinished(string _PlacementID, bool _Success)
+	{
+		if (!m_ShowFinished.TryGetValue(_PlacementID, out Action<bool> action))
+			return;
+		
+		m_ShowFinished.Remove(_PlacementID);
+		
+		action?.Invoke(_Success);
+	}
+
+	#region Unity Ads Implementation
 
 	void IUnityAdsInitializationListener.OnInitializationComplete()
 	{
@@ -168,30 +215,132 @@ public abstract class AdsProcessor : IUnityAdsInitializationListener, IUnityAdsL
 		InvokeShowFinished(_PlacementID, false);
 	}
 
-	void InvokeLoadAdsFinished(bool _Success)
+	#endregion
+}
+
+public class AdsProviderSnapshot
+{
+	public bool   Active { get; }
+	public string ID     { get; }
+
+	public AdsProviderSnapshot(DataSnapshot _Data)
 	{
-		Action<bool> action = m_LoadAdsFinished;
-		m_LoadAdsFinished = null;
-		action?.Invoke(_Success);
+		Active = _Data.GetBool("active");
+		ID     = _Data.Key;
+	}
+}
+
+public class AdsProcessor
+{
+	bool Loaded { get; set; }
+
+	readonly IAdsProvider[] m_AdsProviders;
+
+	readonly List<AdsProviderSnapshot> m_AdsProviderSnapshots = new List<AdsProviderSnapshot>();
+
+	DatabaseReference m_AdsProvidersData;
+
+	[Inject]
+	public AdsProcessor(IAdsProvider[] _AdsProviders)
+	{
+		m_AdsProviders = _AdsProviders;
 	}
 
-	void InvokeLoadFinished(string _PlacementID, bool _Success)
+	public async Task LoadAds()
 	{
-		if (!m_LoadFinished.TryGetValue(_PlacementID, out Action<bool> action))
-			return;
+		if (m_AdsProvidersData == null)
+		{
+			m_AdsProvidersData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ads_providers");
+			m_AdsProvidersData.ValueChanged += OnAdsProvidersUpdate;
+		}
 		
-		m_LoadFinished.Remove(_PlacementID);
+		await FetchAdsProviders();
 		
-		action?.Invoke(_Success);
+		List<Task<bool>> tasks = new List<Task<bool>>();
+		
+		List<string> adsProviderIDs = GetAdsProviderIDs();
+		
+		foreach (string adsProviderID in adsProviderIDs)
+		{
+			IAdsProvider adsProvider = GetAdsProvider(adsProviderID);
+			
+			if (adsProvider == null)
+				continue;
+			
+			tasks.Add(adsProvider.Initialize());
+		}
+		
+		await Task.WhenAny(tasks);
+		
+		Loaded = true;
 	}
 
-	void InvokeShowFinished(string _PlacementID, bool _Success)
+	public List<string> GetAdsProviderIDs()
 	{
-		if (!m_ShowFinished.TryGetValue(_PlacementID, out Action<bool> action))
+		return m_AdsProviderSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
+	}
+
+	public IAdsProvider GetAdsProvider(string _AdsProviderID)
+	{
+		if (string.IsNullOrEmpty(_AdsProviderID))
+			return null;
+		
+		return m_AdsProviders.FirstOrDefault(_AdsProvider => _AdsProvider.ID == _AdsProviderID);
+	}
+
+	public async Task<bool> Interstitial()
+	{
+		foreach (IAdsProvider provider in m_AdsProviders)
+		{
+			if (await provider.Interstitial())
+				return true;
+		}
+		
+		return false;
+	}
+
+	public async Task<bool> Rewarded()
+	{
+		foreach (IAdsProvider provider in m_AdsProviders)
+		{
+			if (await provider.Rewarded())
+				return true;
+		}
+		
+		return false;
+	}
+
+	async void OnAdsProvidersUpdate(object _Sender, EventArgs _Args)
+	{
+		if (!Loaded)
 			return;
 		
-		m_ShowFinished.Remove(_PlacementID);
+		Debug.Log("[AdsProcessor] Updating ads data...");
 		
-		action?.Invoke(_Success);
+		await FetchAdsProviders();
+		
+		Debug.Log("[AdsProcessor] Update ads data complete.");
+	}
+
+	async Task FetchAdsProviders()
+	{
+		m_AdsProviderSnapshots.Clear();
+		
+		DataSnapshot adsProviderSnapshots = await m_AdsProvidersData.OrderByChild("order").GetValueAsync(15000, 2);
+		
+		if (adsProviderSnapshots == null)
+		{
+			Debug.LogError("[AdsProcessor] Fetch ads providers failed.");
+			return;
+		}
+		
+		foreach (DataSnapshot adsProviderSnapshot in adsProviderSnapshots.Children)
+		{
+			AdsProviderSnapshot adsProvider = new AdsProviderSnapshot(adsProviderSnapshot);
+			m_AdsProviderSnapshots.Add(adsProvider);
+		}
 	}
 }

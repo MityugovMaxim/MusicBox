@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.iOS;
 using Zenject;
@@ -20,8 +21,10 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UILevelModeButton m_RestartButton;
 	[SerializeField] LevelPreview      m_PreviewSource;
 
+	ProfileProcessor   m_ProfileProcessor;
 	LevelManager       m_LevelManager;
 	LevelProcessor     m_LevelProcessor;
+	LevelController    m_LevelController;
 	AdsProcessor       m_AdsProcessor;
 	MenuProcessor      m_MenuProcessor;
 	AmbientProcessor   m_AmbientProcessor;
@@ -39,9 +42,10 @@ public class UIResultControlPage : UIResultMenuPage
 
 	[Inject]
 	public void Construct(
-		LevelManager       _LevelManager,
 		ProfileProcessor   _ProfileProcessor,
+		LevelManager       _LevelManager,
 		LevelProcessor     _LevelProcessor,
+		LevelController    _LevelController,
 		AdsProcessor       _AdsProcessor,
 		MenuProcessor      _MenuProcessor,
 		AmbientProcessor   _AmbientProcessor,
@@ -51,8 +55,10 @@ public class UIResultControlPage : UIResultMenuPage
 		UrlProcessor       _UrlProcessor
 	)
 	{
+		m_ProfileProcessor   = _ProfileProcessor;
 		m_LevelManager       = _LevelManager;
 		m_LevelProcessor     = _LevelProcessor;
+		m_LevelController    = _LevelController;
 		m_AdsProcessor       = _AdsProcessor;
 		m_MenuProcessor      = _MenuProcessor;
 		m_AmbientProcessor   = _AmbientProcessor;
@@ -82,22 +88,11 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		await ProcessLeaveAds();
+		
 		m_PreviewSource.Stop();
 		
-		m_LeaveAdsCount++;
-		
-		if (m_LeaveAdsCount >= LEAVE_ADS_COUNT)
-		{
-			m_LeaveAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		}
-		
-		m_LevelProcessor.Remove();
+		m_LevelController.Remove();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -115,22 +110,11 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		await ProcessNextAds();
+		
 		m_PreviewSource.Stop();
 		
-		m_NextAdsCount++;
-		
-		if (m_NextAdsCount >= NEXT_ADS_COUNT)
-		{
-			m_NextAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		
-		m_LevelProcessor.Remove();
+		m_LevelController.Remove();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -153,42 +137,19 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
+		if (!await ProcessRestartAds())
+			return;
+		
 		m_AmbientProcessor.Pause();
 		m_MusicProcessor.StopPreview();
 		
-		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
-		
-		if (levelMode == LevelMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Rewarded();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		else
-		{
-			m_RestartAdsCount++;
-			
-			if (m_RestartAdsCount >= RESTART_ADS_COUNT)
-			{
-				m_RestartAdsCount = 0;
-				
-				await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-				
-				await m_AdsProcessor.Interstitial();
-				
-				await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			}
-		}
-		
-		m_LevelProcessor.Restart();
+		m_LevelController.Restart();
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 		
-		m_LevelProcessor.Play();
+		m_LevelController.Play();
 	}
 
 	public void OpenAppleMusic()
@@ -247,5 +208,79 @@ public class UIResultControlPage : UIResultMenuPage
 	protected override void OnHideFinished()
 	{
 		m_LikeButton.Execute();
+	}
+
+	async Task<bool> ProcessRestartAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return true;
+		
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		
+		if (levelMode == LevelMode.Ads)
+		{
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			bool success = await m_AdsProcessor.Rewarded();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return success;
+		}
+		else
+		{
+			m_RestartAdsCount++;
+			
+			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+				return true;
+			
+			m_RestartAdsCount = 0;
+			
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return true;
+		}
+	}
+
+	async Task ProcessNextAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return;
+		
+		m_NextAdsCount++;
+		
+		if (m_NextAdsCount < NEXT_ADS_COUNT)
+			return;
+		
+		m_NextAdsCount = 0;
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_AdsProcessor.Interstitial();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	async Task ProcessLeaveAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return;
+		
+		m_LeaveAdsCount++;
+		
+		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+			return;
+		
+		m_LeaveAdsCount = 0;
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_AdsProcessor.Interstitial();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }

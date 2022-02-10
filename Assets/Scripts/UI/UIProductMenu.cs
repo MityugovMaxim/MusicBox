@@ -80,18 +80,16 @@ public class UIProductMenu : UISlideMenu
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		// TODO: Uncomment
-		// bool success = await m_StoreProcessor.Purchase(m_ProductID);
-		
-		// TODO: Remove
-		bool success = true;
+		bool success = await m_StoreProcessor.Purchase(m_ProductID);
 		
 		#if UNITY_EDITOR
-		await Task.Delay(2500);
+		await Task.Delay(1500);
 		#endif
 		
 		if (success)
 		{
+			m_StatisticProcessor.LogProductMenuPurchaseSuccess(m_ProductID);
+			
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
@@ -107,6 +105,8 @@ public class UIProductMenu : UISlideMenu
 		}
 		else
 		{
+			m_StatisticProcessor.LogProductMenuPurchaseFailed(m_ProductID);
+			
 			m_HapticProcessor.Process(Haptic.Type.Failure);
 			
 			await Task.WhenAll(

@@ -5,7 +5,7 @@ using Firebase.Auth;
 
 public static class FacebookAuth
 {
-	static async Task InitializeFacebook()
+	public static async Task Initialize()
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
@@ -35,7 +35,7 @@ public static class FacebookAuth
 
 	public static async Task<string> LoginAsync()
 	{
-		await InitializeFacebook();
+		await Initialize();
 		
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Facebook.Unity;
 using Firebase.Analytics;
 using UnityEngine.Analytics;
 using UnityEngine.Scripting;
@@ -121,6 +122,22 @@ public class StatisticUnity : IStatisticProvider
 		}
 		
 		Analytics.CustomEvent(_Name, data);
+	}
+}
+
+[Preserve]
+public class StatisticFacebook : IStatisticProvider
+{
+	public void LogEvent(string _Name, params StatisticData[] _Parameters)
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		if (_Parameters != null && _Parameters.Length > 0)
+		{
+			foreach (StatisticData parameter in _Parameters)
+				parameter.Fill(data);
+		}
+		FB.LogAppEvent(_Name, null, data);
 	}
 }
 
@@ -257,6 +274,22 @@ public class StatisticProcessor
 		);
 	}
 
+	public void LogLevelMenuUnlockSuccess(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_unlock_success",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
+	public void LogLevelMenuUnlockFailed(string _LevelID)
+	{
+		LogEvent(
+			"level_menu_unlock_failed",
+			StatisticData.Create("level_id", _LevelID)
+		);
+	}
+
 	public void LogLevelMenuPlayClick(string _LevelID)
 	{
 		LogEvent(
@@ -289,6 +322,22 @@ public class StatisticProcessor
 	{
 		LogEvent(
 			"product_menu_purchase_click",
+			StatisticData.Create("product_id", _ProductID)
+		);
+	}
+
+	public void LogProductMenuPurchaseSuccess(string _ProductID)
+	{
+		LogEvent(
+			"product_menu_purchase_success",
+			StatisticData.Create("product_id", _ProductID)
+		);
+	}
+
+	public void LogProductMenuPurchaseFailed(string _ProductID)
+	{
+		LogEvent(
+			"product_menu_purchase_failed",
 			StatisticData.Create("product_id", _ProductID)
 		);
 	}

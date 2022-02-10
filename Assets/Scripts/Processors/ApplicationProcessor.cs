@@ -77,6 +77,8 @@ public class ApplicationProcessor
 			m_ApplicationData.ValueChanged += OnApplicationUpdate;
 		}
 		
+		await FacebookAuth.Initialize();
+		
 		await FetchApplication();
 		
 		TryClearCache();

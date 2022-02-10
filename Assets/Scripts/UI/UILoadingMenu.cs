@@ -7,7 +7,7 @@ public class UILoadingMenu : UIMenu
 {
 	[SerializeField] UILoader m_Loader;
 
-	LevelProcessor   m_LevelProcessor;
+	LevelController  m_LevelController;
 	MenuProcessor    m_MenuProcessor;
 	AmbientProcessor m_AmbientProcessor;
 	MusicProcessor   m_MusicProcessor;
@@ -16,13 +16,13 @@ public class UILoadingMenu : UIMenu
 
 	[Inject]
 	public void Construct(
-		LevelProcessor   _LevelProcessor,
+		LevelController  _LevelController,
 		MenuProcessor    _MenuProcessor,
 		AmbientProcessor _AmbientProcessor,
 		MusicProcessor   _MusicProcessor
 	)
 	{
-		m_LevelProcessor   = _LevelProcessor;
+		m_LevelController  = _LevelController;
 		m_MenuProcessor    = _MenuProcessor;
 		m_AmbientProcessor = _AmbientProcessor;
 		m_MusicProcessor   = _MusicProcessor;
@@ -56,7 +56,7 @@ public class UILoadingMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		
-		await m_LevelProcessor.Load(m_LevelID);
+		await m_LevelController.Load(m_LevelID);
 		
 		await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 	}
@@ -68,7 +68,7 @@ public class UILoadingMenu : UIMenu
 		
 		// TODO: Introduce song ui elements before playing sequencer
 		
-		m_LevelProcessor.Play();
+		m_LevelController.Play();
 	}
 
 	protected override IEnumerator ShowAnimation(CanvasGroup _CanvasGroup, float _Duration)

@@ -9,22 +9,22 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UIGameProgress    m_Progress;
 	[SerializeField] UIGameTimer       m_Timer;
 
-	SignalBus      m_SignalBus;
-	LevelProcessor m_LevelProcessor;
-	MenuProcessor  m_MenuProcessor;
+	SignalBus       m_SignalBus;
+	LevelController m_LevelController;
+	MenuProcessor   m_MenuProcessor;
 
 	string m_LevelID;
 
 	[Inject]
 	public void Construct(
-		SignalBus      _SignalBus,
-		LevelProcessor _LevelProcessor,
-		MenuProcessor  _MenuProcessor
+		SignalBus       _SignalBus,
+		LevelController _LevelController,
+		MenuProcessor   _MenuProcessor
 	)
 	{
-		m_SignalBus      = _SignalBus;
-		m_LevelProcessor = _LevelProcessor;
-		m_MenuProcessor  = _MenuProcessor;
+		m_SignalBus       = _SignalBus;
+		m_LevelController = _LevelController;
+		m_MenuProcessor   = _MenuProcessor;
 	}
 
 	void IInitializable.Initialize()
@@ -33,8 +33,8 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		m_SignalBus.Subscribe<LevelFinishSignal>(RegisterLevelFinish);
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 		
-		m_LevelProcessor.AddSampleReceiver(m_Progress);
-		m_LevelProcessor.AddSampleReceiver(m_Timer);
+		m_LevelController.AddSampleReceiver(m_Progress);
+		m_LevelController.AddSampleReceiver(m_Timer);
 	}
 
 	void IDisposable.Dispose()
@@ -43,8 +43,8 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<LevelFinishSignal>(RegisterLevelFinish);
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 		
-		m_LevelProcessor.RemoveSampleReceiver(m_Progress);
-		m_LevelProcessor.RemoveSampleReceiver(m_Timer);
+		m_LevelController.RemoveSampleReceiver(m_Progress);
+		m_LevelController.RemoveSampleReceiver(m_Timer);
 	}
 
 	void RegisterLevelRestart()
@@ -61,7 +61,7 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		
 		await m_MenuProcessor.Show(MenuType.ResultMenu);
 		
-		m_LevelProcessor.Pause();
+		m_LevelController.Pause();
 		
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
@@ -70,19 +70,19 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 
 	void RegisterAudioSourceChanged()
 	{
-		if (Shown && m_LevelProcessor.Playing)
+		if (Shown && m_LevelController.Playing)
 			m_PauseButton.Pause();
 	}
 
 	void OnApplicationPause(bool _Paused)
 	{
-		if (Shown && m_LevelProcessor.Playing && _Paused)
+		if (Shown && m_LevelController.Playing && _Paused)
 			m_PauseButton.Pause();
 	}
 
 	void OnApplicationFocus(bool _Focus)
 	{
-		if (Shown && m_LevelProcessor.Playing && !_Focus)
+		if (Shown && m_LevelController.Playing && !_Focus)
 			m_PauseButton.Pause();
 	}
 

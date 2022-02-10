@@ -10,6 +10,8 @@ using Zenject;
 [Menu(MenuType.LevelMenu)]
 public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 {
+	const int PLAY_ADS_COUNT = 4;
+
 	[SerializeField] UILevelBackground m_Background;
 	[SerializeField] UILevelThumbnail  m_Thumbnail;
 	[SerializeField] UILevelDiscs      m_Discs;
@@ -34,6 +36,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 	StatisticProcessor m_StatisticProcessor;
 
 	string      m_LevelID;
+	int         m_PlayAdsCount;
 	AudioSource m_AudioSource;
 
 	[Inject]
@@ -78,9 +81,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 
 	public async void Unlock()
 	{
-		// TODO: Uncomment
-		//if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
-		//	return;
+		if (!m_LevelManager.IsLevelLockedByCoins(m_LevelID))
+			return;
 		
 		m_StatisticProcessor.LogLevelMenuUnlockClick(m_LevelID);
 		
@@ -93,18 +95,12 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		// TODO: Uncomment
-		// bool success = await UnlockLevel(m_LevelID);
-		
-		// TODO: Remove
-		bool success = true;
-		
-		#if UNITY_EDITOR
-		await Task.Delay(2500);
-		#endif
+		bool success = await UnlockLevel(m_LevelID);
 		
 		if (success)
 		{
+			m_StatisticProcessor.LogLevelMenuUnlockSuccess(m_LevelID);
+			
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
@@ -121,6 +117,8 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		}
 		else
 		{
+			m_StatisticProcessor.LogLevelMenuUnlockFailed(m_LevelID);
+			
 			m_HapticProcessor.Process(Haptic.Type.Failure);
 			
 			await Task.WhenAll(
@@ -143,40 +141,12 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
-		
 		m_PreviewSource.Stop();
 		
-		if (levelMode == LevelMode.Ads)
+		if (!await ProcessPlayAds())
 		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu);
-			
-			m_PlayGroup.Hide();
-			m_LoaderGroup.Show();
-			
-			m_Loader.Restore();
-			
-			#if UNITY_EDITOR
-			await Task.Delay(5000);
-			#endif
-			
-			bool success = await m_AdsProcessor.Rewarded();
-			
-			await Task.Delay(250);
-			
-			if (!success)
-			{
-				Debug.LogErrorFormat("[UILevelMenu] Play failed. Rewarded video error occured. Level ID: {0}.", m_LevelID);
-				
-				Setup(m_LevelID);
-				
-				m_PlayGroup.Show();
-				m_LoaderGroup.Hide();
-				
-				await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-				
-				return;
-			}
+			m_PreviewSource.Play(m_LevelID);
+			return;
 		}
 		
 		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
@@ -266,8 +236,7 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		
 		m_PriceLabel.text = m_LevelProcessor.GetPrice(m_LevelID).ToString();
 		
-		// TODO: Remote 'true' from condition
-		if (true || m_LevelManager.IsLevelLockedByCoins(m_LevelID))
+		if (m_LevelManager.IsLevelLockedByCoins(m_LevelID))
 		{
 			m_UnlockGroup.Show(true);
 			m_PlayGroup.Hide(true);
@@ -313,5 +282,66 @@ public class UILevelMenu : UISlideMenu, IInitializable, IDisposable
 		}
 		
 		return success;
+	}
+
+	async Task<bool> ProcessPlayAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return true;
+		
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		
+		if (levelMode == LevelMode.Ads)
+		{
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			m_PlayGroup.Hide();
+			m_LoaderGroup.Show();
+			
+			m_Loader.Restore();
+			
+			bool success = await m_AdsProcessor.Rewarded();
+			
+			await Task.Delay(500);
+			
+			if (success)
+				return true;
+			
+			Debug.LogErrorFormat("[UILevelMenu] Play failed. Rewarded video error occured. Level ID: {0}.", m_LevelID);
+			
+			m_PlayGroup.Show();
+			m_LoaderGroup.Hide();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			return false;
+		}
+		else
+		{
+			m_PlayAdsCount++;
+			
+			if (m_PlayAdsCount < PLAY_ADS_COUNT)
+				return true;
+			
+			m_PlayAdsCount = 0;
+			
+			m_PlayGroup.Hide();
+			m_LoaderGroup.Show();
+			
+			m_Loader.Restore();
+			
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await Task.Delay(500);
+			
+			m_PlayGroup.Hide();
+			m_LoaderGroup.Show();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			return true;
+		}
 	}
 }

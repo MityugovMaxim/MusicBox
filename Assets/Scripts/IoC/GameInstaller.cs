@@ -31,8 +31,12 @@ public class GameInstaller : MonoInstaller
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
 		
+		Container.Bind<IAdsProvider>().To<AdsProviderUnity>().FromNew().AsSingle();
+		Container.Bind<IAdsProvider>().To<AdsProviderAdMob>().FromNew().AsSingle();
+		
 		Container.BindInterfacesTo<StatisticUnity>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticFirebase>().FromNew().AsSingle();
+		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		
 		Container.BindMemoryPool<UILevelItem, UILevelItem.Pool>()
 			.WithInitialSize(10)
@@ -97,7 +101,6 @@ public class GameInstaller : MonoInstaller
 	void InstallProcessors()
 	{
 		#if UNITY_IOS
-		Container.Bind<AdsProcessor>().To<iOSAdsProcessor>().FromNew().AsSingle();
 		Container.Bind(typeof(MessageProcessor), typeof(IInitializable)).To<iOSMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
@@ -117,6 +120,7 @@ public class GameInstaller : MonoInstaller
 		
 		Container.BindInterfacesAndSelfTo<ApplicationProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<LanguageProcessor>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<AdsProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<TimeProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
@@ -134,6 +138,8 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProfileProcessor>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
+		
+		Container.BindInterfacesAndSelfTo<LevelController>().FromNew().AsSingle();
 	}
 
 	void InstallManagers()

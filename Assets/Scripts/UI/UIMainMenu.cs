@@ -79,7 +79,7 @@ public class UIMainMenu : UIMenu
 		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
 		
-		Application.deepLinkActivated += ProcessDeepLink;
+		//Application.deepLinkActivated += ProcessDeepLink;
 	}
 
 	protected override void OnHideStarted()

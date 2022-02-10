@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +23,7 @@ public class UILanguage : UIEntity
 	[SerializeField] LanguageData[] m_Languages;
 
 	LanguageProcessor  m_LanguageProcessor;
+	MessageProcessor   m_MessageProcessor;
 	MenuProcessor      m_MenuProcessor;
 	HapticProcessor    m_HapticProcessor;
 	StatisticProcessor m_StatisticProcessor;
@@ -31,12 +31,14 @@ public class UILanguage : UIEntity
 	[Inject]
 	public void Construct(
 		LanguageProcessor  _LanguageProcessor,
+		MessageProcessor   _MessageProcessor,
 		MenuProcessor      _MenuProcessor,
 		HapticProcessor    _HapticProcessor,
 		StatisticProcessor _StatisticProcessor
 	)
 	{
 		m_LanguageProcessor  = _LanguageProcessor;
+		m_MessageProcessor   = _MessageProcessor;
 		m_MenuProcessor      = _MenuProcessor;
 		m_HapticProcessor    = _HapticProcessor;
 		m_StatisticProcessor = _StatisticProcessor;
@@ -77,20 +79,18 @@ public class UILanguage : UIEntity
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		StopAllCoroutines();
-		
 		List<Task> tasks = new List<Task>();
 		foreach (LanguageData language in m_Languages)
 		{
 			if (language.Language == _Language)
 			{
 				tasks.Add(language.Check.ShowAsync());
-				tasks.Add(Scale(language.Button, 1.2f));
+				tasks.Add(ScaleAsync(language.Button, 1.2f));
 			}
 			else
 			{
 				tasks.Add(language.Check.HideAsync());
-				tasks.Add(Scale(language.Button, 0.9f));
+				tasks.Add(ScaleAsync(language.Button, 0.9f));
 			}
 		}
 		
@@ -107,6 +107,8 @@ public class UILanguage : UIEntity
 				Task.Delay(1500)
 			);
 			
+			await m_MessageProcessor.ProcessTopic();
+			
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
 			
 			await m_MenuProcessor.Hide(MenuType.LoginMenu);
@@ -115,43 +117,25 @@ public class UILanguage : UIEntity
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	Task Scale(Button _Button, float _Scale, bool _Instant = false)
+	static async void Scale(Component _Component, float _Scale, bool _Instant = false)
 	{
-		if (_Button == null)
-			return null;
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		if (_Instant)
-			_Button.transform.localScale = new Vector3(_Scale, _Scale, 1);
-		else
-			StartCoroutine(ScaleRoutine(_Button.transform, _Scale, 0.2f, () => completionSource.SetResult(true)));
-		
-		return completionSource.Task;
+		await ScaleAsync(_Component, _Scale, _Instant);
 	}
 
-	static IEnumerator ScaleRoutine(Transform _Target, float _Scale, float _Duration, Action _Finished)
+	static async Task ScaleAsync(Component _Component, float _Scale, bool _Instant = false)
 	{
-		if (_Target == null)
-		{
-			_Finished?.Invoke();
-			yield break;
-		}
+		if (_Component == null)
+			return;
 		
-		Vector3 source = _Target.localScale;
-		Vector3 target = new Vector3(_Scale, _Scale, 1);
-		float   time   = 0;
-		while (time < _Duration)
-		{
-			yield return null;
-			
-			time += Time.deltaTime;
-			
-			_Target.localScale = Vector3.Lerp(source, target, time / _Duration);
-		}
+		Transform transform = _Component.transform;
+		Vector3   source    = transform.localScale;
+		Vector3   target    = new Vector3(_Scale, _Scale, 1);
 		
-		_Target.localScale = target;
+		void Animation(float _Phase) => transform.localScale = Vector3.Lerp(source, target, _Phase);
 		
-		_Finished?.Invoke();
+		if (_Instant)
+			Animation(1);
+		else
+			await UnityTask.Phase(Animation, 0.25f);
 	}
 }

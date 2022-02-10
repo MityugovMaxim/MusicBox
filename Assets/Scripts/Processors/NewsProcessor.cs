@@ -11,6 +11,8 @@ public class NewsDataUpdateSignal { }
 public class NewsSnapshot
 {
 	public string ID       { get; }
+	public bool   Active   { get; }
+	public string Image    { get; }
 	public string Language { get; }
 	public string Title    { get; }
 	public string Text     { get; }
@@ -19,6 +21,8 @@ public class NewsSnapshot
 	public NewsSnapshot(DataSnapshot _Data)
 	{
 		ID       = _Data.Key;
+		Active   = _Data.GetBool("active");
+		Image    = _Data.GetString("image");
 		Language = _Data.GetString("language");
 		Title    = _Data.GetString("title");
 		Text     = _Data.GetString("description");
@@ -33,8 +37,7 @@ public class NewsProcessor
 	readonly SignalBus         m_SignalBus;
 	readonly LanguageProcessor m_LanguageProcessor;
 
-	readonly List<string>                     m_NewsIDs       = new List<string>();
-	readonly Dictionary<string, NewsSnapshot> m_NewsSnapshots = new Dictionary<string, NewsSnapshot>();
+	readonly List<NewsSnapshot> m_NewsSnapshots = new List<NewsSnapshot>();
 
 	DatabaseReference m_NewsData;
 
@@ -63,53 +66,63 @@ public class NewsProcessor
 
 	public List<string> GetNewsIDs()
 	{
-		return m_NewsIDs.Where(
-			_NewsID =>
-			{
-				NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
-				
-				return newsSnapshot != null && m_LanguageProcessor.SupportsLanguage(newsSnapshot.Language);
-			}
-		).ToList();
+		return m_NewsSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => m_LanguageProcessor.SupportsLanguage(_Snapshot.Language))
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
+	}
+
+	public string GetImage(string _NewsID)
+	{
+		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
+		
+		if (snapshot == null)
+		{
+			Debug.LogErrorFormat("[NewsProcessor] Get image failed. News with ID '{0}' is null.", _NewsID);
+			return string.Empty;
+		}
+		
+		return snapshot.Image;
 	}
 
 	public string GetTitle(string _NewsID)
 	{
-		NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
 		
-		if (newsSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[NewsProcessor] Get title failed. News with ID '{0}' is null.", _NewsID);
+			Debug.LogErrorFormat("[NewsProcessor] Get title failed. Snapshot with ID '{0}' is null.", _NewsID);
 			return string.Empty;
 		}
 		
-		return newsSnapshot.Title;
+		return snapshot.Title;
 	}
 
 	public string GetText(string _NewsID)
 	{
-		NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
 		
-		if (newsSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[NewsProcessor] Get text failed. News with ID '{0}' is null.", _NewsID);
+			Debug.LogErrorFormat("[NewsProcessor] Get text failed. Snapshot with ID '{0}' is null.", _NewsID);
 			return string.Empty;
 		}
 		
-		return newsSnapshot.Text;
+		return snapshot.Text;
 	}
 
 	public string GetURL(string _NewsID)
 	{
-		NewsSnapshot newsSnapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
 		
-		if (newsSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[NewsProcessor] Get URL failed. News with ID '{0}' is null.", _NewsID);
+			Debug.LogErrorFormat("[NewsProcessor] Get URL failed. Snapshot with ID '{0}' is null.", _NewsID);
 			return string.Empty;
 		}
 		
-		return newsSnapshot.URL;
+		return snapshot.URL;
 	}
 
 	async void OnNewsUpdate(object _Sender, EventArgs _Args)
@@ -128,45 +141,30 @@ public class NewsProcessor
 
 	async Task FetchNews()
 	{
-		m_NewsIDs.Clear();
 		m_NewsSnapshots.Clear();
 		
-		DataSnapshot newsSnapshots = await m_NewsData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot data = await m_NewsData.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (newsSnapshots == null)
+		if (data == null)
 		{
 			Debug.LogError("[NewsProcessor] Fetch news failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot newsSnapshot in newsSnapshots.Children)
-		{
-			bool active = newsSnapshot.GetBool("active");
-			
-			if (!active)
-				continue;
-			
-			NewsSnapshot news = new NewsSnapshot(newsSnapshot);
-			
-			m_NewsIDs.Add(news.ID);
-			m_NewsSnapshots[news.ID] = news;
-		}
+		m_NewsSnapshots.AddRange(data.Children.Select(_Data => new NewsSnapshot(_Data)));
 	}
 
 	NewsSnapshot GetNewsSnapshot(string _NewsID)
 	{
+		if (m_NewsSnapshots == null || m_NewsSnapshots.Count == 0)
+			return null;
+		
 		if (string.IsNullOrEmpty(_NewsID))
 		{
 			Debug.LogError("[NewsProcessor] Get news snapshot failed. News ID is null or empty.");
 			return null;
 		}
 		
-		if (!m_NewsSnapshots.ContainsKey(_NewsID))
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get news snapshot failed. News with ID '{0}' not found.", _NewsID);
-			return null;
-		}
-		
-		return m_NewsSnapshots[_NewsID];
+		return m_NewsSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _NewsID);
 	}
 }

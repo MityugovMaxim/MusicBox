@@ -12,7 +12,10 @@ public class OfferDataUpdateSignal { }
 public class OfferSnapshot
 {
 	public string ID       { get; }
+	public bool   Active   { get; }
+	public string Image    { get; }
 	public string Title    { get; }
+	public string Language { get; }
 	public string LevelID  { get; }
 	public long   Coins    { get; }
 	public int    AdsCount { get; }
@@ -20,6 +23,8 @@ public class OfferSnapshot
 	public OfferSnapshot(DataSnapshot _Data)
 	{
 		ID       = _Data.Key;
+		Active   = _Data.GetBool("active");
+		Image    = _Data.GetString("image");
 		Title    = _Data.GetString("title");
 		LevelID  = _Data.GetString("level_id");
 		Coins    = _Data.GetLong("coins");
@@ -36,8 +41,7 @@ public class OffersProcessor
 	readonly StorageProcessor  m_StorageProcessor;
 	readonly MenuProcessor     m_MenuProcessor;
 
-	readonly List<string>                      m_OfferIDs       = new List<string>();
-	readonly Dictionary<string, OfferSnapshot> m_OfferSnapshots = new Dictionary<string, OfferSnapshot>();
+	readonly List<OfferSnapshot> m_OfferSnapshots = new List<OfferSnapshot>();
 
 	DatabaseReference m_OffersData;
 
@@ -95,8 +99,6 @@ public class OffersProcessor
 			await Task.Delay(250);
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			await DisplayReward(_OfferID);
 		}
 		else
 		{
@@ -118,84 +120,65 @@ public class OffersProcessor
 		return success;
 	}
 
-	async Task DisplayReward(string _OfferID)
-	{
-		UIRewardMenu rewardMenu = m_MenuProcessor.GetMenu<UIRewardMenu>();
-		
-		if (rewardMenu == null)
-			return;
-		
-		rewardMenu.Setup(
-			null,
-			m_StorageProcessor.LoadOfferThumbnail(_OfferID),
-			GetTitle(_OfferID),
-			string.Empty
-		);
-		
-		await m_MenuProcessor.Show(MenuType.RewardMenu);
-		
-		await Task.Delay(2500);
-		
-		await rewardMenu.Play();
-		
-		await m_MenuProcessor.Hide(MenuType.RewardMenu);
-	}
-
 	public List<string> GetOfferIDs()
 	{
-		return m_OfferIDs.ToList();
+		return m_OfferSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => m_LanguageProcessor.SupportsLanguage(_Snapshot.Language))
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
 	}
 
 	public string GetTitle(string _OfferID)
 	{
-		OfferSnapshot offerSnapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
 		
-		if (offerSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get title failed. Offer snapshot with ID '{0}' is null.", _OfferID);
+			Debug.LogErrorFormat("[OfferProcessor] Get title failed. Snapshot with ID '{0}' is null.", _OfferID);
 			return string.Empty;
 		}
 		
-		return offerSnapshot.Title;
+		return snapshot.Title;
 	}
 
 	public string GetLevelID(string _OfferID)
 	{
-		OfferSnapshot offerSnapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
 		
-		if (offerSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get level ID failed. Offer snapshot with ID '{0}' is null.", _OfferID);
+			Debug.LogErrorFormat("[OfferProcessor] Get level ID failed. Snapshot with ID '{0}' is null.", _OfferID);
 			return string.Empty;
 		}
 		
-		return offerSnapshot.LevelID;
+		return snapshot.LevelID;
 	}
 
 	public long GetCoins(string _OfferID)
 	{
-		OfferSnapshot offerSnapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
 		
-		if (offerSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get coins failed. Offer snapshot with ID '{0}' is null.", _OfferID);
+			Debug.LogErrorFormat("[OfferProcessor] Get coins failed. Snapshot with ID '{0}' is null.", _OfferID);
 			return 0;
 		}
 		
-		return offerSnapshot.Coins;
+		return snapshot.Coins;
 	}
 
 	public int GetAdsCount(string _OfferID)
 	{
-		OfferSnapshot offerSnapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
 		
-		if (offerSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get rewarded count failed. Offer snapshot with ID '{0}' is null.", _OfferID);
+			Debug.LogErrorFormat("[OfferProcessor] Get rewarded count failed. Snapshot with ID '{0}' is null.", _OfferID);
 			return 0;
 		}
 		
-		return offerSnapshot.AdsCount;
+		return snapshot.AdsCount;
 	}
 
 	async void OnOffersUpdate(object _Sender, EventArgs _Args)
@@ -214,45 +197,30 @@ public class OffersProcessor
 
 	async Task FetchOffers()
 	{
-		m_OfferIDs.Clear();
 		m_OfferSnapshots.Clear();
 		
-		DataSnapshot offerSnapshots = await m_OffersData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot data = await m_OffersData.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (offerSnapshots == null)
+		if (data == null)
 		{
 			Debug.LogError("[OffersProcessor] Fetch offers failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot offerSnapshot in offerSnapshots.Children)
-		{
-			bool active = offerSnapshot.GetBool("active");
-			
-			if (!active)
-				continue;
-			
-			OfferSnapshot offer = new OfferSnapshot(offerSnapshot);
-			
-			m_OfferIDs.Add(offer.ID);
-			m_OfferSnapshots[offer.ID] = offer;
-		}
+		m_OfferSnapshots.AddRange(data.Children.Select(_Data => new OfferSnapshot(_Data)));
 	}
 
 	OfferSnapshot GetOfferSnapshot(string _OfferID)
 	{
+		if (m_OfferSnapshots == null || m_OfferSnapshots.Count == 0)
+			return null;
+		
 		if (string.IsNullOrEmpty(_OfferID))
 		{
 			Debug.LogError("[OfferProcessor] Get offer snapshot failed. Offer ID is null or empty.");
 			return null;
 		}
 		
-		if (!m_OfferSnapshots.ContainsKey(_OfferID))
-		{
-			Debug.LogErrorFormat("[OfferProcessor] Get offer snapshot failed. Offer with ID '{0}' not found.", _OfferID);
-			return null;
-		}
-		
-		return m_OfferSnapshots[_OfferID];
+		return m_OfferSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _OfferID);
 	}
 }

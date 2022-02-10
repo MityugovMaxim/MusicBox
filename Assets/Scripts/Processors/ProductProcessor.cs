@@ -102,8 +102,10 @@ public class ProductProcessor
 
 	public string GetCoinsProductID(long _Coins)
 	{
+		QualitySettings.DecreaseLevel();
+		
 		ProductSnapshot productSnapshot = m_ProductSnapshots
-			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.Active && _Snapshot.Type == ProductType.Consumable)
 			.OrderBy(_Snapshot => _Snapshot.Coins)
 			.Aggregate((_A, _B) => _A.Coins < _B.Coins && _A.Coins >= _Coins ? _A : _B);
 		

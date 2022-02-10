@@ -70,8 +70,12 @@ public class MusicClip : Clip
 		if (Sequencer.Playing && m_Paused)
 		{
 			m_Paused = false;
+			#if UNITY_EDITOR
 			m_AudioSource.Play();
 			m_AudioSource.time = GetMusicTime(_Time);
+			#else
+			m_AudioSource.UnPause();
+			#endif
 		}
 		
 		if (!Mathf.Approximately(m_Latency, AudioManager.Latency))

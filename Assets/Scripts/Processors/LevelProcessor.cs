@@ -7,12 +7,143 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
+public class LevelController
+{
+	public bool Playing => m_Level != null && m_Level.Playing;
+
+	readonly SignalBus         m_SignalBus;
+	readonly LevelProcessor    m_LevelProcessor;
+	readonly StorageProcessor  m_StorageProcessor;
+	readonly Level.Factory     m_LevelFactory;
+
+	readonly List<ISampleReceiver> m_SampleReceivers = new List<ISampleReceiver>();
+
+	string m_LevelID;
+	Level  m_Level;
+
+	[Inject]
+	public LevelController(
+		SignalBus         _SignalBus,
+		LevelProcessor    _LevelProcessor,
+		StorageProcessor  _StorageProcessor,
+		Level.Factory     _LevelFactory
+	)
+	{
+		m_SignalBus        = _SignalBus;
+		m_LevelProcessor   = _LevelProcessor;
+		m_StorageProcessor = _StorageProcessor;
+		m_LevelFactory     = _LevelFactory;
+	}
+
+	public async Task<bool> Load(string _LevelID)
+	{
+		m_LevelID = _LevelID;
+		
+		string skin = m_LevelProcessor.GetSkin(m_LevelID);
+		
+		Track[] tracks = await m_StorageProcessor.LoadTracks(m_LevelID);
+		
+		if (tracks == null || tracks.Length == 0)
+		{
+			Debug.LogError("[LevelController] Load failed. Tracks is null or empty.");
+			return false;
+		}
+		
+		Level prefab = Resources.Load<Level>(skin);
+		
+		if (prefab == null)
+		{
+			Debug.LogError("[LevelController] Load failed. Skin is null or empty.");
+			return false;
+		}
+		
+		m_Level = m_LevelFactory.Create(prefab);
+		
+		m_Level.Setup(
+			m_LevelProcessor.GetLength(m_LevelID),
+			m_LevelProcessor.GetBPM(m_LevelID),
+			m_LevelProcessor.GetSpeed(m_LevelID),
+			tracks
+		);
+		
+		m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
+		
+		m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
+		
+		return true;
+	}
+
+	public void Remove()
+	{
+		if (m_Level == null)
+		{
+			Debug.LogError("[LevelController] Remove level failed. Level is null.");
+			return;
+		}
+		
+		m_SignalBus.Fire(new LevelExitSignal(m_LevelID));
+		
+		GameObject.Destroy(m_Level.gameObject);
+		
+		m_Level   = null;
+		m_LevelID = null;
+	}
+
+	public void Play()
+	{
+		if (m_Level == null)
+		{
+			Debug.LogError("[LevelController] Play level failed. Level is null.");
+			return;
+		}
+		
+		m_Level.Play(() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID)));
+		
+		m_SignalBus.Fire(new LevelPlaySignal(m_LevelID));
+	}
+
+	public void Pause()
+	{
+		if (m_Level == null)
+		{
+			Debug.LogError("[LevelController] Pause level failed. Level is null.");
+			return;
+		}
+		
+		m_Level.Pause();
+	}
+
+	public void Restart()
+	{
+		if (m_Level == null)
+		{
+			Debug.LogError("[LevelController] Restart level failed. Level is null.");
+			return;
+		}
+		
+		m_Level.Stop();
+		
+		m_SignalBus.Fire(new LevelRestartSignal(m_LevelID));
+	}
+
+	public void AddSampleReceiver(ISampleReceiver _SampleReceiver)
+	{
+		m_SampleReceivers.Add(_SampleReceiver);
+	}
+
+	public void RemoveSampleReceiver(ISampleReceiver _SampleReceiver)
+	{
+		m_SampleReceivers.Remove(_SampleReceiver);
+	}
+}
+
 [Preserve]
 public class LevelDataUpdateSignal { }
 
 public class LevelSnapshot
 {
 	public string                              ID             { get; }
+	public bool                                Active         { get; }
 	public int                                 Level          { get; }
 	public string                              Title          { get; }
 	public string                              Artist         { get; }
@@ -35,6 +166,7 @@ public class LevelSnapshot
 	public LevelSnapshot(DataSnapshot _Data)
 	{
 		ID             = _Data.Key;
+		Active         = _Data.GetBool("active");
 		Level          = _Data.GetInt("level");
 		Title          = _Data.GetString("title", string.Empty);
 		Artist         = _Data.GetString("artist", string.Empty);
@@ -59,36 +191,23 @@ public class LevelSnapshot
 [Preserve]
 public class LevelProcessor
 {
-	public bool Playing => m_Level != null && m_Level.Playing;
-
 	bool Loaded { get; set; }
-
-	Level  m_Level;
-	string m_LevelID;
 
 	readonly SignalBus        m_SignalBus;
 	readonly ProfileProcessor m_ProfileProcessor;
-	readonly StorageProcessor m_StorageProcessor;
-	readonly Level.Factory    m_LevelFactory;
 
-	readonly List<string>                      m_LevelIDs        = new List<string>();
-	readonly Dictionary<string, LevelSnapshot> m_LevelSnapshots  = new Dictionary<string, LevelSnapshot>();
-	readonly List<ISampleReceiver>             m_SampleReceivers = new List<ISampleReceiver>();
+	readonly List<LevelSnapshot> m_LevelSnapshots = new List<LevelSnapshot>();
 
 	DatabaseReference m_LevelsData;
 
 	[Inject]
 	public LevelProcessor(
 		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor,
-		StorageProcessor _StorageProcessor,
-		Level.Factory    _LevelFactory
+		ProfileProcessor _ProfileProcessor
 	)
 	{
 		m_SignalBus        = _SignalBus;
 		m_ProfileProcessor = _ProfileProcessor;
-		m_StorageProcessor = _StorageProcessor;
-		m_LevelFactory     = _LevelFactory;
 	}
 
 	public async Task LoadLevels()
@@ -106,115 +225,172 @@ public class LevelProcessor
 
 	public List<string> GetLevelIDs()
 	{
-		return m_LevelIDs.ToList();
+		return m_LevelSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
 	}
 
 	public bool HasLevelID(string _LevelID)
 	{
-		return m_LevelIDs.Contains(_LevelID);
+		return m_LevelSnapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Any(_Snapshot => _Snapshot.ID == _LevelID);
+	}
+
+	public string GetSkin(string _LevelID)
+	{
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
+		
+		if (snapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get skin failed. Snapshot with ID '{0}' is null.", _LevelID);
+			return string.Empty;
+		}
+		
+		return snapshot.Skin;
 	}
 
 	public string GetArtist(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get artist failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelSnapshot.Artist;
+		return snapshot.Artist;
 	}
 
 	public string GetTitle(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get title failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		return levelSnapshot.Title;
+		return snapshot.Title;
 	}
 
 	public long GetPayout(string _LevelID, ScoreRank _Rank)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get payout failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get payout failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return 0;
 		}
 		
 		long payout = 0;
 		if (_Rank >= ScoreRank.None)
-			payout += levelSnapshot.DefaultPayout;
+			payout += snapshot.DefaultPayout;
 		if (_Rank >= ScoreRank.Bronze)
-			payout += levelSnapshot.BronzePayout;
+			payout += snapshot.BronzePayout;
 		if (_Rank >= ScoreRank.Silver)
-			payout += levelSnapshot.SilverPayout;
+			payout += snapshot.SilverPayout;
 		if (_Rank >= ScoreRank.Gold)
-			payout += levelSnapshot.GoldPayout;
+			payout += snapshot.GoldPayout;
 		if (_Rank >= ScoreRank.Platinum)
-			payout += levelSnapshot.PlatinumPayout;
+			payout += snapshot.PlatinumPayout;
 		
 		return payout;
 	}
 
 	public long GetPrice(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get price failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get price failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return 0;
 		}
 		
-		return levelSnapshot.Price;
+		return snapshot.Price;
 	}
 
 	public long GetRevivePrice(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get revive price failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get revive price failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return 0;
 		}
 		
-		return levelSnapshot.RevivePrice;
+		return snapshot.RevivePrice;
+	}
+
+	public float GetLength(string _LevelID)
+	{
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
+		
+		if (snapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get length failed. Snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return snapshot.Length;
+	}
+
+	public float GetBPM(string _LevelID)
+	{
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
+		
+		if (snapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get BPM failed. Snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return snapshot.BPM;
+	}
+
+	public float GetSpeed(string _LevelID)
+	{
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
+		
+		if (snapshot == null)
+		{
+			Debug.LogErrorFormat("[LevelProcessor] Get speed failed. Snapshot with ID '{0}' is null.", _LevelID);
+			return 0;
+		}
+		
+		return snapshot.Speed;
 	}
 
 	public float GetInvincibility(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get invincibility failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get invincibility failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return 0;
 		}
 		
-		return levelSnapshot.Invincibility;
+		return snapshot.Invincibility;
 	}
 
 	public int GetLevel(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get level failed. Level snapshot with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get level failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return 0;
 		}
 		
-		return levelSnapshot.Level;
+		return snapshot.Level;
 	}
 
 	public LevelMode GetMode(string _LevelID)
@@ -222,145 +398,47 @@ public class LevelProcessor
 		if (m_ProfileProcessor.HasNoAds())
 			return LevelMode.Free;
 		
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get mode failed. Level info with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get mode failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return LevelMode.Free;
 		}
 		
-		return levelSnapshot.Mode;
+		return snapshot.Mode;
 	}
 
 	public LevelBadge GetBadge(string _LevelID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get badge failed. Level info with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get badge failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return LevelBadge.None;
 		}
 		
-		return levelSnapshot.Badge;
+		return snapshot.Badge;
 	}
 
 	public string GetPlatformURL(string _LevelID, string _PlatformID)
 	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
+		LevelSnapshot snapshot = GetLevelSnapshot(_LevelID);
 		
-		if (levelSnapshot == null)
+		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[LevelProcessor] Get platform URL failed. Level info with ID '{0}' is null.", _LevelID);
+			Debug.LogErrorFormat("[LevelProcessor] Get platform URL failed. Snapshot with ID '{0}' is null.", _LevelID);
 			return string.Empty;
 		}
 		
-		if (!levelSnapshot.Platforms.TryGetValue(_PlatformID, out string url))
+		if (!snapshot.Platforms.TryGetValue(_PlatformID, out string url))
 		{
 			Debug.LogErrorFormat("[LevelProcessor] Get platform URL failed. URL not found. Level: {0} Platform: {1}", _LevelID, _PlatformID);
 			return string.Empty;
 		}
 		
 		return url;
-	}
-
-	public async Task Load(string _LevelID)
-	{
-		LevelSnapshot levelSnapshot = GetLevelSnapshot(_LevelID);
-		
-		if (levelSnapshot == null)
-		{
-			Debug.LogError("[LevelProvider] Create level failed. Level info is null.");
-			return;
-		}
-		
-		if (m_Level != null)
-		{
-			Debug.LogErrorFormat("[LevelProvider] Create level failed. Level instance '{0}' already created.", m_Level.name);
-			return;
-		}
-		
-		Track[] tracks = await m_StorageProcessor.LoadTracks(_LevelID);
-		
-		Level prefab = Resources.Load<Level>(levelSnapshot.Skin);
-		
-		m_LevelID = _LevelID;
-		m_Level   = m_LevelFactory.Create(prefab);
-		
-		m_Level.Setup(
-			levelSnapshot.Length,
-			levelSnapshot.BPM,
-			levelSnapshot.Speed,
-			tracks
-		);
-		
-		m_Level.RegisterSampleReceivers(m_SampleReceivers.ToArray());
-		
-		m_SignalBus.Fire(new LevelStartSignal(m_LevelID));
-	}
-
-	public void Remove()
-	{
-		if (m_Level == null)
-		{
-			Debug.LogError("[LevelProvider] Remove level failed. Level is null.");
-			return;
-		}
-		
-		m_SignalBus.Fire(new LevelExitSignal(m_LevelID));
-		
-		GameObject.Destroy(m_Level.gameObject);
-		
-		m_Level   = null;
-		m_LevelID = null;
-	}
-
-	public void Play()
-	{
-		if (m_Level == null)
-		{
-			Debug.LogError("[LevelProvider] Play level failed. Level is null.");
-			return;
-		}
-		
-		m_Level.Play(() => m_SignalBus.Fire(new LevelFinishSignal(m_LevelID)));
-		
-		m_SignalBus.Fire(new LevelPlaySignal(m_LevelID));
-	}
-
-	public void Pause()
-	{
-		if (m_Level == null)
-		{
-			Debug.LogError("[LevelProvider] Pause level failed. Level is null.");
-			return;
-		}
-		
-		m_Level.Pause();
-	}
-
-	public void Restart()
-	{
-		if (m_Level == null)
-		{
-			Debug.LogError("[LevelProvider] Restart level failed. Level is null.");
-			return;
-		}
-		
-		m_Level.Stop();
-		
-		m_SignalBus.Fire(new LevelRestartSignal(m_LevelID));
-	}
-
-	public void AddSampleReceiver(ISampleReceiver _SampleReceiver)
-	{
-		m_SampleReceivers.Add(_SampleReceiver);
-	}
-
-	public void RemoveSampleReceiver(ISampleReceiver _SampleReceiver)
-	{
-		m_SampleReceivers.Remove(_SampleReceiver);
 	}
 
 	async void OnLevelsUpdate(object _Sender, EventArgs _Args)
@@ -379,45 +457,30 @@ public class LevelProcessor
 
 	async Task FetchLevels()
 	{
-		m_LevelIDs.Clear();
 		m_LevelSnapshots.Clear();
 		
-		DataSnapshot levelSnapshots = await m_LevelsData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot data = await m_LevelsData.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (levelSnapshots == null)
+		if (data == null)
 		{
 			Debug.LogError("[LevelProcessor] Fetch levels failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot levelSnapshot in levelSnapshots.Children)
-		{
-			bool active = levelSnapshot.GetBool("active");
-			
-			if (!active)
-				continue;
-			
-			LevelSnapshot level = new LevelSnapshot(levelSnapshot);
-			
-			m_LevelIDs.Add(level.ID);
-			m_LevelSnapshots[level.ID] = level;
-		}
+		m_LevelSnapshots.AddRange(data.Children.Select(_Data => new LevelSnapshot(_Data)));
 	}
 
 	LevelSnapshot GetLevelSnapshot(string _LevelID)
 	{
+		if (m_LevelSnapshots == null || m_LevelSnapshots.Count == 0)
+			return null;
+		
 		if (string.IsNullOrEmpty(_LevelID))
 		{
 			Debug.LogError("[ProgressProcessor] Get level snapshot failed. Level ID is null or empty.");
 			return null;
 		}
 		
-		if (!m_LevelSnapshots.ContainsKey(_LevelID))
-		{
-			Debug.LogErrorFormat("[ProgressProcessor] Get level snapshot failed. Level with ID '{0}' not found.", _LevelID);
-			return null;
-		}
-		
-		return m_LevelSnapshots[_LevelID];
+		return m_LevelSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _LevelID);
 	}
 }

@@ -8,7 +8,7 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	MenuProcessor      m_MenuProcessor;
-	LevelProcessor     m_LevelProcessor;
+	LevelController    m_LevelController;
 	HapticProcessor    m_HapticProcessor;
 	StatisticProcessor m_StatisticProcessor;
 
@@ -27,14 +27,14 @@ public class UIGamePauseButton : UIEntity
 
 	[Inject]
 	public void Construct(
+		LevelController    _LevelController,
 		MenuProcessor      _MenuProcessor,
-		LevelProcessor     _LevelProcessor,
 		HapticProcessor    _HapticProcessor,
 		StatisticProcessor _StatisticProcessor
 	)
 	{
+		m_LevelController    = _LevelController;
 		m_MenuProcessor      = _MenuProcessor;
-		m_LevelProcessor     = _LevelProcessor;
 		m_HapticProcessor    = _HapticProcessor;
 		m_StatisticProcessor = _StatisticProcessor;
 	}
@@ -62,7 +62,7 @@ public class UIGamePauseButton : UIEntity
 		
 		await m_MenuProcessor.Hide(MenuType.PauseMenu);
 		
-		m_LevelProcessor.Play();
+		m_LevelController.Play();
 	}
 
 	public void Pause()
@@ -76,7 +76,7 @@ public class UIGamePauseButton : UIEntity
 		
 		m_MenuProcessor.Show(MenuType.PauseMenu);
 		
-		m_LevelProcessor.Pause();
+		m_LevelController.Pause();
 	}
 
 	public void Toggle()

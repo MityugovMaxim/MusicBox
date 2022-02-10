@@ -17,6 +17,7 @@ public class UIReviveMenu : UIMenu
 	AdsProcessor       m_AdsProcessor;
 	ProfileProcessor   m_ProfileProcessor;
 	LevelProcessor     m_LevelProcessor;
+	LevelController    m_LevelController;
 	HealthProcessor    m_HealthProcessor;
 	MenuProcessor      m_MenuProcessor;
 	HapticProcessor    m_HapticProcessor;
@@ -32,6 +33,7 @@ public class UIReviveMenu : UIMenu
 		AdsProcessor       _AdsProcessor,
 		ProfileProcessor   _ProfileProcessor,
 		LevelProcessor     _LevelProcessor,
+		LevelController    _LevelController,
 		HealthProcessor    _HealthProcessor,
 		MenuProcessor      _MenuProcessor,
 		HapticProcessor    _HapticProcessor,
@@ -41,6 +43,7 @@ public class UIReviveMenu : UIMenu
 		m_AdsProcessor       = _AdsProcessor;
 		m_ProfileProcessor   = _ProfileProcessor;
 		m_LevelProcessor     = _LevelProcessor;
+		m_LevelController    = _LevelController;
 		m_HealthProcessor    = _HealthProcessor;
 		m_MenuProcessor      = _MenuProcessor;
 		m_HapticProcessor    = _HapticProcessor;
@@ -81,7 +84,7 @@ public class UIReviveMenu : UIMenu
 			
 			m_HealthProcessor.Restore();
 			
-			m_LevelProcessor.Play();
+			m_LevelController.Play();
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
@@ -97,7 +100,7 @@ public class UIReviveMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_AdsProcessor.Rewarded(true);
+		bool success = await m_AdsProcessor.Rewarded();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -111,7 +114,7 @@ public class UIReviveMenu : UIMenu
 			
 			m_HealthProcessor.Restore();
 			
-			m_LevelProcessor.Play();
+			m_LevelController.Play();
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
@@ -123,40 +126,17 @@ public class UIReviveMenu : UIMenu
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		if (!await ProcessRestartAds())
+			return;
 		
-		if (levelMode == LevelMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Rewarded();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		else
-		{
-			m_RestartAdsCount++;
-			
-			if (m_RestartAdsCount >= RESTART_ADS_COUNT)
-			{
-				m_RestartAdsCount = 0;
-				
-				await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-				
-				await m_AdsProcessor.Interstitial();
-				
-				await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			}
-		}
-		
-		m_LevelProcessor.Restart();
+		m_LevelController.Restart();
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 		
-		m_LevelProcessor.Play();
+		m_LevelController.Play();
 	}
 
 	public async void Leave()
@@ -165,20 +145,9 @@ public class UIReviveMenu : UIMenu
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		m_LeaveAdsCount++;
+		await ProcessLeaveAds();
 		
-		if (m_LeaveAdsCount >= LEAVE_ADS_COUNT)
-		{
-			m_LeaveAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		
-		m_LevelProcessor.Remove();
+		m_LevelController.Remove();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -224,5 +193,60 @@ public class UIReviveMenu : UIMenu
 		}
 		
 		return success;
+	}
+
+	async Task<bool> ProcessRestartAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return true;
+		
+		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		
+		if (levelMode == LevelMode.Ads)
+		{
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			bool success = await m_AdsProcessor.Rewarded();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return success;
+		}
+		else
+		{
+			m_RestartAdsCount++;
+			
+			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+				return true;
+			
+			m_RestartAdsCount = 0;
+			
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			
+			return true;
+		}
+	}
+
+	async Task ProcessLeaveAds()
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return;
+		
+		m_LeaveAdsCount++;
+		
+		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+			return;
+		
+		m_LeaveAdsCount = 0;
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_AdsProcessor.Interstitial();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }
