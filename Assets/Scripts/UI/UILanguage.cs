@@ -107,7 +107,7 @@ public class UILanguage : UIEntity
 				Task.Delay(1500)
 			);
 			
-			await m_MessageProcessor.ProcessTopic();
+			await m_MessageProcessor.LoadTopic();
 			
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
 			

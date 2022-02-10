@@ -104,11 +104,7 @@ public class UILoginMenu : UIMenu
 		
 		await m_MenuProcessor.Hide(MenuType.BannerMenu);
 		
-		await m_MessageProcessor.ProcessPermission();
-		
-		await m_MessageProcessor.ProcessTopic();
-		
-		await m_MessageProcessor.ProcessLaunchURL(true);
+		await m_MessageProcessor.LoadMessages();
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 	}

@@ -5,10 +5,9 @@ using Firebase.Messaging;
 using ModestTree;
 using Unity.Notifications.iOS;
 using UnityEngine;
-using UnityEngine.Purchasing.MiniJSON;
 using Zenject;
 
-public abstract class MessageProcessor : IInitializable
+public abstract class MessageProcessor
 {
 	const string TOPICS_LANGUAGE_KEY = "TOPICS_LANGUAGE";
 
@@ -30,20 +29,13 @@ public abstract class MessageProcessor : IInitializable
 		m_UrlProcessor      = _UrlProcessor;
 	}
 
-	protected virtual string GetLaunchURL() => Application.absoluteURL;
-
-	protected abstract void RemoveScheduledNotifications();
-
-	void IInitializable.Initialize()
-	{
-		RemoveScheduledNotifications();
-	}
-
-	public async Task ProcessPermission()
+	public async Task LoadMessages()
 	{
 		try
 		{
 			await FirebaseMessaging.RequestPermissionAsync();
+			
+			await LoadTopic();
 		}
 		catch (Exception exception)
 		{
@@ -53,9 +45,11 @@ public abstract class MessageProcessor : IInitializable
 		
 		FirebaseMessaging.TokenReceived   += OnTokenReceived;
 		FirebaseMessaging.MessageReceived += OnMessageReceived;
+		
+		ClearBadges();
 	}
 
-	public async Task ProcessTopic()
+	public async Task LoadTopic()
 	{
 		if (Topic == m_LanguageProcessor.Language)
 			return;
@@ -73,22 +67,19 @@ public abstract class MessageProcessor : IInitializable
 		Debug.Log("[MessageProcessor] Process topics complete.");
 	}
 
-	public async Task ProcessLaunchURL(bool _Instant = false)
-	{
-		await m_UrlProcessor.ProcessURL(GetLaunchURL(), _Instant);
-	}
+	protected abstract void ClearBadges();
 
 	static void OnTokenReceived(object _Sender, TokenReceivedEventArgs _Args)
 	{
-		Debug.LogFormat("[MessageProcessor] Received notification token: '{0}'.", _Args.Token);
+		Debug.LogFormat("[MessageProcessor] Received token: '{0}'.", _Args.Token);
 	}
 
 	async void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
 	{
-		if (!_Args.Message.Data.TryGetValue("url", out string url))
-			return;
+		Debug.LogFormat("[MessageProcessor] Received message: '{0}'.", _Args.Message.MessageType);
 		
-		await m_UrlProcessor.ProcessURL(url);
+		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url))
+			await m_UrlProcessor.ProcessURL(url);
 	}
 }
 
@@ -100,21 +91,7 @@ public class iOSMessageProcessor : MessageProcessor
 		UrlProcessor      _UrlProcessor
 	) : base(_LanguageProcessor, _UrlProcessor) { }
 
-	protected override string GetLaunchURL()
-	{
-		iOSNotification notification = iOSNotificationCenter.GetLastRespondedNotification();
-		
-		if (notification?.Data == null)
-			return Application.absoluteURL;
-		
-		Dictionary<string, object> data = Json.Deserialize(notification.Data) as Dictionary<string, object>;
-		
-		Debug.LogError("---> DATA: " + notification.Data);
-		
-		return data.GetString("url", Application.absoluteURL);
-	}
-
-	protected override void RemoveScheduledNotifications()
+	protected override void ClearBadges()
 	{
 		iOSNotificationCenter.RemoveAllScheduledNotifications();
 		
