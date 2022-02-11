@@ -182,6 +182,56 @@ public class UnityTask : MonoBehaviour
 		return completionSource.Task;
 	}
 
+	public static Task Instruction(YieldInstruction _Instruction, CancellationToken _Token = default)
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		if (_Token.IsCancellationRequested)
+		{
+			completionSource.SetCanceled();
+			return completionSource.Task;
+		}
+		
+		IEnumerator routine = InstructionRoutine(_Instruction, () => completionSource.SetResult(true));
+		
+		_Token.Register(
+			() =>
+			{
+				if (routine != null)
+					m_Instance.StopCoroutine(routine);
+				
+				completionSource.SetCanceled();
+			}
+		);
+		
+		m_Instance.StartCoroutine(routine);
+		
+		return completionSource.Task;
+	}
+
+	public static Task UnloadAssets(CancellationToken _Token)
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		if (_Token.IsCancellationRequested)
+		{
+			completionSource.SetCanceled();
+			return completionSource.Task;
+		}
+		
+		AsyncOperation operation = Resources.UnloadUnusedAssets();
+		
+		operation.completed += _Result =>
+		{
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			
+			completionSource.SetResult(true);
+		};
+		
+		return completionSource.Task;
+	}
+
 	static IEnumerator YieldRoutine()
 	{
 		while (true)
@@ -278,6 +328,14 @@ public class UnityTask : MonoBehaviour
 	{
 		if (_Delay > float.Epsilon)
 			yield return new WaitForSeconds(_Delay);
+		
+		_Finished?.Invoke();
+	}
+
+	static IEnumerator InstructionRoutine(YieldInstruction _Instruction, Action _Finished)
+	{
+		if (_Instruction != null)
+			yield return _Instruction;
 		
 		_Finished?.Invoke();
 	}

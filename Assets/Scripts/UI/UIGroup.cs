@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -19,15 +18,14 @@ public class UIGroup : UIEntity
 		}
 	}
 
+	protected float ShowDuration => m_ShowDuration;
+	protected float HideDuration => m_HideDuration;
+
 	[SerializeField] bool  m_Interactable;
 	[SerializeField] float m_ShowDuration = 0.2f;
 	[SerializeField] float m_HideDuration = 0.2f;
 
 	CanvasGroup m_CanvasGroup;
-
-	IEnumerator m_AlphaRoutine;
-
-	Action m_AlphaFinished;
 
 	CancellationTokenSource m_TokenSource;
 
@@ -63,11 +61,13 @@ public class UIGroup : UIEntity
 		CanvasGroup.interactable   = m_Interactable;
 		CanvasGroup.blocksRaycasts = m_Interactable;
 		
-		OnShowStarted();
+		if (Application.isPlaying)
+			OnShowStarted();
 		
 		await ShowAnimation(m_ShowDuration, _Instant, token);
 		
-		OnShowFinished();
+		if (Application.isPlaying)
+			OnShowFinished();
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -87,11 +87,13 @@ public class UIGroup : UIEntity
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		OnHideStarted();
+		if (Application.isPlaying)
+			OnHideStarted();
 		
 		await HideAnimation(m_HideDuration, _Instant, token);
 		
-		OnHideFinished();
+		if (Application.isPlaying)
+			OnHideFinished();
 		
 		CanvasGroup.interactable   = false;
 		CanvasGroup.blocksRaycasts = false;
@@ -134,83 +136,22 @@ public class UIGroup : UIEntity
 		return AlphaAnimation(0, _Duration, _Instant, _Token);
 	}
 
-	protected Task AlphaAnimation(float _Alpha, float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	protected async Task AlphaAnimation(float _Alpha, float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		if (m_AlphaRoutine != null)
-			StopCoroutine(m_AlphaRoutine);
-		
-		InvokeAlphaFinished();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_AlphaFinished = () => completionSource.TrySetResult(true);
-		
-		if (_Token.IsCancellationRequested)
-		{
-			InvokeAlphaFinished();
-			return completionSource.Task;
-		}
-		
-		_Token.Register(
-			() =>
-			{
-				if (m_AlphaRoutine != null)
-					StopCoroutine(m_AlphaRoutine);
-				
-				InvokeAlphaFinished();
-			}
-		);
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_AlphaRoutine = AlphaRoutine(CanvasGroup, _Alpha, _Duration, InvokeAlphaFinished);
-			
-			StartCoroutine(m_AlphaRoutine);
-		}
-		else
-		{
-			CanvasGroup.alpha = _Alpha;
-			
-			InvokeAlphaFinished();
-		}
-		
-		return completionSource.Task;
-	}
-
-	static IEnumerator AlphaRoutine(CanvasGroup _CanvasGroup, float _Alpha, float _Duration, Action _Finished)
-	{
-		if (_CanvasGroup == null)
-		{
-			_Finished?.Invoke();
-			yield break;
-		}
-		
-		float source = _CanvasGroup.alpha;
+		float source = CanvasGroup.alpha;
 		float target = Mathf.Clamp01(_Alpha);
 		
-		if (!Mathf.Approximately(source, target))
+		if (Mathf.Approximately(source, target))
+			return;
+		
+		void Animation(float _Phase)
 		{
-			float time     = 0;
-			float duration = _Duration * Mathf.Abs(target - source);
-			while (time < duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				_CanvasGroup.alpha = Mathf.Lerp(source, target, time / duration);
-			}
+			CanvasGroup.alpha = Mathf.Lerp(source, target, _Phase);
 		}
 		
-		_CanvasGroup.alpha = target;
-		
-		_Finished?.Invoke();
-	}
-
-	void InvokeAlphaFinished()
-	{
-		Action action = m_AlphaFinished;
-		m_AlphaFinished = null;
-		action?.Invoke();
+		if (_Instant)
+			Animation(1);
+		else
+			await UnityTask.Phase(_Phase => CanvasGroup.alpha = Mathf.Lerp(source, target, _Phase), _Duration, _Token);
 	}
 }

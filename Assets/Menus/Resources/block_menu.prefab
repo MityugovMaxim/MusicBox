@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2490031286128242698
 RectTransform:
   m_ObjectHideFlags: 0
@@ -50,9 +50,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c063e7c242d8419f9adf6362168a00d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Blur: {fileID: 0}
+  m_Interactable: 1
   m_ShowDuration: 0
   m_HideDuration: 0
+  m_Blur: {fileID: 0}
 --- !u!225 &5347708461208306159
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -61,10 +62,10 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4215452445664386190}
   m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 1
 --- !u!1 &6692823264625492324
 GameObject:
   m_ObjectHideFlags: 0

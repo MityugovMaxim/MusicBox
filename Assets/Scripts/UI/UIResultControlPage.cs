@@ -17,9 +17,10 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UILevelThumbnail  m_Thumbnail;
 	[SerializeField] UILevelDiscs      m_Discs;
 	[SerializeField] UILevelLabel      m_Label;
-	[SerializeField] UILevelLikeButton m_LikeButton;
+	[SerializeField] UILevelRating m_Rating;
 	[SerializeField] UILevelModeButton m_RestartButton;
 	[SerializeField] LevelPreview      m_PreviewSource;
+	[SerializeField] UILevelPlatforms  m_Platforms;
 
 	ProfileProcessor   m_ProfileProcessor;
 	LevelManager       m_LevelManager;
@@ -31,7 +32,6 @@ public class UIResultControlPage : UIResultMenuPage
 	MusicProcessor     m_MusicProcessor;
 	HapticProcessor    m_HapticProcessor;
 	StatisticProcessor m_StatisticProcessor;
-	UrlProcessor       m_UrlProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
@@ -51,8 +51,7 @@ public class UIResultControlPage : UIResultMenuPage
 		AmbientProcessor   _AmbientProcessor,
 		MusicProcessor     _MusicProcessor,
 		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor,
-		UrlProcessor       _UrlProcessor
+		StatisticProcessor _StatisticProcessor
 	)
 	{
 		m_ProfileProcessor   = _ProfileProcessor;
@@ -65,7 +64,6 @@ public class UIResultControlPage : UIResultMenuPage
 		m_MusicProcessor     = _MusicProcessor;
 		m_HapticProcessor    = _HapticProcessor;
 		m_StatisticProcessor = _StatisticProcessor;
-		m_UrlProcessor       = _UrlProcessor;
 	}
 
 	public override void Setup(string _LevelID)
@@ -75,8 +73,9 @@ public class UIResultControlPage : UIResultMenuPage
 		m_Thumbnail.Setup(m_LevelID);
 		m_Discs.Setup(m_LevelID);
 		m_Label.Setup(m_LevelID);
-		m_LikeButton.Setup(m_LevelID);
+		m_Rating.Setup(m_LevelID);
 		m_RestartButton.Setup(m_LevelID);
+		m_Platforms.Setup(m_LevelID);
 		m_PreviewSource.Stop();
 	}
 
@@ -152,33 +151,6 @@ public class UIResultControlPage : UIResultMenuPage
 		m_LevelController.Play();
 	}
 
-	public void OpenAppleMusic()
-	{
-		OpenPlatform("apple_music");
-	}
-
-	public void OpenSpotify()
-	{
-		OpenPlatform("spotify");
-	}
-
-	public void OpenDeezer()
-	{
-		OpenPlatform("deezer");
-	}
-
-	async void OpenPlatform(string _PlatformID)
-	{
-		m_StatisticProcessor.LogResultMenuControlPagePlatformClick(m_LevelID, _PlatformID);
-		
-		string url = m_LevelProcessor.GetPlatformURL(m_LevelID, _PlatformID);
-		
-		if (string.IsNullOrEmpty(url))
-			return;
-		
-		await m_UrlProcessor.ProcessURL(url);
-	}
-
 	string GetLevelID(int _Offset)
 	{
 		List<string> levelIDs = m_LevelManager.GetLibraryLevelIDs();
@@ -207,7 +179,7 @@ public class UIResultControlPage : UIResultMenuPage
 
 	protected override void OnHideFinished()
 	{
-		m_LikeButton.Execute();
+		m_Rating.Execute();
 	}
 
 	async Task<bool> ProcessRestartAds()

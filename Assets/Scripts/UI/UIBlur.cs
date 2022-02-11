@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -43,16 +45,16 @@ public class UIBlur : MaskableGraphic
 		}
 	}
 
-	public void Blur()
+	public async void Blur(Action _Finished = null)
 	{
-		StopAllCoroutines();
+		await BlurAsync();
 		
-		StartCoroutine(BlurRoutine());
+		_Finished?.Invoke();
 	}
 
-	static IEnumerator BlurRoutine()
+	public async Task BlurAsync()
 	{
-		yield return new WaitForEndOfFrame();
+		await UnityTask.Instruction(new WaitForEndOfFrame());
 		
 		foreach (Camera camera in Camera.allCameras)
 		{

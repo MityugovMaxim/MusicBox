@@ -101,7 +101,7 @@ public class GameInstaller : MonoInstaller
 	void InstallProcessors()
 	{
 		#if UNITY_IOS
-		Container.Bind(typeof(MessageProcessor), typeof(IInitializable)).To<iOSMessageProcessor>().FromNew().AsSingle();
+		Container.Bind<MessageProcessor>().To<iOSMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
 		Container.Bind<MusicProcessor>()

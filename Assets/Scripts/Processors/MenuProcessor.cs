@@ -85,40 +85,28 @@ public class MenuProcessor : IInitializable
 		return menu;
 	}
 
-	public Task<UIMenu> Show(MenuType _MenuType, bool _Instant = false)
+	public async Task<UIMenu> Show(MenuType _MenuType, bool _Instant = false)
 	{
 		UIMenu menu = GetMenu<UIMenu>(_MenuType);
 		
-		TaskCompletionSource<UIMenu> completionSource = new TaskCompletionSource<UIMenu>();
+		if (menu == null)
+			return null;
 		
-		menu.Show(
-			_Instant,
-			null,
-			() => completionSource.TrySetResult(menu)
-		);
+		await menu.ShowAsync(_Instant);
 		
-		return completionSource.Task;
+		return menu;
 	}
 
-	public Task<UIMenu> Hide(MenuType _MenuType, bool _Instant = false)
+	public async Task<UIMenu> Hide(MenuType _MenuType, bool _Instant = false)
 	{
-		TaskCompletionSource<UIMenu> completionSource = new TaskCompletionSource<UIMenu>();
-		
 		UIMenu menu = GetMenu<UIMenu>(_MenuType, true);
 		
 		if (menu == null)
-		{
-			completionSource.TrySetResult(null);
-			return completionSource.Task;
-		}
+			return null;
 		
-		menu.Hide(
-			_Instant,
-			null,
-			() => completionSource.TrySetResult(menu)
-		);
+		await menu.HideAsync(_Instant);
 		
-		return completionSource.Task;
+		return menu;
 	}
 
 	void Reorder()

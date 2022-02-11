@@ -66,8 +66,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: HAPTIC
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b8a669d2cdbd741b88d67b01024fd0da, type: 2}
-  m_sharedMaterial: {fileID: 6603240175740317581, guid: b8a669d2cdbd741b88d67b01024fd0da,
+  m_fontAsset: {fileID: 11400000, guid: 3d695b72f52454582b941f60dac631ec, type: 2}
+  m_sharedMaterial: {fileID: -5960406906963442645, guid: 3d695b72f52454582b941f60dac631ec,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -529,8 +529,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: SYNC
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b8a669d2cdbd741b88d67b01024fd0da, type: 2}
-  m_sharedMaterial: {fileID: 6603240175740317581, guid: b8a669d2cdbd741b88d67b01024fd0da,
+  m_fontAsset: {fileID: 11400000, guid: 3d695b72f52454582b941f60dac631ec, type: 2}
+  m_sharedMaterial: {fileID: -5960406906963442645, guid: 3d695b72f52454582b941f60dac631ec,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -862,8 +862,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8826910917943886902}
-  - component: {fileID: 8826910917943886896}
   - component: {fileID: 8826910917943886903}
+  - component: {fileID: 8826910917943886896}
   - component: {fileID: -112934484600366884}
   - component: {fileID: 4159650200586598253}
   m_Layer: 5
@@ -872,7 +872,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8826910917943886902
 RectTransform:
   m_ObjectHideFlags: 0
@@ -894,18 +894,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!225 &8826910917943886896
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8826910917943886901}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
 --- !u!114 &8826910917943886903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -918,11 +906,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f3ba0e3a01a4430ea1e2214a330a809, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Blur: {fileID: 8826910918117260628}
+  m_Interactable: 1
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
+  m_Blur: {fileID: 8826910918117260628}
   m_Thumbnail: {fileID: 6595445801084267374}
   m_HapticState: {fileID: 6564283577322899596}
+--- !u!225 &8826910917943886896
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8826910917943886901}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!114 &-112934484600366884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1052,8 +1053,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 120.70001}
-  m_SizeDelta: {x: 0, y: -241.40002}
+  m_AnchoredPosition: {x: 0, y: -7.729431}
+  m_SizeDelta: {x: 0, y: -120.57956}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8826910918028740119
 MonoBehaviour:

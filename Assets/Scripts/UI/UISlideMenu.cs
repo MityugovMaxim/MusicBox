@@ -1,4 +1,5 @@
-using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -7,122 +8,99 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField] RectTransform  m_Content;
 
-	IEnumerator m_RepositionRoutine;
+	CancellationTokenSource m_TokenSource;
+	Vector2                 m_Delta;
 
-	Vector2 m_Delta;
-
-	void Expand()
+	async void Expand(bool _Instant = false)
 	{
-		if (m_RepositionRoutine != null)
-			StopCoroutine(m_RepositionRoutine);
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
 		
-		m_RepositionRoutine = ExpandRoutine(m_Content, ShowDuration);
+		m_TokenSource = new CancellationTokenSource();
 		
-		StartCoroutine(m_RepositionRoutine);
-	}
-
-	void Shrink()
-	{
-		if (m_RepositionRoutine != null)
-			StopCoroutine(m_RepositionRoutine);
+		CancellationToken token = m_TokenSource.Token;
 		
-		m_RepositionRoutine = ShrinkRoutine(m_Content, HideDuration);
+		float phase    = 1 - m_Content.anchorMax.y;
+		float duration = ShowDuration * phase;
 		
-		StartCoroutine(m_RepositionRoutine);
-	}
-
-	protected override IEnumerator ShowAnimation(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
+		await ExpandAsync(duration, _Instant, token);
 		
-		_CanvasGroup.alpha = 1;
-		
-		yield return ExpandRoutine(m_Content, _Duration);
-	}
-
-	protected override IEnumerator HideAnimation(CanvasGroup _CanvasGroup, float _Duration)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		_CanvasGroup.alpha = 1;
-		
-		yield return ShrinkRoutine(m_Content, _Duration);
-	}
-
-	protected override void InstantShow(CanvasGroup _CanvasGroup)
-	{
-		base.InstantShow(_CanvasGroup);
-		
-		m_Content.anchorMin = Vector2.zero;
-		m_Content.anchorMax = Vector2.one;
-	}
-
-	protected override void InstantHide(CanvasGroup _CanvasGroup)
-	{
-		base.InstantHide(_CanvasGroup);
-		
-		m_Content.anchorMin = new Vector2(0, -1);
-		m_Content.anchorMax = new Vector2(1, 0);
-	}
-
-	IEnumerator ExpandRoutine(RectTransform _RectTransform, float _Duration)
-	{
-		if (_RectTransform == null)
-			yield break;
-		
-		Vector2 sourceMin = _RectTransform.anchorMin;
-		Vector2 sourceMax = _RectTransform.anchorMax;
-		Vector2 targetMin = Vector2.zero;
-		Vector2 targetMax = Vector2.one;
-		
-		float time = 0;
-		while (time < _Duration)
-		{
-			yield return null;
-			
-			time += Time.deltaTime;
-			
-			float phase = m_Curve.Evaluate(time / _Duration);
-			
-			_RectTransform.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
-			_RectTransform.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
-		}
-		
-		_RectTransform.anchorMin = targetMin;
-		_RectTransform.anchorMax = targetMax;
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
 		Show(true);
 	}
 
-	IEnumerator ShrinkRoutine(RectTransform _RectTransform, float _Duration)
+	async void Shrink(bool _Instant = false)
 	{
-		if (_RectTransform == null)
-			yield break;
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
 		
-		Vector2 sourceMin = _RectTransform.anchorMin;
-		Vector2 sourceMax = _RectTransform.anchorMax;
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		float phase    = m_Content.anchorMax.y;
+		float duration = ShowDuration * phase;
+		
+		await ShrinkAsync(duration, _Instant, token);
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+		
+		Hide(true);
+	}
+
+	async Task ExpandAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	{
+		Vector2 sourceMin = m_Content.anchorMin;
+		Vector2 sourceMax = m_Content.anchorMax;
+		Vector2 targetMin = Vector2.zero;
+		Vector2 targetMax = Vector2.one;
+		
+		void Animation(float _Phase)
+		{
+			float phase = m_Curve.Evaluate(_Phase);
+			
+			m_Content.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
+			m_Content.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
+		}
+		
+		if (_Instant)
+			Animation(1);
+		else
+			await UnityTask.Phase(Animation, _Duration, _Token);
+	}
+
+	async Task ShrinkAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	{
+		Vector2 sourceMin = m_Content.anchorMin;
+		Vector2 sourceMax = m_Content.anchorMax;
 		Vector2 targetMin = new Vector2(0, -1);
 		Vector2 targetMax = new Vector2(1, 0);
 		
-		float time = 0;
-		while (time < _Duration)
+		void Animation(float _Phase)
 		{
-			yield return null;
+			float phase = m_Curve.Evaluate(_Phase);
 			
-			time += Time.deltaTime;
-			
-			float phase = m_Curve.Evaluate(time / _Duration);
-			
-			_RectTransform.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
-			_RectTransform.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
+			m_Content.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
+			m_Content.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
 		}
 		
-		_RectTransform.anchorMin = targetMin;
-		_RectTransform.anchorMax = targetMax;
-		
-		Hide(true);
+		if (_Instant)
+			Animation(1);
+		else
+			await UnityTask.Phase(Animation, _Duration, _Token);
+	}
+
+	protected override Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	{
+		return ExpandAsync(_Duration, _Instant, _Token);
+	}
+
+	protected override Task HideAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	{
+		return ShrinkAsync(_Duration, _Instant, _Token);
 	}
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
@@ -145,8 +123,8 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 	{
 		m_Delta = Vector2.zero;
 		
-		if (m_RepositionRoutine != null)
-			StopCoroutine(m_RepositionRoutine);
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
 	}
 
 	public void OnDrop(PointerEventData _EventData)

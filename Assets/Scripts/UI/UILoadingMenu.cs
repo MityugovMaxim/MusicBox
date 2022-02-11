@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -71,14 +73,12 @@ public class UILoadingMenu : UIMenu
 		m_LevelController.Play();
 	}
 
-	protected override IEnumerator ShowAnimation(CanvasGroup _CanvasGroup, float _Duration)
+	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		yield return base.ShowAnimation(_CanvasGroup, _Duration);
+		await base.ShowAnimation(_Duration, _Instant, _Token);
 		
-		yield return Resources.UnloadUnusedAssets();
+		await UnityTask.UnloadAssets(_Token);
 		
-		System.GC.Collect();
-		
-		yield return new WaitForSeconds(1.0f);
+		await UnityTask.Delay(1.0f, _Token);
 	}
 }

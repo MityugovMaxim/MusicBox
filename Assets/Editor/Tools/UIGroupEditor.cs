@@ -2,7 +2,8 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(UIGroup), true), CanEditMultipleObjects]
+[CanEditMultipleObjects]
+[CustomEditor(typeof(UIGroup), true)]
 public class UIGroupEditor : Editor
 {
 	public override void OnInspectorGUI()
@@ -11,11 +12,21 @@ public class UIGroupEditor : Editor
 		
 		GUILayout.BeginHorizontal();
 		
+		GUILayout.Space(20);
+		
 		if (GUILayout.Button("SHOW"))
+		{
+			Hide();
 			Show();
+		}
 		
 		if (GUILayout.Button("HIDE"))
+		{
+			Show();
 			Hide();
+		}
+		
+		GUILayout.Space(20);
 		
 		GUILayout.EndHorizontal();
 	}

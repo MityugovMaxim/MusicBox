@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -33,10 +31,6 @@ public class UIGroupLayout : UIGroup
 
 	LayoutElement m_LayoutElement;
 
-	IEnumerator m_SizeRoutine;
-
-	Action m_SizeFinished;
-
 	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
 		await ResizeAnimation(m_Size, m_ShowResizeDuration, _Instant, _Token);
@@ -69,108 +63,53 @@ public class UIGroupLayout : UIGroup
 		}
 	}
 
-	Task WidthAnimation(float _Width, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
+	async Task WidthAnimation(float _Width, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
 	{
-		Vector2 size = new Vector2(_Width, LayoutElement.preferredHeight);
+		float source = LayoutElement.preferredWidth;
+		float target = _Width;
 		
-		return SizeAnimation(size, _Duration, _Curve, _Instant, _Token);
-	}
-
-	Task HeightAnimation(float _Height, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
-	{
-		Vector2 size = new Vector2(LayoutElement.preferredWidth, _Height);
+		if (Mathf.Approximately(source, target))
+			return;
 		
-		return SizeAnimation(size, _Duration, _Curve, _Instant, _Token);
-	}
-
-	Task SizeAnimation(Vector2 _Size, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
-	{
-		if (m_SizeRoutine != null)
-			StopCoroutine(m_SizeRoutine);
-		
-		InvokeSizeFinished();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_SizeFinished = () => completionSource.TrySetResult(true);
-		
-		if (_Token.IsCancellationRequested)
+		void Animation(float _Phase)
 		{
-			InvokeSizeFinished();
-			return completionSource.Task;
-		}
-		
-		_Token.Register(
-			() =>
-			{
-				if (m_SizeRoutine != null)
-					StopCoroutine(m_SizeRoutine);
-				
-				InvokeSizeFinished();
-			}
-		);
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_SizeRoutine = SizeRoutine(LayoutElement, _Size, _Duration, _Curve, InvokeSizeFinished);
+			float phase = _Curve.Evaluate(_Phase);
 			
-			StartCoroutine(m_SizeRoutine);
+			LayoutElement.preferredWidth = Mathf.Lerp(source, target, phase);
 		}
+		
+		if (_Instant)
+			Animation(1);
 		else
+			await UnityTask.Phase(Animation, _Duration, _Token);
+	}
+
+	async Task HeightAnimation(float _Height, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
+	{
+		float source = LayoutElement.preferredHeight;
+		float target = _Height;
+		
+		if (Mathf.Approximately(source, target))
+			return;
+		
+		void Animation(float _Phase)
 		{
-			LayoutElement.preferredWidth  = _Size.x;
-			LayoutElement.preferredHeight = _Size.y;
+			float phase = _Curve.Evaluate(_Phase);
 			
-			InvokeSizeFinished();
+			LayoutElement.preferredHeight = Mathf.Lerp(source, target, phase);
 		}
 		
-		return completionSource.Task;
+		if (_Instant)
+			Animation(1);
+		else
+			await UnityTask.Phase(Animation, _Duration, _Token);
 	}
 
-	static IEnumerator SizeRoutine(
-		LayoutElement  _LayoutElement,
-		Vector2        _Size,
-		float          _Duration,
-		AnimationCurve _Curve,
-		Action         _Finished
-	)
+	async Task SizeAnimation(Vector2 _Size, float _Duration, AnimationCurve _Curve, bool _Instant, CancellationToken _Token)
 	{
-		if (_LayoutElement == null)
-		{
-			_Finished?.Invoke();
-			yield break;
-		}
-		
-		Vector2 source = new Vector2(_LayoutElement.preferredWidth, _LayoutElement.preferredHeight);
-		Vector2 target = _Size;
-		if (source != target && _Duration > float.Epsilon)
-		{
-			float time = 0;
-			while (time < _Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				float phase = _Curve.Evaluate(time / _Duration);
-				
-				Vector2 size = Vector2.Lerp(source, target, phase);
-				
-				_LayoutElement.preferredWidth  = size.x;
-				_LayoutElement.preferredHeight = size.y;
-			}
-		}
-		
-		_LayoutElement.preferredWidth  = target.x;
-		_LayoutElement.preferredHeight = target.y;
-		
-		_Finished?.Invoke();
-	}
-
-	void InvokeSizeFinished()
-	{
-		Action action = m_SizeFinished;
-		m_SizeFinished = null;
-		action?.Invoke();
+		await Task.WhenAll(
+			WidthAnimation(_Size.x, _Duration, _Curve, _Instant, _Token),
+			HeightAnimation(_Size.y, _Duration, _Curve, _Instant, _Token)
+		);
 	}
 }

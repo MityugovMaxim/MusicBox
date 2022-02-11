@@ -83,8 +83,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8758252461353047000}
-  - component: {fileID: 8758252461353046822}
   - component: {fileID: 6873910925083838548}
+  - component: {fileID: 8758252461353046822}
   - component: {fileID: 7917962882551391641}
   - component: {fileID: 6260565803727834555}
   m_Layer: 5
@@ -93,7 +93,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8758252461353047000
 RectTransform:
   m_ObjectHideFlags: 0
@@ -115,18 +115,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!225 &8758252461353046822
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8758252461353047001}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
 --- !u!114 &6873910925083838548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,10 +127,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b000ce942c8347aa80dbcbc5d2f1806e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Blur: {fileID: 0}
+  m_Interactable: 1
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
+  m_Blur: {fileID: 0}
   m_Loader: {fileID: 8758252460903260549}
+--- !u!225 &8758252461353046822
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8758252461353047001}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!114 &7917962882551391641
 MonoBehaviour:
   m_ObjectHideFlags: 0

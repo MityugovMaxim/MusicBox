@@ -8,6 +8,7 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 	[SerializeField] UIGamePauseButton m_PauseButton;
 	[SerializeField] UIGameProgress    m_Progress;
 	[SerializeField] UIGameTimer       m_Timer;
+	[SerializeField] UILevelLabel      m_LevelLabel;
 
 	SignalBus       m_SignalBus;
 	LevelController m_LevelController;
@@ -91,6 +92,7 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		m_LevelID = _LevelID;
 		
 		m_PauseButton.Setup(m_LevelID);
+		m_LevelLabel.Setup(m_LevelID);
 	}
 
 	protected override void OnHideFinished()
