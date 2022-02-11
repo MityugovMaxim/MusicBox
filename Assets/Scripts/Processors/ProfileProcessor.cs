@@ -152,14 +152,7 @@ public class ProfileProcessor
 		
 		long requiredCoins = _Coins - Coins;
 		
-		List<string> productIDs = GetVisibleProductIDs();
-		
-		if (productIDs == null || productIDs.Count == 0)
-			return false;
-		
-		string productID = productIDs
-			.Where(_ProductID => m_ProductProcessor.GetCoins(_ProductID) >= requiredCoins)
-			.Aggregate((_A, _B) => m_ProductProcessor.GetCoins(_A) < m_ProductProcessor.GetCoins(_B) ? _A : _B);
+		string productID = m_ProductProcessor.GetCoinsProductID(requiredCoins);
 		
 		if (string.IsNullOrEmpty(productID))
 			return false;
