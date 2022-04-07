@@ -1,63 +1,41 @@
-using System;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Scripting;
 using Zenject;
-using Zenject.Internal;
 
-public class UIProductItem : UIEntity
+public class UIProductItem : UIEntity, IPointerClickHandler
 {
-	public string LevelID { get; private set; }
-
 	[Preserve]
-	public class Pool : MonoMemoryPool<UIProductItem> { }
+	public class Pool : UIEntityPool<UIProductItem> { }
 
-	[SerializeField] UILevelThumbnail m_Thumbnail;
-	[SerializeField] Button           m_PlayButton;
-	[SerializeField] Button           m_PauseButton;
+	[SerializeField] UIProductImage    m_Image;
+	[SerializeField] UIProductDiscount m_Discount;
+	[SerializeField] UIProductPrice    m_Price;
 
-	Action<string> m_Play;
-	Action<string> m_Stop;
-	bool           m_Playing;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	public void Setup(string _LevelID, Action<string> _Play, Action<string> _Stop)
+	string m_ProductID;
+
+	public void Setup(string _ProductID)
 	{
-		LevelID = _LevelID;
+		m_ProductID = _ProductID;
 		
-		m_Play    = _Play;
-		m_Stop    = _Stop;
-		m_Playing = false;
-		
-		m_PlayButton.gameObject.SetActive(true);
-		m_PauseButton.gameObject.SetActive(false);
-		
-		m_Thumbnail.Setup(_LevelID);
+		m_Image.Setup(m_ProductID);
+		m_Discount.Setup(m_ProductID);
+		m_Price.Setup(m_ProductID);
 	}
 
-	[Preserve]
-	public void Play()
+	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		if (m_Playing)
+		m_StatisticProcessor.LogMainMenuStorePageItemClick(m_ProductID);
+		
+		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
+		
+		if (productMenu == null)
 			return;
 		
-		m_Playing = true;
-		
-		m_PlayButton.gameObject.SetActive(false);
-		m_PauseButton.gameObject.SetActive(true);
-		
-		m_Play?.Invoke(LevelID);
-	}
-
-	[Preserve]
-	public void Stop()
-	{
-		if (!m_Playing)
-			return;
-		
-		m_Playing = false;
-		
-		m_PlayButton.gameObject.SetActive(true);
-		m_PauseButton.gameObject.SetActive(false);
-		
-		m_Stop?.Invoke(LevelID);
+		productMenu.Setup(m_ProductID);
+		productMenu.Show();
 	}
 }

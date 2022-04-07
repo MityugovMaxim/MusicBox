@@ -111,7 +111,7 @@
 				OUT.wave     = ComputeScreenPos(OUT.vertex).xy * _Scale - offset;
 				OUT.rect     = IN.rect;
 				OUT.progress = IN.progress;
-				OUT.mask     = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				
 				return OUT;
 			}

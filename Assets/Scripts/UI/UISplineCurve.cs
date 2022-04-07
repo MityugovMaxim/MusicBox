@@ -67,6 +67,7 @@ public class UISplineCurve : MaskableGraphic
 	static Material m_BlendMaterial;
 	static Material m_AdditiveMaterial;
 
+	[SerializeField] bool          m_Outer;
 	[SerializeField] UISpline      m_Spline;
 	[SerializeField] Sprite        m_Sprite;
 	[SerializeField] RectTransform m_MinCap;
@@ -77,7 +78,10 @@ public class UISplineCurve : MaskableGraphic
 
 	[NonSerialized] UISpline m_SplineCache;
 
-	readonly List<UIVertex> m_Vertices  = new List<UIVertex>();
+	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
+	readonly List<int>      m_Indices  = new List<int>();
+
+	bool m_ValidShape;
 
 	#endregion
 
@@ -102,6 +106,13 @@ public class UISplineCurve : MaskableGraphic
 			Spline.OnRebuild += OnSplineRebuild;
 		
 		SetVerticesDirty();
+	}
+
+	protected override void OnEnable()
+	{
+		m_ValidShape = false;
+		
+		base.OnEnable();
 	}
 
 	protected override void OnDestroy()
@@ -135,23 +146,6 @@ public class UISplineCurve : MaskableGraphic
 	}
 	#endif
 
-	protected override void OnDidApplyAnimationProperties()
-	{
-		base.OnDidApplyAnimationProperties();
-		
-		if (!gameObject.scene.isLoaded)
-			return;
-		
-		SetVerticesDirty();
-	}
-
-	protected override void OnRectTransformDimensionsChange()
-	{
-		base.OnRectTransformDimensionsChange();
-		
-		SetVerticesDirty();
-	}
-
 	#endregion
 
 	#region service methods
@@ -160,59 +154,75 @@ public class UISplineCurve : MaskableGraphic
 	{
 		_VertexHelper.Clear();
 		
-		if (Spline == null)
+		if (Spline == null || Spline.Length < 2)
 			return;
 		
-		m_Vertices.Clear();
+		if (m_ValidShape)
+		{
+			Color32 colorCache = color;
+			for (int i = 0; i < m_Vertices.Count; i++)
+			{
+				UIVertex vertex = m_Vertices[i];
+				vertex.color  = colorCache;
+				m_Vertices[i] = vertex;
+			}
+			_VertexHelper.AddUIVertexStream(m_Vertices, m_Indices);
+			return;
+		}
 		
+		m_ValidShape = true;
+		
+		m_Vertices.Clear();
+		m_Indices.Clear();
+		
+		ProcessCaps();
+		
+		Rect uv = new Rect(0, 0, 1, 1);
+		if (Sprite != null && Sprite.texture != null)
+		{
+			float width  = Sprite.texture.width;
+			float height = Sprite.texture.height;
+			uv        =  Sprite.textureRect;
+			uv.x      /= width;
+			uv.y      /= height;
+			uv.width  /= width;
+			uv.height /= height;
+		}
+		
+		foreach (UISpline.Point point in Spline)
+			ProcessPoint(point, uv, point.Phase);
+		
+		int quads = m_Vertices.Count / 2 - 1;
+		for (int i = 0; i < quads; i++)
+		{
+			m_Indices.Add(i * 2 + 2);
+			m_Indices.Add(i * 2 + 3);
+			m_Indices.Add(i * 2 + 0);
+			
+			m_Indices.Add(i * 2 + 0);
+			m_Indices.Add(i * 2 + 3);
+			m_Indices.Add(i * 2 + 1);
+		}
+		
+		_VertexHelper.AddUIVertexStream(m_Vertices, m_Indices);
+	}
+
+	void ProcessCaps()
+	{
 		if (m_MinCap != null)
 		{
-			UISpline.Point first = m_Spline.First();
-			Vector2 position = rectTransform.TransformPoint(first.Position);
+			UISpline.Point first    = m_Spline.First();
+			Vector2        position = rectTransform.TransformPoint(first.Position);
 			m_MinCap.position = position;
 			m_MinCap.rotation = first.Normal.ToRotation();
 		}
 		
 		if (m_MaxCap != null)
 		{
-			UISpline.Point last  = m_Spline.Last();
-			Vector2 position = rectTransform.TransformPoint(last.Position);
+			UISpline.Point last     = m_Spline.Last();
+			Vector2        position = rectTransform.TransformPoint(last.Position);
 			m_MaxCap.position = position;
 			m_MaxCap.rotation = last.Normal.ToRotation(180);
-		}
-		
-		Rect uv = new Rect(0, 0, 1, 1);
-		if (Sprite != null && Sprite.texture != null)
-		{
-			uv        =  Sprite.textureRect;
-			uv.x      /= Sprite.texture.width;
-			uv.y      /= Sprite.texture.height;
-			uv.width  /= Sprite.texture.width;
-			uv.height /= Sprite.texture.height;
-		}
-		
-		if (Spline.Loop)
-			BuildLoopMesh(uv);
-		else
-			BuildStraightMesh(uv);
-		
-		foreach (UIVertex vertex in m_Vertices)
-			_VertexHelper.AddVert(vertex);
-		
-		int quads = m_Vertices.Count / 2 - 1;
-		for (int i = 0; i < quads; i++)
-		{
-			_VertexHelper.AddTriangle(
-				i * 2 + 1,
-				i * 2 + 0,
-				i * 2 + 2
-			);
-			
-			_VertexHelper.AddTriangle(
-				i * 2 + 3,
-				i * 2 + 1,
-				i * 2 + 2
-			);
 		}
 	}
 
@@ -221,63 +231,26 @@ public class UISplineCurve : MaskableGraphic
 		SetVerticesDirty();
 	}
 
-	void BuildStraightMesh(Rect _UV)
-	{
-		if (Spline == null || Spline.Length < 2)
-			return;
-		
-		// process first point
-		UISpline.Point firstPoint = Spline.First();
-		
-		ProcessPoint(firstPoint, _UV, 0);
-		
-		for (int i = 1; i < Spline.Length - 1; i++)
-		{
-			UISpline.Point point = Spline[i];
-			
-			ProcessPoint(point, _UV, point.Phase);
-		}
-		
-		// process last point
-		UISpline.Point lastPoint = Spline.Last();
-		
-		ProcessPoint(lastPoint, _UV, lastPoint.Phase);
-	}
-
-	void BuildLoopMesh(Rect _UV)
-	{
-		if (Spline == null || Spline.Length < 2)
-			return;
-		
-		// process origin point
-		UISpline.Point originPoint = Spline[0];
-		
-		ProcessPoint(originPoint, _UV, 0);
-		
-		for (int i = 1; i < Spline.Length; i++)
-		{
-			UISpline.Point point = Spline[i];
-			
-			ProcessPoint(point, _UV, point.Phase);
-		}
-		
-		ProcessPoint(originPoint, _UV, 1);
-	}
-
 	void ProcessPoint(UISpline.Point _Point, Rect _UV, float _Phase)
 	{
-		float size = m_Size * 0.5f;
+		float width = m_Size * 0.5f;
+		
+		Vector2 size = new Vector2(m_Spline.GetLength(1), m_Size);
 		
 		UIVertex left = new UIVertex();
-		left.position = _Point.Position + _Point.Normal * size;
+		left.position = _Point.Position + _Point.Normal * width * (m_Outer ? 0 : 1);
 		left.color    = color;
 		left.uv0      = new Vector2(_UV.xMin, _UV.y + _UV.height * _Phase * m_Scale + m_Offset);
+		left.uv1      = new Vector2(_Phase, 0);
+		left.uv2      = size;
 		left.tangent  = _UV.ToVector();
 		
 		UIVertex right = new UIVertex();
-		right.position = _Point.Position - _Point.Normal * size;
+		right.position = _Point.Position - _Point.Normal * width;
 		right.color    = color;
 		right.uv0      = new Vector2(_UV.xMax, _UV.y + _UV.height * _Phase * m_Scale + m_Offset);
+		right.uv1      = new Vector2(_Phase, 1);
+		right.uv2      = size;
 		right.tangent  = _UV.ToVector();
 		
 		m_Vertices.Add(right);

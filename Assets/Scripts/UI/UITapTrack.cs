@@ -1,75 +1,89 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using AudioBox.ASF;
 using Zenject;
 
-public class UITapTrack : UITrack<TapClip>
+public class UITapTrack : ASFTrackContext<ASFTapClip>
 {
-	SignalBus           m_SignalBus;
-	UITapIndicator.Pool m_IndicatorPool;
-	UIInputReceiver     m_InputReceiver;
+	[Inject] UITapIndicator.Pool m_ItemPool;
+	[Inject] UIInputReceiver     m_InputReceiver;
 
-	readonly Dictionary<TapClip, UITapIndicator> m_Indicators = new Dictionary<TapClip, UITapIndicator>();
+	readonly Dictionary<ASFTapClip, UITapIndicator> m_Items = new Dictionary<ASFTapClip, UITapIndicator>();
+	readonly HashSet<ASFClip>                       m_Used  = new HashSet<ASFClip>();
 
-	[Inject]
-	public void Construct(
-		UIInputReceiver     _InputReceiver,
-		UITapIndicator.Pool _IndicatorPool
-	)
+	public override void AddClip(ASFTapClip _Clip, Rect _ClipRect, Rect _ViewRect)
 	{
-		m_InputReceiver = _InputReceiver;
-		m_IndicatorPool = _IndicatorPool;
-	}
-
-	protected override void RemoveIndicator(TapClip _Clip)
-	{
-		if (!m_Indicators.ContainsKey(_Clip))
+		if (m_Used.Contains(_Clip))
 			return;
 		
-		UITapIndicator indicator = m_Indicators[_Clip];
+		UITapIndicator item = m_ItemPool.Spawn(RectTransform, _Clip, UseClip);
 		
-		indicator.Restore();
+		if (item == null)
+			return;
 		
-		m_Indicators.Remove(_Clip);
-		m_InputReceiver.UnregisterIndicator(indicator);
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
 		
-		if (Application.isPlaying)
-			m_IndicatorPool.Despawn(indicator);
-		else
-			DestroyImmediate(indicator.gameObject);
-	}
-
-	protected override void DrawIndicators(List<TapClip> _Clips)
-	{
-		Vector2 anchor = GetAnchor();
-		
-		foreach (TapClip clip in _Clips)
-		{
-			if (!m_Indicators.ContainsKey(clip))
-				m_Indicators[clip] = CreateIndicator();
-			
-			if (!m_Indicators.TryGetValue(clip, out UITapIndicator indicator))
-				continue;
-			
-			indicator.RectTransform.anchorMin        = anchor;
-			indicator.RectTransform.anchorMax        = anchor;
-			indicator.RectTransform.anchoredPosition = new Vector2(0, GetDistance(clip.MinTime));
-		}
-	}
-
-	UITapIndicator CreateIndicator()
-	{
-		UITapIndicator indicator = m_IndicatorPool.Spawn();
-		
-		if (indicator == null)
-			return null;
-		
-		indicator.RectTransform.SetParent(RectTransform, false);
-		
-		indicator.Setup();
+		m_Items[_Clip] = item;
 		
 		if (m_InputReceiver != null)
-			m_InputReceiver.RegisterIndicator(indicator);
+			m_InputReceiver.RegisterIndicator(item);
+	}
+
+	public override void RemoveClip(ASFTapClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
 		
-		return indicator;
+		UITapIndicator item = m_Items[_Clip];
+		
+		m_Items.Remove(_Clip);
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+		
+		m_ItemPool.Despawn(item);
+		
+		if (m_InputReceiver != null)
+			m_InputReceiver.UnregisterIndicator(item);
+	}
+
+	public override void ProcessClip(ASFTapClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
+		
+		UITapIndicator item = m_Items[_Clip];
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+	}
+
+	public override void Clear()
+	{
+		foreach (UITapIndicator item in m_Items.Values)
+		{
+			if (item == null)
+				continue;
+			
+			m_ItemPool.Despawn(item);
+			
+			if (m_InputReceiver != null)
+				m_InputReceiver.UnregisterIndicator(item);
+		}
+		
+		m_Items.Clear();
+		m_Used.Clear();
+	}
+
+	void UseClip(ASFClip _Clip)
+	{
+		m_Used.Add(_Clip);
 	}
 }

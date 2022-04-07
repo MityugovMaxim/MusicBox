@@ -6,25 +6,27 @@ using Zenject;
 
 public class MenuProcessor : IInitializable
 {
+	readonly LocalizationProcessor          m_LocalizationProcessor;
 	readonly Canvas                         m_Canvas;
 	readonly UIMenu.Factory                 m_MenuFactory;
 	readonly Dictionary<MenuType, UIMenu>   m_MenuCache;
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos;
 	readonly List<MenuType>                 m_MenuOrder;
 
-
 	[Inject]
 	public MenuProcessor(
-		Canvas         _Canvas,
-		MenuInfo[]     _MenuInfos,
-		UIMenu.Factory _MenuFactory
+		LocalizationProcessor _LocalizationProcessor,
+		Canvas                _Canvas,
+		MenuInfo[]            _MenuInfos,
+		UIMenu.Factory        _MenuFactory
 	)
 	{
-		m_Canvas      = _Canvas;
-		m_MenuFactory = _MenuFactory;
-		m_MenuCache   = new Dictionary<MenuType, UIMenu>();
-		m_MenuInfos   = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
-		m_MenuOrder   = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
+		m_LocalizationProcessor = _LocalizationProcessor;
+		m_Canvas                = _Canvas;
+		m_MenuFactory           = _MenuFactory;
+		m_MenuCache             = new Dictionary<MenuType, UIMenu>();
+		m_MenuInfos             = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
+		m_MenuOrder             = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
 	}
 
 	async void IInitializable.Initialize()
@@ -32,8 +34,11 @@ public class MenuProcessor : IInitializable
 		await Show(MenuType.LoginMenu, true);
 		
 		UILoginMenu loginMenu = GetMenu<UILoginMenu>();
-		if (loginMenu != null)
-			await loginMenu.Login();
+		
+		if (loginMenu == null)
+			return;
+		
+		await loginMenu.Login();
 	}
 
 	public T GetMenu<T>(bool _Cache = false) where T : UIMenu
@@ -45,6 +50,35 @@ public class MenuProcessor : IInitializable
 		}
 		
 		return GetMenu<T>(menuType, _Cache);
+	}
+
+	public async void ErrorLocalized(string _ID, string _TitleKey, string _MessageKey)
+	{
+		await ErrorLocalizedAsync(_ID, _TitleKey, _MessageKey);
+	}
+
+	public async void Error(string _ID, string _Title, string _Message)
+	{
+		await ErrorAsync(_ID, _Title, _Message);
+	}
+
+	public async Task ErrorLocalizedAsync(string _ID, string _TitleKey, string _MessageKey)
+	{
+		await ErrorAsync(
+			_ID,
+			m_LocalizationProcessor.Get(_TitleKey),
+			m_LocalizationProcessor.Get(_MessageKey)
+		);
+	}
+
+	public async Task ErrorAsync(string _ID, string _Title, string _Message)
+	{
+		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
+		
+		if (errorMenu != null)
+			errorMenu.Setup(_ID, _Title, _Message);
+		
+		await Show(MenuType.ErrorMenu);
 	}
 
 	T GetMenu<T>(MenuType _MenuType, bool _Cache = false) where T : UIMenu

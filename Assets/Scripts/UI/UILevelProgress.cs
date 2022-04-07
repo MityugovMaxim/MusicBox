@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Threading.Tasks;
+using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -12,8 +12,6 @@ public class UILevelProgress : UIGroup
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	[SerializeField] RectTransform     m_Progress;
-	[SerializeField] float             m_MinProgress;
-	[SerializeField] float             m_MaxProgress;
 	[SerializeField] UICascadeTMPLabel m_Label;
 	[SerializeField] UILevel           m_SourceLevel;
 	[SerializeField] UILevel           m_TargetLevel;
@@ -21,17 +19,19 @@ public class UILevelProgress : UIGroup
 	[SerializeField] float             m_ProgressDuration;
 	[SerializeField] AnimationCurve    m_ProgressCurve;
 
-	LanguageProcessor m_LanguageProcessor;
-	HapticProcessor   m_HapticProcessor;
+	[Header("Sounds")]
+	[SerializeField, Sound] string m_ProgressSound;
+	[SerializeField, Sound] string m_LevelSound;
+
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] SoundProcessor        m_SoundProcessor;
+	[Inject] HapticProcessor       m_HapticProcessor;
 
 	float m_SourceProgress;
 	float m_TargetProgress;
 
 	Animator m_Animator;
 	Action   m_CollectFinished;
-	Action   m_ProgressFinished;
-
-	IEnumerator m_ProgressRoutine;
 
 	protected override void Awake()
 	{
@@ -51,16 +51,6 @@ public class UILevelProgress : UIGroup
 		StateBehaviour.UnregisterComplete(m_Animator, "collect", InvokeCollectFinished);
 	}
 
-	[Inject]
-	public void Construct(
-		LanguageProcessor _LanguageProcessor,
-		HapticProcessor   _HapticProcessor
-	)
-	{
-		m_LanguageProcessor = _LanguageProcessor;
-		m_HapticProcessor   = _HapticProcessor;
-	}
-
 	public void Setup(
 		int   _SourceLevel,
 		int   _TargetLevel,
@@ -74,29 +64,24 @@ public class UILevelProgress : UIGroup
 		m_SourceProgress = _SourceProgress;
 		m_TargetProgress = _TargetProgress;
 		
-		Vector2 size = m_Progress.sizeDelta;
-		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_SourceProgress);
-		m_Progress.sizeDelta = size;
+		m_Progress.anchorMin = new Vector2(0, 0);
+		m_Progress.anchorMax = new Vector2(m_SourceProgress, 1);
 		
-		m_Label.Text = m_LanguageProcessor.Get("RESULT_LEVEL_UP");
+		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
 	}
 
 	public Task Progress()
 	{
-		if (m_ProgressRoutine != null)
-			StopCoroutine(m_ProgressRoutine);
+		Vector2 source = new Vector2(m_SourceProgress, 1);
+		Vector2 target = new Vector2(m_TargetProgress, 1);
 		
-		InvokeProgressFinished();
+		m_SoundProcessor.Start(m_ProgressSound);
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_ProgressFinished = () => completionSource.SetResult(true);
-		
-		m_ProgressRoutine = ProgressRoutine();
-		
-		StartCoroutine(m_ProgressRoutine);
-		
-		return completionSource.Task;
+		return UnityTask.Phase(
+			_Phase => m_Progress.anchorMax = Vector2.Lerp(source, target, m_ProgressCurve.Evaluate(_Phase)),
+			m_ProgressDuration,
+			m_ProgressDelay
+		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_ProgressSound));
 	}
 
 	public Task Collect()
@@ -118,6 +103,8 @@ public class UILevelProgress : UIGroup
 	[Preserve]
 	void LevelUp()
 	{
+		m_SoundProcessor.Play(m_LevelSound);
+		
 		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		m_Label.Play();
@@ -132,10 +119,6 @@ public class UILevelProgress : UIGroup
 
 	void Restore()
 	{
-		if (m_ProgressRoutine != null)
-			StopCoroutine(m_ProgressRoutine);
-		
-		InvokeProgressFinished();
 		InvokeCollectFinished();
 		
 		if (m_Animator == null)
@@ -146,52 +129,10 @@ public class UILevelProgress : UIGroup
 		m_Animator.Update(0);
 	}
 
-	IEnumerator ProgressRoutine()
-	{
-		if (m_ProgressDelay > float.Epsilon)
-			yield return new WaitForSeconds(m_ProgressDelay);
-		
-		Vector2 size = m_Progress.sizeDelta;
-		
-		if (!Mathf.Approximately(m_SourceProgress, m_TargetProgress) && m_ProgressDuration > float.Epsilon)
-		{
-			m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_ProgressDuration);
-			
-			float time = 0;
-			while (time < m_ProgressDuration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				float phase = m_ProgressCurve.Evaluate(time / m_ProgressDuration);
-				
-				float progress = Mathf.Lerp(m_SourceProgress, m_TargetProgress, phase);
-				
-				size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, progress);
-				
-				m_Progress.sizeDelta = size;
-			}
-		}
-		
-		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_TargetProgress);
-		
-		m_Progress.sizeDelta = size;
-		
-		InvokeProgressFinished();
-	}
-
 	void InvokeCollectFinished()
 	{
 		Action action = m_CollectFinished;
 		m_CollectFinished = null;
-		action?.Invoke();
-	}
-
-	void InvokeProgressFinished()
-	{
-		Action action = m_ProgressFinished;
-		m_ProgressFinished = null;
 		action?.Invoke();
 	}
 }

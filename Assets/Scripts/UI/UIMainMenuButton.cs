@@ -27,25 +27,12 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 
 	[SerializeField] MainMenuPageType m_PageType;
 
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	Animator m_Animator;
 
 	bool m_Pressed;
-
-	[Inject]
-	public void Construct(
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
 
 	public void Toggle(bool _Value, bool _Instant = false)
 	{
@@ -57,8 +44,6 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
 	{
-		m_HapticProcessor.Process(Haptic.Type.Selection);
-		
 		m_Pressed = true;
 		
 		Animator.SetBool(m_PressedParameterID, m_Pressed);
@@ -84,8 +69,6 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
 		m_StatisticProcessor.LogMainMenuPageSelect(m_PageType);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)

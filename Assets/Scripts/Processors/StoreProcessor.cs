@@ -12,31 +12,22 @@ using Zenject;
 [Preserve]
 public class StoreDataUpdateSignal { }
 
+[Preserve]
 public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 {
-	readonly SignalBus        m_SignalBus;
-	readonly ProductProcessor m_ProductProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] ProductsProcessor m_ProductsProcessor;
 
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
 	Action<bool>       m_LoadStoreFinished;
 	Action<bool>       m_PurchaseFinished;
 
-	[Inject]
-	public StoreProcessor(
-		SignalBus        _SignalBus,
-		ProductProcessor _ProductProcessor
-	)
-	{
-		m_SignalBus        = _SignalBus;
-		m_ProductProcessor = _ProductProcessor;
-	}
-
-	public Task LoadStore()
+	public Task Load()
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		List<string> productIDs = m_ProductProcessor.GetProductIDs();
+		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
 		
 		if (productIDs.Count == 0)
 		{
@@ -49,7 +40,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		foreach (string productID in productIDs)
 		{
 			Debug.LogFormat("[StoreProcessor] Initialize product '{0}'", productID);
-			config.AddProduct(productID, m_ProductProcessor.GetType(productID));
+			config.AddProduct(productID, m_ProductsProcessor.GetType(productID));
 		}
 		
 		m_LoadStoreFinished = _Success => completionSource.TrySetResult(_Success);
@@ -113,21 +104,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[StoreProcessor] Purchase failed. Product ID is null or empty.");
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
-		}
-		
-		if (m_Controller == null)
-		{
-			Debug.LogError("[StoreProcessor] Purchase failed. Store is not loaded.");
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
-		}
-		
-		Product product = m_Controller.products.WithID(_ProductID);
+		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
 		{
@@ -154,13 +131,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetTitle(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[StoreProcessor] Get title failed. Product ID is null or empty.");
-			return "-";
-		}
-		
-		Product product = m_Controller.products.WithID(_ProductID);
+		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
 		{
@@ -173,13 +144,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetDescription(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogError("[StoreProcessor] Get description failed. Product ID is null or empty.");
-			return "-";
-		}
-		
-		Product product = m_Controller.products.WithID(_ProductID);
+		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
 		{
@@ -192,13 +157,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	public string GetPrice(string _ProductID)
 	{
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get price failed. Product ID is null or empty.");
-			return "-";
-		}
-		
-		Product product = m_Controller.products.WithID(_ProductID);
+		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
 		{
@@ -236,6 +195,28 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		_PriceString = string.Format(numberFormatInfo, "{0:C}", _Price);
 		
 		return true;
+	}
+
+	Product GetProduct(string _ProductID)
+	{
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Debug.LogError("[StoreProcessor] Get product failed. Product ID is null or empty.");
+			return null;
+		}
+		
+		if (m_Controller == null)
+		{
+			Debug.LogError("[StoreProcessor] Get product failed. Store is not loaded.");
+			return null;
+		}
+		
+		Product product = m_Controller.products.WithID(_ProductID);
+		
+		if (product == null)
+			Debug.LogErrorFormat("[StoreProcessor] Get product failed. Product with ID '{0}' is null.", _ProductID);
+		
+		return product;
 	}
 
 	async void Validate(Product _Product)
@@ -281,14 +262,14 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	async void RegisterProfileDataUpdate()
 	{
-		await LoadStore();
+		await Load();
 		
 		m_SignalBus.Fire<StoreDataUpdateSignal>();
 	}
 
 	async void RegisterProductDataUpdate()
 	{
-		await LoadStore();
+		await Load();
 		
 		m_SignalBus.Fire<StoreDataUpdateSignal>();
 	}
@@ -310,13 +291,13 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
-		m_SignalBus.Subscribe<ProductDataUpdateSignal>(RegisterProductDataUpdate);
+		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
-		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(RegisterProductDataUpdate);
+		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
 	}
 
 	void IStoreListener.OnInitialized(IStoreController _Controller, IExtensionProvider _Extensions)

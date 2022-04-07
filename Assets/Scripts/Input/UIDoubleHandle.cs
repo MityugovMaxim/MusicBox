@@ -6,42 +6,35 @@ public class UIDoubleHandle : UIHandle
 
 	protected override bool Processed => m_Processed;
 
-	UIDoubleIndicator m_Indicator;
-	bool              m_Interactable;
-	bool              m_Processed;
-	int               m_Count;
+	[SerializeField] UIDoubleIndicator m_Indicator;
 
-	public void Setup(UIDoubleIndicator _Indicator)
+	bool m_Processed;
+	int  m_Count;
+
+	public override void EnterZone()
 	{
-		m_Indicator = _Indicator;
+		m_Processed = false;
+		m_Count     = 0;
 	}
 
-	public override void StartReceiveInput()
+	public override void ExitZone()
 	{
-		if (m_Interactable)
-			return;
-		
-		m_Interactable = true;
-		m_Processed    = false;
-		m_Count        = 0;
-	}
-
-	public override void StopReceiveInput()
-	{
-		if (!m_Interactable)
-			return;
-		
 		if (!m_Processed)
 			ProcessFail(0);
 		
-		m_Interactable = false;
-		m_Processed    = false;
-		m_Count        = 0;
+		m_Processed = false;
+		m_Count     = 0;
+	}
+
+	public override void Restore()
+	{
+		m_Processed = false;
+		m_Count     = 0;
 	}
 
 	public override void TouchDown(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (m_Processed)
 			return;
 		
 		#if UNITY_EDITOR
@@ -67,7 +60,7 @@ public class UIDoubleHandle : UIHandle
 
 	public override void TouchUp(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (m_Processed)
 			return;
 		
 		m_Count--;
@@ -77,13 +70,11 @@ public class UIDoubleHandle : UIHandle
 
 	void ProcessSuccess(float _Progress)
 	{
-		if (m_Indicator != null)
-			m_Indicator.Success(_Progress);
+		m_Indicator.Success(_Progress);
 	}
 
 	void ProcessFail(float _Progress)
 	{
-		if (m_Indicator != null)
-			m_Indicator.Fail(_Progress);
+		m_Indicator.Fail(_Progress);
 	}
 }

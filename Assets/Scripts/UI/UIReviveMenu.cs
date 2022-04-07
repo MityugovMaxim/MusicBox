@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -11,80 +8,60 @@ public class UIReviveMenu : UIMenu
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 2;
 
-	[SerializeField] UILevelThumbnail  m_LevelThumbnail;
-	[SerializeField] UILevelModeButton m_RestartButton;
+	[SerializeField] UISongImage m_Image;
+	[SerializeField] UISongMode  m_Restart;
+	[SerializeField] UIUnitLabel m_Coins;
 
-	AdsProcessor       m_AdsProcessor;
-	ProfileProcessor   m_ProfileProcessor;
-	LevelProcessor     m_LevelProcessor;
-	LevelController    m_LevelController;
-	HealthProcessor    m_HealthProcessor;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] AdsProcessor       m_AdsProcessor;
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] SongController     m_SongController;
+	[Inject] RevivesProcessor   m_RevivesProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	string m_LevelID;
-	int    m_ReviveCount;
+	string m_SongID;
+	int    m_Count;
 	int    m_RestartAdsCount;
 	int    m_LeaveAdsCount;
 
-	[Inject]
-	public void Construct(
-		AdsProcessor       _AdsProcessor,
-		ProfileProcessor   _ProfileProcessor,
-		LevelProcessor     _LevelProcessor,
-		LevelController    _LevelController,
-		HealthProcessor    _HealthProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
+	public void Setup(string _SongID)
 	{
-		m_AdsProcessor       = _AdsProcessor;
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_LevelProcessor     = _LevelProcessor;
-		m_LevelController    = _LevelController;
-		m_HealthProcessor    = _HealthProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
-
-	public void Setup(string _LevelID)
-	{
-		m_LevelID     = _LevelID;
-		m_ReviveCount = 0;
-		m_LevelThumbnail.Setup(m_LevelID);
-		m_RestartButton.Setup(m_LevelID);
+		m_SongID = _SongID;
+		m_Count  = 0;
 		
-		m_StatisticProcessor.LogReviveMenuShow(m_LevelID);
+		m_Image.Setup(m_SongID);
+		m_Restart.Setup(m_SongID);
+		
+		ProcessCoins();
 	}
 
 	public async void ReviveCoins()
 	{
-		m_StatisticProcessor.LogReviveMenuReviveCoinsClick(m_LevelID);
+		m_StatisticProcessor.LogReviveMenuReviveCoinsClick(m_SongID);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		long coins = m_RevivesProcessor.GetCoins(m_Count);
+		
+		if (!await m_ProfileProcessor.CheckCoins(coins))
+			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await ReviveLevel(m_LevelID, m_ReviveCount);
+		bool success = await m_RevivesProcessor.Revive(m_Count);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
 		if (success)
 		{
-			m_ReviveCount++;
+			m_Count++;
 			
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
 			
-			await Task.Delay(1000);
+			await Task.Delay(500);
 			
-			m_HealthProcessor.Restore();
-			
-			m_LevelController.Play();
+			m_SongController.Revive();
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
@@ -92,9 +69,7 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveAds()
 	{
-		m_StatisticProcessor.LogReviveMenuReviveAdsClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_StatisticProcessor.LogReviveMenuReviveAdsClick(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -106,93 +81,60 @@ public class UIReviveMenu : UIMenu
 		
 		if (success)
 		{
-			m_ReviveCount++;
+			m_Count++;
 			
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
 			
-			await Task.Delay(1000);
+			await Task.Delay(500);
 			
-			m_HealthProcessor.Restore();
-			
-			m_LevelController.Play();
+			m_SongController.Revive();
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
+	protected override void OnShowStarted()
+	{
+		m_StatisticProcessor.LogReviveMenuShow(m_SongID);
+		
+		ProcessCoins();
+	}
+
 	public async void Restart()
 	{
-		m_StatisticProcessor.LogReviveMenuRestartClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_StatisticProcessor.LogReviveMenuRestartClick(m_SongID);
 		
 		if (!await ProcessRestartAds())
 			return;
 		
-		m_LevelController.Restart();
+		m_SongController.Restart();
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ResultMenu);
-		
-		m_LevelController.Play();
 	}
 
 	public async void Leave()
 	{
-		m_StatisticProcessor.LogReviveMenuLeaveClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_StatisticProcessor.LogReviveMenuLeaveClick(m_SongID);
 		
 		await ProcessLeaveAds();
 		
-		m_LevelController.Remove();
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Levels);
+			mainMenu.Select(MainMenuPageType.Songs);
 		
-		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
-		if (levelMenu != null)
-			levelMenu.Setup(m_LevelID);
+		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
+		if (songMenu != null)
+			songMenu.Setup(m_SongID);
 		
-		await m_MenuProcessor.Show(MenuType.LevelMenu);
+		m_SongController.Leave();
+		
+		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-	}
-
-	async Task<bool> ReviveLevel(string _LevelID, int _ReviveCount)
-	{
-		long coins = m_LevelProcessor.GetRevivePrice(_LevelID);
-		
-		if (!await m_ProfileProcessor.CheckCoins(coins))
-			return false;
-		
-		HttpsCallableReference revive = FirebaseFunctions.DefaultInstance.GetHttpsCallable("ReviveLevel");
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["level_id"]     = _LevelID;
-		data["revive_count"] = _ReviveCount;
-		
-		bool success;
-		
-		try
-		{
-			HttpsCallableResult result = await revive.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-			
-			success = false;
-		}
-		
-		return success;
 	}
 
 	async Task<bool> ProcessRestartAds()
@@ -200,7 +142,7 @@ public class UIReviveMenu : UIMenu
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
 		
 		if (levelMode == LevelMode.Ads)
 		{
@@ -231,15 +173,15 @@ public class UIReviveMenu : UIMenu
 		}
 	}
 
-	async Task ProcessLeaveAds()
+	async Task<bool> ProcessLeaveAds()
 	{
 		if (m_ProfileProcessor.HasNoAds())
-			return;
+			return false;
 		
 		m_LeaveAdsCount++;
 		
 		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
-			return;
+			return false;
 		
 		m_LeaveAdsCount = 0;
 		
@@ -248,5 +190,12 @@ public class UIReviveMenu : UIMenu
 		await m_AdsProcessor.Interstitial();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+		
+		return true;
+	}
+
+	void ProcessCoins()
+	{
+		m_Coins.Value = m_RevivesProcessor.GetCoins(m_Count);
 	}
 }

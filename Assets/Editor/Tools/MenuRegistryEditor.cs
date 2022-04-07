@@ -23,7 +23,7 @@ public class MenuRegistryEditor : Editor
 		Initialize();
 		
 		if (GUILayout.Button("Find all"))
-			FindLevels();
+			FindAll();
 		
 		GUILayout.Space(10);
 		
@@ -93,7 +93,7 @@ public class MenuRegistryEditor : Editor
 		};
 	}
 
-	void FindLevels()
+	void FindAll()
 	{
 		MenuRegistry registry = target as MenuRegistry;
 		

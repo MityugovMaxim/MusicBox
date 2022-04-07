@@ -1,412 +1,364 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Compression;
 using Firebase.Storage;
 using UnityEngine;
-using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 [Preserve]
 public class StorageProcessor
 {
-	readonly Dictionary<string, string>    m_TextCache      = new Dictionary<string, string>();
-	readonly Dictionary<string, Sprite>    m_SpriteCache    = new Dictionary<string, Sprite>();
-	readonly Dictionary<string, AudioClip> m_AudioClipCache = new Dictionary<string, AudioClip>();
+	static readonly Dictionary<string, Task<Texture2D>> m_TextureTasks   = new Dictionary<string, Task<Texture2D>>();
+	static readonly Dictionary<string, Task<AudioClip>> m_AudioClipTasks = new Dictionary<string, Task<AudioClip>>();
+	static readonly Dictionary<string, Task<string>>    m_TextTasks      = new Dictionary<string, Task<string>>();
 
-	public async Task<string> LoadText(string _RemotePath, CancellationToken _Token = default)
-	{
-		if (_Token.IsCancellationRequested)
-			return null;
-		
-		if (string.IsNullOrEmpty(_RemotePath))
-			return null;
-		
-		if (m_TextCache.ContainsKey(_RemotePath) && m_TextCache[_RemotePath] != null)
-			return m_TextCache[_RemotePath];
-		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
-		
-		if (reference == null)
-			return null;
-		
-		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
-		
-		if (string.IsNullOrEmpty(path))
-			return null;
-		
-		string directory = Path.GetDirectoryName(path);
-		
-		if (string.IsNullOrEmpty(directory))
-			return null;
-		
-		if (!Directory.Exists(directory))
-			Directory.CreateDirectory(directory);
-		
-		string url = $"file://{path}";
-		
-		try
-		{
-			StorageMetadata metadata = await reference.GetMetadataAsync();
-			
-			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
-			{
-				Debug.LogFormat("[StorageProcessor] Load text '{0}'", _RemotePath);
-				
-				await reference.GetFileAsync(url, null, _Token);
-				
-				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
-			}
-		}
-		catch
-		{
-			Debug.LogWarningFormat("[StorageProcessor] Load text '{0}' failed. Try to load it from cache.", _RemotePath);
-		}
-		
-		m_TextCache[_RemotePath] = await WebRequest.LoadText(url, _Token);
-		
-		return m_TextCache[_RemotePath];
-	}
-
-	public async Task<Sprite> LoadSprite(Uri _Uri, CancellationToken _Token = default)
+	public Task<Texture2D> LoadTextureAsync(Uri _Uri, CancellationToken _Token = default)
 	{
 		if (_Uri == null)
 			return null;
 		
-		string url = _Uri.AbsolutePath;
+		string url = _Uri.ToString();
 		
 		if (string.IsNullOrEmpty(url))
 			return null;
 		
-		Sprite sprite = await WebRequest.LoadSprite(url, _Token);
+		if (m_TextureTasks.TryGetValue(url, out Task<Texture2D> task))
+			return task;
 		
-		if (sprite == null)
-			return null;
+		TaskCompletionSource<Texture2D> completionSource = new TaskCompletionSource<Texture2D>();
 		
-		m_SpriteCache[url] = sprite;
+		m_TextureTasks[url] = completionSource.Task;
 		
-		return sprite;
+		WebRequest.LoadTexture(url, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (m_TextureTasks.ContainsKey(url))
+						m_TextureTasks.Remove(url);
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else
+						completionSource.TrySetResult(_Task.Result);
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
 	}
 
-	public async Task<Sprite> LoadSprite(string _RemotePath, CancellationToken _Token = default)
+	public Task<Texture2D> LoadTextureAsync(string _RemotePath, CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			return null;
-		
 		if (string.IsNullOrEmpty(_RemotePath))
 			return null;
 		
-		if (m_SpriteCache.ContainsKey(_RemotePath) && m_SpriteCache[_RemotePath] != null)
-			return m_SpriteCache[_RemotePath];
+		if (m_TextureTasks.TryGetValue(_RemotePath, out Task<Texture2D> task))
+			return task;
 		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		TaskCompletionSource<Texture2D> completionSource = new TaskCompletionSource<Texture2D>();
 		
-		if (reference == null)
-			return null;
+		m_TextureTasks[_RemotePath] = completionSource.Task;
 		
-		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
+		LoadAssetAsync(_RemotePath, WebRequest.LoadTextureFile, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (m_TextureTasks.ContainsKey(_RemotePath))
+						m_TextureTasks.Remove(_RemotePath);
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else if (_Task.IsCompleted)
+						completionSource.TrySetResult(_Task.Result);
+					else
+						completionSource.TrySetResult(null);
+				},
+				CancellationToken.None
+			);
 		
-		if (string.IsNullOrEmpty(path))
-			return null;
-		
-		string directory = Path.GetDirectoryName(path);
-		
-		if (string.IsNullOrEmpty(directory))
-			return null;
-		
-		if (!Directory.Exists(directory))
-			Directory.CreateDirectory(directory);
-		
-		string url = $"file://{path}";
-		
-		if (File.Exists(path))
-		{
-			ReloadCache(_RemotePath, m_SpriteCache);
-			
-			m_SpriteCache[_RemotePath] = await WebRequest.LoadSprite(url, _Token);
-			
-			return m_SpriteCache[_RemotePath];
-		}
-		
-		try
-		{
-			StorageMetadata metadata = await reference.GetMetadataAsync();
-			
-			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash)
-			{
-				Debug.LogFormat("[StorageProcessor] Load sprite '{0}'", _RemotePath);
-				
-				await reference.GetFileAsync(url, null, _Token);
-				
-				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
-			}
-		}
-		catch
-		{
-			Debug.LogWarningFormat("[StorageProcessor] Load sprite '{0}' failed. Try to load it from cache.", _RemotePath);
-		}
-		
-		m_SpriteCache[_RemotePath] = await WebRequest.LoadSprite(url, _Token);
-		
-		return m_SpriteCache[_RemotePath];
+		return completionSource.Task;
 	}
 
-	public async Task<AudioClip> LoadAudioClip(string _RemotePath, CancellationToken _Token = default)
+	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			return null;
-		
 		if (string.IsNullOrEmpty(_RemotePath))
 			return null;
 		
-		if (m_AudioClipCache.ContainsKey(_RemotePath) && m_AudioClipCache[_RemotePath] != null)
-			return m_AudioClipCache[_RemotePath];
+		if (m_AudioClipTasks.TryGetValue(_RemotePath, out Task<AudioClip> task))
+			return task;
 		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		TaskCompletionSource<AudioClip> completionSource = new TaskCompletionSource<AudioClip>();
 		
-		if (reference == null)
+		m_AudioClipTasks[_RemotePath] = completionSource.Task;
+		
+		LoadAssetAsync(_RemotePath, WebRequest.LoadAudioClipFile, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (m_AudioClipTasks.ContainsKey(_RemotePath))
+						m_AudioClipTasks.Remove(_RemotePath);
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else if (_Task.IsCompleted)
+						completionSource.TrySetResult(_Task.Result);
+					else
+						completionSource.TrySetResult(null);
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
+	}
+
+	public Task<string> LoadJson(string _RemotePath, CancellationToken _Token = default)
+	{
+		return LoadJson(_RemotePath, false, Encoding.UTF8, _Token);
+	}
+
+	public Task<string> LoadJson(string _RemotePath, bool _Force, CancellationToken _Token = default)
+	{
+		return LoadJson(_RemotePath, _Force, Encoding.UTF8, _Token);
+	}
+
+	public Task<string> LoadJson(string _RemotePath, Encoding _Encoding, CancellationToken _Token = default)
+	{
+		return LoadJson(_RemotePath, false, _Encoding, _Token);
+	}
+
+	public Task<string> LoadJson(string _RemotePath, bool _Force, Encoding _Encoding, CancellationToken _Token = default)
+	{
+		if (string.IsNullOrEmpty(_RemotePath))
 			return null;
 		
-		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
+		if (m_TextTasks.TryGetValue(_RemotePath, out Task<string> task))
+			return task;
 		
-		if (string.IsNullOrEmpty(path))
+		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
+		
+		m_TextTasks[_RemotePath] = completionSource.Task;
+		
+		LoadDataAsync(_RemotePath, _Force, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (m_TextTasks.ContainsKey(_RemotePath))
+						m_TextTasks.Remove(_RemotePath);
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else if (_Task.IsCompleted && _Task.Result != null)
+					{
+						byte[] decode = Compression.Decompress(_Task.Result);
+						
+						Encoding encoding = _Encoding ?? Encoding.UTF8;
+						
+						string json = encoding.GetString(decode);
+						
+						completionSource.TrySetResult(json);
+					}
+					else
+					{
+						completionSource.TrySetResult(null);
+					}
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
+	}
+
+	static async Task<byte[]> LoadDataAsync(string _RemotePath, bool _Force, CancellationToken _Token = default)
+	{
+		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
+		
+		if (string.IsNullOrEmpty(localPath))
 			return null;
 		
-		string directory = Path.GetDirectoryName(path);
-		
-		if (string.IsNullOrEmpty(directory))
-			return null;
-		
-		if (!Directory.Exists(directory))
-			Directory.CreateDirectory(directory);
-		
-		string url = $"file://{path}";
-		
-		if (File.Exists(path))
+		if (File.Exists(localPath))
 		{
-			ReloadCache(_RemotePath, m_AudioClipCache);
+			if (_Force)
+				await UpdateFileAsync(_RemotePath, localPath, _Token);
+			else
+				UpdateFile(_RemotePath, localPath);
 			
-			m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
-			
-			return m_AudioClipCache[_RemotePath];
-		}
-		
-		try
-		{
-			StorageMetadata metadata = await reference.GetMetadataAsync();
-			
-			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
+			try
 			{
-				Debug.LogFormat("[StorageProcessor] Load audio clip '{0}'", _RemotePath);
-				
-				await reference.GetFileAsync(url, null, _Token);
-				
-				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+				return await WebRequest.LoadDataFile(localPath, _Token);
+			}
+			catch (TaskCanceledException)
+			{
+				Debug.LogFormat("[StorageProcessor] Load text canceled. Remote path: {0} Local path: {1}.", _RemotePath, localPath);
+			}
+			catch (Exception exception)
+			{
+				Debug.LogException(exception);
 			}
 		}
-		catch
-		{
-			Debug.LogWarningFormat("[StorageProcessor] Load audio clip '{0}' failed. Try to load it from cache.", _RemotePath);
-		}
+		
+		await LoadFileAsync(_RemotePath, localPath, _Token);
+		
+		if (!File.Exists(localPath))
+			return null;
 		
 		try
 		{
-			m_AudioClipCache[_RemotePath] = await WebRequest.LoadAudioClip(url, AudioType.OGGVORBIS, _Token);
-			
-			return m_AudioClipCache[_RemotePath];
+			return await WebRequest.LoadDataFile(localPath, _Token);
+		}
+		catch (TaskCanceledException)
+		{
+			Debug.LogFormat("[StorageProcessor] Load text canceled. Remote path: {0} Local path: {1}.", _RemotePath, localPath);
 		}
 		catch (Exception exception)
 		{
-			Debug.LogErrorFormat("[StorageProcessor] Load audio clip '{0}' failed. Error: {1}.", _RemotePath, exception.Message);
+			Debug.LogException(exception);
 		}
 		
 		return null;
 	}
 
-	public async Task<AssetBundle> LoadAssetBundle(string _RemotePath, CancellationToken _Token = default)
+	static async Task<T> LoadAssetAsync<T>(string _RemotePath, Func<string, CancellationToken, Task<T>> _Request, CancellationToken _Token = default) where T : Object
 	{
-		if (_Token.IsCancellationRequested)
+		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
+		
+		if (string.IsNullOrEmpty(localPath))
 			return null;
 		
+		if (File.Exists(localPath))
+		{
+			UpdateFile(_RemotePath, localPath);
+			
+			try
+			{
+				return await _Request.Invoke(localPath, _Token);
+			}
+			catch (TaskCanceledException)
+			{
+				Debug.LogFormat("[StorageProcessor] Load asset canceled. Remote path: {0} Local path: {1}.", _RemotePath, localPath);
+			}
+			catch (Exception exception)
+			{
+				Debug.LogException(exception);
+			}
+		}
+		
+		await LoadFileAsync(_RemotePath, localPath, _Token);
+		
+		if (!File.Exists(localPath))
+			return null;
+		
+		try
+		{
+			return await _Request.Invoke(localPath, _Token);
+		}
+		catch (TaskCanceledException)
+		{
+			Debug.LogFormat("[StorageProcessor] Load asset canceled. Remote path: {0} Local path: {1}.", _RemotePath, localPath);
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+		}
+		
+		return null;
+	}
+
+	static async void LoadFile(string _RemotePath, string _LocalPath)
+	{
+		await LoadFileAsync(_RemotePath, _LocalPath);
+	}
+
+	static async Task LoadFileAsync(string _RemotePath, string _LocalPath, CancellationToken _Token = default)
+	{
 		if (string.IsNullOrEmpty(_RemotePath))
-			return null;
+		{
+			Debug.LogError("[StorageProcessor] Load file failed. Remove path is null or empty");
+			return;
+		}
 		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		if (string.IsNullOrEmpty(_LocalPath))
+		{
+			Debug.LogError("[StorageProcessor] Load file failed. Local path is null or empty");
+			return;
+		}
 		
-		if (reference == null)
-			return null;
-		
-		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
-		
-		if (string.IsNullOrEmpty(path))
-			return null;
-		
-		string directory = Path.GetDirectoryName(path);
+		string directory = Path.GetDirectoryName(_LocalPath);
 		
 		if (string.IsNullOrEmpty(directory))
-			return null;
+			return;
 		
 		if (!Directory.Exists(directory))
 			Directory.CreateDirectory(directory);
 		
-		string url = $"file://{path}";
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
 		
 		try
 		{
-			StorageMetadata metadata = await reference.GetMetadataAsync();
-			
-			if (PlayerPrefs.GetString(_RemotePath) != metadata.Md5Hash || !File.Exists(path))
-			{
-				Debug.LogFormat("[StorageProcessor] Load asset bundle '{0}'", _RemotePath);
-				
-				await reference.GetFileAsync(url, null, _Token);
-				
-				PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
-			}
+			await reference.GetFileAsync($"file://{_LocalPath}", null, _Token);
 		}
-		catch
+		catch (TaskCanceledException)
 		{
-			Debug.LogWarningFormat("[StorageProcessor] Load asset bundle '{0}' failed. Try to load it from cache.", _RemotePath);
+			Debug.LogFormat("[StorageProcessor] Load file canceled. Remote path: {0} Local path: {1}.", _RemotePath, _LocalPath);
 		}
-		
-		return await WebRequest.LoadAssetBundle(url, _Token);
-	}
-
-	public async Task<Sprite> LoadLevelThumbnail(string _LevelID, CancellationToken _Token = default)
-	{
-		return await LoadSprite($"Thumbnails/Levels/{_LevelID}.jpg", _Token);
-	}
-
-	public async Task<Sprite> LoadBannerThumbnail(string _BannerID, CancellationToken _Token = default)
-	{
-		return await LoadSprite($"Thumbnails/Banners/{_BannerID}.jpg", _Token);
-	}
-
-	public async Task<Sprite> LoadOfferThumbnail(string _OfferID, CancellationToken _Token = default)
-	{
-		return await LoadSprite($"Thumbnails/Offers/{_OfferID}.jpg", _Token);
-	}
-
-	public async Task<Sprite> LoadNewsThumbnail(string _NewsID, CancellationToken _Token = default)
-	{
-		return await LoadSprite($"Thumbnails/News/{_NewsID}.jpg", _Token);
-	}
-
-	public async Task<Sprite> LoadProductThumbnail(string _ProductID, CancellationToken _Token = default)
-	{
-		return await LoadSprite($"Thumbnails/Products/{_ProductID}.jpg", _Token);
-	}
-
-	public async Task<Dictionary<string, string>> LoadLocalization(string _Language, CancellationToken _Token = default)
-	{
-		Dictionary<string, string> localization = new Dictionary<string, string>();
-		
-		string text;
-		
-		try
+		catch (Exception exception)
 		{
-			text = await LoadText($"Localization/{_Language}.json", _Token);
+			Debug.LogException(exception);
+			Debug.LogErrorFormat("[StorageProcessor] Load file failed. Remote path: {0} Local path: {1}.", _RemotePath, _LocalPath);
 		}
-		catch (Exception)
+	}
+
+	static async void UpdateFile(string _RemotePath, string _LocalPath)
+	{
+		await UpdateFileAsync(_RemotePath, _LocalPath);
+	}
+
+	static async Task UpdateFileAsync(string _RemotePath, string _LocalPath, CancellationToken _Token = default)
+	{
+		if (string.IsNullOrEmpty(_RemotePath))
 		{
-			Debug.LogWarningFormat("[StorageProcessor] Load localization failed. Language: {0}.", _Language);
-			text = await LoadText($"Localization/{SystemLanguage.English.GetCode()}.json", _Token);
+			Debug.LogError("[StorageProcessor] Load file failed. Remove path is null or empty");
+			return;
 		}
 		
-		Dictionary<string, object> data = MiniJson.JsonDecode(text) as Dictionary<string, object>;
+		if (string.IsNullOrEmpty(_LocalPath))
+		{
+			Debug.LogError("[StorageProcessor] Load file failed. Local path is null or empty");
+			return;
+		}
 		
-		if (data == null)
-			return null;
+		if (!File.Exists(_LocalPath))
+		{
+			Debug.LogErrorFormat("[StorageProcessor] Update file failed. File not found. Remote path: {0} Local path: {1}.", _RemotePath, _LocalPath);
+			return;
+		}
 		
-		foreach (var entry in data)
-			localization[entry.Key] = entry.Value.ToString();
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
 		
-		return localization;
-	}
-
-	public async Task<Sprite> LoadLevelBackground(string _LevelID, CancellationToken _Token = default)
-	{
-		string path = $"Backgrounds/Levels/{_LevelID}.jpg";
+		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		if (m_SpriteCache.ContainsKey(path) && m_SpriteCache[path] != null)
-			return m_SpriteCache[path];
-		
-		Sprite thumbnail = await LoadLevelThumbnail(_LevelID, _Token);
-		
-		if (thumbnail == null)
-			return null;
-		
-		m_SpriteCache[path] = BlurUtility.Blur(thumbnail, 0.5f, 8);
-		
-		return m_SpriteCache[path];
-	}
-
-	public async Task<Sprite> LoadProductBackground(string _ProductID, CancellationToken _Token = default)
-	{
-		string path = $"Backgrounds/Products/{_ProductID}.jpg";
-		
-		if (m_SpriteCache.ContainsKey(path) && m_SpriteCache[path] != null)
-			return m_SpriteCache[path];
-		
-		Sprite thumbnail = await LoadProductThumbnail(_ProductID, _Token);
-		
-		if (thumbnail == null)
-			return null;
-		
-		m_SpriteCache[path] = BlurUtility.Blur(thumbnail, 0.5f, 8);
-		
-		return m_SpriteCache[path];
-	}
-
-	public async Task<Track[]> LoadTracks(string _LevelID, CancellationToken _Token = default)
-	{
-		#if UNITY_EDITOR
-		Track[] tracks = Directory.GetFiles($"Assets/Levels/{_LevelID}/Tracks/", "*.asset")
-			.Select(UnityEditor.AssetDatabase.LoadAssetAtPath<Track>)
-			.ToArray();
-		
-		await Task.Delay(500, _Token);
-		
-		return tracks;
-		#else
-		AssetBundle assetBundle = await LoadAssetBundle($"Levels/level.{_LevelID}.unity3d", _Token);
-		
-		Track[] tracks = assetBundle.LoadAllAssets<Track>();
-		
-		assetBundle.Unload(false);
-		
-		return tracks;
-		#endif
-	}
-
-	static async void ReloadCache<T>(string _Path, IDictionary<string, T> _Cache)
-	{
-		if (string.IsNullOrEmpty(_Path))
+		if (PlayerPrefs.GetString(_RemotePath) == metadata.Md5Hash)
 			return;
 		
-		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_Path);
-		
-		if (reference == null)
-			return;
-		
-		string path = Path.Combine(Application.persistentDataPath, _Path);
-		
-		string url = $"file://{path}";
+		Debug.LogFormat("[StorageProcessor] Updating file '{0}'...", _RemotePath);
 		
 		try
 		{
-			StorageMetadata metadata = await reference.GetMetadataAsync();
+			await reference.GetFileAsync($"file://{_LocalPath}", null, _Token);
 			
-			if (PlayerPrefs.GetString(_Path) == metadata.Md5Hash && File.Exists(path))
-				return;
-			
-			await reference.GetFileAsync(url);
-			
-			PlayerPrefs.SetString(_Path, metadata.Md5Hash);
-			
-			_Cache?.Remove(_Path);
+			PlayerPrefs.SetString(_RemotePath, metadata.Md5Hash);
+		}
+		catch (TaskCanceledException)
+		{
+			Debug.LogFormat("[StorageProcessor] Update file canceled. Remote path: {0} Local path: {1}.", _RemotePath, _LocalPath);
 		}
 		catch (Exception exception)
 		{

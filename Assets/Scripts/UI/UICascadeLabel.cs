@@ -43,25 +43,21 @@ public abstract class UICascadeLabel : UIEntity
 
 	protected abstract int Count { get; }
 
-	[SerializeField] float       m_Length;
-	[SerializeField] float       m_Scale;
-	[SerializeField] Vector2     m_Normal;
-	[SerializeField] float       m_MinAngle;
-	[SerializeField] float       m_MaxAngle;
-	[SerializeField] Gradient    m_Gradient;
-	[SerializeField] Haptic.Type m_Haptic;
+	[SerializeField]        float       m_Length;
+	[SerializeField]        float       m_Scale;
+	[SerializeField]        Vector2     m_Normal;
+	[SerializeField]        float       m_MinAngle;
+	[SerializeField]        float       m_MaxAngle;
+	[SerializeField]        Gradient    m_Gradient;
+	[SerializeField]        Haptic.Type m_Haptic;
+	[SerializeField, Sound] string      m_Sound;
 
-	HapticProcessor m_HapticProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	Vector2  m_Offset;
 	Animator m_Animator;
 	Action   m_PlayFinished;
-
-	[ContextMenu("Test")]
-	public void Test()
-	{
-		PlayAsync();
-	}
 
 	protected override void Awake()
 	{
@@ -129,12 +125,6 @@ public abstract class UICascadeLabel : UIEntity
 	}
 	#endif
 
-	[Inject]
-	public void Construct(HapticProcessor _HapticProcessor)
-	{
-		m_HapticProcessor = _HapticProcessor;
-	}
-
 	public Task PlayAsync()
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
@@ -160,6 +150,8 @@ public abstract class UICascadeLabel : UIEntity
 		if (gameObject.activeInHierarchy)
 		{
 			m_Offset = Quaternion.Euler(0, 0, Random.Range(m_MinAngle, m_MaxAngle)) * m_Normal;
+			
+			m_SoundProcessor.Play(m_Sound);
 			
 			m_HapticProcessor.Process(m_Haptic);
 			

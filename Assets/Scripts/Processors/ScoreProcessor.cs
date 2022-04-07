@@ -7,6 +7,80 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
+public class ScoreManager
+{
+	public float PerfectThreshold => 0.9f;
+	public float GoodThreshold    => 0.4f;
+
+	int Accuracy => 0;
+	long Score => 0;
+	int Combo => 0;
+	int Multiplier => 0;
+
+	[Inject] ScoreProcessor m_ScoreProcessor;
+
+	string m_SongID;
+
+	int m_TapSuccess;
+	int m_TapFail;
+	int m_DoubleSuccess;
+	int m_DoubleFail;
+	int m_HoldSuccess;
+	int m_HoldFail;
+	int m_HoldHit;
+	int m_HoldMiss;
+
+	public void Setup(string _SongID)
+	{
+		m_SongID = _SongID;
+	}
+
+	public void Restore()
+	{
+		
+	}
+
+	void RegisterTapSuccess()
+	{
+		
+	}
+
+	void RegisterTapFail()
+	{
+		
+	}
+
+	void RegisterDoubleSuccess()
+	{
+		
+	}
+
+	void RegisterDoubleFail()
+	{
+		
+	}
+
+	void RegisterHoldHit()
+	{
+		
+	}
+
+	void RegisterHoldMiss()
+	{
+		
+	}
+
+	void RegisterHoldSuccess()
+	{
+		
+	}
+
+	void RegisterHoldFail()
+	{
+		
+	}
+}
+
 public enum ScoreRank
 {
 	None     = 0,
@@ -32,6 +106,7 @@ public class ScoreSnapshot
 	}
 }
 
+[Preserve]
 public class ScoreDataUpdateSignal { }
 
 [Preserve]
@@ -104,7 +179,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			
 			m_Combo = value;
 			
-			m_SignalBus.Fire(new LevelComboSignal(m_Combo, Multiplier, Progress));
+			m_SignalBus.Fire(new SongComboSignal(m_Combo, Multiplier, Progress));
 		}
 	}
 
@@ -216,7 +291,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	readonly List<ScoreSnapshot> m_ScoreSnapshots = new List<ScoreSnapshot>();
 
-	DatabaseReference m_ScoresData;
+	DatabaseReference m_Data;
 
 	long   m_Score;
 	int    m_Combo;
@@ -245,45 +320,43 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_SocialProcessor = _SocialProcessor;
 	}
 
-	public async Task LoadScores()
+	public async Task Load()
 	{
-		if (m_ScoresData != null && m_ScoresData.Key != m_SocialProcessor.UserID)
+		if (m_Data != null && m_Data.Key != m_SocialProcessor.UserID)
 		{
-			Debug.LogFormat("[ScoreProcessor] Change user. From: {0} To: {1}.", m_ScoresData.Key, m_SocialProcessor.UserID);
-			
 			Loaded                    =  false;
-			m_ScoresData.ValueChanged -= OnScoresUpdate;
-			m_ScoresData              =  null;
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
 		}
 		
-		if (m_ScoresData == null)
+		if (m_Data == null)
 		{
-			m_ScoresData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
-			m_ScoresData.ValueChanged += OnScoresUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("scores").Child(m_SocialProcessor.UserID);
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchScores();
+		await Fetch();
 		
 		Loaded = true;
 	}
 
 	public int GetAccuracy(string _LevelID)
 	{
-		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetSnapshot(_LevelID);
 		
 		return snapshot?.Accuracy ?? 0;
 	}
 
 	public long GetScore(string _LevelID)
 	{
-		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetSnapshot(_LevelID);
 		
 		return snapshot?.Score ?? 0;
 	}
 
 	public ScoreRank GetRank(string _LevelID)
 	{
-		ScoreSnapshot snapshot = GetScoreSnapshot(_LevelID);
+		ScoreSnapshot snapshot = GetSnapshot(_LevelID);
 		
 		return snapshot?.Rank ?? ScoreRank.None;
 	}
@@ -328,8 +401,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(Restore);
-		m_SignalBus.Subscribe<LevelRestartSignal>(Restore);
+		m_SignalBus.Subscribe<SongRestartSignal>(Restore);
 		
 		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
 		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
@@ -345,8 +417,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(Restore);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(Restore);
+		m_SignalBus.Unsubscribe<SongRestartSignal>(Restore);
 		
 		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
 		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
@@ -360,25 +431,25 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
 	}
 
-	async void OnScoresUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
-		if (!Loaded || m_ScoresData.Key != m_SocialProcessor.UserID)
+		if (!Loaded || m_Data.Key != m_SocialProcessor.UserID)
 			return;
 		
 		Debug.Log("[ScoreProcessor] Updating scores data...");
 		
-		await FetchScores();
+		await Fetch();
 		
 		Debug.Log("[ScoreProcessor] Update scores data complete.");
 		
 		m_SignalBus.Fire<ScoreDataUpdateSignal>();
 	}
 
-	async Task FetchScores()
+	async Task Fetch()
 	{
 		m_ScoreSnapshots.Clear();
 		
-		DataSnapshot data = await m_ScoresData.GetValueAsync(15000, 2);
+		DataSnapshot data = await m_Data.GetValueAsync(15000, 2);
 		
 		if (data == null)
 		{
@@ -425,7 +496,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_HoldSuccessScore += progress;
 		m_HoldSuccess++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterHoldFail(HoldFailSignal _Signal)
@@ -439,14 +510,14 @@ public class ScoreProcessor : IInitializable, IDisposable
 		m_HoldFailScore += progress;
 		m_HoldFail++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterHoldHit(HoldHitSignal _Signal)
 	{
 		m_HoldHit++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterHoldMiss(HoldMissSignal _Signal)
@@ -455,7 +526,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_HoldMiss++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterTapSuccess(TapSuccessSignal _Signal)
@@ -480,7 +551,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			m_Score += (long)(progress * TAP_BAD_MULTIPLIER * Multiplier);
 		}
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterTapFail(TapFailSignal _Signal)
@@ -489,7 +560,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_TapFail++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterDoubleSuccess(DoubleSuccessSignal _Signal)
@@ -514,7 +585,7 @@ public class ScoreProcessor : IInitializable, IDisposable
 			m_Score += (long)(progress * DOUBLE_BAD_MULTIPLIER * Multiplier);
 		}
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
 	void RegisterDoubleFail(DoubleFailSignal _Signal)
@@ -523,10 +594,10 @@ public class ScoreProcessor : IInitializable, IDisposable
 		
 		m_DoubleFail++;
 		
-		m_SignalBus.Fire(new LevelScoreSignal(m_Score));
+		m_SignalBus.Fire(new SongScoreSignal(m_Score));
 	}
 
-	ScoreSnapshot GetScoreSnapshot(string _LevelID)
+	ScoreSnapshot GetSnapshot(string _LevelID)
 	{
 		if (m_ScoreSnapshots == null || m_ScoreSnapshots.Count == 0)
 			return null;

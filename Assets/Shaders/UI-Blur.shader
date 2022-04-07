@@ -71,6 +71,10 @@
 				
 				fixed4 color = fixed4((horizontal + vertical) * 0.5, 1);
 				
+				const fixed grayscale = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+				
+				color.rgb = lerp(color.rgb, grayscale, 0.1);
+				
 				return color;
 			}
 			ENDCG

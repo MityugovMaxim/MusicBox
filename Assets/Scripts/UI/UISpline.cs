@@ -486,6 +486,8 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 			
 			m_Points.Add(new Point(position, normal, phase));
 		}
+		
+		m_Points.Add(new Point(m_PositionsBuffer[0], m_NormalsBuffer[0], 1));
 	}
 
 	void GenerateStraightPoints()

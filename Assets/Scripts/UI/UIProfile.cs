@@ -4,60 +4,110 @@ using Zenject;
 
 public class UIProfile : UIEntity
 {
-	[SerializeField] UIRemoteGraphic m_Avatar;
-	[SerializeField] TMP_Text        m_Username;
-	[SerializeField] UILevel         m_Level;
-	[SerializeField] TMP_Text        m_Coins;
-	[SerializeField] RectTransform   m_Progress;
-	[SerializeField] TMP_Text        m_Discs;
-	[SerializeField] float           m_MinProgress;
-	[SerializeField] float           m_MaxProgress;
-
-	ProfileProcessor   m_ProfileProcessor;
-	ProgressProcessor  m_ProgressProcessor;
-	SocialProcessor    m_SocialProcessor;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
-
-	[Inject]
-	public void Construct(
-		ProfileProcessor   _ProfileProcessor,
-		ProgressProcessor  _ProgressProcessor,
-		SocialProcessor    _SocialProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
+	public string Username
 	{
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_ProgressProcessor  = _ProgressProcessor;
-		m_SocialProcessor    = _SocialProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
+		get => m_Username;
+		set
+		{
+			if (m_Username == value)
+				return;
+			
+			m_Username = value;
+			
+			ProcessUsername();
+		}
 	}
 
-	public void Setup()
+	public long Coins
 	{
+		get => m_Coins;
+		set
+		{
+			if (m_Coins == value)
+				return;
+			
+			m_Coins = value;
+			
+			ProcessCoins();
+		}
+	}
+
+	public int Discs
+	{
+		get => m_Discs;
+		set
+		{
+			if (m_Discs == value)
+				return;
+			
+			m_Discs = value;
+			
+			ProcessDiscs();
+		}
+	}
+
+	public int Level
+	{
+		get => m_Level.Level;
+		set => m_Level.Level = value;
+	}
+
+	[SerializeField] UIProfileImage m_Image;
+	[SerializeField] TMP_Text       m_UsernameLabel;
+	[SerializeField] UILevel        m_Level;
+	[SerializeField] TMP_Text       m_CoinsLabel;
+	[SerializeField] TMP_Text       m_DiscsLabel;
+
+	[SerializeField] string m_Username;
+	[SerializeField] int    m_Discs;
+	[SerializeField] long   m_Coins;
+
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
+	[Inject] SocialProcessor    m_SocialProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
+
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
 		ProcessUsername();
 		
 		ProcessDiscs();
 		
-		m_Avatar.Load(m_SocialProcessor.Photo);
-		m_Coins.text  = $"{m_ProfileProcessor.Coins}<sprite name=coins_icon>";
-		m_Level.Level = m_ProfileProcessor.Level;
+		ProcessCoins();
+	}
+
+	#if UNITY_EDITOR
+	protected override void OnValidate()
+	{
+		base.OnValidate();
 		
-		Vector2 size = m_Progress.sizeDelta;
-		size.x = Mathf.Lerp(m_MinProgress, m_MaxProgress, m_ProfileProcessor.GetProgress());
-		m_Progress.sizeDelta = size;
+		ProcessUsername();
+		
+		ProcessDiscs();
+		
+		ProcessCoins();
+	}
+	#endif
+
+	public void Setup()
+	{
+		m_Image.Setup(m_SocialProcessor.Photo);
+		
+		Username = m_SocialProcessor.GetUsername();
+		
+		Discs = m_ProfileProcessor.Discs;
+		
+		Level = m_ProfileProcessor.Level;
+		
+		Coins = m_ProfileProcessor.Coins;
 	}
 
 	public void Open()
 	{
 		m_StatisticProcessor.LogMainMenuProfileClick();
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null && mainMenu.Shown)
@@ -66,19 +116,18 @@ public class UIProfile : UIEntity
 
 	void ProcessDiscs()
 	{
-		int minLevel     = m_ProgressProcessor.GetMinLevel();
-		int maxLevel     = m_ProgressProcessor.GetMaxLevel();
-		int level        = Mathf.Clamp(m_ProfileProcessor.Level, minLevel, maxLevel);
-		int currentDiscs = m_ProfileProcessor.Discs;
-		int targetDiscs  = m_ProgressProcessor.GetMaxLimit(level);
-		
-		m_Discs.text = level < m_ProgressProcessor.GetMaxLevel()
-			? $"{currentDiscs}/{targetDiscs}"
-			: currentDiscs.ToString();
+		m_DiscsLabel.text = m_ProgressProcessor != null && Level < m_ProgressProcessor.GetMaxLevel()
+			? $"{Discs}/{m_ProgressProcessor.GetMaxLimit(Level)}"
+			: Discs.ToString();
 	}
 
 	void ProcessUsername()
 	{
-		m_Username.text = m_SocialProcessor.GetUsername();
+		m_UsernameLabel.text = Username;
+	}
+
+	void ProcessCoins()
+	{
+		m_CoinsLabel.text = $"{Coins}<sprite tint=0 name=coins_icon>";
 	}
 }

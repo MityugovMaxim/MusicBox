@@ -4,7 +4,7 @@ public abstract class Haptic
 {
 	public enum Type
 	{
-		Default      = 0,
+		None         = 0,
 		Selection    = 1,
 		Success      = 2,
 		Warning      = 3,

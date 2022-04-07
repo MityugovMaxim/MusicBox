@@ -14,7 +14,23 @@ public static class TransformExtension
 
 	public static bool Intersects(this RectTransform _RectTransform, RectTransform _Target)
 	{
-		return _Target.rect.Overlaps(_RectTransform.GetLocalRect(_Target));
+		Rect source = _RectTransform.GetWorldRect();
+		Rect target = _Target.GetWorldRect();
+		return source.Overlaps(target);
+	}
+
+	public static bool Above(this RectTransform _RectTransform, RectTransform _Target)
+	{
+		Rect source = _RectTransform.GetWorldRect();
+		Rect target = _Target.GetWorldRect();
+		return source.center.y <= target.center.y;
+	}
+
+	public static bool Below(this RectTransform _RectTransform, RectTransform _Target)
+	{
+		Rect source = _RectTransform.GetWorldRect();
+		Rect target = _Target.GetWorldRect();
+		return source.center.y >= target.center.y;
 	}
 
 	public static bool Intersects(this RectTransform _RectTransform, RectTransform _Target, RectOffset _Padding)

@@ -30,7 +30,7 @@ public class UnityTask : MonoBehaviour
 			return completionSource.Task;
 		}
 		
-		_Token.Register(() => completionSource.SetCanceled());
+		_Token.Register(() => completionSource.TrySetCanceled());
 		
 		m_YieldTasks.Enqueue(completionSource);
 		
@@ -60,7 +60,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		
@@ -92,7 +92,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		
@@ -119,7 +119,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		
@@ -146,7 +146,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		
@@ -173,7 +173,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		
@@ -200,7 +200,7 @@ public class UnityTask : MonoBehaviour
 				if (routine != null)
 					m_Instance.StopCoroutine(routine);
 				
-				completionSource.SetCanceled();
+				completionSource.TrySetCanceled();
 			}
 		);
 		

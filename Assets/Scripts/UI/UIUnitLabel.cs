@@ -44,6 +44,7 @@ public class UIUnitLabel : UIEntity
 	[SerializeField] TMP_Text m_Label;
 	[SerializeField] double   m_Value;
 	[SerializeField] bool     m_Sign;
+	[SerializeField] bool     m_Tint;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -70,7 +71,7 @@ public class UIUnitLabel : UIEntity
 
 	void ProcessValue()
 	{
-		m_Label.text = Convert(GetText(Value, m_Type));
+		m_Label.text = Convert(GetText(Value, m_Type), m_Tint);
 	}
 
 	string GetText(double _Value, UnitType _Type)
@@ -86,15 +87,15 @@ public class UIUnitLabel : UIEntity
 		}
 	}
 
-	static string Convert(string _Text)
+	static string Convert(string _Text, bool _Tint)
 	{
 		StringBuilder text = new StringBuilder();
 		foreach (char symbol in _Text)
-			text.Append(Convert(symbol));
+			text.Append(Convert(symbol, _Tint));
 		return text.ToString();
 	}
 
-	static string Convert(char _Symbol)
+	static string Convert(char _Symbol, bool _Tint)
 	{
 		switch (_Symbol)
 		{
@@ -114,7 +115,7 @@ public class UIUnitLabel : UIEntity
 			case '%': return "<sprite tint=1 name=unit_font_percent>";
 			case '*': return "<sprite tint=1 name=unit_font_multiplier>";
 			case 'p': return "<sprite tint=1 name=unit_font_points>";
-			case 'c': return "<sprite name=coins_icon>";
+			case 'c': return $"<sprite tint={(_Tint ? 1 : 0)} name=coins_icon>";
 			default:  return _Symbol.ToString();
 		}
 	}

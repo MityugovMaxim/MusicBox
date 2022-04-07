@@ -5,9 +5,10 @@ using Firebase.Messaging;
 using ModestTree;
 using Unity.Notifications.iOS;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
-public abstract class MessageProcessor
+public abstract class MessageProcessor : IInitializable, IDisposable
 {
 	const string TOPICS_LANGUAGE_KEY = "TOPICS_LANGUAGE";
 
@@ -17,16 +18,23 @@ public abstract class MessageProcessor
 		set => PlayerPrefs.SetString(TOPICS_LANGUAGE_KEY, value);
 	}
 
-	readonly LanguageProcessor m_LanguageProcessor;
-	readonly UrlProcessor      m_UrlProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] UrlProcessor      m_UrlProcessor;
 
-	protected MessageProcessor(
-		LanguageProcessor _LanguageProcessor,
-		UrlProcessor      _UrlProcessor
-	)
+	void IInitializable.Initialize()
 	{
-		m_LanguageProcessor = _LanguageProcessor;
-		m_UrlProcessor      = _UrlProcessor;
+		m_SignalBus.Subscribe<LanguageSelectSignal>(RegisterLanguageSelect);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<LanguageSelectSignal>(RegisterLanguageSelect);
+	}
+
+	async void RegisterLanguageSelect()
+	{
+		await LoadTopic();
 	}
 
 	public async Task LoadMessages()
@@ -57,7 +65,7 @@ public abstract class MessageProcessor
 		Topic = m_LanguageProcessor.Language;
 		
 		List<Task> tasks = new List<Task>();
-		foreach (string language in m_LanguageProcessor.SupportedLanguages.Except(Topic))
+		foreach (string language in m_LanguageProcessor.GetLanguages().Except(Topic))
 			tasks.Add(FirebaseMessaging.UnsubscribeAsync(language));
 		
 		await Task.WhenAll(tasks);
@@ -83,14 +91,9 @@ public abstract class MessageProcessor
 	}
 }
 
+[Preserve]
 public class iOSMessageProcessor : MessageProcessor
 {
-	[Inject]
-	public iOSMessageProcessor(
-		LanguageProcessor _LanguageProcessor,
-		UrlProcessor      _UrlProcessor
-	) : base(_LanguageProcessor, _UrlProcessor) { }
-
 	protected override void ClearBadges()
 	{
 		iOSNotificationCenter.RemoveAllScheduledNotifications();

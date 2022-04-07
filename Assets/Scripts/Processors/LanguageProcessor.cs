@@ -1,85 +1,178 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
+public class LanguageSnapshot
+{
+	public string ID     { get; }
+	public string Name   { get; }
+	public bool   Active { get; }
+	public int    Order  { get; }
+
+	public LanguageSnapshot(DataSnapshot _Data)
+	{
+		ID    = _Data.Key;
+		Active = _Data.GetBool("active");
+		Name  = _Data.GetString("name");
+		Order = _Data.GetInt("order");
+	}
+}
+
+[Preserve]
+public class LanguageDataUpdateSignal { }
+
+[Preserve]
+public class LanguageSelectSignal { }
+
+[Preserve]
 public class LanguageProcessor
 {
-	const string LANGUAGE_KEY = "LANGUAGE";
-
 	public string Language { get; private set; }
 
-	public IReadOnlyCollection<string> SupportedLanguages => m_Languages;
+	const string LANGUAGE_KEY = "LANGUAGE";
 
-	readonly StorageProcessor m_StorageProcessor;
+	bool Loaded { get; set; }
 
-	readonly string[] m_Languages =
+	[Inject] SignalBus             m_SignalBus;
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
+
+	readonly List<LanguageSnapshot> m_Snapshots = new List<LanguageSnapshot>();
+
+	DatabaseReference m_Data;
+
+	public async Task Load()
 	{
-		SystemLanguage.English.GetCode(),
-		SystemLanguage.Russian.GetCode(),
-		SystemLanguage.German.GetCode(),
-		SystemLanguage.Spanish.GetCode(),
-		SystemLanguage.Portuguese.GetCode(),
-	};
-
-	readonly Dictionary<string, string> m_Localization = new Dictionary<string, string>();
-
-	[Inject]
-	public LanguageProcessor(StorageProcessor _StorageProcessor)
-	{
-		m_StorageProcessor = _StorageProcessor;
+		if (m_Data == null)
+		{
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("languages");
+			m_Data.ValueChanged += OnUpdate;
+		}
+		
+		await Fetch();
+		
+		Language = Determine();
+		
+		await m_LocalizationProcessor.Load(Language);
+		
+		Loaded = true;
 	}
 
-	public bool SelectLanguage(string _Language)
+	public List<string> GetLanguages()
 	{
-		if (!m_Languages.Contains(_Language))
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
+	}
+
+	public string GetName(string _Language)
+	{
+		LanguageSnapshot snapshot = GetSnapshot(_Language);
+		
+		return snapshot?.Name ?? _Language;
+	}
+
+	public async Task<bool> Select(string _Language)
+	{
+		if (Language == _Language)
 			return false;
 		
-		PlayerPrefs.SetString(LANGUAGE_KEY, _Language);
+		LanguageSnapshot snapshot = GetSnapshot(_Language);
 		
-		Language = _Language;
+		if (snapshot == null)
+			return false;
+		
+		PlayerPrefs.SetString(LANGUAGE_KEY, snapshot.ID);
+		
+		Language = snapshot.ID;
+		
+		await m_LocalizationProcessor.Load(Language);
+		
+		m_SignalBus.Fire<LanguageSelectSignal>();
 		
 		return true;
 	}
 
-	public bool SupportsLanguage(string _Language)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
-		return string.IsNullOrEmpty(_Language) || Language == _Language;
+		if (!Loaded)
+			return;
+		
+		Debug.Log("[LanguageProcessor] Updating languages data...");
+		
+		await Fetch();
+		
+		string language = Determine();
+		
+		await Select(language);
+		
+		Debug.Log("[LanguageProcessor] Update languages data complete.");
+		
+		m_SignalBus.Fire<LanguageDataUpdateSignal>();
+		
+		Determine();
 	}
 
-	public string Get(string _Key)
+	async Task Fetch()
 	{
-		if (m_Localization.TryGetValue(_Key, out string text) && !string.IsNullOrEmpty(text))
-			return text;
+		m_Snapshots.Clear();
 		
-		return $"MISSING KEY: {_Key}";
+		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 4);
+		
+		if (dataSnapshot == null)
+		{
+			Debug.LogError("[LanguageProcessor] Fetch languages failed.");
+			return;
+		}
+		
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new LanguageSnapshot(_Data)));
 	}
 
-	public string Format(string _Key, params object[] _Args)
+	string Determine()
 	{
-		if (m_Localization.TryGetValue(_Key, out string mask) && !string.IsNullOrEmpty(mask))
-			return string.Format(mask, _Args);
+		string language = PlayerPrefs.HasKey(LANGUAGE_KEY)
+			? PlayerPrefs.GetString(LANGUAGE_KEY)
+			: Application.systemLanguage.GetCode();
 		
-		return $"MISSING KEY: {_Key}";
+		LanguageSnapshot snapshot = GetSnapshot(language);
+		if (snapshot != null)
+			return snapshot.ID;
+		
+		LanguageSnapshot fallback = GetSnapshot(SystemLanguage.English.GetCode());
+		if (fallback != null)
+			return fallback.ID;
+		
+		LanguageSnapshot supported = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot != null);
+		if (supported != null)
+			return supported.ID;
+		
+		Debug.LogError("[LanguageProcessor] Determine language failed.");
+		
+		return null;
 	}
 
-	public async Task LoadLocalization()
+	LanguageSnapshot GetSnapshot(string _Language)
 	{
-		Language = LoadLanguage();
+		if (m_Snapshots.Count == 0)
+			return null;
 		
-		m_Localization.Clear();
+		if (string.IsNullOrEmpty(_Language))
+		{
+			Debug.LogError("[LanguagesProcessor] Get snapshot failed. Language is null or empty.");
+			return null;
+		}
 		
-		Dictionary<string, string> localization = await m_StorageProcessor.LoadLocalization(Language);
+		LanguageSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _Language);
 		
-		foreach (var entry in localization)
-			m_Localization[entry.Key] = entry.Value;
-	}
-
-	string LoadLanguage()
-	{
-		string language = PlayerPrefs.HasKey(LANGUAGE_KEY) ? PlayerPrefs.GetString(LANGUAGE_KEY) : Application.systemLanguage.GetCode();
+		if (snapshot == null)
+			Debug.LogErrorFormat("[LanguagesProcessor] Get snapshot failed. Snapshot with language '{0}' is null.", _Language);
 		
-		return m_Languages.Contains(language) ? language : SystemLanguage.English.GetCode();
+		return snapshot;
 	}
 }

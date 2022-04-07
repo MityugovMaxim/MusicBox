@@ -19,13 +19,13 @@ public class TapResolver : GotoResolver, IInitializable, IDisposable
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Subscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Unsubscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	public override bool Resolve()

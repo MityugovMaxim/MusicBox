@@ -36,10 +36,21 @@ public class UIGroup : UIEntity
 		if (Shown)
 			return;
 		
-		CanvasGroup.alpha          = 0;
+		HideAnimation(m_HideDuration, true);
+		
 		CanvasGroup.interactable   = false;
 		CanvasGroup.blocksRaycasts = false;
+		
 		gameObject.SetActive(false);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
 	public async Task ShowAsync(bool _Instant = false)
@@ -64,7 +75,18 @@ public class UIGroup : UIEntity
 		if (Application.isPlaying)
 			OnShowStarted();
 		
-		await ShowAnimation(m_ShowDuration, _Instant, token);
+		try
+		{
+			await ShowAnimation(m_ShowDuration, _Instant, token);
+		}
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+		}
 		
 		if (Application.isPlaying)
 			OnShowFinished();
@@ -90,7 +112,18 @@ public class UIGroup : UIEntity
 		if (Application.isPlaying)
 			OnHideStarted();
 		
-		await HideAnimation(m_HideDuration, _Instant, token);
+		try
+		{
+			await HideAnimation(m_HideDuration, _Instant, token);
+		}
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+		catch (Exception exception)
+		{
+			Debug.LogException(exception);
+		}
 		
 		if (Application.isPlaying)
 			OnHideFinished();

@@ -5,15 +5,17 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] Canvas m_Canvas;
-
-	[SerializeField] UILevelItem   m_LevelItem;
-	[SerializeField] UILevelGroup  m_LevelGroup;
-	[SerializeField] UIStoreItem   m_StoreItem;
-	[SerializeField] UIOfferItem   m_OfferItem;
-	[SerializeField] UINewsItem    m_NewsItem;
-	[SerializeField] UIUnlockItem  m_UnlockItem;
-	[SerializeField] UIProductItem m_ProductItem;
+	[SerializeField] Canvas            m_Canvas;
+	[SerializeField] UISongContainer   m_SongContainer;
+	[SerializeField] UISongItem        m_SongItem;
+	[SerializeField] UISongGroup       m_SongGroup;
+	[SerializeField] UIProductItem     m_ProductItem;
+	[SerializeField] UIOfferItem       m_OfferItem;
+	[SerializeField] UINewsItem        m_NewsItem;
+	[SerializeField] UISongUnlockItem  m_SongUnlockItem;
+	[SerializeField] UIProductSongItem m_ProductSongItem;
+	[SerializeField] UILanguageItem    m_LanguageItem;
+	[SerializeField] SoundSource       m_SoundSource;
 
 	public override void InstallBindings()
 	{
@@ -29,7 +31,8 @@ public class GameInstaller : MonoInstaller
 		
 		InstallAudioManager();
 		
-		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas);
+		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas).AsSingle();
+		Container.BindInterfacesAndSelfTo<UISongContainer>().FromInstance(m_SongContainer).AsSingle();
 		
 		Container.Bind<IAdsProvider>().To<AdsProviderUnity>().FromNew().AsSingle();
 		Container.Bind<IAdsProvider>().To<AdsProviderAdMob>().FromNew().AsSingle();
@@ -38,40 +41,23 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticFirebase>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		
-		Container.BindMemoryPool<UILevelItem, UILevelItem.Pool>()
-			.WithInitialSize(10)
-			.FromComponentInNewPrefab(m_LevelItem)
-			.UnderTransformGroup("[UIMainMenuItem] Pool");
-		
-		Container.BindMemoryPool<UILevelGroup, UILevelGroup.Pool>()
-			.WithInitialSize(3)
-			.FromComponentInNewPrefab(m_LevelGroup)
-			.UnderTransformGroup("[UIMainMenuGroup] Pool");
-		
-		Container.BindMemoryPool<UIStoreItem, UIStoreItem.Pool>()
+		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
+		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
+		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem);
+		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem);
+		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
+		InstallPool<UISongGroup, UISongGroup.Pool>(m_SongGroup);
+		InstallPool<UISongUnlockItem, UISongUnlockItem.Pool>(m_SongUnlockItem);
+		InstallPool<UILanguageItem, UILanguageItem.Pool>(m_LanguageItem);
+		InstallPool<SoundSource, SoundSource.Pool>(m_SoundSource);
+	}
+
+	void InstallPool<TItem, TPool>(TItem _Prefab) where TItem : Object where TPool : IMemoryPool
+	{
+		Container.BindMemoryPool<TItem, TPool>()
 			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_StoreItem)
-			.UnderTransformGroup("[UIShopMenuItem] Pool");
-		
-		Container.BindMemoryPool<UIOfferItem, UIOfferItem.Pool>()
-			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_OfferItem)
-			.UnderTransformGroup("[UIOfferMenuItem] Pool");
-		
-		Container.BindMemoryPool<UINewsItem, UINewsItem.Pool>()
-			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_NewsItem)
-			.UnderTransformGroup("[UINewsMenuItem] Pool");
-		
-		Container.BindMemoryPool<UIUnlockItem, UIUnlockItem.Pool>()
-			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_UnlockItem)
-			.UnderTransformGroup("[UIUnlockItem] Pool");
-		
-		Container.BindMemoryPool<UIProductItem, UIProductItem.Pool>()
-			.WithInitialSize(5)
-			.FromComponentInNewPrefab(m_ProductItem)
-			.UnderTransformGroup("[UIProductItem] Pool");
+			.FromComponentInNewPrefab(_Prefab)
+			.UnderTransformGroup($"[{typeof(TItem).Name}] Pool");
 	}
 
 	void InstallCulture()
@@ -93,9 +79,11 @@ public class GameInstaller : MonoInstaller
 
 	void InstallFactories()
 	{
-		Container.BindFactory<Level, Level, Level.Factory>().FromFactory<PrefabFactory<Level>>();
+		Container.BindFactory<SongPlayer, SongPlayer, SongPlayer.Factory>().FromFactory<PrefabFactory<SongPlayer>>();
 		
 		Container.BindFactory<UIMenu, UIMenu, UIMenu.Factory>().FromFactory<PrefabFactory<UIMenu>>();
+		
+		Container.BindFactory<UIBackgroundItem, UIBackgroundItem, UIBackgroundItem.Factory>().FromFactory<PrefabFactory<UIBackgroundItem>>();
 	}
 
 	void InstallProcessors()
@@ -118,58 +106,71 @@ public class GameInstaller : MonoInstaller
 			.UnderTransform(transform)
 			.AsSingle();
 		
-		Container.BindInterfacesAndSelfTo<ApplicationProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<LanguageProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<AdsProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<TimeProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<UrlProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<SocialProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<StorageProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ProductProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<StoreProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<LevelProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<HealthProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ScoreProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<NewsProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<OffersProcessor>().FromNew().AsSingle();
+		InstallProcessor<MenuProcessor>();
 		
-		Container.BindInterfacesAndSelfTo<HapticProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<StatisticProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ProgressProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ProfileProcessor>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<MenuProcessor>().FromNew().AsSingle();
+		InstallProcessor<SoundProcessor>();
+		InstallProcessor<SocialProcessor>();
+		InstallProcessor<ProfileProcessor>();
+		InstallProcessor<ApplicationProcessor>();
+		InstallProcessor<StorageProcessor>();
+		InstallProcessor<LanguageProcessor>();
+		InstallProcessor<LocalizationProcessor>();
+		InstallProcessor<HapticProcessor>();
+		InstallProcessor<UrlProcessor>();
+		InstallProcessor<AdsProcessor>();
+		InstallProcessor<StatisticProcessor>();
+		InstallProcessor<BannersProcessor>();
+		InstallProcessor<StoreProcessor>();
+		InstallProcessor<NewsProcessor>();
+		InstallProcessor<ProductsProcessor>();
+		InstallProcessor<SongsProcessor>();
+		InstallProcessor<OffersProcessor>();
+		InstallProcessor<ProgressProcessor>();
+		InstallProcessor<ScoreProcessor>();
+		InstallProcessor<RevivesProcessor>();
 		
-		Container.BindInterfacesAndSelfTo<LevelController>().FromNew().AsSingle();
+		InstallProcessor<HealthManager>();
+		InstallProcessor<ScoreManager>();
+		
+		Container.BindInterfacesAndSelfTo<SongController>().FromNew().AsSingle();
+	}
+
+	void InstallProcessor<T>()
+	{
+		Container.BindInterfacesAndSelfTo<T>().FromNew().AsSingle();
 	}
 
 	void InstallManagers()
 	{
-		Container.BindInterfacesAndSelfTo<LevelManager>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<OffersManager>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
 	{
 		SignalBusInstaller.Install(Container);
 		
+		Container.DeclareSignal<LanguageDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<LanguageSelectSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ApplicationDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<LevelDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<SongsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProductDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<ProductsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<StoreDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<OfferDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		
-		Container.DeclareSignal<LevelStartSignal>();
-		Container.DeclareSignal<LevelPlaySignal>();
-		Container.DeclareSignal<LevelRestartSignal>();
-		Container.DeclareSignal<LevelExitSignal>();
-		Container.DeclareSignal<LevelFinishSignal>();
-		Container.DeclareSignal<LevelUnlockSignal>();
-		Container.DeclareSignal<LevelScoreSignal>();
-		Container.DeclareSignal<LevelComboSignal>();
+		Container.DeclareSignal<SongRestartSignal>();
+		
+		Container.DeclareSignal<LevelPlaySignal>(); // TODO: Remove
+		Container.DeclareSignal<LevelExitSignal>(); // TODO: Remove
+		Container.DeclareSignal<LevelFinishSignal>(); // TODO: Remove
+		
+		Container.DeclareSignal<SongScoreSignal>().OptionalSubscriber();
+		Container.DeclareSignal<SongComboSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<HoldHitSignal>();
 		Container.DeclareSignal<HoldMissSignal>();
@@ -182,7 +183,9 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<DoubleSuccessSignal>();
 		Container.DeclareSignal<DoubleFailSignal>();
 		
-		Container.DeclareSignal<HealthChangedSignal>();
+		Container.DeclareSignal<HealthRestoreSignal>();
+		Container.DeclareSignal<HealthIncreaseSignal>();
+		Container.DeclareSignal<HealthDecreaseSignal>();
 	}
 
 	void InstallAudioManager()

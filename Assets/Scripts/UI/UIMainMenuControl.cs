@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -15,20 +14,32 @@ public class UIMainMenuControl : UIEntity
 	[SerializeField] UIBadge            m_NewsBadge;
 	[SerializeField] UIBadge            m_StoreBadge;
 
+	[Inject] SignalBus        m_SignalBus;
+	[Inject] OffersManager    m_OffersManager;
+	[Inject] SocialProcessor  m_SocialProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] NewsProcessor    m_NewsProcessor;
+
 	readonly HashSet<string> m_NewsIDs    = new HashSet<string>();
 	readonly HashSet<string> m_OfferIDs   = new HashSet<string>();
 	readonly HashSet<string> m_ProductIDs = new HashSet<string>();
 
-	SignalBus        m_SignalBus;
-	SocialProcessor  m_SocialProcessor;
-	ProfileProcessor m_ProfileProcessor;
-	NewsProcessor    m_NewsProcessor;
-
 	MainMenuPageType m_PageType;
 
-	IEnumerator m_MoveRoutine;
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		if (m_SignalBus == null)
+			return;
+		
+		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
+		m_SignalBus.Subscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
+		m_SignalBus.Subscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
+		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
+	}
 
-	protected override void OnDestroy()
+	protected override void OnDisable()
 	{
 		base.OnDestroy();
 		
@@ -36,28 +47,9 @@ public class UIMainMenuControl : UIEntity
 			return;
 		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Process);
-		m_SignalBus.Unsubscribe<OfferDataUpdateSignal>(ProcessOffersBadge);
+		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
 		m_SignalBus.Unsubscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
-		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(ProcessStoreBadge);
-	}
-
-	[Inject]
-	public void Construct(
-		SignalBus        _SignalBus,
-		SocialProcessor  _SocialProcessor,
-		ProfileProcessor _ProfileProcessor,
-		NewsProcessor    _NewsProcessor
-	)
-	{
-		m_SignalBus        = _SignalBus;
-		m_SocialProcessor  = _SocialProcessor;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_NewsProcessor    = _NewsProcessor;
-		
-		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
-		m_SignalBus.Subscribe<OfferDataUpdateSignal>(ProcessOffersBadge);
-		m_SignalBus.Subscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
-		m_SignalBus.Subscribe<ProductDataUpdateSignal>(ProcessStoreBadge);
+		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
 	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant)
@@ -116,7 +108,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		List<string> offerIDs = m_ProfileProcessor.GetVisibleOfferIDs();
+		List<string> offerIDs = m_OffersManager.GetAvailableOfferIDs();
 		
 		m_OffersBadge.Value = GetUnreadCount(OFFERS_KEY, offerIDs, m_OfferIDs);
 	}
@@ -147,7 +139,7 @@ public class UIMainMenuControl : UIEntity
 
 	void ReadOffers()
 	{
-		Read(OFFERS_KEY, m_ProfileProcessor.GetVisibleOfferIDs(), m_OfferIDs);
+		Read(OFFERS_KEY, m_OffersManager.GetAvailableOfferIDs(), m_OfferIDs);
 		
 		m_OffersBadge.Value = 0;
 	}

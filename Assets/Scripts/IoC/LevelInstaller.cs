@@ -5,14 +5,12 @@ public class LevelInstaller : MonoInstaller
 {
 	[SerializeField] AudioProcessor        m_AudioProcessor;
 	[SerializeField] FXProcessor           m_FXProcessor;
-	[SerializeField] ColorProcessor        m_ColorProcessor;
-	[SerializeField] UIInputZone           m_InputZone;
 	[SerializeField] UIInputReceiver       m_InputReceiver;
 	[SerializeField] UITapIndicator        m_TapIndicator;
 	[SerializeField] UIDoubleIndicator     m_DoubleIndicator;
 	[SerializeField] UIHoldIndicator       m_HoldIndicator;
 	[SerializeField] UIComboIndicator      m_ComboIndicator;
-	[SerializeField] UIScoreIndicator      m_ScoreIndicator;
+	//[SerializeField] UIScoreIndicator      m_ScoreIndicator;
 	[SerializeField] UIMultiplierIndicator m_MultiplierIndicator;
 	[SerializeField] UIHealthIndicator     m_HealthIndicator;
 	[SerializeField] UITapFX               m_TapFX;
@@ -21,16 +19,12 @@ public class LevelInstaller : MonoInstaller
 
 	public override void InstallBindings()
 	{
-		Container.Bind<Sequencer>().FromComponentOnRoot().AsSingle();
-		
 		Container.BindInterfacesAndSelfTo<AudioProcessor>().FromInstance(m_AudioProcessor).AsSingle();
 		Container.BindInterfacesAndSelfTo<FXProcessor>().FromInstance(m_FXProcessor).AsSingle();
-		Container.BindInterfacesAndSelfTo<ColorProcessor>().FromInstance(m_ColorProcessor).AsSingle();
-		Container.BindInterfacesTo<UIScoreIndicator>().FromInstance(m_ScoreIndicator).AsSingle();
+		//Container.BindInterfacesTo<UIScoreIndicator>().FromInstance(m_ScoreIndicator).AsSingle();
 		Container.BindInterfacesTo<UIComboIndicator>().FromInstance(m_ComboIndicator).AsSingle();
 		Container.BindInterfacesTo<UIMultiplierIndicator>().FromInstance(m_MultiplierIndicator).AsSingle();
 		Container.BindInterfacesTo<UIHealthIndicator>().FromInstance(m_HealthIndicator).AsSingle();
-		Container.BindInterfacesAndSelfTo<UIInputZone>().FromInstance(m_InputZone).AsSingle();
 		Container.Bind<UIInputReceiver>().FromInstance(m_InputReceiver).AsSingle();
 		
 		InstallPool<UITapIndicator, UITapIndicator.Pool>(m_TapIndicator, 6);

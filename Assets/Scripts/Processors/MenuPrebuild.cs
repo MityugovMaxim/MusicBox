@@ -17,8 +17,8 @@ public class MenuPrebuild
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
 		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
+		{ typeof(UILanguageMenu), MenuType.LanguageMenu },
 		{ typeof(UILatencyMenu), MenuType.LatencyMenu },
-		{ typeof(UILevelMenu), MenuType.LevelMenu },
 		{ typeof(UILoadingMenu), MenuType.LoadingMenu },
 		{ typeof(UILoginMenu), MenuType.LoginMenu },
 		{ typeof(UIMainMenu), MenuType.MainMenu },
@@ -28,7 +28,8 @@ public class MenuPrebuild
 		{ typeof(UIResultMenu), MenuType.ResultMenu },
 		{ typeof(UIRetryMenu), MenuType.RetryMenu },
 		{ typeof(UIReviveMenu), MenuType.ReviveMenu },
-		{ typeof(UIRewardMenu), MenuType.RewardMenu },
+		{ typeof(UISocialMenu), MenuType.SocialMenu },
+		{ typeof(UISongMenu), MenuType.SongMenu },
 	};
 	/// PREBUILD_END
 	#endif

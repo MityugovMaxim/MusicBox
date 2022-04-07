@@ -93,7 +93,7 @@ Shader "UI/Circle"
 				OUT.uv = IN.uv;
 				OUT.data = IN.data;
 				OUT.rect = IN.rect;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				return OUT;
 			}

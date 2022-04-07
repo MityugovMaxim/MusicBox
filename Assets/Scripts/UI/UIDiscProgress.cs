@@ -1,7 +1,8 @@
 using System;
-using System.Collections;
 using System.Threading.Tasks;
+using Firebase.Extensions;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
@@ -12,9 +13,7 @@ public class UIDiscProgress : UIGroup
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 
-	[SerializeField] ScoreRank m_Rank;
-
-	[Space(15)]
+	[SerializeField] ScoreRank        m_Rank;
 	[SerializeField] UISplineProgress m_Progress;
 	[SerializeField] float            m_ProgressDelay;
 	[SerializeField] float            m_ProgressDuration;
@@ -22,15 +21,18 @@ public class UIDiscProgress : UIGroup
 	[SerializeField] float            m_MinProgress;
 	[SerializeField] float            m_MaxProgress;
 
-	HapticProcessor m_HapticProcessor;
+	[Header("Sounds")]
+	[SerializeField, Sound] string m_ProgressSound;
+	[SerializeField, Sound] string m_CollectSound;
+
+	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	float m_SourceProgress;
 	float m_TargetProgress;
 
-	Animator    m_Animator;
-	IEnumerator m_ProgressRoutine;
-	Action      m_CollectFinished;
-	Action      m_ProgressFinished;
+	Animator m_Animator;
+	Action   m_CollectFinished;
 
 	protected override void Awake()
 	{
@@ -59,28 +61,22 @@ public class UIDiscProgress : UIGroup
 		m_Progress.Max = GetProgress(m_SourceProgress);
 	}
 
-	[Inject]
-	public void Construct(HapticProcessor _HapticProcessor)
-	{
-		m_HapticProcessor = _HapticProcessor;
-	}
-
 	public Task Progress()
 	{
-		if (m_ProgressRoutine != null)
-			StopCoroutine(m_ProgressRoutine);
+		m_SoundProcessor.Start(m_ProgressSound);
 		
-		InvokeProgressFinished();
+		m_Progress.Min = GetProgress(0);
+		m_Progress.Max = GetProgress(m_SourceProgress);
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_ProgressFinished = () => completionSource.SetResult(true);
-		
-		m_ProgressRoutine = ProgressRoutine();
-		
-		StartCoroutine(m_ProgressRoutine);
-		
-		return completionSource.Task;
+		return UnityTask.Phase(
+			_Phase =>
+			{
+				float progress = Mathf.Lerp(m_SourceProgress, m_TargetProgress, m_ProgressCurve.Evaluate(_Phase));
+				m_Progress.Max = GetProgress(progress);
+			},
+			m_ProgressDelay,
+			m_ProgressDuration
+		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_ProgressSound));
 	}
 
 	public Task CollectAsync()
@@ -90,6 +86,8 @@ public class UIDiscProgress : UIGroup
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		m_CollectFinished = () => completionSource.TrySetResult(true);
+		
+		m_SoundProcessor.Play(m_CollectSound);
 		
 		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
@@ -108,41 +106,8 @@ public class UIDiscProgress : UIGroup
 		Restore();
 	}
 
-	IEnumerator ProgressRoutine()
-	{
-		if (m_ProgressDelay > float.Epsilon)
-			yield return new WaitForSeconds(m_ProgressDelay);
-		
-		if (!Mathf.Approximately(m_SourceProgress, m_TargetProgress) && m_ProgressDuration > float.Epsilon)
-		{
-			m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_ProgressDuration);
-			
-			float time = 0;
-			while (time < m_ProgressDuration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				float phase = m_ProgressCurve.Evaluate(time / m_ProgressDuration);
-				
-				m_Progress.Min = GetProgress(0);
-				m_Progress.Max = GetProgress(Mathf.Lerp(m_SourceProgress, m_TargetProgress, phase));
-			}
-		}
-		
-		m_Progress.Min = GetProgress(0);
-		m_Progress.Max = GetProgress(m_TargetProgress);
-		
-		InvokeProgressFinished();
-	}
-
 	void Restore()
 	{
-		if (m_ProgressRoutine != null)
-			StopCoroutine(m_ProgressRoutine);
-		
-		InvokeProgressFinished();
 		InvokeCollectFinished();
 		
 		if (m_Animator == null)
@@ -156,13 +121,6 @@ public class UIDiscProgress : UIGroup
 	float GetProgress(float _Progress)
 	{
 		return Mathf.Lerp(m_MinProgress, m_MaxProgress, _Progress);
-	}
-
-	void InvokeProgressFinished()
-	{
-		Action action = m_ProgressFinished;
-		m_ProgressFinished = null;
-		action?.Invoke();
 	}
 
 	void InvokeCollectFinished()

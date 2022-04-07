@@ -44,8 +44,6 @@ public class UIRetryMenu : UIMenu
 	{
 		m_StatisticProcessor.LogRetryMenuRetryClick(m_Reason);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
 		Hide();
 		
 		Action action = m_Retry;
@@ -57,8 +55,6 @@ public class UIRetryMenu : UIMenu
 	public void Cancel()
 	{
 		m_StatisticProcessor.LogRetryMenuCancelClick(m_Reason);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		Hide();
 		

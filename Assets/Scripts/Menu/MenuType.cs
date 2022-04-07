@@ -3,7 +3,7 @@ public enum MenuType
 	BlockMenu      = 0,
 	LoginMenu      = 1,
 	MainMenu       = 2,
-	LevelMenu      = 3,
+	SongMenu       = 3,
 	ProductMenu    = 4,
 	LoadingMenu    = 5,
 	GameMenu       = 6,
@@ -16,4 +16,6 @@ public enum MenuType
 	ReviveMenu     = 13,
 	BannerMenu     = 14,
 	RetryMenu      = 15,
+	LanguageMenu   = 16,
+	SocialMenu     = 17,
 }

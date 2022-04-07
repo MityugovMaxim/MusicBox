@@ -12,6 +12,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: combo_multiplier_fx
       objectReference: {fileID: 0}
+    - target: {fileID: 1793508304924887216, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_Name
+      value: hold_track_1  [REWORK]
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508305203598852, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_Name
+      value: double_track [REWORK]
+      objectReference: {fileID: 0}
     - target: {fileID: 1793508305320785472, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
       propertyPath: m_SizeDelta.x
@@ -22,10 +32,15 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1793508305350033886, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_AudioSource
+      value: 
+      objectReference: {fileID: 8135092159145040803}
     - target: {fileID: 1793508305350034978, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
       propertyPath: m_Name
-      value: level
+      value: default
       objectReference: {fileID: 0}
     - target: {fileID: 1793508305350034979, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
@@ -86,7 +101,32 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Texture
       value: 
-      objectReference: {fileID: 8600000, guid: ae8113508066e4fe39017e377b6d36de, type: 2}
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508306773041883, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508306773041883, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508306773041883, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508306810734385, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_RenderMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1793508306844526692, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_Name
+      value: tap_track
+      objectReference: {fileID: 0}
     - target: {fileID: 1793508306891007891, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
       propertyPath: m_SizeDelta.x
@@ -95,7 +135,7 @@ PrefabInstance:
     - target: {fileID: 1793508306891007891, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -120.57971
+      value: -121.12149
       objectReference: {fileID: 0}
     - target: {fileID: 1793508306891007891, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
@@ -105,7 +145,12 @@ PrefabInstance:
     - target: {fileID: 1793508306891007891, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -7.729431
+      value: -9.7196045
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061412305140265193, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_Name
+      value: hold_track_2  [REWORK]
       objectReference: {fileID: 0}
     - target: {fileID: 3287745597971953700, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}
@@ -202,5 +247,23 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9154311297704941466, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: b8a669d2cdbd741b88d67b01024fd0da,
+        type: 2}
+    - target: {fileID: 9154311297704941466, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 6603240175740317581, guid: b8a669d2cdbd741b88d67b01024fd0da,
+        type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4fdee45cf740349ab8fe554d476f2f7f, type: 3}
+--- !u!82 &8135092159145040803 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1793508306827113490, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+    type: 3}
+  m_PrefabInstance: {fileID: 7495807800455704497}
+  m_PrefabAsset: {fileID: 0}

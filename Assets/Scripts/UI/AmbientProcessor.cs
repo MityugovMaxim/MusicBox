@@ -40,6 +40,7 @@ public class AmbientProcessor : MonoBehaviour
 	string                  m_AmbientID;
 	bool                    m_Processing;
 	bool                    m_Paused;
+	bool                    m_Locked;
 	AudioSource             m_AudioSource;
 	CancellationTokenSource m_TokenSource;
 
@@ -66,7 +67,7 @@ public class AmbientProcessor : MonoBehaviour
 		m_AudioSource.volume      = 0;
 	}
 
-	public async Task LoadAmbient()
+	public async Task Load()
 	{
 		if (m_AmbientData == null)
 		{
@@ -112,8 +113,21 @@ public class AmbientProcessor : MonoBehaviour
 		await ResumeAsync();
 	}
 
+	public void Lock()
+	{
+		m_Locked = true;
+	}
+
+	public void Unlock()
+	{
+		m_Locked = false;
+	}
+
 	public async Task PauseAsync()
 	{
+		if (m_Locked)
+			return;
+		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		
@@ -136,6 +150,9 @@ public class AmbientProcessor : MonoBehaviour
 
 	public async Task ResumeAsync()
 	{
+		if (m_Locked)
+			return;
+		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		
@@ -166,7 +183,7 @@ public class AmbientProcessor : MonoBehaviour
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		AudioClip audioClip = await m_StorageProcessor.LoadAudioClip($"Ambient/{_AmbientID}.ogg", token);
+		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", token);
 		
 		if (audioClip == null || token.IsCancellationRequested)
 			return;

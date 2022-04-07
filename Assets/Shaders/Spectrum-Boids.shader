@@ -2,8 +2,8 @@
 {
 	Properties
 	{
-		_Scale ("Scale", Float) = 0.9
-		_Dampen ("Dampen", Range(0, 1)) = 0.1
+		_Scale ("Scale", Float) = 0.95
+		_Dampen ("Dampen", Range(0, 1)) = 0.25
 	}
 
 	 SubShader
@@ -30,7 +30,7 @@
 				half2 base = IN.localTexcoord * 2 - 1;
 				base.y /= _ScreenParams.x / _ScreenParams.y;
 				
-				const half size = 61;
+				const half size = 64;
 				
 				fixed distances[size];
 				
@@ -60,12 +60,12 @@
 				fixed highlight = 0;
 				for (int i = 0; i < size; i++)
 				{
-					const fixed valueMin = 0.0004; // 0.02
-					const fixed valueMax = 0.0064;  // 0.08
+					const fixed valueMin = 0.0004;
+					const fixed valueMax = 0.0064;
 					value += smoothstep(valueMax, valueMin, distances[i]);
 					
-					const fixed highlightMin = 0.000001; // 0.001
-					const fixed highlightMax = 0.0025;    // 0.05
+					const fixed highlightMin = 0.000001;
+					const fixed highlightMax = 0.0025;
 					highlight += smoothstep(highlightMax, highlightMin, distances[i]);
 				}
 				value *= value;

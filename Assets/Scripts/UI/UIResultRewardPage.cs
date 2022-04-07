@@ -30,18 +30,16 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] UIDiscs            m_Discs;
 	[SerializeField] UIGroup            m_ContinueGroup;
 	[SerializeField] UIGroup            m_LoaderGroup;
-	[SerializeField] UILoader           m_Loader;
 	[SerializeField] UICascadeUnitLabel m_ScoreLabel;
 	[SerializeField] UICascadeUnitLabel m_CoinsLabel;
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
-	ScoreProcessor     m_ScoreProcessor;
-	LevelProcessor     m_LevelProcessor;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
-	LanguageProcessor  m_LanguageProcessor;
+	[Inject] ScoreProcessor     m_ScoreProcessor;
+	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] HapticProcessor    m_HapticProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string      m_LevelID;
 	ScoreRank   m_SourceRank;
@@ -58,34 +56,16 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	readonly Queue<ProgressData> m_ProgressData = new Queue<ProgressData>();
 
-	[Inject]
-	public void Construct(
-		ScoreProcessor     _ScoreProcessor,
-		LevelProcessor     _LevelProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor,
-		LanguageProcessor  _LanguageProcessor
-	)
+	public override void Setup(string _SongID)
 	{
-		m_ScoreProcessor     = _ScoreProcessor;
-		m_LevelProcessor     = _LevelProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-		m_LanguageProcessor  = _LanguageProcessor;
-	}
-
-	public override void Setup(string _LevelID)
-	{
-		m_LevelID        = _LevelID;
+		m_LevelID        = _SongID;
 		m_SourceRank     = m_ScoreProcessor.GetRank(m_LevelID);
 		m_SourceAccuracy = m_ScoreProcessor.GetAccuracy(m_LevelID);
 		m_SourceScore    = m_ScoreProcessor.GetScore(m_LevelID);
 		m_TargetRank     = m_ScoreProcessor.Rank;
 		m_TargetAccuracy = m_ScoreProcessor.Accuracy;
 		m_TargetScore    = m_ScoreProcessor.Score;
-		m_Coins          = m_LevelProcessor.GetPayout(m_LevelID, m_TargetRank);
+		m_Coins          = m_SongsProcessor.GetPayout(m_LevelID, m_SourceRank, m_TargetRank);
 		
 		m_ProgressData.Clear();
 		for (ScoreRank rank = m_SourceRank; rank <= m_TargetRank; rank++)
@@ -156,14 +136,10 @@ public class UIResultRewardPage : UIResultMenuPage
 	{
 		m_StatisticProcessor.LogResultMenuRewardPageContinueClick(m_LevelID);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		m_ContinueGroup.Hide();
 		m_LoaderGroup.Show();
-		
-		m_Loader.Restore();
 		
 		bool success = await FinishLevel();
 		
@@ -282,8 +258,8 @@ public class UIResultRewardPage : UIResultMenuPage
 	void ProcessTitle()
 	{
 		m_Title.Text = m_SourceScore > m_TargetScore
-			? m_LanguageProcessor.Get("RESULT_NEW_RECORD")
-			: m_LanguageProcessor.Get("RESULT_TITLE");
+			? GetLocalization("RESULT_NEW_RECORD")
+			: GetLocalization("RESULT_TITLE");
 	}
 
 	void InvokeCoinsFinished()

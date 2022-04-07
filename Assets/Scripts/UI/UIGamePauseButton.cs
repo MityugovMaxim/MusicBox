@@ -7,10 +7,8 @@ public class UIGamePauseButton : UIEntity
 	static readonly int m_ShowParameterID    = Animator.StringToHash("Show");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	MenuProcessor      m_MenuProcessor;
-	LevelController    m_LevelController;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string   m_LevelID;
 	bool     m_Paused;
@@ -23,20 +21,6 @@ public class UIGamePauseButton : UIEntity
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
-	}
-
-	[Inject]
-	public void Construct(
-		LevelController    _LevelController,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_LevelController    = _LevelController;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
 	}
 
 	public void Setup(string _LevelID)
@@ -62,10 +46,11 @@ public class UIGamePauseButton : UIEntity
 		
 		await m_MenuProcessor.Hide(MenuType.PauseMenu);
 		
-		m_LevelController.Play();
+		// TODO: Fix
+		// m_SongsController.Play();
 	}
 
-	public void Pause()
+	public async void Pause()
 	{
 		if (m_Paused)
 			return;
@@ -74,15 +59,14 @@ public class UIGamePauseButton : UIEntity
 		
 		m_Animator.SetBool(m_ShowParameterID, true);
 		
-		m_MenuProcessor.Show(MenuType.PauseMenu);
+		// TODO: Fix
+		// m_SongsController.Pause();
 		
-		m_LevelController.Pause();
+		await m_MenuProcessor.Show(MenuType.PauseMenu);
 	}
 
 	public void Toggle()
 	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
-		
 		if (m_Paused)
 		{
 			m_StatisticProcessor.LogGameMenuResumeClick(m_LevelID);

@@ -4,167 +4,181 @@ using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
-
-public class NewsDataUpdateSignal { }
 
 public class NewsSnapshot
 {
-	public string ID       { get; }
-	public bool   Active   { get; }
-	public string Image    { get; }
-	public string Language { get; }
-	public string Title    { get; }
-	public string Text     { get; }
-	public string URL      { get; }
+	public string ID        { get; }
+	public bool   Active    { get; }
+	public string Image     { get; }
+	public string Title     { get; }
+	public string Message   { get; }
+	public long   Timestamp { get; }
+	public string URL       { get; }
+	public int    Order     { get; }
 
 	public NewsSnapshot(DataSnapshot _Data)
 	{
-		ID       = _Data.Key;
-		Active   = _Data.GetBool("active");
-		Image    = _Data.GetString("image");
-		Language = _Data.GetString("language");
-		Title    = _Data.GetString("title");
-		Text     = _Data.GetString("description");
-		URL      = _Data.GetString("url");
+		ID        = _Data.Key;
+		Active    = _Data.GetBool("active");
+		Image     = _Data.GetString("image");
+		Title     = _Data.GetString("title");
+		Message   = _Data.GetString("message");
+		Timestamp = _Data.GetLong("timestamp");
+		URL       = _Data.GetString("url");
+		Order     = _Data.GetInt("order");
 	}
 }
 
-public class NewsProcessor
+[Preserve]
+public class NewsDataUpdateSignal { }
+
+[Preserve]
+public class NewsProcessor : IInitializable, IDisposable
 {
 	bool Loaded { get; set; }
 
-	readonly SignalBus         m_SignalBus;
-	readonly LanguageProcessor m_LanguageProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] LanguageProcessor m_LanguageProcessor;
 
-	readonly List<NewsSnapshot> m_NewsSnapshots = new List<NewsSnapshot>();
+	readonly List<NewsSnapshot> m_Snapshots = new List<NewsSnapshot>();
 
-	DatabaseReference m_NewsData;
+	DatabaseReference m_Data;
 
-	[Inject]
-	public NewsProcessor(
-		SignalBus         _SignalBus,
-		LanguageProcessor _LanguageProcessor
-	)
+	void IInitializable.Initialize()
 	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
+		m_SignalBus.Subscribe<LanguageSelectSignal>(OnLanguageSelect);
 	}
 
-	public async Task LoadNews()
+	void IDisposable.Dispose()
 	{
-		if (m_NewsData == null)
+		m_SignalBus.Unsubscribe<LanguageSelectSignal>(OnLanguageSelect);
+	}
+
+	public async Task Load()
+	{
+		if (m_Data == null)
 		{
-			m_NewsData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("news");
-			m_NewsData.ValueChanged += OnNewsUpdate;
+			string path = $"news/{m_LanguageProcessor.Language}";
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child(path);
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchNews();
+		await Fetch();
 		
 		Loaded = true;
 	}
 
 	public List<string> GetNewsIDs()
 	{
-		return m_NewsSnapshots
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => m_LanguageProcessor.SupportsLanguage(_Snapshot.Language))
+			.OrderByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
 
 	public string GetImage(string _NewsID)
 	{
-		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get image failed. News with ID '{0}' is null.", _NewsID);
-			return string.Empty;
-		}
-		
-		return snapshot.Image;
+		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetTitle(string _NewsID)
 	{
-		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get title failed. Snapshot with ID '{0}' is null.", _NewsID);
-			return string.Empty;
-		}
-		
-		return snapshot.Title;
+		return snapshot?.Title ?? string.Empty;
 	}
 
-	public string GetText(string _NewsID)
+	public string GetMessage(string _NewsID)
 	{
-		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get text failed. Snapshot with ID '{0}' is null.", _NewsID);
+		return snapshot?.Message ?? string.Empty;
+	}
+
+	public string GetDate(string _NewsID)
+	{
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
+		
+		if (snapshot == null || snapshot.Timestamp == 0)
 			return string.Empty;
-		}
 		
-		return snapshot.Text;
+		DateTimeOffset date = DateTimeOffset.FromUnixTimeSeconds(snapshot.Timestamp);
+		
+		return date.LocalDateTime.ToShortDateString();
 	}
 
 	public string GetURL(string _NewsID)
 	{
-		NewsSnapshot snapshot = GetNewsSnapshot(_NewsID);
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[NewsProcessor] Get URL failed. Snapshot with ID '{0}' is null.", _NewsID);
-			return string.Empty;
-		}
-		
-		return snapshot.URL;
+		return snapshot?.URL ?? string.Empty;
 	}
 
-	async void OnNewsUpdate(object _Sender, EventArgs _Args)
+	async void OnLanguageSelect()
+	{
+		if (m_Data == null)
+			return;
+		
+		m_Data.ValueChanged -= OnUpdate;
+		m_Data              =  null;
+		Loaded              =  false;
+		
+		await Load();
+		
+		m_SignalBus.Fire<NewsDataUpdateSignal>();
+	}
+
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
 		Debug.Log("[NewsProcessor] Updating news data...");
 		
-		await FetchNews();
+		await Fetch();
 		
 		Debug.Log("[NewsProcessor] Update news data complete.");
 		
 		m_SignalBus.Fire<NewsDataUpdateSignal>();
 	}
 
-	async Task FetchNews()
+	async Task Fetch()
 	{
-		m_NewsSnapshots.Clear();
+		m_Snapshots.Clear();
 		
-		DataSnapshot data = await m_NewsData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (data == null)
+		if (dataSnapshot == null)
 		{
 			Debug.LogError("[NewsProcessor] Fetch news failed.");
 			return;
 		}
 		
-		m_NewsSnapshots.AddRange(data.Children.Select(_Data => new NewsSnapshot(_Data)));
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new NewsSnapshot(_Data)));
 	}
 
-	NewsSnapshot GetNewsSnapshot(string _NewsID)
+	NewsSnapshot GetSnapshot(string _NewsID)
 	{
-		if (m_NewsSnapshots == null || m_NewsSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return null;
 		
 		if (string.IsNullOrEmpty(_NewsID))
 		{
-			Debug.LogError("[NewsProcessor] Get news snapshot failed. News ID is null or empty.");
+			Debug.LogError("[NewsProcessor] Get snapshot failed. News ID is null or empty.");
 			return null;
 		}
 		
-		return m_NewsSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _NewsID);
+		NewsSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _NewsID);
+		
+		if (snapshot == null)
+			Debug.LogErrorFormat("[NewsProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _NewsID);
+		
+		return snapshot;
 	}
 }

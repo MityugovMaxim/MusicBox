@@ -4,11 +4,21 @@ using UnityEngine.EventSystems;
 
 public class UIEntity : UIBehaviour
 {
+	public Transform Transform
+	{
+		get
+		{
+			if (ReferenceEquals(m_Transform, null))
+				m_Transform = GetComponent<Transform>();
+			return m_Transform;
+		}
+	}
+
 	public RectTransform RectTransform
 	{
 		get
 		{
-			if ((object)m_RectTransform == null)
+			if (ReferenceEquals(m_RectTransform, null))
 				m_RectTransform = GetComponent<RectTransform>();
 			return m_RectTransform;
 		}
@@ -17,6 +27,7 @@ public class UIEntity : UIBehaviour
 	protected bool IsInstanced => gameObject.scene.isLoaded;
 
 	[NonSerialized] RectTransform m_RectTransform;
+	[NonSerialized] Transform     m_Transform;
 
 	public void BringToFront()
 	{

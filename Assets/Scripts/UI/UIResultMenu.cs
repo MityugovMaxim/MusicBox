@@ -13,32 +13,19 @@ public enum ResultMenuPageType
 [Menu(MenuType.ResultMenu)]
 public class UIResultMenu : UIMenu
 {
-	[SerializeField] UILevelBackground  m_Background;
+	[SerializeField] UISongBackground   m_Background;
 	[SerializeField] UIResultMenuPage[] m_Pages;
 
-	AmbientProcessor m_AmbientProcessor;
-	MusicProcessor   m_MusicProcessor;
+	string m_SongID;
 
-	string m_LevelID;
-
-	[Inject]
-	public void Construct(
-		AmbientProcessor _AmbientProcessor,
-		MusicProcessor   _MusicProcessor
-	)
+	public void Setup(string _SongID)
 	{
-		m_AmbientProcessor = _AmbientProcessor;
-		m_MusicProcessor   = _MusicProcessor;
-	}
-
-	public void Setup(string _LevelID)
-	{
-		m_LevelID = _LevelID;
+		m_SongID = _SongID;
 		
-		m_Background.Setup(m_LevelID, true);
+		m_Background.Setup(m_SongID);
 		
 		foreach (UIResultMenuPage page in m_Pages)
-			page.Setup(m_LevelID);
+			page.Setup(m_SongID);
 	}
 
 	public Task Select(ResultMenuPageType _PageType, bool _Instant = false)
@@ -66,9 +53,6 @@ public class UIResultMenu : UIMenu
 	protected override void OnShowStarted()
 	{
 		Select(ResultMenuPageType.Reward, true);
-		
-		m_AmbientProcessor.Resume();
-		m_MusicProcessor.StopPreview();
 	}
 
 	protected override void OnShowFinished()

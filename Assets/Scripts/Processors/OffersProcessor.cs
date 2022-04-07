@@ -3,174 +3,126 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
-using Firebase.Functions;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
-public class OfferDataUpdateSignal { }
+[Preserve]
+public class OffersDataUpdateSignal { }
 
 public class OfferSnapshot
 {
-	public string ID       { get; }
-	public bool   Active   { get; }
-	public string Image    { get; }
-	public string Title    { get; }
-	public string Language { get; }
-	public string LevelID  { get; }
-	public long   Coins    { get; }
-	public int    AdsCount { get; }
+	public string ID          { get; }
+	public bool   Active      { get; }
+	public string Image       { get; }
+	public string Title       { get; }
+	public string Description { get; }
+	public string SongID      { get; }
+	public long   Coins       { get; }
+	public int    AdsCount    { get; }
+	public long   Timestamp   { get; }
+	public int    Order       { get; }
 
 	public OfferSnapshot(DataSnapshot _Data)
 	{
-		ID       = _Data.Key;
-		Active   = _Data.GetBool("active");
-		Image    = _Data.GetString("image");
-		Title    = _Data.GetString("title");
-		LevelID  = _Data.GetString("level_id");
-		Coins    = _Data.GetLong("coins");
-		AdsCount = _Data.GetInt("ads_count");
+		ID          = _Data.Key;
+		Active      = _Data.GetBool("active");
+		Image       = _Data.GetString("image");
+		Title       = _Data.GetString("title");
+		Description = _Data.GetString("description");
+		SongID      = _Data.GetString("song_id");
+		Coins       = _Data.GetLong("coins");
+		AdsCount    = _Data.GetInt("ads_count");
+		Timestamp   = _Data.GetLong("timestamp");
+		Order       = _Data.GetInt("order");
 	}
 }
 
-public class OffersProcessor
+[Preserve]
+public class OffersProcessor : IInitializable, IDisposable
 {
 	bool Loaded { get; set; }
 
-	readonly SignalBus         m_SignalBus;
-	readonly LanguageProcessor m_LanguageProcessor;
-	readonly StorageProcessor  m_StorageProcessor;
-	readonly MenuProcessor     m_MenuProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] LanguageProcessor m_LanguageProcessor;
 
-	readonly List<OfferSnapshot> m_OfferSnapshots = new List<OfferSnapshot>();
+	readonly List<OfferSnapshot> m_Snapshots = new List<OfferSnapshot>();
 
-	DatabaseReference m_OffersData;
+	DatabaseReference m_Data;
 
-	[Inject]
-	public OffersProcessor(
-		SignalBus         _SignalBus,
-		LanguageProcessor _LanguageProcessor,
-		StorageProcessor  _StorageProcessor,
-		MenuProcessor     _MenuProcessor
-	)
+	void IInitializable.Initialize()
 	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
-		m_StorageProcessor  = _StorageProcessor;
-		m_MenuProcessor     = _MenuProcessor;
+		m_SignalBus.Subscribe<LanguageSelectSignal>(OnLanguageSelect);
 	}
 
-	public async Task LoadOffers()
+	void IDisposable.Dispose()
 	{
-		if (m_OffersData == null)
+		m_SignalBus.Unsubscribe<LanguageSelectSignal>(OnLanguageSelect);
+	}
+
+	public async Task Load()
+	{
+		if (m_Data == null)
 		{
-			m_OffersData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("offers");
-			m_OffersData.ValueChanged += OnOffersUpdate;
+			string path = $"offers/{m_LanguageProcessor.Language}";
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child(path);
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchOffers();
+		await Fetch();
 		
 		Loaded = true;
 	}
 
-	public async Task<bool> CollectOffer(string _OfferID)
-	{
-		HttpsCallableReference collectOffer = FirebaseFunctions.DefaultInstance.GetHttpsCallable("CollectOffer");
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["offer_id"] = _OfferID;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		bool success;
-		
-		try
-		{
-			HttpsCallableResult result = await collectOffer.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch (Exception)
-		{
-			success = false;
-		}
-		
-		if (success)
-		{
-			await Task.Delay(250);
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		else
-		{
-			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
-			if (errorMenu != null)
-			{
-				errorMenu.Setup(
-					"offer_collect_error",
-					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_TITLE"),
-					m_LanguageProcessor.Get("OFFER_COLLECT_ERROR_MESSAGE")
-				);
-			}
-			
-			await m_MenuProcessor.Show(MenuType.ErrorMenu);
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		}
-		
-		return success;
-	}
-
 	public List<string> GetOfferIDs()
 	{
-		return m_OfferSnapshots
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => m_LanguageProcessor.SupportsLanguage(_Snapshot.Language))
+			.OrderBy(_Snapshot => _Snapshot.Order)
+			.ThenByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
 
-	public string GetTitle(string _OfferID)
+	public string GetImage(string _OfferID)
 	{
-		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[OfferProcessor] Get title failed. Snapshot with ID '{0}' is null.", _OfferID);
-			return string.Empty;
-		}
-		
-		return snapshot.Title;
+		return snapshot?.Image ?? string.Empty;
 	}
 
-	public string GetLevelID(string _OfferID)
+	public string GetTitle(string _OfferID)
 	{
-		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[OfferProcessor] Get level ID failed. Snapshot with ID '{0}' is null.", _OfferID);
-			return string.Empty;
-		}
+		return snapshot?.Title ?? string.Empty;
+	}
+
+	public string GetDescription(string _OfferID)
+	{
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
 		
-		return snapshot.LevelID;
+		return snapshot?.Description ?? string.Empty;
+	}
+
+	public string GetSongID(string _OfferID)
+	{
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
+		
+		return snapshot?.SongID ?? string.Empty;
 	}
 
 	public long GetCoins(string _OfferID)
 	{
-		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[OfferProcessor] Get coins failed. Snapshot with ID '{0}' is null.", _OfferID);
-			return 0;
-		}
-		
-		return snapshot.Coins;
+		return snapshot?.Coins ?? 0;
 	}
 
 	public int GetAdsCount(string _OfferID)
 	{
-		OfferSnapshot snapshot = GetOfferSnapshot(_OfferID);
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
 		
 		if (snapshot == null)
 		{
@@ -181,46 +133,65 @@ public class OffersProcessor
 		return snapshot.AdsCount;
 	}
 
-	async void OnOffersUpdate(object _Sender, EventArgs _Args)
+	async void OnLanguageSelect()
+	{
+		if (m_Data == null)
+			return;
+		
+		m_Data.ValueChanged -= OnUpdate;
+		m_Data              =  null;
+		Loaded              =  false;
+		
+		await Load();
+		
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
+	}
+
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
 		Debug.Log("[OfferProcessor] Updating offers data...");
 		
-		await FetchOffers();
+		await Fetch();
 		
 		Debug.Log("[OfferProcessor] Update offers data complete.");
 		
-		m_SignalBus.Fire<OfferDataUpdateSignal>();
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
 	}
 
-	async Task FetchOffers()
+	async Task Fetch()
 	{
-		m_OfferSnapshots.Clear();
+		m_Snapshots.Clear();
 		
-		DataSnapshot data = await m_OffersData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (data == null)
+		if (dataSnapshot == null)
 		{
 			Debug.LogError("[OffersProcessor] Fetch offers failed.");
 			return;
 		}
 		
-		m_OfferSnapshots.AddRange(data.Children.Select(_Data => new OfferSnapshot(_Data)));
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new OfferSnapshot(_Data)));
 	}
 
-	OfferSnapshot GetOfferSnapshot(string _OfferID)
+	OfferSnapshot GetSnapshot(string _OfferID)
 	{
-		if (m_OfferSnapshots == null || m_OfferSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return null;
 		
 		if (string.IsNullOrEmpty(_OfferID))
 		{
-			Debug.LogError("[OfferProcessor] Get offer snapshot failed. Offer ID is null or empty.");
+			Debug.LogError("[OfferProcessor] Get snapshot failed. Offer ID is null or empty.");
 			return null;
 		}
 		
-		return m_OfferSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _OfferID);
+		OfferSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _OfferID);
+		
+		if (snapshot == null)
+			Debug.LogErrorFormat("[OffersProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _OfferID);
+		
+		return snapshot;
 	}
 }

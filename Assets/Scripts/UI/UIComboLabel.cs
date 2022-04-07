@@ -19,29 +19,15 @@ public class UIComboLabel : UIEntity, IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelComboSignal>(RegisterLevelCombo);
+		m_SignalBus.Subscribe<SongComboSignal>(RegisterLevelCombo);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelComboSignal>(RegisterLevelCombo);
+		m_SignalBus.Unsubscribe<SongComboSignal>(RegisterLevelCombo);
 	}
 
-	void RegisterLevelStart()
-	{
-		SetMultiplier(0);
-	}
-
-	void RegisterLevelRestart()
-	{
-		SetMultiplier(0);
-	}
-
-	void RegisterLevelCombo(LevelComboSignal _Signal)
+	void RegisterLevelCombo(SongComboSignal _Signal)
 	{
 		SetMultiplier(_Signal.Multiplier);
 	}

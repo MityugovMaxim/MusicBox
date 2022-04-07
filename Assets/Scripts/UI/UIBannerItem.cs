@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
-using Zenject;
 
 public class UIBannerItem : UIGroup
 {
@@ -11,22 +10,18 @@ public class UIBannerItem : UIGroup
 		Close
 	}
 
-	[SerializeField] UIRemoteImage m_Banner;
+	[SerializeField] UIBannerImage m_Image;
 	[SerializeField] UIGroup       m_Control;
-
-	StorageProcessor m_StorageProcessor;
 
 	Action<BannerState> m_ProcessFinished;
 
-	[Inject]
-	public void Construct(StorageProcessor _StorageProcessor)
-	{
-		m_StorageProcessor = _StorageProcessor;
-	}
+	string m_BannerID;
 
 	public void Setup(string _BannerID)
 	{
-		m_Banner.Load(m_StorageProcessor.LoadLevelThumbnail(_BannerID));
+		m_BannerID = _BannerID;
+		
+		m_Image.Setup(m_BannerID);
 		
 		m_Control.Hide(true);
 	}

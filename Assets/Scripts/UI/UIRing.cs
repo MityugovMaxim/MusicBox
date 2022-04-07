@@ -84,18 +84,19 @@ public class UIRing : MaskableGraphic
 		if (Sprite != null)
 		{
 			uv = new Rect(
-				Sprite.rect.x / Sprite.texture.width,
-				Sprite.rect.y / Sprite.texture.height,
-				Sprite.rect.width / Sprite.texture.width,
-				Sprite.rect.height / Sprite.texture.height
+				Sprite.textureRect.x / Sprite.texture.width,
+				Sprite.textureRect.y / Sprite.texture.height,
+				Sprite.textureRect.width / Sprite.texture.width,
+				Sprite.textureRect.height / Sprite.texture.height
 			);
 		}
 		for (int i = 0; i <= samples; i++)
 		{
-			float phase = Mathf.Lerp(uv.yMax, uv.yMin, (float)i / samples);
+			float p     = (float)i / samples;
+			float phase = Mathf.Lerp(uv.xMin, uv.xMax, (float)i / samples);
 			
-			m_Vertices.Add(Create(outer, color, new Vector2(uv.xMin, phase)));
-			m_Vertices.Add(Create(inner, color, new Vector2(uv.xMax, phase)));
+			m_Vertices.Add(Create(outer, color, new Vector2(phase, uv.yMin)));
+			m_Vertices.Add(Create(inner, color, new Vector2(phase, uv.yMax)));
 			
 			outer = step * outer;
 			inner = step * inner;

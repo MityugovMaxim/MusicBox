@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 public class ProgressSnapshot
@@ -22,6 +23,7 @@ public class ProgressSnapshot
 	}
 }
 
+[Preserve]
 public class ProgressDataUpdateSignal { }
 
 public class ProgressProcessor
@@ -32,7 +34,7 @@ public class ProgressProcessor
 
 	readonly List<ProgressSnapshot> m_ProgressSnapshots = new List<ProgressSnapshot>();
 
-	DatabaseReference m_ProgressData;
+	DatabaseReference m_Data;
 
 	[Inject]
 	public ProgressProcessor(SignalBus _SignalBus)
@@ -40,15 +42,15 @@ public class ProgressProcessor
 		m_SignalBus = _SignalBus;
 	}
 
-	public async Task LoadProgress()
+	public async Task Load()
 	{
-		if (m_ProgressData == null)
+		if (m_Data == null)
 		{
-			m_ProgressData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("progress");
-			m_ProgressData.ValueChanged += OnProgressUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("progress");
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchProgress();
+		await Fetch();
 		
 		Loaded = true;
 	}
@@ -143,23 +145,23 @@ public class ProgressProcessor
 		return progressSnapshot?.MaxLimit ?? 0;
 	}
 
-	async void OnProgressUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
 		Debug.Log("[ProgressProcessor] Updating progress data...");
 		
-		await FetchProgress();
+		await Fetch();
 		
 		Debug.Log("[ProgressProcessor] Update progress data complete.");
 	}
 
-	async Task FetchProgress()
+	async Task Fetch()
 	{
 		m_ProgressSnapshots.Clear();
 		
-		DataSnapshot progressSnapshots = await m_ProgressData.GetValueAsync(15000, 2);
+		DataSnapshot progressSnapshots = await m_Data.GetValueAsync(15000, 2);
 		
 		if (progressSnapshots == null)
 		{

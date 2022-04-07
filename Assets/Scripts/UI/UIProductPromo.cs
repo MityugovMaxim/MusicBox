@@ -4,30 +4,15 @@ using Zenject;
 
 public class UIProductPromo : UIGroupLayout, IPointerClickHandler
 {
-	[SerializeField] UIProductLabel     m_Label;
-	[SerializeField] UIProductPrice     m_Price;
-	[SerializeField] UIProductThumbnail m_Thumbnail;
+	[SerializeField] UIProductImage m_Image;
+	[SerializeField] UIProductLabel m_Label;
+	[SerializeField] UIProductPrice m_Price;
 
-	ProfileProcessor   m_ProfileProcessor;
-	HapticProcessor    m_HapticProcessor;
-	MenuProcessor      m_MenuProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string m_ProductID;
-
-	[Inject]
-	public void Construct(
-		ProfileProcessor   _ProfileProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
 
 	public async void Setup(string _ProductID)
 	{
@@ -39,9 +24,9 @@ public class UIProductPromo : UIGroupLayout, IPointerClickHandler
 			return;
 		}
 		
+		m_Image.Setup(m_ProductID);
 		m_Label.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
-		m_Thumbnail.Setup(m_ProductID);
 		
 		await ShowAsync();
 	}
@@ -49,8 +34,6 @@ public class UIProductPromo : UIGroupLayout, IPointerClickHandler
 	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
 		m_StatisticProcessor.LogMainMenuPromoClick(m_ProductID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactHeavy);
 		
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		if (productMenu != null)

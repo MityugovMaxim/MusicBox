@@ -38,6 +38,20 @@ half remap01(const half _Value, const half _Low, const half _High)
 	return (_Value - _Low) / (_High - _Low);
 }
 
+half remap01Clamped(const half _Value, const half _Low, const half _High)
+{
+	return clamp(remap01(_Value, _Low, _High), 0, 1);
+}
+
+half3 remap01Clamped(const half3 _Value, const half _Low, const half _High)
+{
+	return half3(
+		remap01Clamped(_Value.x, _Low, _High),
+		remap01Clamped(_Value.y, _Low, _High),
+		remap01Clamped(_Value.z, _Low, _High)
+	);
+}
+
 half remap(const half _Value, const half _Low1, const half _High1, const half _Low2, const half _High2)
 {
 	return _Low2 + (_Value - _Low1) * (_High2 - _Low2) / (_High1 - _Low1);

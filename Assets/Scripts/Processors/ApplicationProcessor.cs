@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
-using ModestTree.Util;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
+[Preserve]
 public class ApplicationDataUpdateSignal { }
 
 public class ApplicationSnapshot
@@ -24,6 +23,7 @@ public class BannerSnapshot
 {
 	public string ID        { get; }
 	public bool   Active    { get; }
+	public string Image     { get; }
 	public string Language  { get; }
 	public bool   Permanent { get; }
 	public string Version   { get; }
@@ -34,6 +34,7 @@ public class BannerSnapshot
 		ID        = _Data.Key;
 		Active    = _Data.GetBool("active");
 		Language  = _Data.GetString("language");
+		Image     = _Data.GetString("image");
 		Permanent = _Data.GetBool("permanent");
 		Version   = _Data.GetString("version");
 		URL       = _Data.GetString("url");
@@ -53,116 +54,60 @@ public class ApplicationProcessor
 
 	bool Loaded { get; set; }
 
-	readonly SignalBus         m_SignalBus;
-	readonly LanguageProcessor m_LanguageProcessor;
+	[Inject] SignalBus m_SignalBus;
 
-	readonly List<BannerSnapshot> m_BannerSnapshots = new List<BannerSnapshot>();
+	DatabaseReference m_Data;
 
-	DatabaseReference m_ApplicationData;
+	ApplicationSnapshot m_Snapshot;
 
-	ApplicationSnapshot m_ApplicationSnapshot;
-
-	[Inject]
-	public ApplicationProcessor(SignalBus _SignalBus, LanguageProcessor _LanguageProcessor)
+	public async Task Load()
 	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
-	}
-
-	public async Task LoadApplication()
-	{
-		if (m_ApplicationData == null)
+		if (m_Data == null)
 		{
-			m_ApplicationData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("application");
-			m_ApplicationData.ValueChanged += OnApplicationUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("application");
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
 		await FacebookAuth.Initialize();
 		
-		await FetchApplication();
+		await Fetch();
 		
 		TryClearCache();
 		
 		Loaded = true;
 	}
 
-	public List<string> GetBannerIDs()
-	{
-		return m_BannerSnapshots
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => m_LanguageProcessor.SupportsLanguage(_Snapshot.Language))
-			.Where(_Snapshot => string.IsNullOrEmpty(_Snapshot.Version) || _Snapshot.Version == Application.version)
-			.OrderByDescending(_Snapshot => _Snapshot.Permanent)
-			.Select(_Snapshot => _Snapshot.ID)
-			.ToList();
-	}
-
-	public string GetURL(string _BannerID)
-	{
-		BannerSnapshot bannerSnapshot = GetBannerSnapshot(_BannerID);
-		
-		if (bannerSnapshot == null)
-		{
-			Debug.LogErrorFormat("[ApplicationProcessor] Get banner URL failed. Banner snapshot with ID '{0}' is null.", _BannerID);
-			return string.Empty;
-		}
-		
-		return bannerSnapshot.URL;
-	}
-
-	public bool IsPermanent(string _BannerID)
-	{
-		BannerSnapshot bannerSnapshot = GetBannerSnapshot(_BannerID);
-		
-		if (bannerSnapshot == null)
-		{
-			Debug.LogErrorFormat("[ApplicationProcessor] Get banner permanent flag failed. Banner snapshot with ID '{0}' is null.", _BannerID);
-			return false;
-		}
-		
-		return bannerSnapshot.Permanent;
-	}
-
-	async void OnApplicationUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
 		Debug.Log("[ApplicationProcessor] Updating application data...");
 		
-		await FetchApplication();
+		await Fetch();
 		
 		Debug.Log("[ApplicationProcessor] Update application data complete.");
 		
 		m_SignalBus.Fire<ApplicationDataUpdateSignal>();
 	}
 
-	async Task FetchApplication()
+	async Task Fetch()
 	{
-		DataSnapshot applicationSnapshot = await m_ApplicationData.GetValueAsync(15000, 4);
+		DataSnapshot dataSnapshot = await m_Data.GetValueAsync(15000, 4);
 		
-		if (applicationSnapshot == null)
+		if (dataSnapshot == null)
 		{
 			Debug.LogError("[ApplicationProcessor] Fetch application failed.");
 			return;
 		}
 		
-		m_ApplicationSnapshot = new ApplicationSnapshot(applicationSnapshot);
-		
-		m_BannerSnapshots.Clear();
-		
-		DataSnapshot bannersSnapshot = applicationSnapshot.Child("banners");
-		if (bannersSnapshot.Exists)
-		{
-			foreach (DataSnapshot bannerSnapshot in bannersSnapshot.Children)
-				m_BannerSnapshots.Add(new BannerSnapshot(bannerSnapshot));
-		}
+		m_Snapshot = new ApplicationSnapshot(dataSnapshot);
 	}
 
 	void TryClearCache()
 	{
 		(int sourceMajor, int sourceMinor, int sourcePatch) = GetVersion(CacheVersion);
-		(int targetMajor, int targetMinor, int targetPatch) = GetVersion(m_ApplicationSnapshot.Version);
+		(int targetMajor, int targetMinor, int targetPatch) = GetVersion(m_Snapshot.Version);
 		
 		if (sourceMajor != targetMajor || sourceMinor != targetMinor || sourcePatch != targetPatch)
 			return;
@@ -180,7 +125,7 @@ public class ApplicationProcessor
 			foreach (string directory in directories)
 				Directory.Delete(directory, true);
 			
-			CacheVersion = m_ApplicationSnapshot.Version;
+			CacheVersion = m_Snapshot.Version;
 			
 			Debug.LogError("[ApplicationProcessor] Clear cache success.");
 		}
@@ -191,7 +136,7 @@ public class ApplicationProcessor
 		}
 	}
 
-	(int Major, int Minor, int Build) GetVersion(string _Version)
+	static (int Major, int Minor, int Patch) GetVersion(string _Version)
 	{
 		if (string.IsNullOrEmpty(_Version))
 			return (0, 0, 0);
@@ -217,16 +162,5 @@ public class ApplicationProcessor
 			patch = 0;
 		
 		return (major, minor, patch);
-	}
-
-	BannerSnapshot GetBannerSnapshot(string _BannerID)
-	{
-		if (string.IsNullOrEmpty(_BannerID))
-		{
-			Debug.LogError("[ApplicationProcessor] Get banner snapshot failed. Banner ID is null or empty.");
-			return null;
-		}
-		
-		return m_BannerSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _BannerID);
 	}
 }

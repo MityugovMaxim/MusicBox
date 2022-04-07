@@ -1,32 +1,56 @@
+using System;
+using AudioBox.ASF;
 using UnityEngine;
 using Zenject;
 
-[RequireComponent(typeof(Animator))]
 public abstract class UIIndicator : UIEntity
 {
 	public abstract UIHandle Handle { get; }
 
-	protected Animator Animator
+	public RectTransform Container { get; private set; }
+
+	public Rect ClipRect { get; set; }
+
+	public Rect ViewRect
 	{
-		get
+		get => m_ViewRect;
+		set
 		{
-			if (m_Animator == null)
-				m_Animator = GetComponent<Animator>();
-			return m_Animator;
+			if (m_ViewRect.position != value.position)
+				Transform.localPosition = value.center;
+			
+			if (m_ViewRect.size != value.size)
+				RectTransform.sizeDelta = value.size;
+			
+			m_ViewRect = value;
 		}
 	}
 
-	protected SignalBus   SignalBus   { get; private set; }
-	protected FXProcessor FXProcessor { get; private set; }
+	protected Animator    Animator    => m_Animator;
+	protected SignalBus   SignalBus   => m_SignalBus;
+	protected FXProcessor FXProcessor => m_FXProcessor;
 
-	Animator m_Animator;
+	[SerializeField] Animator m_Animator;
 
-	[Inject]
-	public void Construct(SignalBus _SignalBus, FXProcessor _FXProcessor)
+	[Inject] SignalBus   m_SignalBus;
+	[Inject] FXProcessor m_FXProcessor;
+
+	Rect m_ViewRect;
+
+	ASFClip         m_Clip;
+	Action<ASFClip> m_Callback;
+
+	public void Setup(RectTransform _Container, ASFClip _Clip, Action<ASFClip> _Callback)
 	{
-		SignalBus   = _SignalBus;
-		FXProcessor = _FXProcessor;
-		
-		Animator.keepAnimatorControllerStateOnDisable = true;
+		Container  = _Container;
+		m_Clip     = _Clip;
+		m_Callback = _Callback;
+	}
+
+	public abstract void Restore();
+
+	protected void InvokeCallback()
+	{
+		m_Callback?.Invoke(m_Clip);
 	}
 }

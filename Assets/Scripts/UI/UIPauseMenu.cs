@@ -8,102 +8,87 @@ public class UIPauseMenu : UIMenu
 	const int RESTART_ADS_COUNT = 2;
 	const int LEAVE_ADS_COUNT   = 3;
 
-	[SerializeField] UILevelThumbnail m_Thumbnail;
-	[SerializeField] UIHapticState    m_HapticState;
+	[SerializeField] UISongImage   m_Image;
+	[SerializeField] UISongLabel   m_Label;
+	[SerializeField] UIHapticState m_HapticState;
 
-	ProfileProcessor   m_ProfileProcessor;
-	LevelProcessor     m_LevelProcessor;
-	LevelController    m_LevelController;
-	AdsProcessor       m_AdsProcessor;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] SongController     m_SongController;
+	[Inject] AdsProcessor       m_AdsProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	string m_LevelID;
+	string m_SongID;
 	int    m_RestartAdsCount;
 	int    m_LeaveAdsCount;
 
-	[Inject]
-	public void Construct(
-		ProfileProcessor   _ProfileProcessor,
-		LevelProcessor     _LevelProcessor,
-		LevelController    _LevelController,
-		AdsProcessor       _AdsProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_LevelProcessor     = _LevelProcessor;
-		m_LevelController    = _LevelController;
-		m_AdsProcessor       = _AdsProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
-
 	public void Setup(string _LevelID)
 	{
-		m_LevelID = _LevelID;
+		m_SongID = _LevelID;
 		
-		m_Thumbnail.Setup(m_LevelID);
+		m_Image.Setup(m_SongID);
+		m_Label.Setup(m_SongID);
 		
 		m_HapticState.Setup();
 	}
 
 	public async void Restart()
 	{
-		m_StatisticProcessor.LogPauseMenuRestartClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_StatisticProcessor.LogPauseMenuRestartClick(m_SongID);
 		
 		if (!await ProcessRestartAds())
 			return;
 		
-		m_LevelController.Restart();
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		m_SongController.Restart();
 		
 		await m_MenuProcessor.Hide(MenuType.PauseMenu);
 		
-		m_LevelController.Play();
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	public async void Leave()
 	{
-		m_StatisticProcessor.LogPauseMenuLeaveClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_StatisticProcessor.LogPauseMenuLeaveClick(m_SongID);
 		
 		await ProcessLeaveAds();
 		
-		m_LevelController.Remove();
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Levels);
+			mainMenu.Select(MainMenuPageType.Songs);
 		
-		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
-		if (levelMenu != null)
-			levelMenu.Setup(m_LevelID);
+		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
+		if (songMenu != null)
+			songMenu.Setup(m_SongID);
 		
-		await m_MenuProcessor.Show(MenuType.LevelMenu);
+		m_SongController.Leave();
+		
+		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 	}
 
-	public void Latency()
+	public async void Resume()
 	{
-		m_StatisticProcessor.LogPauseMenuLatencyClick(m_LevelID);
+		// TODO: Statistics
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		UILatencyMenu latencyMenu = m_MenuProcessor.GetMenu<UILatencyMenu>();
+		m_SongController.Resume();
 		
-		if (latencyMenu != null)
-			latencyMenu.Setup(m_LevelID);
+		await m_MenuProcessor.Hide(MenuType.PauseMenu);
 		
-		m_MenuProcessor.Show(MenuType.LatencyMenu);
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	public async void Latency()
+	{
+		m_StatisticProcessor.LogPauseMenuLatencyClick(m_SongID);
+		
+		await m_MenuProcessor.Show(MenuType.LatencyMenu);
 	}
 
 	protected override void OnHideStarted()
@@ -117,7 +102,7 @@ public class UIPauseMenu : UIMenu
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_LevelProcessor.GetMode(m_LevelID);
+		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
 		
 		if (levelMode == LevelMode.Ads)
 		{

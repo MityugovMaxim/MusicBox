@@ -55,7 +55,6 @@ Shader "UI/Pattern"
 			#pragma multi_compile_local _ UNITY_UI_CLIP_RECT
 			#pragma multi_compile_local _ UNITY_UI_ALPHACLIP
 
-			#include "UIMask.cginc"
 			#include "UnityCG.cginc"
 			#include "Math.cginc"
 
@@ -72,7 +71,6 @@ Shader "UI/Pattern"
 				half2 uv      : TEXCOORD0;
 				half2 mask    : TEXCOORD1;
 				half2 data    : TEXCOORD2;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct fragData
@@ -80,8 +78,6 @@ Shader "UI/Pattern"
 				float4 vertex  : SV_POSITION;
 				fixed4 color   : COLOR;
 				float2 uv      : TEXCOORD0;
-				half4  mask    : TEXCOORD1;
-				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			sampler2D _MainTex;
@@ -95,14 +91,12 @@ Shader "UI/Pattern"
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
-				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				
 				const int count = 15;
 				const half2 uv = (IN.uv * 2 - 1) / half2(1, _ScreenParams.x / _ScreenParams.y);
 				
 				OUT.uv = rotate45(uv, half2(0, 0)) * count;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
 				OUT.color = IN.color;
 				return OUT;
 			}
@@ -125,15 +119,6 @@ Shader "UI/Pattern"
 				color.rgb *= color.a * val + color.a * ring * val * 5 + ring * smoothstep(0.065, 0.07, val);
 				
 				color *= lerp(_SourceColor, _TargetColor, grayscale(color) * 3);
-				
-				#ifdef UNITY_UI_CLIP_RECT
-				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-				color.a *= m.x * m.y;
-				#endif
-				
-				#ifdef UNITY_UI_ALPHACLIP
-				clip (color.a - 0.001);
-				#endif
 				
 				return color;
 			}

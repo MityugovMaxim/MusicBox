@@ -42,33 +42,15 @@ public class UIMultiplierIndicator : UIEntity, IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelComboSignal>(RegisterCombo);
+		m_SignalBus.Subscribe<SongComboSignal>(RegisterCombo);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelComboSignal>(RegisterCombo);
+		m_SignalBus.Unsubscribe<SongComboSignal>(RegisterCombo);
 	}
 
-	void RegisterLevelStart()
-	{
-		ProcessMultiplier(1, true);
-		
-		ProcessProgress(0, true);
-	}
-
-	void RegisterLevelRestart()
-	{
-		ProcessMultiplier(1, true);
-		
-		ProcessProgress(0, true);
-	}
-
-	void RegisterCombo(LevelComboSignal _Signal)
+	void RegisterCombo(SongComboSignal _Signal)
 	{
 		ProcessMultiplier(_Signal.Multiplier);
 		

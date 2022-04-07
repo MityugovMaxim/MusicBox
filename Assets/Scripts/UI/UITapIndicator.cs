@@ -1,16 +1,25 @@
+using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UITapIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<UITapIndicator>
+	public class Pool : UIIndicatorPool<UITapIndicator>
 	{
-		protected override void Reinitialize(UITapIndicator _Item)
+		protected override void OnSpawned(UITapIndicator _Item)
+		{
+			base.OnSpawned(_Item);
+			
+			_Item.Restore();
+		}
+
+		protected override void OnDespawned(UITapIndicator _Item)
 		{
 			_Item.Restore();
+			
+			base.OnDespawned(_Item);
 		}
 	}
 
@@ -22,38 +31,34 @@ public class UITapIndicator : UIIndicator
 
 	[SerializeField] UITapHandle m_Handle;
 
-	public void Setup()
+	public override void Restore()
 	{
-		if (m_Handle != null)
-			m_Handle.Setup(this);
-	}
-
-	public void Restore()
-	{
-		if (m_Handle != null)
-			m_Handle.StopReceiveInput();
+		m_Handle.Restore();
 		
 		Animator.ResetTrigger(m_SuccessParameterID);
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetTrigger(m_RestoreParameterID);
 		
-		if (gameObject.activeInHierarchy)
-			Animator.Update(0);
+		Animator.Update(0);
 	}
 
 	public void Success(float _Progress)
 	{
-		SignalBus.Fire(new TapSuccessSignal(_Progress));
+		Animator.SetTrigger(m_SuccessParameterID);
 		
 		FXProcessor.TapFX(Handle.GetWorldRect());
 		
-		Animator.SetTrigger(m_SuccessParameterID);
+		InvokeCallback();
+		
+		SignalBus.Fire(new TapSuccessSignal(_Progress));
 	}
 
 	public void Fail(float _Progress)
 	{
-		SignalBus.Fire(new TapFailSignal(_Progress));
-		
 		Animator.SetTrigger(m_FailParameterID);
+		
+		InvokeCallback();
+		
+		SignalBus.Fire(new TapFailSignal(_Progress));
 	}
 }

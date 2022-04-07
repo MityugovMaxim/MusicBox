@@ -38,8 +38,6 @@ public class UIErrorMenu : UIMenu
 
 	public async void Close()
 	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
 		await m_MenuProcessor.Hide(MenuType.ErrorMenu);
 		
 		Action action = m_Action;

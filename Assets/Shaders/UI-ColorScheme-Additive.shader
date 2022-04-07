@@ -85,7 +85,7 @@ Shader "UI/ColorScheme/Additive"
 				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.uv = IN.uv;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				return OUT;
 			}

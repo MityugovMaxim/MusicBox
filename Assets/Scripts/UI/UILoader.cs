@@ -16,8 +16,10 @@ public class UILoader : UIEntity
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 	}
 
-	public void Restore()
+	protected override void OnEnable()
 	{
+		base.OnEnable();
+		
 		if (m_Animator != null)
 			m_Animator.SetTrigger(m_RestoreParameterID);
 	}

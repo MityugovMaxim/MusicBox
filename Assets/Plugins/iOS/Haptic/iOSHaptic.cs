@@ -53,9 +53,6 @@ public class iOSHaptic : Haptic
 		
 		switch (_Type)
 		{
-			case Type.Default:
-				Handheld.Vibrate();
-				break;
 			case Type.Selection:
 				HapticSelection();
 				return;

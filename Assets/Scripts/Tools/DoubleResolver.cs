@@ -19,13 +19,13 @@ public class DoubleResolver : GotoResolver, IInitializable, IDisposable
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Subscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Unsubscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	public override bool Resolve()

@@ -87,7 +87,7 @@
 				OUT.color  = IN.color * _Color;
 				OUT.uv     = IN.rect.xy + IN.rect.zw * IN.uv;
 				OUT.rect   = IN.rect;
-				OUT.mask   = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				
 				return OUT;
 			}

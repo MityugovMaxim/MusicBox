@@ -47,7 +47,7 @@ public abstract class UIImage : MaskableGraphic
 
 	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
 	{
-		Rect    rect = GetPixelAdjustedRect();
+		Rect    rect = rectTransform.rect;
 		Vector4 mask = GetMask();
 		Vector4 uv   = m_Sprite != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Sprite) : new Vector4(0, 0, 1, 1);
 		

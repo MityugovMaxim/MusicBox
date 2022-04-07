@@ -40,7 +40,7 @@ public static class AppleAuth
 		#if UNITY_IOS && !UNITY_EDITOR
 		AppleAuthManager_Login(InvokeLoginSuccess, InvokeLoginCanceled, InvokeLoginFailed);
 		#else
-		InvokeLoginFailed("[AppleAuthManager] Login failed. Apple sign in is not supported.");
+		InvokeLoginFailed("Login failed. Apple sign in is not supported.");
 		#endif
 		
 		return completionSource.Task;

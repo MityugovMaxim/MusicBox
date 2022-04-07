@@ -62,7 +62,6 @@ Shader "UI/ColorScheme/Default"
 				float4 vertex : POSITION;
 				float4 color  : COLOR;
 				float2 uv     : TEXCOORD0;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct fragData
@@ -71,7 +70,6 @@ Shader "UI/ColorScheme/Default"
 				fixed4 color  : COLOR;
 				float2 uv     : TEXCOORD0;
 				half4  mask   : TEXCOORD1;
-				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			sampler2D _MainTex;
@@ -85,14 +83,14 @@ Shader "UI/ColorScheme/Default"
 				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.uv = IN.uv;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				return OUT;
 			}
 
 			fixed4 frag(const fragData IN) : SV_Target
 			{
-				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
+				half4 color = tex2D(_MainTex, IN.uv) * IN.color;
 				
 				#ifdef BACKGROUND_SCHEME
 				color.rgb *= BACKGROUND_BY_RANGE(color, 0.15, 0.8);
@@ -100,16 +98,7 @@ Shader "UI/ColorScheme/Default"
 				color.rgb *= FOREGROUND_BY_RANGE(color, 0.15, 0.8);
 				#endif
 				
-				#ifdef UNITY_UI_CLIP_RECT
-				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-				color.a *= m.x * m.y;
-				#endif
-				
-				#ifdef UNITY_UI_ALPHACLIP
-				clip (color.a - 0.001);
-				#endif
-				
-				return color;
+				return useUIMask(color, IN.mask);
 			}
 			ENDCG
 		}

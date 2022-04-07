@@ -8,29 +8,19 @@ public class UIScoreIndicator : UIEntity, IInitializable, IDisposable
 	[SerializeField] UIUnitLabel m_ScoreLabel;
 	[SerializeField] float       m_Duration = 0.15f;
 
-	SignalBus m_SignalBus;
+	[Inject] SignalBus m_SignalBus;
 
 	long        m_Score;
 	IEnumerator m_ScoreRoutine;
 
-	[Inject]
-	public void Construct(SignalBus _SignalBus)
+	void IInitializable.Initialize()
 	{
-		m_SignalBus = _SignalBus;
+		m_SignalBus.Subscribe<SongScoreSignal>(RegisterLevelScore);
 	}
 
-	public void Initialize()
+	void IDisposable.Dispose()
 	{
-		m_SignalBus.Subscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Subscribe<LevelScoreSignal>(RegisterLevelScore);
-	}
-
-	public void Dispose()
-	{
-		m_SignalBus.Unsubscribe<LevelStartSignal>(RegisterLevelStart);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
-		m_SignalBus.Unsubscribe<LevelScoreSignal>(RegisterLevelScore);
+		m_SignalBus.Unsubscribe<SongScoreSignal>(RegisterLevelScore);
 	}
 
 	void RegisterLevelStart()
@@ -43,7 +33,7 @@ public class UIScoreIndicator : UIEntity, IInitializable, IDisposable
 		Restore();
 	}
 
-	void RegisterLevelScore(LevelScoreSignal _Signal)
+	void RegisterLevelScore(SongScoreSignal _Signal)
 	{
 		SetScore(_Signal.Score);
 	}

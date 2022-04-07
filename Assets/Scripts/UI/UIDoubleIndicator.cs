@@ -1,18 +1,12 @@
+using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UIDoubleIndicator : UIIndicator
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<UIDoubleIndicator>
-	{
-		protected override void Reinitialize(UIDoubleIndicator _Item)
-		{
-			_Item.Restore();
-		}
-	}
+	public class Pool : UIIndicatorPool<UIDoubleIndicator> { }
 
 	public override UIHandle Handle => m_Handle;
 
@@ -22,38 +16,34 @@ public class UIDoubleIndicator : UIIndicator
 
 	[SerializeField] UIDoubleHandle m_Handle;
 
-	public void Setup()
+	public override void Restore()
 	{
-		if (m_Handle != null)
-			m_Handle.Setup(this);
-	}
-
-	public void Restore()
-	{
-		if (m_Handle != null)
-			m_Handle.StopReceiveInput();
+		m_Handle.Restore();
 		
 		Animator.ResetTrigger(m_SuccessParameterID);
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetTrigger(m_RestoreParameterID);
 		
-		if (gameObject.activeInHierarchy)
-			Animator.Update(0);
+		Animator.Update(0);
 	}
 
 	public void Success(float _Progress)
 	{
-		SignalBus.Fire(new DoubleSuccessSignal(_Progress));
+		Animator.SetTrigger(m_SuccessParameterID);
 		
 		FXProcessor.DoubleFX(Handle.GetWorldRect());
 		
-		Animator.SetTrigger(m_SuccessParameterID);
+		InvokeCallback();
+		
+		SignalBus.Fire(new DoubleSuccessSignal(_Progress));
 	}
 
 	public void Fail(float _Progress)
 	{
-		SignalBus.Fire(new DoubleFailSignal(_Progress));
-		
 		Animator.SetTrigger(m_FailParameterID);
+		
+		InvokeCallback();
+		
+		SignalBus.Fire(new DoubleFailSignal(_Progress));
 	}
 }

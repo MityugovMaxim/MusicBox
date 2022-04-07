@@ -94,7 +94,7 @@ Shader "UI/Wave"
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.uv = IN.uv;
 				OUT.rect = IN.rect;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.wave = IN.data;
 				OUT.color = IN.color * _Color;
 				return OUT;

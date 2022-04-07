@@ -19,13 +19,13 @@ public class HoldResolver : GotoResolver, IInitializable, IDisposable
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Subscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Subscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	void IDisposable.Dispose()
 	{
 		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Unsubscribe<LevelRestartSignal>(RegisterLevelRestart);
+		m_SignalBus.Unsubscribe<SongRestartSignal>(RegisterLevelRestart);
 	}
 
 	public override bool Resolve()

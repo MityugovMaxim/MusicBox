@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandler
+public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandler, IDeselectHandler
 {
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField] RectTransform  m_Content;
@@ -127,7 +127,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		m_TokenSource?.Dispose();
 	}
 
-	public void OnDrop(PointerEventData _EventData)
+	void IDropHandler.OnDrop(PointerEventData _EventData)
 	{
 		const float anchorThreshold = 0.7f;
 		const float speedThreshold  = 0.4f;
@@ -141,6 +141,18 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		else if (speed < -speedThreshold)
 			Shrink();
 		else if (anchor.y > anchorThreshold)
+			Expand();
+		else
+			Shrink();
+	}
+
+	void IDeselectHandler.OnDeselect(BaseEventData eventData)
+	{
+		const float anchorThreshold = 0.7f;
+		
+		Vector2 anchor = m_Content.anchorMax;
+		
+		if (anchor.y > anchorThreshold)
 			Expand();
 		else
 			Shrink();

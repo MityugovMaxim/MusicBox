@@ -10,17 +10,17 @@ public class UIMainStorePage : UIMainMenuPage
 
 	SignalBus        m_SignalBus;
 	ProfileProcessor m_ProfileProcessor;
-	UIStoreItem.Pool m_ItemPool;
+	UIProductItem.Pool m_ItemPool;
 
 	List<string> m_ProductIDs;
 
-	readonly List<UIStoreItem> m_Items = new List<UIStoreItem>();
+	readonly List<UIProductItem> m_Items = new List<UIProductItem>();
 
 	[Inject]
 	public void Construct(
 		SignalBus        _SignalBus,
 		ProfileProcessor _ProfileProcessor,
-		UIStoreItem.Pool _ItemPool
+		UIProductItem.Pool _ItemPool
 	)
 	{
 		m_SignalBus        = _SignalBus;
@@ -33,18 +33,18 @@ public class UIMainStorePage : UIMainMenuPage
 		Refresh();
 		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
 	void Refresh()
 	{
-		foreach (UIStoreItem item in m_Items)
+		foreach (UIProductItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
@@ -55,11 +55,12 @@ public class UIMainStorePage : UIMainMenuPage
 		
 		foreach (string productID in m_ProductIDs)
 		{
-			UIStoreItem item = m_ItemPool.Spawn();
+			if (string.IsNullOrEmpty(productID))
+				continue;
+			
+			UIProductItem item = m_ItemPool.Spawn(m_Container);
 			
 			item.Setup(productID);
-			
-			item.RectTransform.SetParent(m_Container, false);
 			
 			m_Items.Add(item);
 		}

@@ -8,40 +8,24 @@ public class UIMainOffersPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 
 	[SerializeField] RectTransform m_Container;
-	[SerializeField] UIGroup       m_ItemsGroup;
-	[SerializeField] UIGroup       m_EmptyGroup;
 
-	SignalBus        m_SignalBus;
-	ProfileProcessor m_ProfileProcessor;
-	UIOfferItem.Pool m_ItemPool;
-
-	List<string> m_OfferIDs;
+	[Inject] SignalBus        m_SignalBus;
+	[Inject] OffersManager    m_OffersManager;
+	[Inject] UIOfferItem.Pool m_ItemPool;
 
 	readonly List<UIOfferItem> m_Items = new List<UIOfferItem>();
-
-	[Inject]
-	public void Construct(
-		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor,
-		UIOfferItem.Pool _ItemPool
-	)
-	{
-		m_SignalBus        = _SignalBus;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_ItemPool         = _ItemPool;
-	}
 
 	protected override void OnShowStarted()
 	{
 		Refresh(false);
 		
-		m_SignalBus.Subscribe<OfferDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<OffersDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_SignalBus.Unsubscribe<OfferDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 	}
 
@@ -53,33 +37,41 @@ public class UIMainOffersPage : UIMainMenuPage
 	async void Refresh(bool _Instant)
 	{
 		foreach (UIOfferItem item in m_Items)
-		{
-			item.Hide(true);
 			m_ItemPool.Despawn(item);
-		}
 		m_Items.Clear();
 		
-		m_OfferIDs = m_ProfileProcessor.GetVisibleOfferIDs();
+		List<string> availableOfferIDs = m_OffersManager.GetAvailableOfferIDs();
 		
-		if (m_OfferIDs == null || m_OfferIDs.Count == 0)
+		if (availableOfferIDs != null)
 		{
-			m_ItemsGroup.Hide();
-			m_EmptyGroup.Show();
-			return;
+			foreach (string offerID in availableOfferIDs)
+			{
+				if (string.IsNullOrEmpty(offerID))
+					continue;
+				
+				UIOfferItem item = m_ItemPool.Spawn(m_Container);
+				
+				item.Setup(offerID);
+				
+				m_Items.Add(item);
+			}
 		}
 		
-		m_ItemsGroup.Show();
-		m_EmptyGroup.Hide();
+		List<string> collectedOfferIDs = m_OffersManager.GetCollectedOfferIDs();
 		
-		foreach (string offerID in m_OfferIDs)
+		if (collectedOfferIDs != null)
 		{
-			UIOfferItem item = m_ItemPool.Spawn();
-			
-			item.Setup(offerID);
-			
-			item.RectTransform.SetParent(m_Container, false);
-			
-			m_Items.Add(item);
+			foreach (string offerID in collectedOfferIDs)
+			{
+				if (string.IsNullOrEmpty(offerID))
+					continue;
+				
+				UIOfferItem item = m_ItemPool.Spawn(m_Container);
+				
+				item.Setup(offerID);
+				
+				m_Items.Add(item);
+			}
 		}
 		
 		for (int i = m_Items.Count - 1; i >= 0; i--)

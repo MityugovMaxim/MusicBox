@@ -1,80 +1,96 @@
 using System.Collections.Generic;
+using AudioBox.ASF;
 using UnityEngine;
 using Zenject;
 
-public class UIHoldTrack : UITrack<HoldClip>
+public class UIHoldTrack : ASFTrackContext<ASFHoldClip>
 {
-	readonly Dictionary<HoldClip, UIHoldIndicator> m_Indicators = new Dictionary<HoldClip, UIHoldIndicator>();
+	[Inject] UIHoldIndicator.Pool m_ItemPool;
+	[Inject] UIInputReceiver      m_InputReceiver;
 
-	UIInputReceiver      m_InputReceiver;
-	UIHoldIndicator.Pool m_IndicatorPool;
+	readonly Dictionary<ASFHoldClip, UIHoldIndicator> m_Items = new Dictionary<ASFHoldClip, UIHoldIndicator>();
+	readonly HashSet<ASFClip>                         m_Used  = new HashSet<ASFClip>();
 
-	[Inject]
-	public void Construct(UIInputReceiver _InputReceiver, UIHoldIndicator.Pool _IndicatorPool)
+	public override void AddClip(ASFHoldClip _Clip, Rect _ClipRect, Rect _ViewRect)
 	{
-		m_InputReceiver = _InputReceiver;
-		m_IndicatorPool = _IndicatorPool;
-	}
-
-	protected override void RemoveIndicator(HoldClip _Clip)
-	{
-		if (_Clip == null || !m_Indicators.ContainsKey(_Clip))
+		if (m_Used.Contains(_Clip))
 			return;
 		
-		UIHoldIndicator indicator = m_Indicators[_Clip];
+		UIHoldIndicator item = m_ItemPool.Spawn(RectTransform, _Clip, UseClip);
 		
-		if (indicator == null)
+		if (item == null)
 			return;
 		
-		indicator.Restore();
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
 		
-		m_Indicators.Remove(_Clip);
+		item.Build(_Clip);
+		item.Process(_Clip.Phase);
 		
-		m_InputReceiver.UnregisterIndicator(indicator);
-		
-		m_IndicatorPool.Despawn(indicator);
-	}
-
-	protected override void DrawIndicators(List<HoldClip> _Clips)
-	{
-		Vector2 anchor = GetAnchor();
-		
-		foreach (HoldClip clip in _Clips)
-		{
-			if (!m_Indicators.ContainsKey(clip))
-				m_Indicators[clip] = CreateIndicator(clip);
-			
-			UIHoldIndicator indicator = m_Indicators[clip];
-			
-			if (indicator == null)
-				continue;
-			
-			indicator.RectTransform.anchorMin        = anchor;
-			indicator.RectTransform.anchorMax        = anchor;
-			indicator.RectTransform.anchoredPosition = new Vector2(0, GetDistance(clip.MinTime));
-			
-			float progress = Mathf.InverseLerp(clip.MinTime, clip.MaxTime, Time);
-			
-			indicator.Process(progress);
-		}
-	}
-
-	UIHoldIndicator CreateIndicator(HoldClip _Clip)
-	{
-		UIHoldIndicator indicator = m_IndicatorPool.Spawn();
-		
-		if (indicator == null)
-			return null;
-		
-		indicator.RectTransform.SetParent(RectTransform, false);
-		
-		float duration = GetDistance(_Clip.MaxTime) - GetDistance(_Clip.MinTime);
-		
-		indicator.Setup(_Clip, duration);
+		m_Items[_Clip] = item;
 		
 		if (m_InputReceiver != null)
-			m_InputReceiver.RegisterIndicator(indicator);
+			m_InputReceiver.RegisterIndicator(item);
+	}
+
+	public override void RemoveClip(ASFHoldClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
 		
-		return indicator;
+		UIHoldIndicator item = m_Items[_Clip];
+		
+		m_Items.Remove(_Clip);
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+		
+		item.Process(_Clip.Phase);
+		
+		m_ItemPool.Despawn(item);
+		
+		if (m_InputReceiver != null)
+			m_InputReceiver.UnregisterIndicator(item);
+	}
+
+	public override void ProcessClip(ASFHoldClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
+		
+		UIHoldIndicator item = m_Items[_Clip];
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+		
+		item.Process(_Clip.Phase);
+	}
+
+	public override void Clear()
+	{
+		foreach (UIHoldIndicator item in m_Items.Values)
+		{
+			if (item == null)
+				continue;
+			
+			m_ItemPool.Despawn(item);
+			
+			if (m_InputReceiver != null)
+				m_InputReceiver.UnregisterIndicator(item);
+		}
+		
+		m_Items.Clear();
+		m_Used.Clear();
+	}
+
+	void UseClip(ASFClip _Clip)
+	{
+		m_Used.Add(_Clip);
 	}
 }

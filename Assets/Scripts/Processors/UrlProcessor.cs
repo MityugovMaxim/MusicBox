@@ -77,11 +77,14 @@ public class UrlProcessor
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		
 		if (_Parameters == null || !_Parameters.TryGetValue("product_id", out string productID))
+		{
+			await SelectMainPage(MainMenuPageType.Store, _Instant);
 			return;
+		}
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
+		await m_MenuProcessor.Hide(MenuType.SongMenu, _Instant);
 		
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
@@ -89,8 +92,6 @@ public class UrlProcessor
 			productMenu.Setup(productID);
 		
 		await m_MenuProcessor.Show(MenuType.ProductMenu, _Instant);
-		
-		mainMenu.Select(MainMenuPageType.Store, true);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
@@ -104,23 +105,26 @@ public class UrlProcessor
 		if (mainMenu == null || !mainMenu.Shown)
 			return;
 		
-		UILevelMenu levelMenu = m_MenuProcessor.GetMenu<UILevelMenu>();
+		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		
 		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
+		{
+			await SelectMainPage(MainMenuPageType.Songs, _Instant);
 			return;
+		}
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
+		await m_MenuProcessor.Hide(MenuType.SongMenu, _Instant);
 		
-		if (levelMenu != null)
-			levelMenu.Setup(levelID);
+		if (songMenu != null)
+			songMenu.Setup(levelID);
 		
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
-		await m_MenuProcessor.Show(MenuType.LevelMenu, _Instant);
+		await m_MenuProcessor.Show(MenuType.SongMenu, _Instant);
 		
-		mainMenu.Select(MainMenuPageType.Levels, _Instant);
+		mainMenu.Select(MainMenuPageType.Songs, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
@@ -149,7 +153,7 @@ public class UrlProcessor
 		if (mainMenu == null || !mainMenu.Shown)
 			return;
 		
-		await m_MenuProcessor.Hide(MenuType.LevelMenu, _Instant);
+		await m_MenuProcessor.Hide(MenuType.SongMenu, _Instant);
 		
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		

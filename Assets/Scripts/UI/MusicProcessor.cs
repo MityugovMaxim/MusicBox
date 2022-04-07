@@ -8,6 +8,8 @@ public class MusicProcessor : MonoBehaviour
 	const float PLAY_FADE_DURATION = 0.5f;
 	const float STOP_FADE_DURATION = 0.25f;
 
+	public bool Playing => m_AudioSource.isPlaying;
+
 	AudioSource m_AudioSource;
 
 	StorageProcessor m_StorageProcessor;
@@ -59,7 +61,7 @@ public class MusicProcessor : MonoBehaviour
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		AudioClip audioClip = await m_StorageProcessor.LoadAudioClip(_Path, token);
+		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(_Path, token);
 		
 		if (audioClip == null || token.IsCancellationRequested)
 			return;

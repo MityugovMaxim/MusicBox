@@ -4,39 +4,33 @@ public class UITapHandle : UIHandle
 {
 	protected override bool Processed => m_Processed;
 
-	bool           m_Interactable;
-	bool           m_Processed;
-	UITapIndicator m_Indicator;
+	[SerializeField] UITapIndicator m_Indicator;
 
-	public void Setup(UITapIndicator _Indicator)
+	bool m_Processed;
+
+	public override void EnterZone()
 	{
-		m_Indicator = _Indicator;
+		m_Processed = false;
 	}
 
-	public override void StartReceiveInput()
+	public override void ExitZone()
 	{
-		if (m_Interactable)
+		if (m_Processed)
 			return;
 		
-		m_Interactable = true;
-		m_Processed    = false;
+		ProcessFail(0);
+		
+		m_Processed = false;
 	}
 
-	public override void StopReceiveInput()
+	public override void Restore()
 	{
-		if (!m_Interactable)
-			return;
-		
-		if (!m_Processed)
-			ProcessFail(0);
-		
-		m_Interactable = false;
-		m_Processed    = false;
+		m_Processed = false;
 	}
 
 	public override void TouchDown(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed)
+		if (m_Processed)
 			return;
 		
 		Rect rect = RectTransform.rect;
@@ -57,13 +51,11 @@ public class UITapHandle : UIHandle
 
 	void ProcessSuccess(float _Progress)
 	{
-		if (m_Indicator != null)
-			m_Indicator.Success(_Progress);
+		m_Indicator.Success(_Progress);
 	}
 
 	void ProcessFail(float _Progress)
 	{
-		if (m_Indicator != null)
-			m_Indicator.Fail(_Progress);
+		m_Indicator.Fail(_Progress);
 	}
 }

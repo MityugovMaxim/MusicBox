@@ -14,19 +14,19 @@ public static class BlurUtility
 
 	static Material m_Material;
 
-	public static Sprite Blur(
-		Sprite _Sprite,
-		float  _Scale      = 1,
-		int    _Iterations = 3 
+	public static Texture2D Blur(
+		Texture2D _Texture,
+		float     _Scale      = 1,
+		int       _Iterations = 3 
 	)
 	{
-		int width  = (int)_Sprite.rect.width;
-		int height = (int)_Sprite.rect.height;
+		int width  = _Texture.width;
+		int height = _Texture.height;
 		
 		RenderTexture source = RenderTexture.GetTemporary(width >> 1, height >> 1, 0);
 		RenderTexture target = RenderTexture.GetTemporary(width >> 2, height >> 2, 0);
 		
-		Graphics.Blit(_Sprite.texture, source);
+		Graphics.Blit(_Texture, source);
 		
 		for (int i = 0; i < _Iterations; i++)
 		{
@@ -59,11 +59,6 @@ public static class BlurUtility
 		RenderTexture.ReleaseTemporary(source);
 		RenderTexture.ReleaseTemporary(target);
 		
-		return Sprite.Create(
-			texture,
-			new Rect(2, 2, texture.width - 4, texture.height - 4),
-			new Vector2(0.5f, 0.5f),
-			1
-		);
+		return texture;
 	}
 }

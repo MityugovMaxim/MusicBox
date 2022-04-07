@@ -6,7 +6,7 @@ public class UIProductDiscount : UIGroup
 {
 	[SerializeField] TMP_Text m_Label;
 
-	ProductProcessor m_ProductProcessor;
+	[Inject] ProductsProcessor m_ProductsProcessor;
 
 	string m_ProductID;
 
@@ -17,17 +17,11 @@ public class UIProductDiscount : UIGroup
 		Hide(true);
 	}
 
-	[Inject]
-	public void Construct(ProductProcessor _ProductProcessor)
-	{
-		m_ProductProcessor = _ProductProcessor;
-	}
-
 	public void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
 		
-		float discount = m_ProductProcessor.GetDiscount(m_ProductID);
+		float discount = m_ProductsProcessor.GetDiscount(m_ProductID);
 		
 		if (Mathf.Approximately(discount, 0))
 			Hide();

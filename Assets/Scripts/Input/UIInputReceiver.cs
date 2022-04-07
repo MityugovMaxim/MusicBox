@@ -1,22 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Zenject;
 
-public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-	public override bool raycastTarget => true;
-
-	UIInputZone m_InputZone;
-
-	readonly UIVertex[] m_Vertices =
-	{
-		new UIVertex(),
-		new UIVertex(),
-		new UIVertex(),
-		new UIVertex(),
-	};
+	[SerializeField] RectTransform m_InputArea;
 
 	readonly Dictionary<int, Rect>           m_Pointers        = new Dictionary<int, Rect>();
 	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
@@ -24,12 +12,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 	readonly List<UIHandle>                  m_ActiveHandles   = new List<UIHandle>();
 
 	bool m_Processing;
-
-	[Inject]
-	public void Construct(UIInputZone _InputZone)
-	{
-		m_InputZone = _InputZone;
-	}
 
 	public void Process()
 	{
@@ -57,8 +39,6 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		if (m_Selection.ContainsKey(handle))
 			m_Selection.Remove(handle);
 		
-		handle.StopReceiveInput();
-		
 		m_InactiveHandles.Add(handle);
 	}
 
@@ -72,23 +52,8 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 		if (m_Selection.ContainsKey(handle))
 			m_Selection.Remove(handle);
 		
-		handle.StopReceiveInput();
-		
 		m_InactiveHandles.Remove(handle);
 		m_ActiveHandles.Remove(handle);
-	}
-
-	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
-	{
-		Rect rect = GetPixelAdjustedRect();
-		
-		m_Vertices[0].position = new Vector2(rect.xMin, rect.yMin);
-		m_Vertices[1].position = new Vector2(rect.xMin, rect.yMax);
-		m_Vertices[2].position = new Vector2(rect.xMax, rect.yMax);
-		m_Vertices[3].position = new Vector2(rect.xMax, rect.yMin);
-		
-		_VertexHelper.Clear();
-		_VertexHelper.AddUIVertexQuad(m_Vertices);
 	}
 
 	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
@@ -144,7 +109,7 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	Rect GetZoneArea(PointerEventData _EventData)
 	{
-		Rect rect = m_InputZone.GetWorldRect();
+		Rect rect = m_InputArea.GetWorldRect();
 		
 		Vector2 position = new Vector2(
 			_EventData.pointerCurrentRaycast.worldPosition.x,
@@ -163,6 +128,11 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 
 	void EnableHandles()
 	{
+		Rect rect = m_InputArea.GetWorldRect();
+		
+		float enterThreshold = rect.yMax;
+		float exitThreshold  = rect.yMin;
+		
 		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
 		{
 			UIHandle handle = m_InactiveHandles[i];
@@ -173,19 +143,31 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (!m_InputZone.RectTransform.Intersects(handle.RectTransform))
+			Rect handleRect = handle.GetWorldRect();
+			
+			if (handleRect.yMin > enterThreshold)
 				continue;
 			
-			handle.StartReceiveInput();
+			if (handleRect.yMax < exitThreshold)
+			{
+				handle.ExitZone();
+				m_InactiveHandles.RemoveAt(i);
+				continue;
+			}
 			
+			handle.EnterZone();
 			m_ActiveHandles.Add(handle);
-			
 			m_InactiveHandles.RemoveAt(i);
 		}
 	}
 
 	void DisableHandles()
 	{
+		Rect rect = m_InputArea.GetWorldRect();
+		
+		float enterThreshold = rect.yMax;
+		float exitThreshold  = rect.yMin;
+		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
 			UIHandle handle = m_ActiveHandles[i];
@@ -196,11 +178,20 @@ public class UIInputReceiver : Graphic, IPointerDownHandler, IPointerUpHandler, 
 				continue;
 			}
 			
-			if (m_InputZone.RectTransform.Intersects(handle.RectTransform))
+			Rect handleRect = handle.GetWorldRect();
+			
+			if (handleRect.yMin > enterThreshold)
+			{
+				handle.Restore();
+				m_ActiveHandles.RemoveAt(i);
+				m_InactiveHandles.Insert(0, handle);
+				continue;
+			}
+			
+			if (handleRect.yMax > exitThreshold)
 				continue;
 			
-			handle.StopReceiveInput();
-			
+			handle.ExitZone();
 			m_ActiveHandles.RemoveAt(i);
 		}
 	}

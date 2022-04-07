@@ -9,15 +9,16 @@ public abstract class UIHandle : UIEntity
 		if (Processed)
 			return false;
 		
-		Rect area = RectTransform.InverseTransformRect(_Rect);
-		Rect rect = RectTransform.rect;
+		Rect rect = RectTransform.InverseTransformRect(_Rect);
 		
-		return rect.Overlaps(area);
+		return RectTransform.rect.Overlaps(rect);
 	}
 
-	public abstract void StartReceiveInput();
+	public abstract void EnterZone();
 
-	public abstract void StopReceiveInput();
+	public abstract void ExitZone();
+
+	public abstract void Restore();
 
 	public abstract void TouchDown(int _ID, Rect _Area);
 

@@ -13,57 +13,52 @@ public class UIHoldHandle : UIHandle
 
 	protected override bool Processed => m_Processed;
 
-	[SerializeField] RectTransform m_Marker;
-	[SerializeField] RectOffset    m_Margin;
+	[SerializeField] UIHoldIndicator m_Indicator;
+	[SerializeField] RectTransform   m_Marker;
+	[SerializeField] RectOffset      m_Margin;
 
-	UIHoldIndicator m_Indicator;
-	bool            m_Interactable;
-	bool            m_Processed;
-	bool            m_Hold;
-	bool            m_Miss;
-	Rect            m_Area;
+	bool m_Processed;
+	bool m_Hold;
+	bool m_Miss;
+	Rect m_Area;
 
-	public void Setup(UIHoldIndicator _Indicator)
+	public override void EnterZone()
 	{
-		m_Indicator = _Indicator;
-		
+		m_Processed = false;
+		m_Hold      = false;
+		m_Miss      = false;
 		MinProgress = 0;
 		MaxProgress = 0;
 	}
 
-	public override void StartReceiveInput()
+	public override void ExitZone()
 	{
-		if (m_Interactable)
-			return;
-		
-		m_Interactable = true;
-		m_Processed    = false;
-		m_Hold         = false;
-		m_Miss         = false;
-		MinProgress    = 0;
-		MaxProgress    = 0;
-	}
-
-	public override void StopReceiveInput()
-	{
-		if (!m_Interactable)
-			return;
-		
 		if (m_Marker != null)
 			m_Marker.anchoredPosition = Vector2.zero;
 		
 		if (!m_Processed)
 			ProcessFail();
 		
-		m_Interactable = false;
-		m_Processed    = false;
-		m_Hold         = false;
-		m_Miss         = false;
+		m_Hold = false;
+		m_Miss = false;
+	}
+
+	public override void Restore()
+	{
+		if (m_Marker != null)
+			m_Marker.anchoredPosition = Vector2.zero;
+		
+		MinProgress = 0;
+		MaxProgress = 0;
+		
+		m_Processed = false;
+		m_Hold      = false;
+		m_Miss      = false;
 	}
 
 	public void Process(float _Phase)
 	{
-		if (!m_Interactable || m_Processed)
+		if (m_Processed)
 			return;
 		
 		if (m_Hold)
@@ -83,21 +78,22 @@ public class UIHoldHandle : UIHandle
 			MinProgress = _Phase;
 			MaxProgress = _Phase;
 			
-			Vector2 position = m_Indicator.GetMinPosition();
-			Rect    rect     = GetWorldRect();
+			Rect  indicatorRect = m_Indicator.GetWorldRect();
+			Rect  handleRect    = GetWorldRect();
+			float missThreshold = indicatorRect.yMin + handleRect.height;
 			
-			if (!m_Miss && !rect.Contains(position))
-			{
-				m_Miss = true;
-				
-				ProcessMiss();
-			}
+			if (m_Miss || handleRect.yMin < missThreshold)
+				return;
+			
+			m_Miss = true;
+			
+			ProcessMiss();
 		}
 	}
 
 	public override void TouchDown(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed || m_Hold)
+		if (m_Processed || m_Hold)
 			return;
 		
 		m_Hold = true;
@@ -108,7 +104,7 @@ public class UIHoldHandle : UIHandle
 
 	public override void TouchUp(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed || !m_Hold)
+		if (m_Processed || !m_Hold)
 			return;
 		
 		if (m_Marker != null)
@@ -117,18 +113,12 @@ public class UIHoldHandle : UIHandle
 		m_Hold      = false;
 		m_Processed = true;
 		
-		Vector2 position = m_Indicator.GetMaxPosition();
-		Rect    rect     = GetWorldRect();
-		
-		if (rect.Contains(position))
-			ProcessSuccess();
-		else
-			ProcessFail();
+		ProcessSuccess();
 	}
 
 	public override void TouchMove(int _ID, Rect _Area)
 	{
-		if (!m_Interactable || m_Processed || !m_Hold)
+		if (m_Processed || !m_Hold)
 			return;
 		
 		Rect rect = GetLocalRect(m_Margin);
@@ -151,25 +141,21 @@ public class UIHoldHandle : UIHandle
 
 	void ProcessHit()
 	{
-		if (m_Indicator != null)
-			m_Indicator.Hit(MinProgress, MaxProgress);
+		m_Indicator.Hit(MinProgress, MaxProgress);
 	}
 
 	void ProcessMiss()
 	{
-		if (m_Indicator != null)
-			m_Indicator.Miss(MinProgress, MaxProgress);
+		m_Indicator.Miss(MinProgress, MaxProgress);
 	}
 
 	void ProcessSuccess()
 	{
-		if (m_Indicator != null)
-			m_Indicator.Success(MinProgress, MaxProgress);
+		m_Indicator.Success(MinProgress, MaxProgress);
 	}
 
 	void ProcessFail()
 	{
-		if (m_Indicator != null)
-			m_Indicator.Fail(MinProgress, MaxProgress);
+		m_Indicator.Fail(MinProgress, MaxProgress);
 	}
 }

@@ -19,25 +19,18 @@ public class SocialProcessor : IInitializable, IDisposable
 	public string Name     => m_User?.DisplayName;
 	public Uri    Photo    => m_User?.PhotoUrl;
 
-	readonly SignalBus         m_SignalBus;
-	readonly LanguageProcessor m_LanguageProcessor;
+	[Inject] SignalBus             m_SignalBus;
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	FirebaseAuth m_Auth;
 	FirebaseUser m_User;
 	bool         m_Online;
 
-	[Inject]
-	public SocialProcessor(
-		SignalBus         _SignalBus,
-		LanguageProcessor _LanguageProcessor
-	)
-	{
-		m_SignalBus         = _SignalBus;
-		m_LanguageProcessor = _LanguageProcessor;
-	}
-
 	public async Task<bool> Login()
 	{
+		if (m_Auth == null)
+			m_Auth = FirebaseAuth.DefaultInstance;
+		
 		try
 		{
 			m_User = m_Auth.CurrentUser;
@@ -51,7 +44,7 @@ public class SocialProcessor : IInitializable, IDisposable
 		}
 		catch (Exception exception)
 		{
-			Debug.LogErrorFormat("[SocialProcessor] Login failed. Error: {0}.", exception.Message);
+			Debug.LogException(exception);
 			
 			return false;
 		}
@@ -93,7 +86,7 @@ public class SocialProcessor : IInitializable, IDisposable
 			return device;
 		
 		return Guest
-			? m_LanguageProcessor.Get("PROFILE_GUEST")
+			? m_LocalizationProcessor.Get("PROFILE_GUEST")
 			: SystemInfo.deviceModel;
 	}
 

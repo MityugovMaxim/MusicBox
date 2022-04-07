@@ -7,25 +7,11 @@ public class FXProcessor : UIEntity, IInitializable
 {
 	[SerializeField] UIFXHighlight[] m_Highlights;
 	[SerializeField] UIFXHighlight   m_Flash;
+	[SerializeField] RectTransform   m_InputArea;
 
-	UIInputZone     m_InputZone;
-	UITapFX.Pool    m_TapFXPool;
-	UIDoubleFX.Pool m_DoubleFXPool;
-	UIHoldFX.Pool   m_HoldFXPool;
-
-	[Inject]
-	public void Construct(
-		UIInputZone     _InputZone,
-		UITapFX.Pool    _TapFXPool,
-		UIDoubleFX.Pool _DoubleFXPool,
-		UIHoldFX.Pool   _HoldFXPool
-	)
-	{
-		m_InputZone    = _InputZone;
-		m_TapFXPool    = _TapFXPool;
-		m_DoubleFXPool = _DoubleFXPool;
-		m_HoldFXPool   = _HoldFXPool;
-	}
+	[Inject] UITapFX.Pool    m_TapFXPool;
+	[Inject] UIDoubleFX.Pool m_DoubleFXPool;
+	[Inject] UIHoldFX.Pool   m_HoldFXPool;
 
 	void IInitializable.Initialize()
 	{
@@ -104,7 +90,7 @@ public class FXProcessor : UIEntity, IInitializable
 
 	Vector2 GetZonePosition(Vector2 _Position)
 	{
-		Rect rect = m_InputZone.GetWorldRect();
+		Rect rect = m_InputArea.GetWorldRect();
 		
 		Vector2 position = new Vector2(
 			_Position.x,

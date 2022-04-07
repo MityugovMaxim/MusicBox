@@ -1,71 +1,89 @@
 using System.Collections.Generic;
+using AudioBox.ASF;
 using UnityEngine;
 using Zenject;
 
-public class UIDoubleTrack : UITrack<DoubleClip>
+public class UIDoubleTrack : ASFTrackContext<ASFDoubleClip>
 {
-	UIInputReceiver        m_InputReceiver;
-	UIDoubleIndicator.Pool m_IndicatorPool;
+	[Inject] UIDoubleIndicator.Pool m_ItemPool;
+	[Inject] UIInputReceiver        m_InputReceiver;
 
-	readonly Dictionary<DoubleClip, UIDoubleIndicator> m_Indicators = new Dictionary<DoubleClip, UIDoubleIndicator>();
+	readonly Dictionary<ASFDoubleClip, UIDoubleIndicator> m_Items = new Dictionary<ASFDoubleClip, UIDoubleIndicator>();
+	readonly HashSet<ASFClip>                             m_Used  = new HashSet<ASFClip>();
 
-	[Inject]
-	public void Construct(UIInputReceiver _InputReceiver, UIDoubleIndicator.Pool _IndicatorPool)
+	public override void AddClip(ASFDoubleClip _Clip, Rect _ClipRect, Rect _ViewRect)
 	{
-		m_InputReceiver = _InputReceiver;
-		m_IndicatorPool = _IndicatorPool;
-	}
-
-	protected override void RemoveIndicator(DoubleClip _Clip)
-	{
-		if (!m_Indicators.ContainsKey(_Clip))
+		if (m_Used.Contains(_Clip))
 			return;
 		
-		UIDoubleIndicator indicator = m_Indicators[_Clip];
+		UIDoubleIndicator item = m_ItemPool.Spawn(RectTransform, _Clip, UseClip);
 		
-		indicator.Restore();
+		if (item == null)
+			return;
 		
-		m_Indicators.Remove(_Clip);
-		m_InputReceiver.UnregisterIndicator(indicator);
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
 		
-		if (Application.isPlaying)
-			m_IndicatorPool.Despawn(indicator);
-		else
-			DestroyImmediate(indicator.gameObject);
-	}
-
-	protected override void DrawIndicators(List<DoubleClip> _Clips)
-	{
-		Vector2 anchor = GetAnchor();
-		
-		foreach (DoubleClip clip in _Clips)
-		{
-			if (!m_Indicators.ContainsKey(clip))
-				m_Indicators[clip] = CreateIndicator();
-			
-			if (!m_Indicators.TryGetValue(clip, out UIDoubleIndicator indicator))
-				continue;
-			
-			indicator.RectTransform.anchorMin        = anchor;
-			indicator.RectTransform.anchorMax        = anchor;
-			indicator.RectTransform.anchoredPosition = new Vector2(0, GetDistance(clip.MinTime));
-		}
-	}
-
-	UIDoubleIndicator CreateIndicator()
-	{
-		UIDoubleIndicator indicator = m_IndicatorPool.Spawn();
-		
-		if (indicator == null)
-			return null;
-		
-		indicator.RectTransform.SetParent(RectTransform, false);
-		
-		indicator.Setup();
+		m_Items[_Clip] = item;
 		
 		if (m_InputReceiver != null)
-			m_InputReceiver.RegisterIndicator(indicator);
+			m_InputReceiver.RegisterIndicator(item);
+	}
+
+	public override void RemoveClip(ASFDoubleClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
 		
-		return indicator;
+		UIDoubleIndicator item = m_Items[_Clip];
+		
+		m_Items.Remove(_Clip);
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+		
+		m_ItemPool.Despawn(item);
+		
+		if (m_InputReceiver != null)
+			m_InputReceiver.UnregisterIndicator(item);
+	}
+
+	public override void ProcessClip(ASFDoubleClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	{
+		if (!m_Items.ContainsKey(_Clip))
+			return;
+		
+		UIDoubleIndicator item = m_Items[_Clip];
+		
+		if (item == null)
+			return;
+		
+		item.ClipRect = _ClipRect;
+		item.ViewRect = _ViewRect;
+	}
+
+	public override void Clear()
+	{
+		foreach (UIDoubleIndicator item in m_Items.Values)
+		{
+			if (item == null)
+				continue;
+			
+			m_ItemPool.Despawn(item);
+			
+			if (m_InputReceiver != null)
+				m_InputReceiver.UnregisterIndicator(item);
+		}
+		
+		m_Items.Clear();
+		m_Used.Clear();
+	}
+
+	void UseClip(ASFClip _Clip)
+	{
+		m_Used.Add(_Clip);
 	}
 }

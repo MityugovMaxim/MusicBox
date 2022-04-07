@@ -1,4 +1,4 @@
-using UnityEngine;
+using AudioBox.Logging;
 
 public class EditorHaptic : Haptic
 {
@@ -8,6 +8,6 @@ public class EditorHaptic : Haptic
 
 	public override void Process(Type _Type)
 	{
-		Debug.LogFormat("[EditorHaptic] Haptic: {0}", _Type);
+		Log.Info(this, "Haptic: {0}", _Type);
 	}
 }

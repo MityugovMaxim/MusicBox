@@ -6,26 +6,33 @@ public class UIHealthIndicator : UIEntity, IInitializable, IDisposable
 {
 	[SerializeField] UILife[] m_Lives;
 
-	SignalBus       m_SignalBus;
-	HealthProcessor m_HealthProcessor;
-
-	[Inject]
-	public void Construct(SignalBus _SignalBus)
-	{
-		m_SignalBus = _SignalBus;
-	}
+	[Inject] SignalBus m_SignalBus;
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<HealthChangedSignal>(RegisterHealthChanged);
+		m_SignalBus.Subscribe<HealthRestoreSignal>(RegisterHealthRestore);
+		m_SignalBus.Subscribe<HealthDecreaseSignal>(RegisterHealthDecrease);
+		m_SignalBus.Subscribe<HealthIncreaseSignal>(RegisterHealthIncrease);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<HealthChangedSignal>(RegisterHealthChanged);
+		m_SignalBus.Unsubscribe<HealthRestoreSignal>(RegisterHealthRestore);
+		m_SignalBus.Unsubscribe<HealthDecreaseSignal>(RegisterHealthDecrease);
+		m_SignalBus.Unsubscribe<HealthIncreaseSignal>(RegisterHealthIncrease);
 	}
 
-	void RegisterHealthChanged(HealthChangedSignal _Signal)
+	void RegisterHealthRestore(HealthRestoreSignal _Signal)
+	{
+		ProcessHealth(_Signal.Health);
+	}
+
+	void RegisterHealthDecrease(HealthDecreaseSignal _Signal)
+	{
+		ProcessHealth(_Signal.Health);
+	}
+
+	void RegisterHealthIncrease(HealthIncreaseSignal _Signal)
 	{
 		ProcessHealth(_Signal.Health);
 	}

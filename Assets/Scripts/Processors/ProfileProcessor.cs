@@ -6,8 +6,10 @@ using Firebase.Database;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Scripting;
 using Zenject;
 
+[Preserve]
 public class ProfileDataUpdateSignal { }
 
 public class ProfileItem
@@ -27,7 +29,7 @@ public class ProfileSnapshot
 	public long                  Coins    { get; }
 	public int                   Level    { get; }
 	public int                   Discs    { get; }
-	public IReadOnlyList<string> LevelIDs   { get; }
+	public IReadOnlyList<string> SongIDs   { get; }
 	public IReadOnlyList<string> OfferIDs   { get; }
 	public IReadOnlyList<string> ProductsIDs { get; }
 
@@ -36,7 +38,7 @@ public class ProfileSnapshot
 		Coins       = _Data.GetLong("coins");
 		Discs       = _Data.GetInt("discs");
 		Level       = _Data.GetInt("level", 1);
-		LevelIDs    = _Data.GetChildKeys("levels");
+		SongIDs    = _Data.GetChildKeys("levels");
 		OfferIDs    = _Data.GetChildKeys("offers");
 		ProductsIDs = _Data.GetChildKeys("products");
 	}
@@ -47,7 +49,7 @@ public class ProfileProcessor
 	public int                   Level      => m_ProgressProcessor.ClampLevel(m_ProfileSnapshot?.Level ?? 1);
 	public int                   Discs      => m_ProfileSnapshot?.Discs ?? 0;
 	public long                  Coins      => m_ProfileSnapshot?.Coins ?? 0;
-	public IReadOnlyList<string> LevelIDs   => m_ProfileSnapshot?.LevelIDs;
+	public IReadOnlyList<string> SongIDs    => m_ProfileSnapshot?.SongIDs;
 	public IReadOnlyList<string> OfferIDs   => m_ProfileSnapshot?.OfferIDs;
 	public IReadOnlyList<string> ProductIDs => m_ProfileSnapshot?.ProductsIDs;
 
@@ -56,7 +58,7 @@ public class ProfileProcessor
 	readonly SignalBus         m_SignalBus;
 	readonly SocialProcessor   m_SocialProcessor;
 	readonly ProgressProcessor m_ProgressProcessor;
-	readonly ProductProcessor  m_ProductProcessor;
+	readonly ProductsProcessor  m_ProductsProcessor;
 	readonly OffersProcessor   m_OffersProcessor;
 	readonly MenuProcessor     m_MenuProcessor;
 
@@ -69,7 +71,7 @@ public class ProfileProcessor
 		SignalBus         _SignalBus,
 		SocialProcessor   _SocialProcessor,
 		ProgressProcessor _ProgressProcessor,
-		ProductProcessor  _ProductProcessor,
+		ProductsProcessor  _ProductsProcessor,
 		OffersProcessor   _OffersProcessor,
 		MenuProcessor     _MenuProcessor
 	)
@@ -77,7 +79,7 @@ public class ProfileProcessor
 		m_SignalBus         = _SignalBus;
 		m_SocialProcessor   = _SocialProcessor;
 		m_ProgressProcessor = _ProgressProcessor;
-		m_ProductProcessor  = _ProductProcessor;
+		m_ProductsProcessor  = _ProductsProcessor;
 		m_OffersProcessor   = _OffersProcessor;
 		m_MenuProcessor     = _MenuProcessor;
 	}
@@ -111,23 +113,15 @@ public class ProfileProcessor
 
 	public List<string> GetVisibleProductIDs()
 	{
-		return m_ProductProcessor.GetProductIDs()
+		return m_ProductsProcessor.GetProductIDs()
 			.Where(_ProductID => !HasProduct(_ProductID))
-			.OrderByDescending(_ProductID => Mathf.Abs(m_ProductProcessor.GetDiscount(_ProductID)))
+			.OrderByDescending(_ProductID => Mathf.Abs(m_ProductsProcessor.GetDiscount(_ProductID)))
 			.ToList();
 	}
 
-	public List<string> GetVisibleOfferIDs()
+	public bool HasSong(string _LevelID)
 	{
-		return m_OffersProcessor.GetOfferIDs()
-			.Where(_OfferID => !HasOffer(_OfferID))
-			.Distinct()
-			.ToList();
-	}
-
-	public bool HasLevel(string _LevelID)
-	{
-		return LevelIDs.Contains(_LevelID);
+		return SongIDs.Contains(_LevelID);
 	}
 
 	public bool HasOffer(string _OfferID)
@@ -137,12 +131,12 @@ public class ProfileProcessor
 
 	public bool HasProduct(string _ProductID)
 	{
-		return m_ProductProcessor.GetType(_ProductID) == ProductType.NonConsumable && ProductIDs.Contains(_ProductID);
+		return m_ProductsProcessor.GetType(_ProductID) == ProductType.NonConsumable && ProductIDs.Contains(_ProductID);
 	}
 
 	public bool HasNoAds()
 	{
-		return ProductIDs.Any(m_ProductProcessor.IsNoAds);
+		return ProductIDs.Any(m_ProductsProcessor.IsNoAds);
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)
@@ -152,7 +146,7 @@ public class ProfileProcessor
 		
 		long requiredCoins = _Coins - Coins;
 		
-		string productID = m_ProductProcessor.GetCoinsProductID(requiredCoins);
+		string productID = m_ProductsProcessor.GetCoinsProductID(requiredCoins);
 		
 		if (string.IsNullOrEmpty(productID))
 			return false;

@@ -25,48 +25,22 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	ProfileProcessor   m_ProfileProcessor;
-	ScoreProcessor     m_ScoreProcessor;
-	ProgressProcessor  m_ProgressProcessor;
-	StorageProcessor   m_StorageProcessor;
-	LevelManager       m_LevelManager;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
-	UIUnlockItem.Pool  m_ItemPool;
+	[Inject] ProfileProcessor      m_ProfileProcessor;
+	[Inject] ScoreProcessor        m_ScoreProcessor;
+	[Inject] ProgressProcessor     m_ProgressProcessor;
+	[Inject] SongsManager          m_SongsManager;
+	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] StatisticProcessor    m_StatisticProcessor;
+	[Inject] UISongUnlockItem.Pool m_ItemPool;
 
-	readonly Queue<ProgressData> m_ProgressData = new Queue<ProgressData>();
-	readonly List<UIUnlockItem>  m_Items        = new List<UIUnlockItem>();
+	readonly Queue<ProgressData>    m_ProgressData = new Queue<ProgressData>();
+	readonly List<UISongUnlockItem> m_Items        = new List<UISongUnlockItem>();
 
 	string m_LevelID;
 
-	[Inject]
-	public void Construct(
-		ProfileProcessor   _ProfileProcessor,
-		ScoreProcessor     _ScoreProcessor,
-		ProgressProcessor  _ProgressProcessor,
-		StorageProcessor   _StorageProcessor,
-		LevelManager       _LevelManager,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor,
-		UIUnlockItem.Pool  _ItemPool
-	)
+	public override void Setup(string _SongID)
 	{
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_ScoreProcessor     = _ScoreProcessor;
-		m_ProgressProcessor  = _ProgressProcessor;
-		m_StorageProcessor   = _StorageProcessor;
-		m_LevelManager       = _LevelManager;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-		m_ItemPool           = _ItemPool;
-	}
-
-	public override void Setup(string _LevelID)
-	{
-		m_LevelID = _LevelID;
+		m_LevelID = _SongID;
 		
 		int sourceDiscs = m_ProfileProcessor.Discs;
 		int targetDiscs = m_ProfileProcessor.Discs + (int)m_ScoreProcessor.Rank;
@@ -142,32 +116,31 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	void RemoveItems()
 	{
-		foreach (UIUnlockItem item in m_Items)
+		foreach (UISongUnlockItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 	}
 
 	void CreateItems(int _Level)
 	{
-		List<string> levelIDs = m_LevelManager.GetLockedLevelIDs(_Level);
+		List<string> levelIDs = m_SongsManager.GetLockedSongIDs(_Level);
 		
 		foreach (string levelID in levelIDs)
 		{
-			UIUnlockItem item = m_ItemPool.Spawn();
+			UISongUnlockItem songItem = m_ItemPool.Spawn();
 			
-			item.Setup(m_StorageProcessor.LoadLevelThumbnail(levelID));
+			// TODO: Fix
+			//item.Setup(m_StorageProcessor.LoadLevelThumbnail(levelID));
 			
-			item.RectTransform.SetParent(m_ItemsGroup.RectTransform, false);
+			songItem.RectTransform.SetParent(m_ItemsGroup.RectTransform, false);
 			
-			m_Items.Add(item);
+			m_Items.Add(songItem);
 		}
 	}
 
 	public async void Continue()
 	{
 		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_LevelID);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
 		m_ContinueGroup.Hide();
 		
@@ -183,7 +156,7 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	async Task UnlockItems()
 	{
-		foreach (UIUnlockItem item in m_Items)
+		foreach (UISongUnlockItem item in m_Items)
 		{
 			await Task.WhenAny(
 				item.PlayAsync(),

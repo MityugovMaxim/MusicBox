@@ -7,70 +7,55 @@ using Zenject;
 [Menu(MenuType.ProductMenu)]
 public class UIProductMenu : UISlideMenu
 {
-	[SerializeField] UIUnitLabel         m_CoinsLabel;
-	[SerializeField] GameObject          m_ItemsGroup;
+	[SerializeField] UIUnitLabel         m_Coins;
 	[SerializeField] RectTransform       m_Container;
 	[SerializeField] UIProductBackground m_Background;
-	[SerializeField] UIProductThumbnail  m_Thumbnail;
+	[SerializeField] UIProductImage      m_Image;
 	[SerializeField] UIProductLabel      m_Label;
 	[SerializeField] UIProductPrice      m_Price;
+	[SerializeField] GameObject          m_ItemsGroup;
 	[SerializeField] UIGroup             m_PurchaseGroup;
 	[SerializeField] UIGroup             m_LoaderGroup;
 	[SerializeField] UIGroup             m_CompleteGroup;
-	[SerializeField] LevelPreview        m_PreviewSource;
+	[SerializeField] SongPreview         m_Preview;
 
-	SignalBus          m_SignalBus;
-	ProductProcessor   m_ProductProcessor;
-	StoreProcessor     m_StoreProcessor;
-	ProfileProcessor   m_ProfileProcessor;
-	LevelProcessor     m_LevelProcessor;
-	MenuProcessor      m_MenuProcessor;
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
-	UIProductItem.Pool m_ItemPool;
+	[SerializeField, Sound] string m_SuccessSound;
+	[SerializeField, Sound] string m_FailSound;
+
+	[Inject] SignalBus              m_SignalBus;
+	[Inject] ProductsProcessor      m_ProductsProcessor;
+	[Inject] StoreProcessor         m_StoreProcessor;
+	[Inject] ProfileProcessor       m_ProfileProcessor;
+	[Inject] SongsProcessor         m_SongsProcessor;
+	[Inject] MenuProcessor          m_MenuProcessor;
+	[Inject] HapticProcessor        m_HapticProcessor;
+	[Inject] SoundProcessor         m_SoundProcessor;
+	[Inject] StatisticProcessor     m_StatisticProcessor;
+	[Inject] UIProductSongItem.Pool m_ItemPool;
 
 	string m_ProductID;
 
-	readonly List<UIProductItem> m_Items = new List<UIProductItem>();
-
-	[Inject]
-	public void Construct(
-		SignalBus          _SignalBus,
-		ProductProcessor   _ProductProcessor,
-		StoreProcessor     _StoreProcessor,
-		ProfileProcessor   _ProfileProcessor,
-		LevelProcessor     _LevelProcessor,
-		MenuProcessor      _MenuProcessor,
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor,
-		UIProductItem.Pool _ItemPool
-	)
-	{
-		m_SignalBus          = _SignalBus;
-		m_ProductProcessor   = _ProductProcessor;
-		m_StoreProcessor     = _StoreProcessor;
-		m_ProfileProcessor   = _ProfileProcessor;
-		m_LevelProcessor     = _LevelProcessor;
-		m_MenuProcessor      = _MenuProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-		m_ItemPool           = _ItemPool;
-	}
+	readonly List<UIProductSongItem> m_Items = new List<UIProductSongItem>();
 
 	public void Setup(string _ProductID)
 	{
-		Select(_ProductID);
+		m_ProductID = _ProductID;
+		
+		m_Background.Setup(m_ProductID);
+		m_Image.Setup(m_ProductID);
+		m_Label.Setup(m_ProductID);
+		m_Price.Setup(m_ProductID);
+		
+		Refresh();
 	}
 
 	public async void Purchase()
 	{
 		m_StatisticProcessor.LogProductMenuPurchaseClick(m_ProductID);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
+		m_Preview.Stop();
 		
-		m_PreviewSource.Stop();
-		
-		foreach (UIProductItem item in m_Items)
+		foreach (UIProductSongItem item in m_Items)
 			item.Stop();
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
@@ -93,6 +78,7 @@ public class UIProductMenu : UISlideMenu
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
+			m_SoundProcessor.Play(m_SuccessSound);
 			
 			await m_CompleteGroup.ShowAsync();
 			
@@ -108,6 +94,7 @@ public class UIProductMenu : UISlideMenu
 			m_StatisticProcessor.LogProductMenuPurchaseFailed(m_ProductID);
 			
 			m_HapticProcessor.Process(Haptic.Type.Failure);
+			m_SoundProcessor.Play(m_FailSound);
 			
 			await Task.WhenAll(
 				m_PurchaseGroup.ShowAsync(),
@@ -124,24 +111,19 @@ public class UIProductMenu : UISlideMenu
 	{
 		m_StatisticProcessor.LogProductMenuNextClick(m_ProductID);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		Select(GetProductID(1));
+		Setup(GetProductID(1));
 	}
 
 	public void Previous()
 	{
 		m_StatisticProcessor.LogProductMenuPreviousClick(m_ProductID);
 		
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		Select(GetProductID(-1));
+		Setup(GetProductID(-1));
 	}
 
 	string GetProductID(int _Offset)
 	{
 		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
-		
 		int index = productIDs.IndexOf(m_ProductID);
 		if (index >= 0 && index < productIDs.Count)
 			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];
@@ -153,46 +135,49 @@ public class UIProductMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
-		m_PreviewSource.Stop();
+		m_Preview.Stop();
 		
-		foreach (UIProductItem item in m_Items)
+		foreach (UIProductSongItem item in m_Items)
 			item.Stop();
 		
 		Refresh();
 		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_PreviewSource.Stop();
-		
-		foreach (UIProductItem item in m_Items)
-			item.Stop();
-		
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
+	}
+
+	protected override void OnHideFinished()
+	{
+		m_Preview.Stop();
+		
+		foreach (UIProductSongItem item in m_Items)
+			item.Stop();
 	}
 
 	void Refresh()
 	{
-		foreach (UIProductItem item in m_Items)
+		foreach (UIProductSongItem item in m_Items)
 		{
 			item.Stop();
 			m_ItemPool.Despawn(item);
 		}
 		m_Items.Clear();
 		
-		List<string> levelIDs = m_ProductProcessor.GetLevelIDs(m_ProductID)
-			.Where(m_LevelProcessor.HasLevelID)
+		List<string> songIDs = m_ProductsProcessor.GetSongIDs(m_ProductID)
+			.Where(_SongID => m_SongsProcessor.GetMode(_SongID) == LevelMode.Product)
 			.ToList();
 		
-		m_ItemsGroup.SetActive(levelIDs.Count > 0);
+		m_ItemsGroup.SetActive(songIDs.Count > 0);
 		
-		foreach (string levelID in levelIDs)
+		foreach (string levelID in songIDs)
 		{
-			UIProductItem item = m_ItemPool.Spawn();
+			UIProductSongItem item = m_ItemPool.Spawn();
 			
 			item.Setup(levelID, PlayPreview, StopPreview);
 			
@@ -201,46 +186,30 @@ public class UIProductMenu : UISlideMenu
 			m_Items.Add(item);
 		}
 		
-		m_Background.Setup(m_ProductID, !Shown);
-		m_Thumbnail.Setup(m_ProductID);
-		m_Label.Setup(m_ProductID);
-		m_Price.Setup(m_ProductID);
-		
-		long coins = m_ProductProcessor.GetCoins(m_ProductID);
-		m_CoinsLabel.Value = coins;
-		m_CoinsLabel.gameObject.SetActive(coins != 0);
+		long coins = m_ProductsProcessor.GetCoins(m_ProductID);
+		m_Coins.Value = coins;
+		m_Coins.gameObject.SetActive(coins != 0);
 		
 		m_PurchaseGroup.Show(true);
 		m_LoaderGroup.Hide(true);
 		m_CompleteGroup.Hide(true);
 		
-		m_PreviewSource.Stop();
+		m_Preview.Stop();
 	}
 
-	void PlayPreview(string _LevelID)
+	void PlayPreview(string _SongID)
 	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		foreach (UIProductItem item in m_Items)
+		foreach (UIProductSongItem item in m_Items)
 		{
-			if (item.LevelID != _LevelID)
+			if (item.SongID != _SongID)
 				item.Stop();
 		}
 		
-		m_PreviewSource.Play(_LevelID);
+		m_Preview.Play(_SongID);
 	}
 
-	void StopPreview(string _LevelID)
+	void StopPreview(string _SongID)
 	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
-		
-		m_PreviewSource.Stop();
-	}
-
-	void Select(string _ProductID)
-	{
-		m_ProductID = _ProductID;
-		
-		Refresh();
+		m_Preview.Stop();
 	}
 }

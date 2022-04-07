@@ -103,7 +103,7 @@ Shader "UI/Cube"
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.color = IN.color * _Color;
 				OUT.uv = IN.uv;
-				OUT.mask = getUIMask(OUT.vertex.w, IN.vertex.xy);
+				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.screen = ComputeScreenPos(OUT.vertex) * _Scale - offset;
 				
 				return OUT;
