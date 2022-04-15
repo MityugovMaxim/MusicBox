@@ -8,7 +8,7 @@ public class UILoginMenu : UIMenu
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
 	[Inject] AdsProcessor         m_AdsProcessor;
 	[Inject] SongsProcessor       m_SongsProcessor;
-	[Inject] ScoreProcessor       m_ScoreProcessor;
+	[Inject] ScoresProcessor       m_ScoresProcessor;
 	[Inject] NewsProcessor        m_NewsProcessor;
 	[Inject] OffersProcessor      m_OffersProcessor;
 	[Inject] ProductsProcessor    m_ProductsProcessor;
@@ -38,7 +38,7 @@ public class UILoginMenu : UIMenu
 			m_NewsProcessor.Load(),
 			m_ProgressProcessor.Load(),
 			m_SongsProcessor.Load(),
-			m_ScoreProcessor.Load(),
+			m_ScoresProcessor.Load(),
 			m_RevivesProcessor.Load(),
 			m_ProfileProcessor.LoadProfile()
 		);

@@ -18,6 +18,8 @@ public abstract class UIHandle : UIEntity
 
 	public abstract void ExitZone();
 
+	public abstract void Reverse();
+
 	public abstract void Restore();
 
 	public abstract void TouchDown(int _ID, Rect _Area);

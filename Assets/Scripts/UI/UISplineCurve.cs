@@ -81,8 +81,6 @@ public class UISplineCurve : MaskableGraphic
 	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
 	readonly List<int>      m_Indices  = new List<int>();
 
-	bool m_ValidShape;
-
 	#endregion
 
 	#region engine methods
@@ -106,13 +104,6 @@ public class UISplineCurve : MaskableGraphic
 			Spline.OnRebuild += OnSplineRebuild;
 		
 		SetVerticesDirty();
-	}
-
-	protected override void OnEnable()
-	{
-		m_ValidShape = false;
-		
-		base.OnEnable();
 	}
 
 	protected override void OnDestroy()
@@ -156,21 +147,6 @@ public class UISplineCurve : MaskableGraphic
 		
 		if (Spline == null || Spline.Length < 2)
 			return;
-		
-		if (m_ValidShape)
-		{
-			Color32 colorCache = color;
-			for (int i = 0; i < m_Vertices.Count; i++)
-			{
-				UIVertex vertex = m_Vertices[i];
-				vertex.color  = colorCache;
-				m_Vertices[i] = vertex;
-			}
-			_VertexHelper.AddUIVertexStream(m_Vertices, m_Indices);
-			return;
-		}
-		
-		m_ValidShape = true;
 		
 		m_Vertices.Clear();
 		m_Indices.Clear();

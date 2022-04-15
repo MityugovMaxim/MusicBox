@@ -19,15 +19,15 @@ public class UIComboLabel : UIEntity, IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<SongComboSignal>(RegisterLevelCombo);
+		m_SignalBus.Subscribe<ScoreSignal>(RegisterLevelCombo);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<SongComboSignal>(RegisterLevelCombo);
+		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterLevelCombo);
 	}
 
-	void RegisterLevelCombo(SongComboSignal _Signal)
+	void RegisterLevelCombo(ScoreSignal _Signal)
 	{
 		SetMultiplier(_Signal.Multiplier);
 	}

@@ -24,20 +24,35 @@ public class UIHoldHandle : UIHandle
 
 	public override void EnterZone()
 	{
-		m_Processed = false;
-		m_Hold      = false;
-		m_Miss      = false;
+		if (m_Processed)
+			return;
+		
 		MinProgress = 0;
 		MaxProgress = 0;
+		
+		m_Hold = false;
+		m_Miss = false;
 	}
 
 	public override void ExitZone()
 	{
-		if (m_Marker != null)
-			m_Marker.anchoredPosition = Vector2.zero;
+		if (m_Processed)
+			return;
 		
-		if (!m_Processed)
-			ProcessFail();
+		ProcessFail();
+		
+		m_Processed = true;
+		m_Hold      = false;
+		m_Miss      = false;
+	}
+
+	public override void Reverse()
+	{
+		if (m_Processed)
+			return;
+		
+		MinProgress = 0;
+		MaxProgress = 0;
 		
 		m_Hold = false;
 		m_Miss = false;

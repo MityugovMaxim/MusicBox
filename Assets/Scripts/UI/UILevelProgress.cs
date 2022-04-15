@@ -11,13 +11,29 @@ public class UILevelProgress : UIGroup
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	[SerializeField] RectTransform     m_Progress;
+	public float Progress
+	{
+		get => m_Progress;
+		set
+		{
+			if (Mathf.Approximately(m_Progress, value))
+				return;
+			
+			m_Progress = value;
+			
+			ProcessProgress();
+		}
+	}
+
+	[SerializeField] RectTransform     m_Target;
 	[SerializeField] UICascadeTMPLabel m_Label;
 	[SerializeField] UILevel           m_SourceLevel;
 	[SerializeField] UILevel           m_TargetLevel;
 	[SerializeField] float             m_ProgressDelay;
 	[SerializeField] float             m_ProgressDuration;
 	[SerializeField] AnimationCurve    m_ProgressCurve;
+
+	[SerializeField, Range(0, 1)] float m_Progress;
 
 	[Header("Sounds")]
 	[SerializeField, Sound] string m_ProgressSound;
@@ -51,6 +67,15 @@ public class UILevelProgress : UIGroup
 		StateBehaviour.UnregisterComplete(m_Animator, "collect", InvokeCollectFinished);
 	}
 
+	#if UNITY_EDITOR
+	protected override void OnValidate()
+	{
+		base.OnValidate();
+		
+		ProcessProgress();
+	}
+	#endif
+
 	public void Setup(
 		int   _SourceLevel,
 		int   _TargetLevel,
@@ -61,30 +86,33 @@ public class UILevelProgress : UIGroup
 		m_SourceLevel.Level = _SourceLevel;
 		m_TargetLevel.Level = _TargetLevel;
 		
+		m_Progress       = _SourceProgress;
 		m_SourceProgress = _SourceProgress;
 		m_TargetProgress = _TargetProgress;
 		
-		m_Progress.anchorMin = new Vector2(0, 0);
-		m_Progress.anchorMax = new Vector2(m_SourceProgress, 1);
+		m_Target.anchorMin = new Vector2(0, 0);
+		m_Target.anchorMax = new Vector2(m_SourceProgress, 1);
 		
 		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
+		
+		ProcessProgress();
 	}
 
-	public Task Progress()
+	public Task ProgressAsync()
 	{
-		Vector2 source = new Vector2(m_SourceProgress, 1);
-		Vector2 target = new Vector2(m_TargetProgress, 1);
-		
 		m_SoundProcessor.Start(m_ProgressSound);
 		
-		return UnityTask.Phase(
-			_Phase => m_Progress.anchorMax = Vector2.Lerp(source, target, m_ProgressCurve.Evaluate(_Phase)),
+		return UnityTask.Lerp(
+			_Value => Progress = _Value,
+			m_SourceProgress,
+			m_TargetProgress,
+			m_ProgressDelay,
 			m_ProgressDuration,
-			m_ProgressDelay
+			m_ProgressCurve
 		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_ProgressSound));
 	}
 
-	public Task Collect()
+	public Task CollectAsync()
 	{
 		InvokeCollectFinished();
 		
@@ -100,23 +128,6 @@ public class UILevelProgress : UIGroup
 		return completionSource.Task;
 	}
 
-	[Preserve]
-	void LevelUp()
-	{
-		m_SoundProcessor.Play(m_LevelSound);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
-		
-		m_Label.Play();
-	}
-
-	protected override void OnShowStarted()
-	{
-		base.OnShowStarted();
-		
-		Restore();
-	}
-
 	void Restore()
 	{
 		InvokeCollectFinished();
@@ -127,6 +138,28 @@ public class UILevelProgress : UIGroup
 		m_Animator.ResetTrigger(m_CollectParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
 		m_Animator.Update(0);
+	}
+
+	[Preserve]
+	void LevelUp()
+	{
+		m_SoundProcessor.Play(m_LevelSound);
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
+		
+		m_Label.Play();
+	}
+
+	void ProcessProgress()
+	{
+		m_Target.anchorMax = new Vector2(Progress, 1);
+	}
+
+	protected override void OnShowStarted()
+	{
+		base.OnShowStarted();
+		
+		Restore();
 	}
 
 	void InvokeCollectFinished()

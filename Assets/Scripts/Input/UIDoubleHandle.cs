@@ -13,17 +13,29 @@ public class UIDoubleHandle : UIHandle
 
 	public override void EnterZone()
 	{
-		m_Processed = false;
-		m_Count     = 0;
+		if (m_Processed)
+			return;
+		
+		m_Count = 0;
 	}
 
 	public override void ExitZone()
 	{
-		if (!m_Processed)
-			ProcessFail(0);
+		if (m_Processed)
+			return;
 		
-		m_Processed = false;
+		ProcessFail(0);
+		
+		m_Processed = true;
 		m_Count     = 0;
+	}
+
+	public override void Reverse()
+	{
+		if (m_Processed)
+			return;
+		
+		m_Count = 0;
 	}
 
 	public override void Restore()

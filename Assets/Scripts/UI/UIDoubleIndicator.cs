@@ -42,6 +42,8 @@ public class UIDoubleIndicator : UIIndicator
 	{
 		Animator.SetTrigger(m_FailParameterID);
 		
+		FXProcessor.Fail();
+		
 		InvokeCallback();
 		
 		SignalBus.Fire(new DoubleFailSignal(_Progress));

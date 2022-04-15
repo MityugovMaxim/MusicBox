@@ -18,12 +18,14 @@ public class UIGroupEditor : Editor
 		{
 			Hide();
 			Show();
+			Save();
 		}
 		
 		if (GUILayout.Button("HIDE"))
 		{
 			Show();
 			Hide();
+			Save();
 		}
 		
 		GUILayout.Space(20);
@@ -41,5 +43,11 @@ public class UIGroupEditor : Editor
 	{
 		foreach (UIGroup group in targets.OfType<UIGroup>())
 			group.Hide(!Application.isPlaying);
+	}
+
+	void Save()
+	{
+		foreach (UIGroup group in targets.OfType<UIGroup>())
+			EditorUtility.SetDirty(group);
 	}
 }

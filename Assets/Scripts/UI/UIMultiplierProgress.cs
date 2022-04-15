@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -7,125 +7,94 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class UIMultiplierProgress : UIEntity
 {
-	Animator Animator
+	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
+	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
+
+	public float Progress
 	{
-		get
+		get => m_Progress;
+		set
 		{
-			if (m_Animator == null)
-			{
-				m_Animator = GetComponent<Animator>();
-				m_Animator.keepAnimatorControllerStateOnDisable = true;
-			}
-			return m_Animator;
+			if (Mathf.Approximately(m_Progress, value))
+				return;
+			
+			m_Progress = value;
+			
+			ProcessProgress();
 		}
 	}
 
-	static readonly int m_PlayParameterID = Animator.StringToHash("Play");
-
-	[SerializeField] UIRing       m_Progress;
+	[SerializeField] UIRing         m_Ring;
+	[SerializeField] float          m_Progress;
 	[SerializeField] float          m_Duration = 0.2f;
 	[SerializeField] AnimationCurve m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
-	Animator    m_Animator;
-	Action      m_ProgressFinished;
-	Action      m_PlayFinished;
-	IEnumerator m_ProgressRoutine;
+	Animator m_Animator;
+	Action   m_PlayFinished;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		StateBehaviour.RegisterComplete(Animator, "play", InvokePlayFinished);
+		m_Animator = GetComponent<Animator>();
+		
+		m_Animator.RegisterComplete("play", InvokePlayFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		StateBehaviour.UnregisterComplete(Animator, "play", InvokePlayFinished);
+		m_Animator.UnregisterComplete("play", InvokePlayFinished);
 	}
 
-	public Task ProgressAsync(float _Progress, bool _Instant = false)
+	#if UNITY_EDITOR
+	protected override void OnValidate()
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		base.OnValidate();
 		
-		Progress(_Progress, _Instant, () => completionSource.SetResult(true));
-		
-		return completionSource.Task;
+		ProcessProgress();
 	}
+	#endif
 
-	public Task PlayAsync(bool _Instant = false)
-	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		Play(_Instant, () => completionSource.SetResult(true));
-		
-		return completionSource.Task;
-	}
-
-	public void Progress(float _Progress, bool _Instant = false, Action _Finished = null)
-	{
-		if (m_ProgressRoutine != null)
-			StopCoroutine(m_ProgressRoutine);
-		
-		InvokeProgressFinished();
-		
-		m_ProgressFinished = _Finished;
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_ProgressRoutine = ProgressRoutine(_Progress);
-			
-			StartCoroutine(m_ProgressRoutine);
-		}
-		else
-		{
-			m_Progress.Arc = Mathf.Clamp01(_Progress);
-			
-			InvokeProgressFinished();
-		}
-	}
-
-	public void Play(bool _Instant = false, Action _Finished = null)
+	public void Restore()
 	{
 		InvokePlayFinished();
 		
-		m_PlayFinished = _Finished;
-		
-		if (!_Instant && gameObject.activeInHierarchy)
-			Animator.SetTrigger(m_PlayParameterID);
-		else
-			InvokePlayFinished();
+		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
-	IEnumerator ProgressRoutine(float _Progress)
+	public Task ProgressAsync(float _Progress, CancellationToken _Token = default)
 	{
-		float source = m_Progress.Arc;
-		float target = Mathf.Clamp01(_Progress);
-		if (!Mathf.Approximately(source, target))
-		{
-			float time   = 0;
-			while (time < m_Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				float phase = m_Curve.Evaluate(time / m_Duration);
-				
-				m_Progress.Arc = Mathf.Lerp(source, target, phase);
-			}
-		}
-		m_Progress.Arc = target;
+		if (_Token.IsCancellationRequested)
+			return Task.FromCanceled(_Token);
 		
-		InvokeProgressFinished();
+		return UnityTask.Lerp(
+			_Value => Progress = _Value,
+			Progress,
+			_Progress,
+			m_Duration,
+			m_Curve,
+			_Token
+		);
 	}
 
-	void InvokeProgressFinished()
+	public Task PlayAsync()
 	{
-		Action action = m_ProgressFinished;
-		m_ProgressFinished = null;
-		action?.Invoke();
+		Restore();
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		m_PlayFinished = () => completionSource.TrySetResult(true);
+		
+		m_Animator.SetTrigger(m_PlayParameterID);
+		
+		return completionSource.Task;
+	}
+
+	void ProcessProgress()
+	{
+		m_Ring.Arc = Progress;
 	}
 
 	void InvokePlayFinished()

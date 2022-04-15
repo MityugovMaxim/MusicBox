@@ -16,15 +16,8 @@ public class UIColorTrack : ASFTrackContext<ASFColorClip>, IASFColorSampler
 
 	public override void Clear() { }
 
-	bool m_Passed;
-
 	void IASFColorSampler.Sample(ASFColorClip _Source, ASFColorClip _Target, float _Phase)
 	{
-		if (m_Passed)
-			return;
-		
-		m_Passed = true;
-		
 		SetColor(m_BackgroundPrimaryPropertyID, _Source.BackgroundPrimary, _Target.BackgroundPrimary, _Phase);
 		SetColor(m_BackgroundSecondaryPropertyID, _Source.BackgroundSecondary, _Target.BackgroundSecondary, _Phase);
 		SetColor(m_ForegroundPrimaryPropertyID, _Source.ForegroundPrimary, _Target.ForegroundPrimary, _Phase);

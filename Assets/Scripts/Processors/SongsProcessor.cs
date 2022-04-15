@@ -17,7 +17,7 @@ public class SongSnapshot
 	public int                                 Level             { get; }
 	public string                              Title             { get; }
 	public string                              Artist            { get; }
-	public LevelMode                           Mode              { get; }
+	public SongMode                           Mode              { get; }
 	public SongBadge                           Badge             { get; }
 	public float                               BPM               { get; }
 	public float                               Speed             { get; }
@@ -44,7 +44,7 @@ public class SongSnapshot
 		Level             = _Data.GetInt("level");
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
-		Mode              = _Data.GetEnum<LevelMode>("mode");
+		Mode              = _Data.GetEnum<SongMode>("mode");
 		Badge             = _Data.GetEnum<SongBadge>("badge");
 		Ratio             = _Data.GetFloat("ratio", 0.75f);
 		BPM               = _Data.GetFloat("bpm");
@@ -161,28 +161,6 @@ public class SongsProcessor
 		return payout;
 	}
 
-	public int GetThreshold(string _SongID, ScoreRank _Rank)
-	{
-		SongSnapshot snapshot = GetSnapshot(_SongID);
-		
-		if (snapshot == null)
-			return 0;
-		
-		switch (_Rank)
-		{
-			case ScoreRank.Bronze:
-				return snapshot.BronzeThreshold;
-			case ScoreRank.Silver:
-				return snapshot.SilverThreshold;
-			case ScoreRank.Gold:
-				return snapshot.GoldThreshold;
-			case ScoreRank.Platinum:
-				return snapshot.PlatinumThreshold;
-			default:
-				return 0;
-		}
-	}
-
 	public long GetPrice(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
@@ -190,7 +168,28 @@ public class SongsProcessor
 		return snapshot?.Price ?? 0;
 	}
 
-	public bool ContainsPlatformURL(string _SongID, string _PlatformID)
+	public string GetAppleMusicURL(string _SongID)
+	{
+		const string platformID = "apple_music";
+		
+		return GetPlatformURL(_SongID, platformID);
+	}
+
+	public string GetSpotifyURL(string _SongID)
+	{
+		const string platformID = "spotify";
+		
+		return GetPlatformURL(_SongID, platformID);
+	}
+
+	public string GetDeezerURL(string _SongID)
+	{
+		const string platformID = "deezer";
+		
+		return GetPlatformURL(_SongID, platformID);
+	}
+
+	bool ContainsPlatformURL(string _SongID, string _PlatformID)
 	{
 		if (string.IsNullOrEmpty(_PlatformID))
 			return false;
@@ -200,7 +199,7 @@ public class SongsProcessor
 		return snapshot != null && snapshot.Platforms != null && snapshot.Platforms.ContainsKey(_PlatformID);
 	}
 
-	public string GetPlatformURL(string _SongID, string _PlatformID)
+	string GetPlatformURL(string _SongID, string _PlatformID)
 	{
 		if (!ContainsPlatformURL(_SongID, _PlatformID))
 			return string.Empty;
@@ -245,14 +244,43 @@ public class SongsProcessor
 		return snapshot?.Level ?? 0;
 	}
 
-	public LevelMode GetMode(string _SongID)
+	public int GetThreshold(string _SongID, ScoreRank _Rank)
 	{
-		if (m_ProfileProcessor.HasNoAds())
-			return LevelMode.Free;
+		if (_Rank < ScoreRank.None)
+			return 0;
+		
+		const int maxThreshold = 100;
 		
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Mode ?? LevelMode.Free;
+		if (snapshot == null)
+			return maxThreshold;
+		
+		switch (_Rank)
+		{
+			case ScoreRank.None:
+				return 0;
+			case ScoreRank.Bronze:
+				return snapshot.BronzeThreshold;
+			case ScoreRank.Silver:
+				return snapshot.SilverThreshold;
+			case ScoreRank.Gold:
+				return snapshot.GoldThreshold;
+			case ScoreRank.Platinum:
+				return snapshot.PlatinumThreshold;
+			default:
+				return maxThreshold;
+		}
+	}
+
+	public SongMode GetMode(string _SongID)
+	{
+		if (m_ProfileProcessor.HasNoAds())
+			return SongMode.Free;
+		
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Mode ?? SongMode.Free;
 	}
 
 	public SongBadge GetBadge(string _SongID)

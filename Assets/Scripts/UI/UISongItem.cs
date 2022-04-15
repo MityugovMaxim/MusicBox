@@ -30,7 +30,7 @@ public class UISongItem : UIEntity, IPointerClickHandler
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		m_StatisticProcessor.LogMainMenuLevelPageItemClick(m_SongID);
+		m_StatisticProcessor.LogMainMenuSongsPageItemClick(m_SongID);
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		

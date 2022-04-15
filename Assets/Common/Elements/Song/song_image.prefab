@@ -84,7 +84,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1679959708637045688}
   - component: {fileID: 6229789013460445267}
-  - component: {fileID: 4640743307130309284}
+  - component: {fileID: 752200640513449588}
   m_Layer: 5
   m_Name: song_image
   m_TagString: Untagged
@@ -126,8 +126,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb7aa106e1404d369536bce9fce93b49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Image: {fileID: 4640743307130309284}
---- !u!114 &4640743307130309284
+  m_Image: {fileID: 752200640513449588}
+  m_Album: {fileID: 1358360301344445894}
+--- !u!114 &752200640513449588
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -136,17 +137,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 1972972776694222024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06503b4413364b129186c7c92d64b416, type: 3}
+  m_Script: {fileID: 11500000, guid: a908973a15634c4ba598c63e4e6c210e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Path: 
-  m_Graphic: {fileID: 5756534225386563147}
-  m_Group: song
+  m_Graphic: {fileID: 1358360301344445894}
   m_Size: 512
   m_Default: {fileID: 0}
   m_LoaderGroup: {fileID: 9185604727584996600}
   m_Blur: 0
   m_URL: 0
+  m_AtlasSize: 2048
 --- !u!1 &2448836260169780347
 GameObject:
   m_ObjectHideFlags: 0
@@ -519,8 +520,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3837480202129889463}
-  - component: {fileID: 172480773207858818}
-  - component: {fileID: 5756534225386563147}
+  - component: {fileID: 3549810670404526262}
+  - component: {fileID: 1358360301344445894}
   m_Layer: 5
   m_Name: image
   m_TagString: Untagged
@@ -547,7 +548,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &172480773207858818
+--- !u!222 &3549810670404526262
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -555,16 +556,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7850580072834737387}
   m_CullTransparentMesh: 0
---- !u!114 &5756534225386563147
+--- !u!114 &1358360301344445894
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7850580072834737387}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Script: {fileID: 11500000, guid: 2205a0e9cbe541f19c5a295daf2642df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -575,15 +576,10 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_Type: 0
+  m_Scheme: 0
+  m_Grayscale: 0
+  m_Brightness: 0.2
 --- !u!1001 &8357778359944205739
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,48 +1,46 @@
-using System;
 using UnityEngine;
 using Zenject;
 
-public class UIHealthIndicator : UIEntity, IInitializable, IDisposable
+public class UIHealthIndicator : UIEntity
 {
-	[SerializeField] UILife[] m_Lives;
+	[SerializeField] UIHealthHandle[] m_Handles;
 
 	[Inject] SignalBus m_SignalBus;
 
-	void IInitializable.Initialize()
+	int m_Health;
+
+	protected override void Awake()
 	{
-		m_SignalBus.Subscribe<HealthRestoreSignal>(RegisterHealthRestore);
-		m_SignalBus.Subscribe<HealthDecreaseSignal>(RegisterHealthDecrease);
-		m_SignalBus.Subscribe<HealthIncreaseSignal>(RegisterHealthIncrease);
+		base.Awake();
+		
+		m_SignalBus.Subscribe<HealthSignal>(RegisterHealth);
 	}
 
-	void IDisposable.Dispose()
+	protected override void OnDestroy()
 	{
-		m_SignalBus.Unsubscribe<HealthRestoreSignal>(RegisterHealthRestore);
-		m_SignalBus.Unsubscribe<HealthDecreaseSignal>(RegisterHealthDecrease);
-		m_SignalBus.Unsubscribe<HealthIncreaseSignal>(RegisterHealthIncrease);
+		base.OnDestroy();
+		
+		m_SignalBus.Unsubscribe<HealthSignal>(RegisterHealth);
 	}
 
-	void RegisterHealthRestore(HealthRestoreSignal _Signal)
-	{
-		ProcessHealth(_Signal.Health);
-	}
-
-	void RegisterHealthDecrease(HealthDecreaseSignal _Signal)
-	{
-		ProcessHealth(_Signal.Health);
-	}
-
-	void RegisterHealthIncrease(HealthIncreaseSignal _Signal)
+	void RegisterHealth(HealthSignal _Signal)
 	{
 		ProcessHealth(_Signal.Health);
 	}
 
 	void ProcessHealth(int _Health)
 	{
-		for (int i = 0; i < m_Lives.Length; i++)
+		for (int i = 0; i < m_Handles.Length; i++)
 		{
-			if (m_Lives[i] != null)
-				m_Lives[i].SetActive(i < _Health);
+			UIHealthHandle handle = m_Handles[i];
+			
+			if (handle == null)
+				continue;
+			
+			if (i < _Health)
+				handle.Restore();
+			else
+				handle.Damage();
 		}
 	}
 }

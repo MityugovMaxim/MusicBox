@@ -9,8 +9,6 @@ public class SongPlayer : ASFPlayer
 	[Preserve]
 	public class Factory : PlaceholderFactory<SongPlayer, SongPlayer> { }
 
-	public float Size => RectTransform.rect.height;
-
 	[SerializeField] UITapTrack      m_TapTrack;
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
 	[SerializeField] UIHoldTrack     m_HoldTrack;

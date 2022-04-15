@@ -25,8 +25,7 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	[Inject] ProfileProcessor      m_ProfileProcessor;
-	[Inject] ScoreProcessor        m_ScoreProcessor;
+	[Inject] ScoreManager          m_ScoreManager;
 	[Inject] ProgressProcessor     m_ProgressProcessor;
 	[Inject] SongsManager          m_SongsManager;
 	[Inject] MenuProcessor         m_MenuProcessor;
@@ -36,23 +35,39 @@ public class UIResultLevelPage : UIResultMenuPage
 	readonly Queue<ProgressData>    m_ProgressData = new Queue<ProgressData>();
 	readonly List<UISongUnlockItem> m_Items        = new List<UISongUnlockItem>();
 
-	string m_LevelID;
+	string m_SongID;
+	int    m_SourceDiscs;
+	int    m_TargetDiscs;
+	int    m_MinLevel;
+	int    m_MaxLevel;
+	int    m_SourceLevel;
+	int    m_TargetLevel;
 
 	public override void Setup(string _SongID)
 	{
-		m_LevelID = _SongID;
+		m_SongID = _SongID;
 		
-		int sourceDiscs = m_ProfileProcessor.Discs;
-		int targetDiscs = m_ProfileProcessor.Discs + (int)m_ScoreProcessor.Rank;
-		int minLevel    = m_ProgressProcessor.GetMinLevel();
-		int maxLevel    = m_ProgressProcessor.GetMaxLevel();
-		int sourceLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(sourceDiscs), minLevel, maxLevel);
-		int targetLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(targetDiscs), minLevel, maxLevel);
+		m_MinLevel    = m_ProgressProcessor.GetMinLevel();
+		m_MaxLevel    = m_ProgressProcessor.GetMaxLevel();
+		m_SourceDiscs = m_ScoreManager.GetSourceDiscs();
+		m_TargetDiscs = m_ScoreManager.GetTargetDiscs();
+		m_SourceLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(m_SourceDiscs), m_MinLevel, m_MaxLevel);
+		m_TargetLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(m_TargetDiscs), m_MinLevel, m_MaxLevel);
 		
+		ProcessProgress();
+		
+		m_LevelProgress.Hide(true);
+		m_ItemsGroup.Hide(true);
+		m_ContinueGroup.Hide(true);
+	}
+
+	void ProcessProgress()
+	{
 		m_ProgressData.Clear();
-		for (int level = sourceLevel; level <= targetLevel; level++)
+		
+		for (int level = m_SourceLevel; level <= m_TargetLevel; level++)
 		{
-			if (level >= maxLevel)
+			if (level >= m_MaxLevel)
 				break;
 			
 			int minLimit = m_ProgressProcessor.GetMinLimit(level);
@@ -61,15 +76,11 @@ public class UIResultLevelPage : UIResultMenuPage
 			m_ProgressData.Enqueue(
 				new ProgressData(
 					level,
-					Mathf.InverseLerp(minLimit, maxLimit, sourceDiscs),
-					Mathf.InverseLerp(minLimit, maxLimit, targetDiscs)
+					Mathf.InverseLerp(minLimit, maxLimit, m_SourceDiscs),
+					Mathf.InverseLerp(minLimit, maxLimit, m_TargetDiscs)
 				)
 			);
 		}
-		
-		m_LevelProgress.Hide(true);
-		m_ItemsGroup.Hide(true);
-		m_ContinueGroup.Hide(true);
 	}
 
 	public override async void Play()
@@ -85,19 +96,19 @@ public class UIResultLevelPage : UIResultMenuPage
 				progressData.Target
 			);
 			
-			CreateItems(progressData.Level + 2);
+			ProcessItems(progressData.Level + 1);
 			
 			await Task.WhenAll(
 				m_LevelProgress.ShowAsync(),
 				m_ItemsGroup.ShowAsync()
 			);
 			
-			await m_LevelProgress.Progress();
+			await m_LevelProgress.ProgressAsync();
 			
 			if (m_ProgressData.Count == 0)
 				break;
 			
-			await m_LevelProgress.Collect();
+			await m_LevelProgress.CollectAsync();
 			
 			await UnlockItems();
 			
@@ -107,40 +118,32 @@ public class UIResultLevelPage : UIResultMenuPage
 				m_LevelProgress.HideAsync(),
 				m_ItemsGroup.HideAsync()
 			);
-			
-			RemoveItems();
 		}
 		
 		m_ContinueGroup.Show();
 	}
 
-	void RemoveItems()
+	void ProcessItems(int _Level)
 	{
 		foreach (UISongUnlockItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
-	}
-
-	void CreateItems(int _Level)
-	{
-		List<string> levelIDs = m_SongsManager.GetLockedSongIDs(_Level);
 		
-		foreach (string levelID in levelIDs)
+		List<string> songIDs = m_SongsManager.GetLockedSongIDs(_Level);
+		
+		foreach (string songID in songIDs)
 		{
-			UISongUnlockItem songItem = m_ItemPool.Spawn();
+			UISongUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
 			
-			// TODO: Fix
-			//item.Setup(m_StorageProcessor.LoadLevelThumbnail(levelID));
+			item.Setup(songID);
 			
-			songItem.RectTransform.SetParent(m_ItemsGroup.RectTransform, false);
-			
-			m_Items.Add(songItem);
+			m_Items.Add(item);
 		}
 	}
 
 	public async void Continue()
 	{
-		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_LevelID);
+		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_SongID);
 		
 		m_ContinueGroup.Hide();
 		

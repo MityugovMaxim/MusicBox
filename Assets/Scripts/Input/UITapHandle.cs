@@ -8,10 +8,7 @@ public class UITapHandle : UIHandle
 
 	bool m_Processed;
 
-	public override void EnterZone()
-	{
-		m_Processed = false;
-	}
+	public override void EnterZone() { }
 
 	public override void ExitZone()
 	{
@@ -20,8 +17,10 @@ public class UITapHandle : UIHandle
 		
 		ProcessFail(0);
 		
-		m_Processed = false;
+		m_Processed = true;
 	}
+
+	public override void Reverse() { }
 
 	public override void Restore()
 	{

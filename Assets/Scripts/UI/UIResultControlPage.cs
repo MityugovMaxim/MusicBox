@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
-using UnityEngine.iOS;
 using Zenject;
 
 public class UIResultControlPage : UIResultMenuPage
@@ -128,11 +128,14 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_RateUsCount++;
 		
-		if (m_RateUsCount >= RATE_US_COUNT)
+		if (m_RateUsCount == RATE_US_COUNT)
 		{
-			m_RateUsCount = 0;
-			
-			Device.RequestStoreReview();
+			#if UNITY_IOS
+			UnityEngine.iOS.Device.RequestStoreReview();
+			#elif UNITY_ANDROID
+			// TODO: Create review request
+			Log.Info(this, "Request store review");
+			#endif
 		}
 		
 		m_Preview.Play(m_SongID);
@@ -148,9 +151,9 @@ public class UIResultControlPage : UIResultMenuPage
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
+		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
 		
-		if (levelMode == LevelMode.Ads)
+		if (songMode == SongMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			

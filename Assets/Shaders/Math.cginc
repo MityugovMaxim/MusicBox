@@ -118,11 +118,11 @@ half2 scale(half2 _Vector, const half2 _Pivot, const half2 _Scale)
 	return _Vector;
 }
 
-half2 rotate(const half2 _Vector, const half _Angle)
+half2 rotate(const half2 _Vector, const half _Radians)
 {
-	const half s = sin(_Angle);
-	const half c = cos(_Angle);
-	const half2x2 rotation = { c, -s, -s, c };
+	const half s = sin(_Radians);
+	const half c = cos(_Radians);
+	const half2x2 rotation = half2x2(c, s, -s, c);
 	return mul(_Vector, rotation);
 }
 
@@ -179,4 +179,9 @@ half2 rotate270(half2 _Vector, const half2 _Pivot)
 	_Vector = half2(_Vector.y, -_Vector.x);
 	_Vector += _Pivot;
 	return _Vector;
+}
+
+half2 rotate270(const half2 _Vector)
+{
+	return half2(_Vector.y, -_Vector.x);
 }

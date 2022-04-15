@@ -18,4 +18,6 @@ public enum MenuType
 	RetryMenu      = 15,
 	LanguageMenu   = 16,
 	SocialMenu     = 17,
+	SplashMenu     = 18,
+	SetupMenu      = 19,
 }

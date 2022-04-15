@@ -1,4 +1,5 @@
-using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -21,40 +22,36 @@ public class UIFXHighlight : UIEntity
 
 	CanvasGroup m_CanvasGroup;
 
-	IEnumerator m_PlayRoutine;
+	CancellationTokenSource m_TokenSource;
 
-	public void Play()
+	public async Task PlayAsync()
 	{
-		if (m_PlayRoutine != null)
-			StopCoroutine(m_PlayRoutine);
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
 		
-		if (!gameObject.activeInHierarchy)
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		CanvasGroup canvasGroup = CanvasGroup;
+		
+		try
+		{
+			
+			await UnityTask.Phase(
+				_Phase => canvasGroup.alpha = Mathf.Lerp(m_Source, m_Target, m_Curve.Evaluate(_Phase)),
+				m_Duration,
+				token
+			);
+		}
+		catch (TaskCanceledException) { }
+		
+		canvasGroup.alpha = 0;
+		
+		if (token.IsCancellationRequested)
 			return;
 		
-		m_PlayRoutine = PlayRoutine(CanvasGroup, m_Source, m_Target, m_Duration, m_Curve);
-		
-		StartCoroutine(m_PlayRoutine);
-	}
-
-	static IEnumerator PlayRoutine(CanvasGroup _CanvasGroup, float _Source, float _Target, float _Duration, AnimationCurve _Curve)
-	{
-		if (_CanvasGroup == null)
-			yield break;
-		
-		_CanvasGroup.alpha = _Source;
-		
-		float time = 0;
-		while (time < _Duration)
-		{
-			yield return null;
-			
-			time += Time.deltaTime;
-			
-			float phase = _Curve.Evaluate(time / _Duration);
-			
-			_CanvasGroup.alpha = Mathf.Lerp(_Source, _Target, phase);
-		}
-		
-		_CanvasGroup.alpha = 0;
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 }

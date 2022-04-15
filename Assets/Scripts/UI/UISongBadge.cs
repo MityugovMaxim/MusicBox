@@ -16,6 +16,7 @@ public class UISongBadge : UIEntity
 		
 		SongBadge badge = m_SongsProcessor.GetBadge(m_SongID);
 		
+		gameObject.SetActive(badge != SongBadge.None);
 		m_NewBadge.SetActive(badge == SongBadge.New);
 		m_HotBadge.SetActive(badge == SongBadge.Hot);
 	}

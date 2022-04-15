@@ -1894,7 +1894,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: <sprite tint=1 name=unit_font_0><sprite name=coins_icon>
+  m_text: <sprite tint=1 name=unit_font_0><sprite tint=0 name=coins_icon>
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b8a669d2cdbd741b88d67b01024fd0da, type: 2}
   m_sharedMaterial: {fileID: 6603240175740317581, guid: b8a669d2cdbd741b88d67b01024fd0da,
@@ -2080,6 +2080,7 @@ MonoBehaviour:
   m_Label: {fileID: 6527666860206937620}
   m_Value: 0
   m_Sign: 1
+  m_Tint: 0
 --- !u!1001 &1713578627366306345
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2224,6 +2225,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 3337466257254544497}
     m_Modifications:
+    - target: {fileID: 4617919846328994720, guid: cf8b8385e75b04d7b86936c7dc3e9783,
+        type: 3}
+      propertyPath: m_TouchClickSound
+      value: Click
+      objectReference: {fileID: 0}
     - target: {fileID: 7079622682101189953, guid: cf8b8385e75b04d7b86936c7dc3e9783,
         type: 3}
       propertyPath: m_Name

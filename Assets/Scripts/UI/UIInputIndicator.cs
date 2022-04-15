@@ -92,14 +92,6 @@ public class UIInputIndicator : UIEntity
 
 	void Process(float _Progress)
 	{
-		return;
-		
-		if (_Progress >= m_ScoreManager.PerfectThreshold)
-			Play(m_Perfect);
-		else if (_Progress >= m_ScoreManager.GoodThreshold)
-			Play(m_Good);
-		else
-			Play(m_Bad);
 	}
 
 	async void Play(UIRounded _Outline)

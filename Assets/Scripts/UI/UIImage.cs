@@ -51,12 +51,12 @@ public abstract class UIImage : MaskableGraphic
 		Vector4 mask = GetMask();
 		Vector4 uv   = m_Sprite != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Sprite) : new Vector4(0, 0, 1, 1);
 		
-		Color32 color32 = color;
+		Color32 color = this.color;
 		_VertexHelper.Clear();
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMin, rect.yMin),
-			color32,
+			color,
 			new Vector2(uv.x, uv.y),
 			new Vector2(mask.x, mask.y),
 			GetUV2(),
@@ -67,7 +67,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMin, rect.yMax),
-			color32,
+			color,
 			new Vector2(uv.x, uv.w),
 			new Vector2(mask.x, mask.w),
 			GetUV2(),
@@ -78,7 +78,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMax, rect.yMax),
-			color32,
+			color,
 			new Vector2(uv.z, uv.w),
 			new Vector2(mask.z, mask.w),
 			GetUV2(),
@@ -89,7 +89,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMax, rect.yMin),
-			color32,
+			color,
 			new Vector2(uv.z, uv.y),
 			new Vector2(mask.z, mask.y),
 			GetUV2(),
@@ -116,10 +116,13 @@ public abstract class UIImage : MaskableGraphic
 	protected static Material CreateMaterial(string _Shader, params string[] _Keywords)
 	{
 		Material material = new Material(Shader.Find(_Shader));
-		foreach (string keyword in _Keywords)
+		if (_Keywords.Length > 0)
 		{
-			if (!string.IsNullOrEmpty(keyword))
-				material.EnableKeyword(keyword);
+			foreach (string keyword in _Keywords)
+			{
+				if (!string.IsNullOrEmpty(keyword))
+					material.EnableKeyword(keyword);
+			}
 		}
 		return material;
 	}

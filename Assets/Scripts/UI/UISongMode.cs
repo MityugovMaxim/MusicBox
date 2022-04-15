@@ -13,13 +13,13 @@ public class UISongMode : UIEntity
 
 	public void Setup(string _LevelID)
 	{
-		LevelMode levelMode      = m_SongsProcessor.GetMode(_LevelID);
-		bool      levelAvailable = m_SongsManager.IsSongAvailable(_LevelID);
+		SongMode songMode      = m_SongsProcessor.GetMode(_LevelID);
+		bool     songAvailable = m_SongsManager.IsSongAvailable(_LevelID);
 		
-		m_FreeMode.SetActive(levelAvailable && levelMode == LevelMode.Free);
-		m_AdsMode.SetActive(levelAvailable && levelMode == LevelMode.Ads);
-		m_ProductMode.SetActive(levelAvailable && levelMode == LevelMode.Product);
+		m_FreeMode.SetActive(songAvailable && songMode == SongMode.Free);
+		m_AdsMode.SetActive(songAvailable && songMode == SongMode.Ads);
+		m_ProductMode.SetActive(songAvailable && songMode == SongMode.Product);
 		
-		m_Lock.SetActive(!levelAvailable);
+		m_Lock.SetActive(!songAvailable);
 	}
 }

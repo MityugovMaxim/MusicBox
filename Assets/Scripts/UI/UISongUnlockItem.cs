@@ -8,7 +8,7 @@ using Zenject;
 public class UISongUnlockItem : UIEntity
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<UISongUnlockItem> { }
+	public class Pool : UIEntityPool<UISongUnlockItem> { }
 
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");

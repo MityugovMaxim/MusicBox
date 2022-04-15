@@ -8,7 +8,7 @@ public class UISongDiscs : UIEntity
 	[SerializeField] GameObject m_GoldRank;
 	[SerializeField] GameObject m_PlatinumRank;
 
-	[Inject] ScoreProcessor m_ScoreProcessor;
+	[Inject] ScoresProcessor m_ScoresProcessor;
 
 	string m_SongID;
 
@@ -16,7 +16,7 @@ public class UISongDiscs : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		ScoreRank rank = m_ScoreProcessor.GetRank(m_SongID);
+		ScoreRank rank = m_ScoresProcessor.GetRank(m_SongID);
 		
 		gameObject.SetActive(rank >= ScoreRank.None);
 		

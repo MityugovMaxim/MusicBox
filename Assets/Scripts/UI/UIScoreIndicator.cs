@@ -1,92 +1,90 @@
-using System;
-using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class UIScoreIndicator : UIEntity, IInitializable, IDisposable
+public class UIScoreIndicator : UIEntity
 {
 	[SerializeField] UIUnitLabel m_ScoreLabel;
 	[SerializeField] float       m_Duration = 0.15f;
 
 	[Inject] SignalBus m_SignalBus;
 
-	long        m_Score;
-	IEnumerator m_ScoreRoutine;
+	long m_Score;
 
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<SongScoreSignal>(RegisterLevelScore);
-	}
+	CancellationTokenSource m_TokenSource;
 
-	void IDisposable.Dispose()
+	protected override void Awake()
 	{
-		m_SignalBus.Unsubscribe<SongScoreSignal>(RegisterLevelScore);
-	}
-
-	void RegisterLevelStart()
-	{
-		Restore();
-	}
-
-	void RegisterLevelRestart()
-	{
-		Restore();
-	}
-
-	void RegisterLevelScore(SongScoreSignal _Signal)
-	{
-		SetScore(_Signal.Score);
-	}
-
-	void SetScore(long _Score, bool _Instant = false)
-	{
-		if (m_ScoreRoutine != null)
-			StopCoroutine(m_ScoreRoutine);
+		base.Awake();
 		
-		if (!_Instant && gameObject.activeInHierarchy)
-		{
-			m_ScoreRoutine = ScoreRoutine(_Score);
-			
-			StartCoroutine(m_ScoreRoutine);
-		}
-		else
-		{
-			m_Score = _Score;
-			
-			m_ScoreLabel.Value = m_Score;
-		}
+		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
 	}
 
-	void Restore()
+	protected override void OnDestroy()
 	{
-		SetScore(0, true);
+		base.OnDestroy();
+		
+		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
 	}
 
-	IEnumerator ScoreRoutine(long _Score)
+	void RegisterScore(ScoreSignal _Signal)
+	{
+		ProcessScore(_Signal.Score);
+	}
+
+	async void ProcessScore(long _Score)
+	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		try
+		{
+			await ScoreAsync(_Score, token);
+		}
+		catch (TaskCanceledException) { }
+		
+		if (token.IsCancellationRequested)
+			return;
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+	}
+
+	Task ScoreAsync(long _Score, CancellationToken _Token = default)
 	{
 		long source = m_Score;
 		long target = _Score;
 		
-		if (source != target)
+		if (source >= target || _Token.IsCancellationRequested)
 		{
-			long  delta = target - source;
-			float time  = 0;
-			while (time < m_Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				double phase = time / m_Duration;
-				
-				m_Score = source + (long)(delta * phase);
-				
-				m_ScoreLabel.Value = m_Score;
-			}
+			m_Score            = target;
+			m_ScoreLabel.Value = m_Score;
+			return Task.CompletedTask;
 		}
 		
-		m_Score = target;
+		_Token.Register(
+			() =>
+			{
+				m_Score            = target;
+				m_ScoreLabel.Value = m_Score;
+			}
+		);
 		
-		m_ScoreLabel.Value = m_Score;
+		long delta = target - source;
+		
+		return UnityTask.Phase(
+			_Phase =>
+			{
+				m_Score            = source + (long)(delta * _Phase);
+				m_ScoreLabel.Value = m_Score;
+			},
+			m_Duration,
+			_Token
+		);
 	}
 }

@@ -21,8 +21,9 @@ public class UIRounded : SpriteGraphic
 			if (m_Radius == radius)
 				return;
 			
-			m_Radius     = radius;
-			m_ValidShape = false;
+			m_Radius = radius;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
@@ -36,8 +37,9 @@ public class UIRounded : SpriteGraphic
 			if (Mathf.Approximately(m_Radius.x, value))
 				return;
 			
-			m_Radius.x   = value;
-			m_ValidShape = false;
+			m_Radius.x = value;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
@@ -51,8 +53,9 @@ public class UIRounded : SpriteGraphic
 			if (Mathf.Approximately(m_Radius.y, value))
 				return;
 			
-			m_Radius.y   = value;
-			m_ValidShape = false;
+			m_Radius.y = value;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
@@ -66,8 +69,9 @@ public class UIRounded : SpriteGraphic
 			if (Mathf.Approximately(m_Radius.z, value))
 				return;
 			
-			m_Radius.z   = value;
-			m_ValidShape = false;
+			m_Radius.z = value;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
@@ -81,8 +85,9 @@ public class UIRounded : SpriteGraphic
 			if (Mathf.Approximately(m_Radius.w, value))
 				return;
 			
-			m_Radius.w   = value;
-			m_ValidShape = false;
+			m_Radius.w = value;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
@@ -96,11 +101,18 @@ public class UIRounded : SpriteGraphic
 			if (Mathf.Approximately(m_Width, value))
 				return;
 			
-			m_Width      = value;
-			m_ValidShape = false;
+			m_Width = value;
+			
+			Valid = false;
 			
 			SetVerticesDirty();
 		}
+	}
+
+	bool Valid
+	{
+		get => m_Valid && m_Vertices.Count > 0 && m_Indices.Count > 0;
+		set => m_Valid = value;
 	}
 
 	[SerializeField] Vector4 m_Radius;
@@ -109,17 +121,40 @@ public class UIRounded : SpriteGraphic
 	[SerializeField] Gradient m_Gradient;
 	[SerializeField] Mode     m_Mode;
 
+	bool m_Valid;
+
 	readonly List<UIVertex> m_Vertices = new List<UIVertex>();
 	readonly List<int>      m_Indices  = new List<int>();
 
-	bool m_ValidShape;
+	protected override void OnRectTransformDimensionsChange()
+	{
+		Valid = false;
+		
+		base.OnRectTransformDimensionsChange();
+	}
 
 	protected override void OnEnable()
 	{
-		m_ValidShape = false;
+		Valid = false;
 		
 		base.OnEnable();
 	}
+
+	protected override void OnDisable()
+	{
+		Valid = false;
+		
+		base.OnDisable();
+	}
+
+	#if UNITY_EDITOR
+	protected override void OnValidate()
+	{
+		Valid = false;
+		
+		base.OnValidate();
+	}
+	#endif
 
 	float GetOffset()
 	{
@@ -142,28 +177,26 @@ public class UIRounded : SpriteGraphic
 		return weight * m_Width;
 	}
 
-	Rect m_CachedRect;
-
 	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
 	{
 		_VertexHelper.Clear();
 		
-		Color32 colorCache = color;
-		
-		if (m_ValidShape)
+		if (Valid)
 		{
-			
+			Color32 color = this.color;
 			for (int i = 0; i < m_Vertices.Count; i++)
 			{
 				UIVertex vertex = m_Vertices[i];
-				vertex.color  = colorCache;
+				vertex.color  = color;
 				m_Vertices[i] = vertex;
 			}
+			
 			_VertexHelper.AddUIVertexStream(m_Vertices, m_Indices);
+			
 			return;
 		}
 		
-		m_ValidShape = true;
+		Valid = true;
 		
 		m_Vertices.Clear();
 		m_Indices.Clear();
@@ -196,21 +229,21 @@ public class UIRounded : SpriteGraphic
 		
 		float length = 0;
 		
-		length += TopLeftCorner(tlRadius, totalLength, length, rect, _VertexHelper);
+		TopLeftCorner(tlRadius, rect, totalLength, ref length);
 		
-		length += TopSide(tlRadius, trRadius, totalLength, length, rect, _VertexHelper);
+		TopSide(tlRadius, trRadius, rect, totalLength, ref length);
 		
-		length += TopRightCorner(trRadius, totalLength, length, rect, _VertexHelper);
+		TopRightCorner(trRadius, rect, totalLength, ref length);
 		
-		length += RightSide(trRadius, brRadius, totalLength, length, rect, _VertexHelper);
+		RightSide(trRadius, brRadius, rect, totalLength, ref length);
 		
-		length += BottomRightCorner(brRadius, totalLength, length, rect, _VertexHelper);
+		BottomRightCorner(brRadius, rect, totalLength, ref length);
 		
-		length += BottomSide(brRadius, blRadius, totalLength, length, rect, _VertexHelper);
+		BottomSide(brRadius, blRadius, rect, totalLength, ref length);
 		
-		length += BottomLeftCorner(blRadius, totalLength, length, rect, _VertexHelper);
+		BottomLeftCorner(blRadius, rect, totalLength, ref length);
 		
-		length += LeftSide(blRadius, tlRadius, totalLength, length, rect, _VertexHelper);
+		LeftSide(blRadius, tlRadius, rect, totalLength, ref length);
 		
 		int quads = m_Vertices.Count / 2 - 1;
 		for (int i = 0; i < quads; i++)
@@ -254,9 +287,9 @@ public class UIRounded : SpriteGraphic
 			: _Radius;
 	}
 
-	float TopLeftCorner(float _Radius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void TopLeftCorner(float _Radius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Corner(
+		_Length += Corner(
 			new Vector2(-1, 0),
 			new Vector2(_Rect.xMin + _Radius, _Rect.yMax - _Radius),
 			_Radius,
@@ -265,9 +298,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float TopRightCorner(float _Radius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void TopRightCorner(float _Radius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Corner(
+		_Length += Corner(
 			new Vector2(0, 1),
 			new Vector2(_Rect.xMax - _Radius, _Rect.yMax - _Radius),
 			_Radius,
@@ -276,9 +309,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float BottomRightCorner(float _Radius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void BottomRightCorner(float _Radius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Corner(
+		_Length += Corner(
 			new Vector2(1, 0),
 			new Vector2(_Rect.xMax - _Radius, _Rect.yMin + _Radius),
 			_Radius,
@@ -287,9 +320,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float BottomLeftCorner(float _Radius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void BottomLeftCorner(float _Radius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Corner(
+		_Length += Corner(
 			new Vector2(0, -1),
 			new Vector2(_Rect.xMin + _Radius, _Rect.yMin + _Radius),
 			_Radius,
@@ -298,9 +331,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float TopSide(float _TLRadius, float _TRRadius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void TopSide(float _TLRadius, float _TRRadius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Side(
+		_Length += Side(
 			new Vector2(0, 1),
 			new Vector2(_Rect.xMin + _TLRadius, _Rect.yMax),
 			new Vector2(_Rect.xMax - _TRRadius, _Rect.yMax),
@@ -309,9 +342,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float RightSide(float _TRRadius, float _BRRadius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void RightSide(float _TRRadius, float _BRRadius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Side(
+		_Length += Side(
 			new Vector2(1, 0),
 			new Vector2(_Rect.xMax, _Rect.yMax - _TRRadius),
 			new Vector2(_Rect.xMax, _Rect.yMin + _BRRadius),
@@ -320,9 +353,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float BottomSide(float _BRRadius, float _BLRadius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void BottomSide(float _BRRadius, float _BLRadius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Side(
+		_Length += Side(
 			new Vector2(0, -1),
 			new Vector2(_Rect.xMax - _BRRadius, _Rect.yMin),
 			new Vector2(_Rect.xMin + _BLRadius, _Rect.yMin),
@@ -331,9 +364,9 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float LeftSide(float _BLRadius, float _TLRadius, float _TotalLength, float _Length, Rect _Rect, VertexHelper _VertexHelper)
+	void LeftSide(float _BLRadius, float _TLRadius, Rect _Rect, float _TotalLength, ref float _Length)
 	{
-		return Side(
+		_Length += Side(
 			new Vector2(-1, 0),
 			new Vector2(_Rect.xMin, _Rect.yMin + _BLRadius),
 			new Vector2(_Rect.xMin, _Rect.yMax - _TLRadius),
@@ -342,7 +375,7 @@ public class UIRounded : SpriteGraphic
 		);
 	}
 
-	float Corner(Vector2 _Normal, Vector2 _Pivot, float   _Radius, float   _TotalLength, float   _Length)
+	float Corner(Vector2 _Normal, Vector2 _Pivot, float _Radius, float _TotalLength, float _Length)
 	{
 		float length = Mathf.PI * _Radius * 0.5f;
 		

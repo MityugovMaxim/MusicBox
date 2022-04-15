@@ -69,6 +69,58 @@ public class UnityTask : MonoBehaviour
 		return completionSource.Task;
 	}
 
+	public static Task Lerp(
+		Action<float>     _Action,
+		float             _Source,
+		float             _Target,
+		float             _Duration,
+		CancellationToken _Token = default
+	)
+	{
+		return Lerp(_Action, _Source, _Target, 0, _Duration, AnimationCurve.Linear(0, 0, 1, 1), _Token);
+	}
+
+	public static Task Lerp(
+		Action<float>     _Action,
+		float             _Source,
+		float             _Target,
+		float             _Duration,
+		AnimationCurve    _Curve,
+		CancellationToken _Token = default
+	)
+	{
+		return Lerp(_Action, _Source, _Target, 0, _Duration, _Curve, _Token);
+	}
+
+	public static Task Lerp(
+		Action<float>     _Action,
+		float             _Source,
+		float             _Target,
+		float             _Delay,
+		float             _Duration,
+		AnimationCurve    _Curve,
+		CancellationToken _Token = default
+	)
+	{
+		if (Mathf.Approximately(_Source, _Target))
+		{
+			_Delay    = 0;
+			_Duration = 0;
+		}
+		
+		return Phase(
+			_Phase =>
+			{
+				float phase = _Curve.Evaluate(_Phase);
+				float value = Mathf.Lerp(_Source, _Target, phase);
+				_Action(value);
+			},
+			_Delay,
+			_Duration,
+			_Token
+		);
+	}
+
 	public static Task Phase(Action<float> _Action, float _Duration, CancellationToken _Token = default)
 	{
 		return Phase(_Action, 0, _Duration, _Token);

@@ -1,7 +1,10 @@
+using System;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using Zenject;
+using Object = UnityEngine.Object;
 
 public class GameInstaller : MonoInstaller
 {
@@ -90,6 +93,8 @@ public class GameInstaller : MonoInstaller
 	{
 		#if UNITY_IOS
 		Container.Bind<MessageProcessor>().To<iOSMessageProcessor>().FromNew().AsSingle();
+		#elif UNITY_ANDROID
+		Container.Bind<MessageProcessor>().To<AndroidMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
 		Container.Bind<MusicProcessor>()
@@ -126,7 +131,7 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<SongsProcessor>();
 		InstallProcessor<OffersProcessor>();
 		InstallProcessor<ProgressProcessor>();
-		InstallProcessor<ScoreProcessor>();
+		InstallProcessor<ScoresProcessor>();
 		InstallProcessor<RevivesProcessor>();
 		
 		InstallProcessor<HealthManager>();
@@ -156,26 +161,12 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SongsDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ScoreDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<ScoresDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProductsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<StoreDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<SongRestartSignal>();
-		
-		Container.DeclareSignal<LevelPlaySignal>(); // TODO: Remove
-		Container.DeclareSignal<LevelExitSignal>(); // TODO: Remove
-		Container.DeclareSignal<LevelFinishSignal>(); // TODO: Remove
-		
-		Container.DeclareSignal<SongScoreSignal>().OptionalSubscriber();
-		Container.DeclareSignal<SongComboSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<HoldHitSignal>();
-		Container.DeclareSignal<HoldMissSignal>();
-		Container.DeclareSignal<HoldSuccessSignal>();
-		Container.DeclareSignal<HoldFailSignal>();
 		
 		Container.DeclareSignal<TapSuccessSignal>();
 		Container.DeclareSignal<TapFailSignal>();
@@ -183,18 +174,25 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<DoubleSuccessSignal>();
 		Container.DeclareSignal<DoubleFailSignal>();
 		
-		Container.DeclareSignal<HealthRestoreSignal>();
-		Container.DeclareSignal<HealthIncreaseSignal>();
-		Container.DeclareSignal<HealthDecreaseSignal>();
+		Container.DeclareSignal<HoldHitSignal>();
+		Container.DeclareSignal<HoldMissSignal>();
+		Container.DeclareSignal<HoldSuccessSignal>();
+		Container.DeclareSignal<HoldFailSignal>();
+		
+		Container.DeclareSignal<ScoreSignal>().OptionalSubscriber();
+		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();
 	}
 
 	void InstallAudioManager()
 	{
-		Container.BindInterfacesAndSelfTo<AudioManager>().FromNew().AsSingle();
-		Container.DeclareSignal<AudioPlaySignal>();
-		Container.DeclareSignal<AudioPauseSignal>();
-		Container.DeclareSignal<AudioNextTrackSignal>();
-		Container.DeclareSignal<AudioPreviousTrackSignal>();
-		Container.DeclareSignal<AudioSourceChangedSignal>();
+		#if UNITY_EDITOR
+		Container.Bind(typeof(AudioManager), typeof(IInitializable), typeof(IDisposable)).To<EditorAudioManager>().FromNew().AsSingle();
+		#elif UNITY_IOS
+		Container.Bind(typeof(AudioManager), typeof(IInitializable), typeof(IDisposable)).To<iOSAudioManager>().FromNew().AsSingle();
+		#elif UNITY_ANDROID
+		Container.Bind(typeof(AudioManager), typeof(IInitializable), typeof(IDisposable)).To<AndroidAudioManager>().FromNew().AsSingle();
+		#endif
+		
+		Container.DeclareSignal<AudioSourceChangedSignal>().OptionalSubscriber();
 	}
 }

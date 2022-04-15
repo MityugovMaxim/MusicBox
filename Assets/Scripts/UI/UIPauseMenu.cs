@@ -102,9 +102,9 @@ public class UIPauseMenu : UIMenu
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
+		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
 		
-		if (levelMode == LevelMode.Ads)
+		if (songMode == SongMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using AudioBox.Logging;
+using Firebase.Functions;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -7,73 +11,59 @@ public class UISongRating : UIEntity
 	[SerializeField] Toggle m_LikeButton;
 	[SerializeField] Toggle m_DislikeButton;
 
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] ScoresProcessor m_ScoresProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
-	int    m_Rating;
-	string m_LevelID;
+	string m_SongID;
+	int    m_SourceRating;
+	int    m_TargetRating;
 
-	[Inject]
-	public void Construct(
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
+	public void Setup(string _SongID)
 	{
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
-
-	public void Setup(string _LevelID)
-	{
-		m_LevelID = _LevelID;
+		m_SongID       = _SongID;
+		m_SourceRating = m_ScoresProcessor.GetRating(m_SongID);
+		m_TargetRating = m_ScoresProcessor.GetRating(m_SongID);
 		
-		m_Rating = GetRating();
-		
-		m_LikeButton.SetIsOnWithoutNotify(m_Rating == 1);
-		m_DislikeButton.SetIsOnWithoutNotify(m_Rating == -1);
+		m_LikeButton.SetIsOnWithoutNotify(m_SourceRating == 1);
+		m_DislikeButton.SetIsOnWithoutNotify(m_SourceRating == -1);
 	}
 
 	public void Like(bool _Value)
 	{
-		m_Rating = _Value ? 1 : 0;
+		m_TargetRating = _Value ? 1 : 0;
 		
-		m_HapticProcessor.Process(Haptic.Type.Success);
+		Haptic.Type haptic = _Value ? Haptic.Type.Success : Haptic.Type.Selection;
 		
-		m_LikeButton.SetIsOnWithoutNotify(m_Rating == 1);
-		m_DislikeButton.SetIsOnWithoutNotify(m_Rating == -1);
+		m_HapticProcessor.Process(haptic);
 	}
 
 	public void Dislike(bool _Value)
 	{
-		m_Rating = _Value ? -1 : 0;
+		m_TargetRating = _Value ? -1 : 0;
 		
-		m_HapticProcessor.Process(Haptic.Type.Warning);
-		
-		m_LikeButton.gameObject.SetActive(m_Rating == 1);
-		m_DislikeButton.gameObject.SetActive(m_Rating == -1);
+		m_HapticProcessor.Process(Haptic.Type.Selection);
 	}
 
-	public void Execute()
+	public async void Execute()
 	{
-		int rating = GetRating();
-		
-		if (m_Rating == rating)
+		if (m_SourceRating == m_TargetRating)
 			return;
 		
-		SetRating(m_Rating);
+		HttpsCallableReference function = FirebaseFunctions.DefaultInstance.GetHttpsCallable("SongRating");
 		
-		int delta = m_Rating - rating;
+		Dictionary<string, object> data = new Dictionary<string,object>()
+		{
+			{ "song_id", m_SongID },
+			{ "rating", m_TargetRating }
+		};
 		
-		m_StatisticProcessor.LogResultMenuControlPageRating(m_LevelID, delta);
-	}
-
-	int GetRating()
-	{
-		return PlayerPrefs.GetInt($"rating_{m_LevelID}", 0);
-	}
-
-	void SetRating(int _Rating)
-	{
-		PlayerPrefs.SetInt($"rating_{m_LevelID}", _Rating);
+		try
+		{
+			await function.CallAsync(data);
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 	}
 }

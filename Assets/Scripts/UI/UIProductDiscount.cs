@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using Zenject;
 
-public class UIProductDiscount : UIGroup
+public class UIProductDiscount : UIEntity
 {
 	[SerializeField] TMP_Text m_Label;
 
@@ -10,23 +10,13 @@ public class UIProductDiscount : UIGroup
 
 	string m_ProductID;
 
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		Hide(true);
-	}
-
 	public void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
 		
 		float discount = m_ProductsProcessor.GetDiscount(m_ProductID);
 		
-		if (Mathf.Approximately(discount, 0))
-			Hide();
-		else
-			Show();
+		gameObject.SetActive(!Mathf.Approximately(discount, 0));
 		
 		string sign = discount > 0 ? "+" : string.Empty;
 		

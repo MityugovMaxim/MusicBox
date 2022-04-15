@@ -75,7 +75,7 @@ public class UIMainMenu : UIMenu
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
 		
@@ -86,7 +86,7 @@ public class UIMainMenu : UIMenu
 	{
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProgressDataUpdateSignal>(Refresh);
 		

@@ -122,6 +122,7 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
 		if (m_Atlas == null && !m_URL)
 			m_Atlas = Atlas.Create(m_AtlasSize, new Vector2Int(m_Size, m_Size));

@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Firebase.Extensions;
 using UnityEngine;
-using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
@@ -10,16 +9,32 @@ public class UIDiscProgress : UIGroup
 {
 	public ScoreRank Rank => m_Rank;
 
+	public float Progress
+	{
+		get => m_Progress;
+		set
+		{
+			if (Mathf.Approximately(m_Progress, value))
+				return;
+			
+			m_Progress = value;
+			
+			ProcessProgress();
+		}
+	}
+
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 
 	[SerializeField] ScoreRank        m_Rank;
-	[SerializeField] UISplineProgress m_Progress;
+	[SerializeField] UISplineProgress m_Target;
 	[SerializeField] float            m_ProgressDelay;
 	[SerializeField] float            m_ProgressDuration;
 	[SerializeField] AnimationCurve   m_ProgressCurve;
 	[SerializeField] float            m_MinProgress;
 	[SerializeField] float            m_MaxProgress;
+
+	[SerializeField, Range(0, 1)] float m_Progress;
 
 	[Header("Sounds")]
 	[SerializeField, Sound] string m_ProgressSound;
@@ -42,40 +57,45 @@ public class UIDiscProgress : UIGroup
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		StateBehaviour.RegisterComplete(m_Animator, "collect", InvokeCollectFinished);
+		m_Animator.RegisterComplete("collect", InvokeCollectFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		StateBehaviour.UnregisterComplete(m_Animator, "collect", InvokeCollectFinished);
+		m_Animator.UnregisterComplete("collect", InvokeCollectFinished);
 	}
+
+	#if UNITY_EDITOR
+	protected override void OnValidate()
+	{
+		base.OnValidate();
+		
+		ProcessProgress();
+	}
+	#endif
 
 	public void Setup(float _SourceProgress, float _TargetProgress)
 	{
+		m_Progress       = _SourceProgress;
 		m_SourceProgress = _SourceProgress;
 		m_TargetProgress = _TargetProgress;
 		
-		m_Progress.Min = GetProgress(0);
-		m_Progress.Max = GetProgress(m_SourceProgress);
+		ProcessProgress();
 	}
 
-	public Task Progress()
+	public Task ProgressAsync()
 	{
 		m_SoundProcessor.Start(m_ProgressSound);
 		
-		m_Progress.Min = GetProgress(0);
-		m_Progress.Max = GetProgress(m_SourceProgress);
-		
-		return UnityTask.Phase(
-			_Phase =>
-			{
-				float progress = Mathf.Lerp(m_SourceProgress, m_TargetProgress, m_ProgressCurve.Evaluate(_Phase));
-				m_Progress.Max = GetProgress(progress);
-			},
+		return UnityTask.Lerp(
+			_Value => Progress = _Value,
+			m_SourceProgress,
+			m_TargetProgress,
 			m_ProgressDelay,
-			m_ProgressDuration
+			m_ProgressDuration,
+			m_ProgressCurve
 		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_ProgressSound));
 	}
 
@@ -118,9 +138,10 @@ public class UIDiscProgress : UIGroup
 		m_Animator.Update(0);
 	}
 
-	float GetProgress(float _Progress)
+	void ProcessProgress()
 	{
-		return Mathf.Lerp(m_MinProgress, m_MaxProgress, _Progress);
+		m_Target.Min = m_MinProgress;
+		m_Target.Max = Mathf.Lerp(m_MinProgress, m_MaxProgress, Progress);
 	}
 
 	void InvokeCollectFinished()

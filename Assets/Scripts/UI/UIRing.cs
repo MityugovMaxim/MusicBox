@@ -92,7 +92,6 @@ public class UIRing : MaskableGraphic
 		}
 		for (int i = 0; i <= samples; i++)
 		{
-			float p     = (float)i / samples;
 			float phase = Mathf.Lerp(uv.xMin, uv.xMax, (float)i / samples);
 			
 			m_Vertices.Add(Create(outer, color, new Vector2(phase, uv.yMin)));

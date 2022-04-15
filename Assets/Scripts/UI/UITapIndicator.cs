@@ -57,6 +57,8 @@ public class UITapIndicator : UIIndicator
 	{
 		Animator.SetTrigger(m_FailParameterID);
 		
+		FXProcessor.Fail();
+		
 		InvokeCallback();
 		
 		SignalBus.Fire(new TapFailSignal(_Progress));

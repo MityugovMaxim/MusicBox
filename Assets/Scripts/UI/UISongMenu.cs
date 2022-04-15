@@ -37,14 +37,14 @@ public class UISongMenu : UISlideMenu
 
 	public void Next()
 	{
-		m_StatisticProcessor.LogLevelMenuNextClick(m_SongID);
+		m_StatisticProcessor.LogSongMenuNextClick(m_SongID);
 		
 		Select(GetLevelID(1));
 	}
 
 	public void Previous()
 	{
-		m_StatisticProcessor.LogLevelMenuPreviousClick(m_SongID);
+		m_StatisticProcessor.LogSongMenuPreviousClick(m_SongID);
 		
 		Select(GetLevelID(-1));
 	}
@@ -54,7 +54,7 @@ public class UISongMenu : UISlideMenu
 		if (!m_SongsManager.IsSongLockedByCoins(m_SongID))
 			return;
 		
-		m_StatisticProcessor.LogLevelMenuUnlockClick(m_SongID);
+		m_StatisticProcessor.LogSongMenuUnlockClick(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -67,7 +67,7 @@ public class UISongMenu : UISlideMenu
 		
 		if (success)
 		{
-			m_StatisticProcessor.LogLevelMenuUnlockSuccess(m_SongID);
+			m_StatisticProcessor.LogSongMenuUnlockSuccess(m_SongID);
 			
 			await m_LoaderGroup.HideAsync();
 			
@@ -85,7 +85,7 @@ public class UISongMenu : UISlideMenu
 		}
 		else
 		{
-			m_StatisticProcessor.LogLevelMenuUnlockFailed(m_SongID);
+			m_StatisticProcessor.LogSongMenuUnlockFailed(m_SongID);
 			
 			m_HapticProcessor.Process(Haptic.Type.Failure);
 			
@@ -105,7 +105,7 @@ public class UISongMenu : UISlideMenu
 		if (!m_SongsManager.IsSongAvailable(m_SongID))
 			return;
 		
-		m_StatisticProcessor.LogLevelMenuPlayClick(m_SongID);
+		m_StatisticProcessor.LogSongMenuPlayClick(m_SongID);
 		
 		m_PreviewSource.Stop();
 		
@@ -155,7 +155,7 @@ public class UISongMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	protected override void OnShowFinished()
@@ -167,7 +167,7 @@ public class UISongMenu : UISlideMenu
 	{
 		m_PreviewSource.Stop();
 		
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(RegisterScoreDataUpdate);
+		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	void Select(string _LevelID)
@@ -234,9 +234,9 @@ public class UISongMenu : UISlideMenu
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
+		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
 		
-		if (levelMode == LevelMode.Ads)
+		if (songMode == SongMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			

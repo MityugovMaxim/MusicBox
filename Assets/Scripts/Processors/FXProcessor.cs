@@ -1,91 +1,61 @@
-using System;
-using System.Collections;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class FXProcessor : UIEntity, IInitializable
+public class FXProcessor : UIEntity
 {
 	[SerializeField] UIFXHighlight[] m_Highlights;
 	[SerializeField] UIFXHighlight   m_Flash;
+	[SerializeField] UIFXHighlight   m_Dim;
 	[SerializeField] RectTransform   m_InputArea;
 
 	[Inject] UITapFX.Pool    m_TapFXPool;
 	[Inject] UIDoubleFX.Pool m_DoubleFXPool;
 	[Inject] UIHoldFX.Pool   m_HoldFXPool;
 
-	void IInitializable.Initialize()
+	public async void TapFX(Rect _Rect)
 	{
-		Prewarm();
-	}
-
-	public void TapFX(Rect _Rect)
-	{
-		UITapFX tapFX = m_TapFXPool.Spawn();
-		
-		tapFX.RectTransform.SetParent(RectTransform, false);
-		tapFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
-		
-		IEnumerator delayRoutine = DelayRoutine(
-			tapFX.Duration,
-			() => m_TapFXPool.Despawn(tapFX)
-		);
-		
-		StartCoroutine(delayRoutine);
-		
 		Highlight(_Rect.center);
+		
+		UITapFX item = m_TapFXPool.Spawn(RectTransform);
+		
+		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
+		
+		await item.PlayAsync();
+		
+		m_TapFXPool.Despawn(item);
 	}
 
-	public void DoubleFX(Rect _Rect)
+	public async void DoubleFX(Rect _Rect)
 	{
-		UIDoubleFX doubleFX = m_DoubleFXPool.Spawn();
-		
-		doubleFX.RectTransform.SetParent(RectTransform, false);
-		doubleFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
-		
-		IEnumerator delayRoutine = DelayRoutine(
-			doubleFX.Duration,
-			() => m_DoubleFXPool.Despawn(doubleFX)
-		);
-		
-		StartCoroutine(delayRoutine);
-		
 		Flash();
+		
+		UIDoubleFX item = m_DoubleFXPool.Spawn(RectTransform);
+		
+		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
+		
+		await item.PlayAsync();
+		
+		m_DoubleFXPool.Despawn(item);
 	}
 
-	public void HoldFX(Rect _Rect)
+	public async void HoldFX(Rect _Rect)
 	{
-		UIHoldFX holdFX = m_HoldFXPool.Spawn();
-		
-		holdFX.RectTransform.SetParent(RectTransform, false);
-		holdFX.RectTransform.localPosition = GetZonePosition(_Rect.center);
-		
-		IEnumerator delayRoutine = DelayRoutine(
-			holdFX.Duration,
-			() => m_HoldFXPool.Despawn(holdFX)
-		);
-		
-		StartCoroutine(delayRoutine);
-		
 		Highlight(_Rect.center);
+		
+		UIHoldFX item = m_HoldFXPool.Spawn(RectTransform);
+		
+		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
+		
+		await item.PlayAsync();
+		
+		m_HoldFXPool.Despawn(item);
 	}
 
-	void Prewarm()
+	public void Fail()
 	{
-		UITapFX tapFX = m_TapFXPool.Spawn();
-		m_TapFXPool.Despawn(tapFX);
-		
-		UIDoubleFX doubleFX = m_DoubleFXPool.Spawn();
-		m_DoubleFXPool.Despawn(doubleFX);
-		
-		UIHoldFX holdFX = m_HoldFXPool.Spawn();
-		m_HoldFXPool.Despawn(holdFX);
-	}
-
-	static IEnumerator DelayRoutine(float _Delay, Action _Callback)
-	{
-		yield return new WaitForSeconds(_Delay);
-		
-		_Callback?.Invoke();
+		Dim();
 	}
 
 	Vector2 GetZonePosition(Vector2 _Position)
@@ -100,17 +70,30 @@ public class FXProcessor : UIEntity, IInitializable
 		return RectTransform.InverseTransformPoint(position);
 	}
 
-	void Highlight(Vector2 _Position)
+	async void Flash()
 	{
-		foreach (UIFXHighlight highlight in m_Highlights)
-		{
-			if (highlight != null && highlight.RectTransform.GetWorldRect().Contains(_Position, true))
-				highlight.Play();
-		}
+		await m_Flash.PlayAsync();
 	}
 
-	void Flash()
+	async void Dim()
 	{
-		m_Flash.Play();
+		await m_Dim.PlayAsync();
+	}
+
+	async void Highlight(Vector2 _Position)
+	{
+		await HighlightAsync(_Position);
+	}
+
+	Task HighlightAsync(Vector2 _Position)
+	{
+		UIFXHighlight highlight = GetHighlight(_Position);
+		
+		return highlight != null ? highlight.PlayAsync() : null;
+	}
+
+	UIFXHighlight GetHighlight(Vector2 _Position)
+	{
+		return m_Highlights.FirstOrDefault(_Highlight => _Highlight != null && _Highlight.GetWorldRect().Contains(_Position, true));
 	}
 }

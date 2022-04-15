@@ -146,6 +146,8 @@ public class UIHoldIndicator : UIIndicator
 		Animator.SetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		
+		FXProcessor.Fail();
+		
 		InvokeCallback();
 		
 		SignalBus.Fire(new HoldFailSignal(_MinProgress, _MaxProgress));

@@ -1,56 +1,54 @@
+using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class HealthRestoreSignal
+public class HealthSignal
 {
 	public int Health { get; }
 
-	public HealthRestoreSignal(int _Health)
+	public HealthSignal(int _Health)
 	{
 		Health = _Health;
 	}
 }
 
 [Preserve]
-public class HealthIncreaseSignal
-{
-	public int Health { get; }
-
-	public HealthIncreaseSignal(int _Health)
-	{
-		Health = _Health;
-	}
-}
-
-[Preserve]
-public class HealthDecreaseSignal
-{
-	public int Health { get; }
-
-	public HealthDecreaseSignal(int _Health)
-	{
-		Health = _Health;
-	}
-}
-
-[Preserve]
-public class HealthManager
+public class HealthManager : IInitializable, IDisposable
 {
 	const int MAX_HEALTH = 4;
 
 	[Inject] SignalBus      m_SignalBus;
 	[Inject] SongsProcessor m_SongsProcessor;
 
+	string m_SongID;
+	Action m_Death;
 	int    m_Health;
 	float  m_InvincibilityDuration;
 	float  m_InvincibilityTime;
 
-	public void Setup(string _SongID)
+	void IInitializable.Initialize()
 	{
+		m_SignalBus.Subscribe<TapFailSignal>(Damage);
+		m_SignalBus.Subscribe<DoubleFailSignal>(Damage);
+		m_SignalBus.Subscribe<HoldFailSignal>(Damage);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<TapFailSignal>(Damage);
+		m_SignalBus.Unsubscribe<DoubleFailSignal>(Damage);
+		m_SignalBus.Unsubscribe<HoldFailSignal>(Damage);
+	}
+
+	public void Setup(string _SongID, Action _Death)
+	{
+		m_SongID = _SongID;
+		m_Death  = _Death;
+		
 		m_InvincibilityTime     = 0;
-		m_InvincibilityDuration = m_SongsProcessor.GetInvincibility(_SongID);
+		m_InvincibilityDuration = m_SongsProcessor.GetInvincibility(m_SongID);
 	}
 
 	public void Restore()
@@ -59,27 +57,21 @@ public class HealthManager
 		
 		m_InvincibilityTime = 0;
 		
-		m_SignalBus.Fire(new HealthRestoreSignal(m_Health));
+		m_SignalBus.Fire(new HealthSignal(m_Health));
 	}
 
-	public void Decrease()
+	void Damage()
 	{
 		if (Time.time < m_InvincibilityTime)
 			return;
 		
 		m_InvincibilityTime = Time.time + m_InvincibilityDuration;
 		
-		m_Health -= 1;
+		m_Health = Mathf.Max(0, m_Health - 1);
 		
-		m_SignalBus.Fire(new HealthDecreaseSignal(m_Health));
-	}
-
-	public void Increase()
-	{
-		m_InvincibilityTime = 0;
+		m_SignalBus.Fire(new HealthSignal(m_Health));
 		
-		m_Health = Mathf.Min(m_Health + 1, MAX_HEALTH);
-		
-		m_SignalBus.Fire(new HealthIncreaseSignal(m_Health));
+		if (m_Health == 0)
+			m_Death?.Invoke();
 	}
 }

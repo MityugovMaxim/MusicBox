@@ -170,7 +170,7 @@ public class UIProductMenu : UISlideMenu
 		m_Items.Clear();
 		
 		List<string> songIDs = m_ProductsProcessor.GetSongIDs(m_ProductID)
-			.Where(_SongID => m_SongsProcessor.GetMode(_SongID) == LevelMode.Product)
+			.Where(_SongID => m_SongsProcessor.GetMode(_SongID) == SongMode.Product)
 			.ToList();
 		
 		m_ItemsGroup.SetActive(songIDs.Count > 0);

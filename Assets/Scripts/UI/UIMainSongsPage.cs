@@ -20,7 +20,7 @@ public class UIMainSongsPage : UIMainMenuPage
 		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<SongsDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
@@ -28,7 +28,7 @@ public class UIMainSongsPage : UIMainMenuPage
 	{
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 

@@ -125,15 +125,21 @@ RouteObserver* m_RouteObserver;
 
 extern "C"
 {
-	float AudioManager_GetInputLatency()
-	{
-		return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.inputLatency;
-	}
+    void AudioManager_Register(CommandHandler _AudioSourceChanged)
+    {
+        if (m_RouteObserver != NULL)
+            [m_RouteObserver remove];
+        
+        m_RouteObserver = [[RouteObserver new] init:_AudioSourceChanged];
+    }
 
-	float AudioManager_GetOutputLatency()
-	{
-		return AVAudioSession.sharedInstance.IOBufferDuration + AVAudioSession.sharedInstance.outputLatency;
-	}
+    void AudioManager_Unregister()
+    {
+        if (m_RouteObserver == NULL)
+            return;
+        
+        [m_RouteObserver remove];
+    }
 
 	const char* AudioManager_GetOutputName()
 	{
@@ -142,7 +148,7 @@ extern "C"
 		return MakeStringCopy(portName);
 	}
 
-	const char* AudioManager_GetOutputUID()
+	const char* AudioManager_GetOutputID()
 	{
 		NSString* portUID = AVAudioSession.sharedInstance.currentRoute.outputs[0].UID;
 		
@@ -176,8 +182,6 @@ extern "C"
 	void AudioManager_EnableAudio()
 	{
 		AVAudioSession* session = [AVAudioSession sharedInstance];
-		
-		//[session setActive:YES error:nil];
 		[session setCategory:AVAudioSessionCategoryPlayback
 			mode:AVAudioSessionModeSpokenAudio
 			options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
@@ -188,48 +192,5 @@ extern "C"
 	void AudioManager_DisableAudio()
 	{
 		UnitySetAudioSessionActive(false);
-		//[AVAudioSession.sharedInstance setActive:NO error:nil];
-	}
-
-	void AudioManager_UnregisterRemoteCommands()
-	{
-		[m_RouteObserver remove];
-	}
-
-	void AudioManager_RegisterRemoteCommands(
-		CommandHandler _PlayHandler,
-		CommandHandler _PauseHandler,
-		CommandHandler _NextTrackHandler,
-		CommandHandler _PreviousTrackHandler,
-		CommandHandler _SourceChanged
-	)
-	{
-		m_RouteObserver = [[RouteObserver new] init:_SourceChanged];
-		
-		MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-		
-		[commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-		 {
-			_PlayHandler();
-			return MPRemoteCommandHandlerStatusSuccess;
-		}];
-		
-		[commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-		 {
-			_PauseHandler();
-			return MPRemoteCommandHandlerStatusSuccess;
-		}];
-		
-		[commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-		 {
-			_NextTrackHandler();
-			return MPRemoteCommandHandlerStatusSuccess;
-		}];
-		
-		[commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent* _Nonnull event)
-		 {
-			_PreviousTrackHandler();
-			return MPRemoteCommandHandlerStatusSuccess;
-		}];
 	}
 }

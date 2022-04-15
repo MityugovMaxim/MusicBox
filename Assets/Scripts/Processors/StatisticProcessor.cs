@@ -191,11 +191,11 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogMainMenuLevelPageItemClick(string _LevelID)
+	public void LogMainMenuSongsPageItemClick(string _SongID)
 	{
 		LogEvent(
-			"main_menu_level_page_item_click",
-			StatisticData.Create("level_id", _LevelID)
+			"main_menu_songs_page_item_click",
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
@@ -266,23 +266,23 @@ public class StatisticProcessor
 
 	#region Level Menu
 
-	public void LogLevelMenuUnlockClick(string _LevelID)
+	public void LogSongMenuUnlockClick(string _SongID)
 	{
 		LogEvent(
-			"level_menu_unlock_click",
-			StatisticData.Create("level_id", _LevelID)
+			"song_menu_unlock_click",
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogLevelMenuUnlockSuccess(string _LevelID)
+	public void LogSongMenuUnlockSuccess(string _LevelID)
 	{
 		LogEvent(
-			"level_menu_unlock_success",
-			StatisticData.Create("level_id", _LevelID)
+			"song_menu_unlock_success",
+			StatisticData.Create("song_id", _LevelID)
 		);
 	}
 
-	public void LogLevelMenuUnlockFailed(string _LevelID)
+	public void LogSongMenuUnlockFailed(string _LevelID)
 	{
 		LogEvent(
 			"level_menu_unlock_failed",
@@ -290,7 +290,7 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogLevelMenuPlayClick(string _LevelID)
+	public void LogSongMenuPlayClick(string _LevelID)
 	{
 		LogEvent(
 			"level_menu_play_click",
@@ -298,7 +298,7 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogLevelMenuNextClick(string _LevelID)
+	public void LogSongMenuNextClick(string _LevelID)
 	{
 		LogEvent(
 			"level_menu_next_click",
@@ -306,7 +306,7 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogLevelMenuPreviousClick(string _LevelID)
+	public void LogSongMenuPreviousClick(string _LevelID)
 	{
 		LogEvent(
 			"level_menu_previous_click",
@@ -362,27 +362,27 @@ public class StatisticProcessor
 
 	#region Pause Menu
 
-	public void LogPauseMenuLeaveClick(string _LevelID)
+	public void LogPauseMenuLeaveClick(string _SongID)
 	{
 		LogEvent(
 			"pause_menu_leave_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogPauseMenuRestartClick(string _LevelID)
+	public void LogPauseMenuRestartClick(string _SongID)
 	{
 		LogEvent(
 			"pause_menu_restart_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogPauseMenuLatencyClick(string _LevelID)
+	public void LogPauseMenuLatencyClick(string _SongID)
 	{
 		LogEvent(
 			"pause_menu_latency_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("level_id", _SongID)
 		);
 	}
 
@@ -396,83 +396,54 @@ public class StatisticProcessor
 
 	#endregion
 
-	#region Game Menu
-
-	public void LogGameMenuPauseClick(string _LevelID)
-	{
-		LogEvent(
-			"game_menu_pause_click",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	public void LogGameMenuResumeClick(string _LevelID)
-	{
-		LogEvent(
-			"game_menu_resume_click",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	#endregion
-
 	#region Result Menu
 
-	public void LogResultMenuRewardPageContinueClick(string _LevelID)
+	public void LogResultMenuRewardPageContinueClick(string _SongID)
 	{
 		LogEvent(
 			"result_menu_reward_page_continue_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogResultMenuLevelPageContinueClick(string _LevelID)
+	public void LogResultMenuLevelPageContinueClick(string _SongID)
 	{
 		LogEvent(
 			"result_menu_level_page_continue_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogResultMenuControlPageLeaveClick(string _LevelID)
+	public void LogResultMenuControlPageLeaveClick(string _SongID)
 	{
 		LogEvent(
 			"result_menu_control_page_leave_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogResultMenuControlPageNextClick(string _LevelID)
+	public void LogResultMenuControlPageNextClick(string _SongID)
 	{
 		LogEvent(
 			"result_menu_control_page_next_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogResultMenuControlPageRestartClick(string _LevelID)
+	public void LogResultMenuControlPageRestartClick(string _SongID)
 	{
 		LogEvent(
 			"result_menu_control_page_restart_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogResultMenuControlPagePlatformClick(string _LevelID, string _PlatformID)
+	public void LogResultMenuControlPagePlatformClick(string _SongID, string _PlatformURL)
 	{
 		LogEvent(
 			"result_menu_control_page_platform_click",
-			StatisticData.Create("level_id", _LevelID),
-			StatisticData.Create("platform_id", _PlatformID)
-		);
-	}
-
-	public void LogResultMenuControlPageRating(string _LevelID, int _Delta)
-	{
-		LogEvent(
-			"result_menu_control_page_rating",
-			StatisticData.Create("level_id", _LevelID),
-			StatisticData.Create("rating", _Delta)
+			StatisticData.Create("song_id", _SongID),
+			StatisticData.Create("platform_url", _PlatformURL)
 		);
 	}
 
@@ -480,43 +451,43 @@ public class StatisticProcessor
 
 	#region Revive Menu
 
-	public void LogReviveMenuShow(string _LevelID)
+	public void LogReviveMenuShow(string _SongID)
 	{
 		LogEvent(
 			"revive_menu_show",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogReviveMenuReviveAdsClick(string _LevelID)
+	public void LogReviveMenuReviveAdsClick(string _SongID)
 	{
 		LogEvent(
 			"revive_menu_revive_ads_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogReviveMenuReviveCoinsClick(string _LevelID)
+	public void LogReviveMenuReviveCoinsClick(string _SongID)
 	{
 		LogEvent(
 			"revive_menu_revive_coins_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogReviveMenuLeaveClick(string _LevelID)
+	public void LogReviveMenuLeaveClick(string _SongID)
 	{
 		LogEvent(
 			"revive_menu_leave_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
-	public void LogReviveMenuRestartClick(string _LevelID)
+	public void LogReviveMenuRestartClick(string _SongID)
 	{
 		LogEvent(
 			"revive_menu_restart_click",
-			StatisticData.Create("level_id", _LevelID)
+			StatisticData.Create("song_id", _SongID)
 		);
 	}
 
@@ -524,13 +495,13 @@ public class StatisticProcessor
 
 	#region Latency Menu
 
-	public void LogLatencyMenuState(string _DeviceName, string _DeviceUID, string _DeviceType, float _Latency)
+	public void LogAudioLatencyState(string _DeviceName, string _DeviceUID, AudioOutputType _DeviceType, float _Latency)
 	{
 		LogEvent(
 			"latency_menu_state",
 			StatisticData.Create("device_name", _DeviceName),
 			StatisticData.Create("device_uid", _DeviceUID),
-			StatisticData.Create("device_type", _DeviceType),
+			StatisticData.Create("device_type", _DeviceType.ToString()),
 			StatisticData.Create("latency", _Latency)
 		);
 	}

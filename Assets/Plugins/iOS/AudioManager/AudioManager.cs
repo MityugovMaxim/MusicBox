@@ -1,46 +1,118 @@
-﻿// ReSharper disable RedundantUsingDirective
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using AudioBox.Logging;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
-public class AudioPlaySignal { }
-public class AudioPauseSignal { }
-public class AudioNextTrackSignal { }
-public class AudioPreviousTrackSignal { }
+[Preserve]
 public class AudioSourceChangedSignal { }
 
-public class AudioManager : IInitializable
+#if UNITY_EDITOR
+[Preserve]
+public class EditorAudioManager : AudioManager
 {
-	public enum OutputType
+	protected override void Load(Action _AudioSourceChanged)
 	{
-		BuiltIn    = 0,
-		Headphones = 1,
-		Bluetooth  = 2,
-		Unknown    = 3,
+		Log.Info(this, "Load completed.");
 	}
 
-	delegate void RemoteCommandHandler();
+	protected override void Unload()
+	{
+		Log.Info(this, "Unload completed.");
+	}
 
-	#if UNITY_IOS && !UNITY_EDITOR
-	[DllImport("__Internal")]
-	static extern float AudioManager_GetInputLatency();
+	public override void SetAudioActive(bool _Value)
+	{
+		if (_Value)
+			Log.Info(this, "Audio enabled");
+		else
+			Log.Info(this, "Audio disabled");
+	}
 
-	[DllImport("__Internal")]
-	static extern float AudioManager_GetOutputLatency();
+	public override string GetAudioOutputName()
+	{
+		return "Speaker";
+	}
 
+	public override AudioOutputType GetAudioOutputType()
+	{
+		return AudioOutputType.BuiltIn;
+	}
+
+	public override string GetAudioOutputID()
+	{
+		return "speaker_id";
+	}
+}
+#endif
+
+#if UNITY_ANDROID
+public class AndroidAudioManager : AudioManager
+{
+	class AudioSourceChanged : AndroidJavaProxy
+	{
+		readonly Action m_Action;
+
+		public AudioSourceChanged(Action _Action) : base(HANDLER_NAME)
+		{
+			m_Action = _Action;
+		}
+
+		public void Invoke()
+		{
+			m_Action?.Invoke();
+		}
+	}
+
+	const string CLASS_NAME   = "com.audiobox.audiocontroller.AudioController";
+	const string HANDLER_NAME = "com.audiobox.audiocontroller.CommandHandler";
+
+	AndroidJavaObject m_AudioController;
+	AndroidJavaProxy  m_AudioSourceChanged;
+
+	protected override void Load(Action _AudioSourceChanged)
+	{
+		m_AudioController = new AndroidJavaObject(CLASS_NAME);
+		m_AudioSourceChanged = new  AudioSourceChanged(_AudioSourceChanged);
+		
+		m_AudioController.Call("Register", m_AudioSourceChanged);
+	}
+
+	protected override void Unload()
+	{
+		m_AudioController.Call("Unregister");
+		m_AudioController.Dispose();
+	}
+
+	public override void SetAudioActive(bool _Value) { }
+
+	public override string GetAudioOutputName()
+	{
+		return m_AudioController.Call<string>("GetAudioOutputName");
+	}
+
+	public override AudioOutputType GetAudioOutputType()
+	{
+		return (AudioOutputType)m_AudioController.Call<int>("GetAudioOutputType");
+	}
+
+	public override string GetAudioOutputID()
+	{
+		return m_AudioController.Call<string>("GetAudioOutputID");
+	}
+}
+#endif
+
+#if UNITY_IOS
+[Preserve]
+public class iOSAudioManager : AudioManager
+{
 	[DllImport("__Internal")]
-	static extern void AudioManager_RegisterRemoteCommands(
-		RemoteCommandHandler _PlayHandler,
-		RemoteCommandHandler _PauseHandler,
-		RemoteCommandHandler _NextTrackHandler,
-		RemoteCommandHandler _PreviousTrackHandler,
-		RemoteCommandHandler _SourceChangedHandler
-	);
+	static extern void AudioManager_Register(RemoteCommandHandler _AudioSourceChangedHandler);
 
 	[DllImport("_Internal")]
-	static extern void AudioManager_UnregisterRemoteCommands();
+	static extern void AudioManager_Unregister();
 
 	[DllImport("__Internal")]
 	static extern void AudioManager_EnableAudio();
@@ -56,134 +128,105 @@ public class AudioManager : IInitializable
 
 	[DllImport("__Internal")]
 	static extern int AudioManager_GetOutputType();
-	#endif
 
-	const string MANUAL_LATENCY_KEY = "MANUAL_LATENCY";
+	static Action m_AudioSourceChanged;
 
-	public static float Latency => m_HardwareLatency + m_ManualLatency;
-
-	static SignalBus m_SignalBus;
-
-	static float m_HardwareLatency;
-	static float m_ManualLatency;
-
-	[Inject]
-	public AudioManager(SignalBus _SignalBus)
+	protected override void Load(Action _AudioSourceChanged)
 	{
-		m_SignalBus = _SignalBus;
+		m_AudioSourceChanged = _AudioSourceChanged;
 		
-		m_HardwareLatency = GetHardwareLatency();
-		m_ManualLatency   = GetManualLatency();
+		AudioManager_Register(AudioSourceChangedHandler);
 	}
 
-	void IInitializable.Initialize()
+	protected override void Unload()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
-		AudioManager_RegisterRemoteCommands(
-			PlayHandler,
-			PauseHandler,
-			NextTrackHandler,
-			PreviousTrackHandler,
-			SourceChangedHandler
-		);
-		#endif
+		AudioManager_Unregister();
 	}
 
-	public static void SetAudioActive(bool _Value)
+	public override void SetAudioActive(bool _Value)
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
 		if (_Value)
 			AudioManager_EnableAudio();
 		else
 			AudioManager_DisableAudio();
-		#endif
 	}
 
-	public static string GetAudioOutputName()
+	public override string GetAudioOutputName()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
 		return AudioManager_GetOutputName();
-		#else
-		return "Default speakers";
-		#endif
 	}
 
-	public static string GetAudioOutputUID()
+	public override string GetAudioOutputID()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
 		return AudioManager_GetOutputUID();
-		#else
-		return string.Empty;
-		#endif
 	}
 
-	public static OutputType GetAudioOutputType()
+	public override AudioOutputType GetAudioOutputType()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
-		return (OutputType)AudioManager_GetOutputType();
-		#else
-		return OutputType.BuiltIn;
-		#endif
+		return (AudioOutputType)AudioManager_GetOutputType();
 	}
 
-	public static float GetManualLatency()
+	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
+	static void AudioSourceChangedHandler()
 	{
-		string key = MANUAL_LATENCY_KEY + GetAudioOutputUID();
+		m_AudioSourceChanged?.Invoke();
+	}
+}
+#endif
+
+public enum AudioOutputType
+{
+	BuiltIn    = 0,
+	Headphones = 1,
+	Bluetooth  = 2,
+	Unknown    = 3,
+}
+
+public abstract class AudioManager : IInitializable, IDisposable
+{
+	protected delegate void RemoteCommandHandler();
+
+	const string LATENCY_KEY = "LATENCY";
+
+	[Inject] SignalBus m_SignalBus;
+
+	void IInitializable.Initialize()
+	{
+		Load(InvokeAudioSourceChanged);
+	}
+
+	void IDisposable.Dispose()
+	{
+		Unload();
+	}
+
+	protected abstract void Load(Action _AudioSourceChanged);
+	protected abstract void Unload();
+
+	public abstract void SetAudioActive(bool _Value);
+
+	public abstract string GetAudioOutputName();
+
+	public abstract AudioOutputType GetAudioOutputType();
+
+	public abstract string GetAudioOutputID();
+
+	public float GetLatency()
+	{
+		string key = $"{LATENCY_KEY}_{GetAudioOutputID()}";
 		
 		return PlayerPrefs.GetFloat(key, 0);
 	}
 
-	public static void SetManualLatency(float _ManualLatency)
+	public void SetLatency(float _Latency)
 	{
-		m_ManualLatency = _ManualLatency;
+		string key = LATENCY_KEY + GetAudioOutputID();
 		
-		string key = MANUAL_LATENCY_KEY + GetAudioOutputUID();
-		
-		PlayerPrefs.SetFloat(key, _ManualLatency);
+		PlayerPrefs.SetFloat(key, _Latency);
 	}
 
-	public static float GetHardwareLatency()
+	void InvokeAudioSourceChanged()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
-		float latency = AudioManager_GetOutputLatency();
-		if (latency > 0)
-			Debug.LogFormat("[AudioManager] Detected {0}ms latency.", latency);
-		return latency;
-		#else
-		return 0;
-		#endif
-	}
-
-	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
-	static void PlayHandler()
-	{
-		m_SignalBus.Fire(new AudioPlaySignal());
-	}
-
-	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
-	static void PauseHandler()
-	{
-		m_SignalBus.Fire(new AudioPauseSignal());
-	}
-
-	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
-	static void NextTrackHandler()
-	{
-		m_SignalBus.Fire(new AudioNextTrackSignal());
-	}
-
-	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
-	static void PreviousTrackHandler()
-	{
-		m_SignalBus.Fire(new AudioPreviousTrackSignal());
-	}
-
-	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]
-	static void SourceChangedHandler()
-	{
-		m_HardwareLatency = GetHardwareLatency();
-		m_ManualLatency   = GetManualLatency();
-		
-		m_SignalBus.Fire(new AudioSourceChangedSignal());
+		m_SignalBus.Fire<AudioSourceChangedSignal>();
 	}
 }

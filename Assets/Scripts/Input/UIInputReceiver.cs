@@ -182,7 +182,7 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			
 			if (handleRect.yMin > enterThreshold)
 			{
-				handle.Restore();
+				handle.Reverse();
 				m_ActiveHandles.RemoveAt(i);
 				m_InactiveHandles.Insert(0, handle);
 				continue;

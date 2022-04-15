@@ -4,16 +4,14 @@ public class Spectrum : MonoBehaviour
 {
 	const int SAMPLES = 64;
 
-	static readonly float[] m_Values   = new float[SAMPLES];
 	static readonly float[] m_Buffer   = new float[SAMPLES];
 	static readonly float[] m_Spectrum = new float[SAMPLES];
 
 	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
 
-	[SerializeField] AudioSource    m_AudioSource;
-	[SerializeField] float          m_Dampen = 1.25f;
-	[SerializeField] FFTWindow      m_FFT    = FFTWindow.BlackmanHarris;
-	[SerializeField] AnimationCurve m_Limit  = AnimationCurve.Linear(0, 1, 1, 0);
+	[SerializeField] AudioSource m_AudioSource;
+	[SerializeField] float       m_Dampen = 1.25f;
+	[SerializeField] FFTWindow   m_FFT    = FFTWindow.BlackmanHarris;
 
 	void Update()
 	{
@@ -30,16 +28,7 @@ public class Spectrum : MonoBehaviour
 
 	void Process(int _Channel)
 	{
-		m_AudioSource.GetOutputData(m_Values, _Channel);
 		m_AudioSource.GetSpectrumData(m_Buffer, _Channel, m_FFT);
-		
-		float sum = 0;
-		for (int i = 0; i < SAMPLES; i++)
-			sum += m_Values[i] * m_Values[i];
-		float rms = Mathf.Sqrt(sum / SAMPLES);
-		
-		// for (int i = 1; i < SAMPLES; i += 2)
-		// 	m_Buffer[i - 1] = Mathf.Abs(m_Buffer[i - 1]) + Mathf.Abs(m_Buffer[i]);
 		
 		for (int i = 0; i < SAMPLES / 2; i++)
 		{

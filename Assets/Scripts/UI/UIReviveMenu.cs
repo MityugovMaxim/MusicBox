@@ -63,6 +63,15 @@ public class UIReviveMenu : UIMenu
 			
 			m_SongController.Revive();
 		}
+		else
+		{
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"song_revive_coins",
+				"SONG_REVIVE_ERROR_TITLE",
+				"SONG_REVIVE_ERROR_MESSAGE",
+				ReviveCoins
+			);
+		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
@@ -88,6 +97,15 @@ public class UIReviveMenu : UIMenu
 			await Task.Delay(500);
 			
 			m_SongController.Revive();
+		}
+		else
+		{
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"song_revive_ads",
+				"SONG_REVIVE_ERROR_TITLE",
+				"SONG_REVIVE_ERROR_MESSAGE",
+				ReviveAds
+			);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
@@ -142,9 +160,9 @@ public class UIReviveMenu : UIMenu
 		if (m_ProfileProcessor.HasNoAds())
 			return true;
 		
-		LevelMode levelMode = m_SongsProcessor.GetMode(m_SongID);
+		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
 		
-		if (levelMode == LevelMode.Ads)
+		if (songMode == SongMode.Ads)
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			

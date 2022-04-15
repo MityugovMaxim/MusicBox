@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
-using ModestTree;
-using Unity.Notifications.iOS;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -65,8 +63,11 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		Topic = m_LanguageProcessor.Language;
 		
 		List<Task> tasks = new List<Task>();
-		foreach (string language in m_LanguageProcessor.GetLanguages().Except(Topic))
-			tasks.Add(FirebaseMessaging.UnsubscribeAsync(language));
+		foreach (string language in m_LanguageProcessor.GetLanguages())
+		{
+			if (language != Topic)
+				tasks.Add(FirebaseMessaging.UnsubscribeAsync(language));
+		}
 		
 		await Task.WhenAll(tasks);
 		
@@ -91,13 +92,23 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 	}
 }
 
+#if UNITY_ANDROID
+[Preserve]
+public class AndroidMessageProcessor : MessageProcessor
+{
+	protected override void ClearBadges() { }
+}
+#endif
+
+#if UNITY_IOS
 [Preserve]
 public class iOSMessageProcessor : MessageProcessor
 {
 	protected override void ClearBadges()
 	{
-		iOSNotificationCenter.RemoveAllScheduledNotifications();
+		Unity.Notifications.iOS.iOSNotificationCenter.RemoveAllScheduledNotifications();
 		
-		iOSNotificationCenter.ApplicationBadge = 0;
+		Unity.Notifications.iOSiOSNotificationCenter.ApplicationBadge = 0;
 	}
 }
+#endif

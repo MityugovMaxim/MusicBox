@@ -659,18 +659,6 @@ MonoBehaviour:
     m_Right: 15
     m_Top: 15
     m_Bottom: 15
---- !u!225 &1603599398289165523
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4193023959690877548}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
 --- !u!1 &5395422449397907365
 GameObject:
   m_ObjectHideFlags: 0
@@ -882,8 +870,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 640923586647879331, guid: b2774a7bcb9454efca399991adf533b4,
         type: 3}
-      propertyPath: m_Layer
-      value: 9
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2657645789006278878, guid: b2774a7bcb9454efca399991adf533b4,
         type: 3}
@@ -990,24 +978,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4034115532841041466, guid: b2774a7bcb9454efca399991adf533b4,
-        type: 3}
-      propertyPath: m_Layer
-      value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 4874831179133495548, guid: b2774a7bcb9454efca399991adf533b4,
-        type: 3}
-      propertyPath: m_Layer
-      value: 9
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2774a7bcb9454efca399991adf533b4, type: 3}
---- !u!1 &4193023959690877548 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 640923586647879331, guid: b2774a7bcb9454efca399991adf533b4,
-    type: 3}
-  m_PrefabInstance: {fileID: 3663002682710521039}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &1599977761232602129 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2657645789006278878, guid: b2774a7bcb9454efca399991adf533b4,

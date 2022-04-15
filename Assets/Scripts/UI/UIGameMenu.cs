@@ -33,17 +33,17 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 
 	void RegisterAudioSourceChanged()
 	{
-		if (Shown)
-			Pause();
+		// if (Shown)
+		// 	Pause();
 	}
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		//m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		//m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 	}
 }

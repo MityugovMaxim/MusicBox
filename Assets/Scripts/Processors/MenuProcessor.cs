@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
+using Object = UnityEngine.Object;
 
 public class MenuProcessor : IInitializable
 {
@@ -31,25 +33,7 @@ public class MenuProcessor : IInitializable
 
 	async void IInitializable.Initialize()
 	{
-		await Show(MenuType.LoginMenu, true);
-		
-		UILoginMenu loginMenu = GetMenu<UILoginMenu>();
-		
-		if (loginMenu == null)
-			return;
-		
-		await loginMenu.Login();
-	}
-
-	public T GetMenu<T>(bool _Cache = false) where T : UIMenu
-	{
-		if (!MenuPrebuild.TryGetMenuType<T>(out MenuType menuType))
-		{
-			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu type '{0}' not found.", typeof(T).Name);
-			return null;
-		}
-		
-		return GetMenu<T>(menuType, _Cache);
+		await Show(MenuType.SplashMenu, true);
 	}
 
 	public async void ErrorLocalized(string _ID, string _TitleKey, string _MessageKey)
@@ -62,23 +46,65 @@ public class MenuProcessor : IInitializable
 		await ErrorAsync(_ID, _Title, _Message);
 	}
 
-	public async Task ErrorLocalizedAsync(string _ID, string _TitleKey, string _MessageKey)
+	public Task ErrorLocalizedAsync(string _ID, string _TitleKey, string _MessageKey)
 	{
-		await ErrorAsync(
+		return ErrorAsync(
 			_ID,
 			m_LocalizationProcessor.Get(_TitleKey),
 			m_LocalizationProcessor.Get(_MessageKey)
 		);
 	}
 
-	public async Task ErrorAsync(string _ID, string _Title, string _Message)
+	public Task ErrorAsync(string _ID, string _Title, string _Message)
 	{
 		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
 		
 		if (errorMenu != null)
 			errorMenu.Setup(_ID, _Title, _Message);
 		
-		await Show(MenuType.ErrorMenu);
+		return Show(MenuType.ErrorMenu);
+	}
+
+	public async void RetryLocalized(string _ID, string _TitleKey, string _MessageKey, Action _Retry, Action _Cancel = null)
+	{
+		await RetryLocalizedAsync(_ID, _TitleKey, _MessageKey, _Retry, _Cancel);
+	}
+
+	public async void Retry(string _ID, string _Title, string _Message, Action _Retry, Action _Cancel = null)
+	{
+		await RetryAsync(_ID, _Title, _Message, _Retry, _Cancel);
+	}
+
+	public Task RetryLocalizedAsync(string _ID, string _TitleKey, string _MessageKey, Action _Retry, Action _Cancel = null)
+	{
+		return RetryAsync(
+			_ID,
+			m_LocalizationProcessor.Get(_TitleKey),
+			m_LocalizationProcessor.Get(_MessageKey),
+			_Retry,
+			_Cancel
+		);
+	}
+
+	public Task RetryAsync(string _ID, string _Title, string _Message, Action _Retry, Action _Cancel = null)
+	{
+		UIRetryMenu retryMenu = GetMenu<UIRetryMenu>();
+		
+		if (retryMenu != null)
+			retryMenu.Setup(_ID, _Title, _Message, _Retry, _Cancel);
+		
+		return Show(MenuType.RetryMenu);
+	}
+
+	public T GetMenu<T>(bool _Cache = false) where T : UIMenu
+	{
+		if (!MenuPrebuild.TryGetMenuType<T>(out MenuType menuType))
+		{
+			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu type '{0}' not found.", typeof(T).Name);
+			return null;
+		}
+		
+		return GetMenu<T>(menuType, _Cache);
 	}
 
 	T GetMenu<T>(MenuType _MenuType, bool _Cache = false) where T : UIMenu
@@ -117,6 +143,25 @@ public class MenuProcessor : IInitializable
 		Reorder();
 		
 		return menu;
+	}
+
+	public bool RemoveMenu(MenuType _MenuType)
+	{
+		if (!m_MenuCache.ContainsKey(_MenuType))
+			return false;
+		
+		UIMenu menu = m_MenuCache[_MenuType];
+		
+		m_MenuCache.Remove(_MenuType);
+		
+		if (menu == null)
+			return false;
+		
+		Object.Destroy(menu.gameObject);
+		
+		Reorder();
+		
+		return true;
 	}
 
 	public async Task<UIMenu> Show(MenuType _MenuType, bool _Instant = false)

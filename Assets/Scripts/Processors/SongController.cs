@@ -10,20 +10,21 @@ using Zenject;
 [Preserve]
 public class SongController
 {
+	[Inject] AudioManager       m_AudioManager;
 	[Inject] UISongContainer    m_SongContainer;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] StorageProcessor   m_StorageProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] HealthManager      m_HealthManager;
-	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] SongPlayer.Factory m_SongFactory;
 	[Inject] AmbientProcessor   m_AmbientProcessor;
 	[Inject] MusicProcessor     m_MusicProcessor;
 
+	[Inject] HealthManager m_HealthManager;
+	[Inject] ScoreManager  m_ScoreManager;
+
 	string     m_SongID;
 	SongPlayer m_Player;
 
-	CancellationTokenSource m_LoadToken;
 	CancellationTokenSource m_RewindToken;
 
 	public async Task<bool> Load(string _SongID)
@@ -44,39 +45,48 @@ public class SongController
 			return false;
 		}
 		
-		m_LoadToken?.Cancel();
-		m_LoadToken?.Dispose();
-		
-		m_LoadToken = new CancellationTokenSource();
-		
 		if (m_Player != null)
-			GameObject.DestroyImmediate(m_Player.gameObject);
+		{
+			m_Player.Stop();
+			m_Player.Clear();
+			GameObject.Destroy(m_Player.gameObject);
+		}
 		
 		m_Player = null;
 		
-		CancellationToken token = m_LoadToken.Token;
+		SongPlayer player = Resources.Load<SongPlayer>(skin);
+		if (ReferenceEquals(player, null))
+		{
+			Log.Error(this, "Load song failed. Player with ID '{0}' is null.", m_SongID);
+			return false;
+		}
 		
-		await ResourceManager.UnloadAsync(token);
+		AudioClip music = await LoadMusicAsync(m_SongID);
 		
-		m_Player = await ResourceManager.InstantiateAsync(
-			skin,
-			m_SongFactory,
-			m_SongContainer,
-			token
-		);
+		if (music == null)
+		{
+			Log.Error(this, "Load song failed. Music with ID '{0}' is null.", m_SongID);
+			return false;
+		}
 		
-		AudioClip music = await LoadMusicAsync(m_SongID, token);
+		string asf = await LoadASFAsync(m_SongID);
 		
-		string asf = await LoadASFAsync(m_SongID, token);
+		if (string.IsNullOrEmpty(asf))
+		{
+			Log.Error(this, "Load song failed. ASF with ID '{0}' is null.", m_SongID);
+			return false;
+		}
 		
 		float ratio    = m_SongsProcessor.GetRatio(m_SongID);
 		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
-		float duration = m_Player.Size / speed;
+		float duration = m_SongContainer.Size / speed;
 		
+		m_Player = m_SongFactory.Create(player);
+		m_Player.RectTransform.SetParent(m_SongContainer.RectTransform, false);
 		m_Player.Setup(ratio, duration, music, asf, Finish);
 		
-		m_HealthManager.Setup(m_SongID);
 		m_ScoreManager.Setup(m_SongID);
+		m_HealthManager.Setup(m_SongID, Death);
 		
 		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
 		if (gameMenu != null)
@@ -87,9 +97,6 @@ public class SongController
 			pauseMenu.Setup(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
-		
-		m_LoadToken?.Dispose();
-		m_LoadToken = null;
 		
 		return true;
 	}
@@ -107,9 +114,10 @@ public class SongController
 		m_RewindToken = null;
 		
 		m_HealthManager.Restore();
+		m_ScoreManager.Restore();
 		
 		m_Player.Time = -m_Player.Duration;
-		m_Player.Play();
+		m_Player.Play(m_AudioManager.GetLatency());
 		
 		DisableAudio();
 	}
@@ -151,7 +159,7 @@ public class SongController
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Player.Play();
+		m_Player.Play(m_AudioManager.GetLatency());
 		
 		DisableAudio();
 		
@@ -181,7 +189,7 @@ public class SongController
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Player.Play();
+		m_Player.Play(m_AudioManager.GetLatency());
 		
 		DisableAudio();
 		
@@ -202,10 +210,11 @@ public class SongController
 		m_RewindToken = null;
 		
 		m_HealthManager.Restore();
+		m_ScoreManager.Restore();
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Clear();
-		m_Player.Play();
+		m_Player.Play(m_AudioManager.GetLatency());
 		
 		DisableAudio();
 	}
@@ -224,11 +233,41 @@ public class SongController
 		
 		m_Player.Stop();
 		
-		GameObject.DestroyImmediate(m_Player.gameObject);
+		Resources.UnloadAsset(m_Player.Music);
+		
+		GameObject.Destroy(m_Player.gameObject);
 		
 		m_Player = null;
 		
 		EnableAudio();
+	}
+
+	async void Death()
+	{
+		if (m_Player == null)
+		{
+			Log.Error(this, "Death failed. Player is null.");
+			return;
+		}
+		
+		m_RewindToken?.Cancel();
+		m_RewindToken?.Dispose();
+		m_RewindToken = null;
+		
+		m_Player.Stop();
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		await Task.Delay(600);
+		
+		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
+		
+		if (reviveMenu != null)
+			reviveMenu.Setup(m_SongID);
+		
+		await m_MenuProcessor.Show(MenuType.ReviveMenu);
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	async void Finish()

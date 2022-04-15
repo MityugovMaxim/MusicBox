@@ -8,16 +8,16 @@ public class SongsManager
 {
 	[Inject] ProfileProcessor  m_ProfileProcessor;
 	[Inject] SongsProcessor    m_SongsProcessor;
-	[Inject] ScoreProcessor    m_ScoreProcessor;
+	[Inject] ScoresProcessor   m_ScoresProcessor;
 	[Inject] ProductsProcessor m_ProductsProcessor;
 
 	public List<string> GetLibrarySongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()
-			.Where(_SongID => m_ProfileProcessor.HasSong(_SongID) || IsSongLockedByCoins(_SongID) || !IsSongLockedByLevel(_SongID))
+			.Where(IsSongAvailable)
 			.OrderByDescending(m_SongsProcessor.GetBadge)
 			.ThenByDescending(m_SongsProcessor.GetLevel)
-			.ThenBy(m_ScoreProcessor.GetRank)
+			.ThenBy(m_ScoresProcessor.GetRank)
 			.ThenBy(m_SongsProcessor.GetPrice)
 			.ToList();
 	}
@@ -52,12 +52,22 @@ public class SongsManager
 		if (m_ProfileProcessor.HasSong(_SongID))
 			return false;
 		
-		return false;
+		SongMode songMode = m_SongsProcessor.GetMode(_SongID);
+		
+		if (songMode != SongMode.Product)
+			return false;
+		
+		return true;
 	}
 
 	public bool IsSongLockedByLevel(string _SongID)
 	{
 		if (m_ProfileProcessor.HasSong(_SongID))
+			return false;
+		
+		SongMode songMode = m_SongsProcessor.GetMode(_SongID);
+		
+		if (songMode == SongMode.Product)
 			return false;
 		
 		int currentLevel  = m_ProfileProcessor.Level;
@@ -71,10 +81,9 @@ public class SongsManager
 		if (m_ProfileProcessor.HasSong(_SongID))
 			return false;
 		
-		int currentLevel  = m_ProfileProcessor.Level;
-		int requiredLevel = m_SongsProcessor.GetLevel(_SongID);
+		SongMode songMode = m_SongsProcessor.GetMode(_SongID);
 		
-		if (currentLevel < requiredLevel)
+		if (songMode == SongMode.Product)
 			return false;
 		
 		return m_SongsProcessor.GetPrice(_SongID) > 0;
@@ -85,12 +94,12 @@ public class SongsManager
 		if (m_ProfileProcessor.HasSong(_SongID))
 			return true;
 		
-		int currentLevel  = m_ProfileProcessor.Level;
-		int requiredLevel = m_SongsProcessor.GetLevel(_SongID);
-		
-		if (currentLevel < requiredLevel)
+		if (IsSongLockedByProduct(_SongID))
 			return false;
 		
-		return m_SongsProcessor.GetPrice(_SongID) == 0;
+		if (IsSongLockedByLevel(_SongID))
+			return false;
+		
+		return true;
 	}
 }

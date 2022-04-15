@@ -461,9 +461,9 @@ MonoBehaviour:
   m_TouchDownHaptic: 1
   m_TouchUpHaptic: 0
   m_TouchClickHaptic: 5
-  m_TouchDownSound: down
+  m_TouchDownSound: Down
   m_TouchUpSound: 
-  m_TouchClickSound: click
+  m_TouchClickSound: Up
   m_Button: {fileID: 0}
 --- !u!1 &6686201726405218729
 GameObject:
@@ -549,14 +549,13 @@ GameObject:
   m_Component:
   - component: {fileID: 3458422443916129234}
   - component: {fileID: 5490773792087029612}
-  - component: {fileID: 8232398925051552706}
   m_Layer: 5
   m_Name: discount
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3458422443916129234
 RectTransform:
   m_ObjectHideFlags: 0
@@ -590,22 +589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ff047ed75b44f5cb49042c2dc5a18f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Interactable: 0
-  m_ShowDuration: 0.2
-  m_HideDuration: 0.2
   m_Label: {fileID: 4032813864823177252}
---- !u!225 &8232398925051552706
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7481035502155046998}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
 --- !u!1 &8587317751900491504
 GameObject:
   m_ObjectHideFlags: 0

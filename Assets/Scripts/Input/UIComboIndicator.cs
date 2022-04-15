@@ -1,30 +1,27 @@
-using System;
 using UnityEngine;
 using Zenject;
 
-public class UIComboIndicator : UIGroup, IInitializable, IDisposable
+public class UIComboIndicator : UIGroup
 {
 	[SerializeField] UIUnitLabel m_Label;
 
-	SignalBus m_SignalBus;
+	[Inject] SignalBus m_SignalBus;
 
-	[Inject]
-	public void Construct(SignalBus _SignalBus)
+	protected override void Awake()
 	{
-		m_SignalBus = _SignalBus;
+		base.Awake();
+		
+		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
 	}
 
-	void IInitializable.Initialize()
+	protected override void OnDestroy()
 	{
-		m_SignalBus.Subscribe<SongComboSignal>(RegisterLevelCombo);
+		base.OnDestroy();
+		
+		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
 	}
 
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<SongComboSignal>(RegisterLevelCombo);
-	}
-
-	void RegisterLevelCombo(SongComboSignal _Signal)
+	void RegisterScore(ScoreSignal _Signal)
 	{
 		m_Label.Value = _Signal.Combo;
 		
@@ -32,12 +29,5 @@ public class UIComboIndicator : UIGroup, IInitializable, IDisposable
 			Show();
 		else
 			Hide();
-	}
-
-	void Restore()
-	{
-		Hide(true);
-		
-		m_Label.Value = 0;
 	}
 }

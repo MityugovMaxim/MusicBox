@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Firebase.Extensions;
 using Firebase.Functions;
 using UnityEngine;
 using Zenject;
@@ -35,13 +37,14 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
-	[Inject] ScoreProcessor     m_ScoreProcessor;
+	[Inject] ScoresProcessor    m_ScoresProcessor;
+	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	string      m_LevelID;
+	string      m_SongID;
 	ScoreRank   m_SourceRank;
 	ScoreRank   m_TargetRank;
 	int         m_SourceAccuracy;
@@ -51,59 +54,23 @@ public class UIResultRewardPage : UIResultMenuPage
 	long        m_Coins;
 	IEnumerator m_ScoreRoutine;
 	IEnumerator m_CoinsRoutine;
-	Action      m_ScoreFinished;
-	Action      m_CoinsFinished;
 
 	readonly Queue<ProgressData> m_ProgressData = new Queue<ProgressData>();
 
 	public override void Setup(string _SongID)
 	{
-		m_LevelID        = _SongID;
-		m_SourceRank     = m_ScoreProcessor.GetRank(m_LevelID);
-		m_SourceAccuracy = m_ScoreProcessor.GetAccuracy(m_LevelID);
-		m_SourceScore    = m_ScoreProcessor.GetScore(m_LevelID);
-		m_TargetRank     = m_ScoreProcessor.Rank;
-		m_TargetAccuracy = m_ScoreProcessor.Accuracy;
-		m_TargetScore    = m_ScoreProcessor.Score;
-		m_Coins          = m_SongsProcessor.GetPayout(m_LevelID, m_SourceRank, m_TargetRank);
+		m_SongID         = _SongID;
+		m_SourceRank     = m_ScoresProcessor.GetRank(m_SongID);
+		m_SourceAccuracy = m_ScoresProcessor.GetAccuracy(m_SongID);
+		m_SourceScore    = m_ScoresProcessor.GetScore(m_SongID);
+		m_TargetRank     = m_ScoreManager.GetRank();
+		m_TargetAccuracy = m_ScoreManager.GetAccuracy();
+		m_TargetScore    = m_ScoreManager.GetScore();
+		m_Coins          = m_SongsProcessor.GetPayout(m_SongID, m_SourceRank, m_TargetRank);
 		
-		m_ProgressData.Clear();
-		for (ScoreRank rank = m_SourceRank; rank <= m_TargetRank; rank++)
-		{
-			if (rank >= ScoreRank.Platinum)
-				break;
-			
-			int minAccuracy = m_ScoreProcessor.GetRankMinAccuracy(rank);
-			int maxAccuracy = m_ScoreProcessor.GetRankMaxAccuracy(rank);
-			
-			m_ProgressData.Enqueue(
-				new ProgressData(
-					rank,
-					Mathf.InverseLerp(minAccuracy, maxAccuracy, m_SourceAccuracy),
-					Mathf.InverseLerp(minAccuracy, maxAccuracy, m_TargetAccuracy)
-				)
-			);
-		}
+		ProcessProgress();
 		
-		foreach (UIDiscProgress discProgress in m_DiscsProgress)
-			discProgress.Hide(true);
-		
-		UIDiscProgress sourceDiscProgress = GetDiscProgress(m_SourceRank + 1);
-		if (sourceDiscProgress != null)
-		{
-			int   minAccuracy = m_ScoreProcessor.GetRankMinAccuracy(m_SourceRank);
-			int   maxAccuracy = m_ScoreProcessor.GetRankMaxAccuracy(m_SourceRank);
-			float progress    = Mathf.InverseLerp(minAccuracy, maxAccuracy, m_SourceAccuracy);
-			sourceDiscProgress.Setup(progress, progress);
-			sourceDiscProgress.Show(true);
-		}
-		
-		if (m_SourceRank >= ScoreRank.Platinum)
-			m_Discs.Show(true);
-		else
-			m_Discs.Hide(true);
-		
-		m_Discs.Rank = m_TargetRank > m_SourceRank ? m_TargetRank : m_SourceRank;
+		ProcessDiscs();
 		
 		ProcessTitle();
 		
@@ -134,7 +101,7 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	public async void Continue()
 	{
-		m_StatisticProcessor.LogResultMenuRewardPageContinueClick(m_LevelID);
+		m_StatisticProcessor.LogResultMenuRewardPageContinueClick(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -143,11 +110,30 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		bool success = await FinishLevel();
 		
-		if (!success)
-			await FinishLevel();
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
+		if (success)
+		{
+			await m_ScoresProcessor.Load();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			Skip();
+		}
+		else
+		{
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"song_finish",
+				"SONG_FINISH_ERROR_TITLE",
+				"SONG_FINISH_ERROR_MESSAGE",
+				Continue,
+				Skip
+			);
+		}
+	}
+
+	async void Skip()
+	{
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
 		if (resultMenu == null)
 			return;
@@ -159,6 +145,52 @@ public class UIResultRewardPage : UIResultMenuPage
 		await resultMenu.Select(pageType);
 		
 		resultMenu.Play(pageType);
+	}
+
+	void ProcessTitle()
+	{
+		m_Title.Text = m_SourceScore > m_TargetScore
+			? GetLocalization("RESULT_NEW_RECORD")
+			: GetLocalization("RESULT_TITLE");
+	}
+
+	void ProcessProgress()
+	{
+		m_ProgressData.Clear();
+		for (ScoreRank rank = m_SourceRank; rank <= m_TargetRank; rank++)
+		{
+			if (rank >= ScoreRank.Platinum)
+				break;
+			
+			float sourceProgress = m_ScoreManager.GetRankSourceProgress(rank);
+			float targetProgress = m_ScoreManager.GetRankTargetProgress(rank);
+			
+			m_ProgressData.Enqueue(new ProgressData(rank, sourceProgress, targetProgress));
+		}
+	}
+
+	void ProcessDiscs()
+	{
+		foreach (UIDiscProgress discProgress in m_DiscsProgress)
+		{
+			if (discProgress.Rank != m_SourceRank + 1)
+			{
+				discProgress.Hide(true);
+				continue;
+			}
+			
+			float progress = m_ScoreManager.GetRankSourceProgress(m_SourceRank);
+			
+			discProgress.Setup(progress, progress);
+			discProgress.Show(true);
+		}
+		
+		m_Discs.Rank = m_TargetRank > m_SourceRank ? m_TargetRank : m_SourceRank;
+		
+		if (m_TargetAccuracy > m_SourceAccuracy && m_SourceRank < ScoreRank.Platinum)
+			m_Discs.Hide(true);
+		else
+			m_Discs.Show(true);
 	}
 
 	UIDiscProgress GetDiscProgress(ScoreRank _Rank)
@@ -186,150 +218,64 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			await discProgress.ShowAsync();
 			
-			await discProgress.Progress();
+			await discProgress.ProgressAsync();
 			
 			if (m_TargetRank <= progressData.Rank)
-				break;
-			
-			await Task.WhenAny(
-				discProgress.CollectAsync().ContinueWith(_Task => discProgress.Hide(true)),
-				Task.Delay(250)
-			);
+			{
+				await Task.WhenAny(
+					discProgress.HideAsync(),
+					Task.Delay(250)
+				);
+			}
+			else
+			{
+				await Task.WhenAny(
+					discProgress.CollectAsync().ContinueWith(_Task => discProgress.HideAsync()),
+					Task.Delay(250)
+				);
+			}
 		}
 		
 		if (m_SourceRank > ScoreRank.None || m_TargetRank > ScoreRank.None)
 			await m_Discs.ShowAsync();
 	}
 
-	Task PlayScore()
+	Task PlayScore(CancellationToken _Token = default)
 	{
-		if (m_ScoreRoutine != null)
-			StopCoroutine(m_ScoreRoutine);
-		
-		InvokeScoreFinished();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_ScoreFinished = () => completionSource.SetResult(true);
-		
-		if (gameObject.activeInHierarchy)
-		{
-			m_ScoreRoutine = UnitRoutine(m_ScoreLabel, m_TargetScore, InvokeScoreFinished);
-			
-			StartCoroutine(m_ScoreRoutine);
-		}
-		else
-		{
-			m_ScoreLabel.Value = m_TargetScore;
-			
-			InvokeScoreFinished();
-		}
-		
-		return completionSource.Task;
+		return UnitAsync(m_ScoreLabel, m_TargetScore, _Token);
 	}
 
-	Task PlayCoins()
+	Task PlayCoins(CancellationToken _Token = default)
 	{
-		if (m_CoinsRoutine != null)
-			StopCoroutine(m_CoinsRoutine);
-		
-		InvokeCoinsFinished();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_CoinsFinished = () => completionSource.SetResult(true);
-		
-		if (gameObject.activeInHierarchy)
-		{
-			m_CoinsRoutine = UnitRoutine(m_CoinsLabel, m_Coins, InvokeCoinsFinished);
-			
-			StartCoroutine(m_CoinsRoutine);
-		}
-		else
-		{
-			m_CoinsLabel.Value = m_Coins;
-			
-			InvokeCoinsFinished();
-		}
-		
-		return completionSource.Task;
+		return UnitAsync(m_CoinsLabel, m_Coins, _Token);
 	}
 
-	void ProcessTitle()
+	Task UnitAsync(UICascadeUnitLabel _Label, double _Value, CancellationToken _Token = default)
 	{
-		m_Title.Text = m_SourceScore > m_TargetScore
-			? GetLocalization("RESULT_NEW_RECORD")
-			: GetLocalization("RESULT_TITLE");
-	}
-
-	void InvokeCoinsFinished()
-	{
-		Action action = m_CoinsFinished;
-		m_CoinsFinished = null;
-		action?.Invoke();
-	}
-
-	void InvokeScoreFinished()
-	{
-		Action action = m_ScoreFinished;
-		m_ScoreFinished = null;
-		action?.Invoke();
-	}
-
-	IEnumerator UnitRoutine(
-		UICascadeUnitLabel _Label,
-		double             _Value,
-		Action             _Finished
-	)
-	{
-		if (_Label == null)
-		{
-			_Finished?.Invoke();
-			yield break;
-		}
+		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
 		
-		_Label.Value = 0;
-		
-		if (_Value > 0 && m_Duration > float.Epsilon)
-		{
-			m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
-			
-			float time = 0;
-			while (time < m_Duration)
-			{
-				yield return null;
-				
-				time += Time.deltaTime;
-				
-				float phase = m_Curve.Evaluate(time / m_Duration);
-				
-				_Label.Value = (long)(_Value * phase);
-			}
-			
-			_Label.RectTransform.SetAsLastSibling();
-			_Label.Play();
-		}
-		
-		_Label.Value = (long)_Value;
-		
-		_Finished?.Invoke();
+		return UnityTask.Phase(
+			_Phase => _Label.Value = (long)(_Value * m_Curve.Evaluate(_Phase)),
+			m_Duration,
+			_Token
+		).ContinueWithOnMainThread(_Task => _Label.Play(), _Token);
 	}
 
 	async Task<bool> FinishLevel()
 	{
-		HttpsCallableReference finishLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("FinishLevel");
+		HttpsCallableReference finishSong = FirebaseFunctions.DefaultInstance.GetHttpsCallable("FinishSong");
 		
 		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["level_id"] = m_LevelID;
-		data["rank"]     = (int)m_ScoreProcessor.Rank;
-		data["accuracy"] = m_ScoreProcessor.Accuracy;
-		data["score"]    = m_ScoreProcessor.Score;
+		data["song_id"]  = m_SongID;
+		data["rank"]     = (int)m_ScoreManager.GetRank();
+		data["accuracy"] = m_ScoreManager.GetAccuracy();
+		data["score"]    = m_ScoreManager.GetScore();
 		
 		bool success;
 		
 		try
 		{
-			HttpsCallableResult result = await finishLevel.CallAsync(data);
+			HttpsCallableResult result = await finishSong.CallAsync(data);
 			
 			success = (bool)result.Data;
 		}

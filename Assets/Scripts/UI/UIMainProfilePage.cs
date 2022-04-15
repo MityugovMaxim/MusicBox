@@ -84,7 +84,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<LanguageDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<LanguageSelectSignal>(Refresh);
 	}
@@ -93,7 +93,7 @@ public class UIMainProfilePage : UIMainMenuPage
 	{
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoreDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<LanguageDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<LanguageSelectSignal>(Refresh);
 	}
