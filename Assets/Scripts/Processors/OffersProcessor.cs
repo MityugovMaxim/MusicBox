@@ -7,16 +7,11 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-[Preserve]
-public class OffersDataUpdateSignal { }
-
 public class OfferSnapshot
 {
 	public string ID          { get; }
 	public bool   Active      { get; }
 	public string Image       { get; }
-	public string Title       { get; }
-	public string Description { get; }
 	public string SongID      { get; }
 	public long   Coins       { get; }
 	public int    AdsCount    { get; }
@@ -25,51 +20,49 @@ public class OfferSnapshot
 
 	public OfferSnapshot(DataSnapshot _Data)
 	{
-		ID          = _Data.Key;
-		Active      = _Data.GetBool("active");
-		Image       = _Data.GetString("image");
-		Title       = _Data.GetString("title");
-		Description = _Data.GetString("description");
-		SongID      = _Data.GetString("song_id");
-		Coins       = _Data.GetLong("coins");
-		AdsCount    = _Data.GetInt("ads_count");
-		Timestamp   = _Data.GetLong("timestamp");
-		Order       = _Data.GetInt("order");
+		ID        = _Data.Key;
+		Active    = _Data.GetBool("active");
+		Image     = _Data.GetString("image");
+		SongID    = _Data.GetString("song_id");
+		Coins     = _Data.GetLong("coins");
+		AdsCount  = _Data.GetInt("ads_count");
+		Timestamp = _Data.GetLong("timestamp");
+		Order     = _Data.GetInt("order");
 	}
 }
 
 [Preserve]
-public class OffersProcessor : IInitializable, IDisposable
+public class OffersDataUpdateSignal { }
+
+[Preserve]
+public class OffersDescriptor : DescriptorProcessor<OffersDataUpdateSignal>
+{
+	protected override string Path => "offers_descriptors";
+}
+
+[Preserve]
+public class OffersProcessor
 {
 	bool Loaded { get; set; }
 
-	[Inject] SignalBus         m_SignalBus;
-	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] SignalBus        m_SignalBus;
+	[Inject] OffersDescriptor m_OffersDescriptor;
 
 	readonly List<OfferSnapshot> m_Snapshots = new List<OfferSnapshot>();
 
 	DatabaseReference m_Data;
 
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<LanguageSelectSignal>(OnLanguageSelect);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LanguageSelectSignal>(OnLanguageSelect);
-	}
-
 	public async Task Load()
 	{
 		if (m_Data == null)
 		{
-			string path = $"offers/{m_LanguageProcessor.Language}";
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child(path);
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child($"offers");
 			m_Data.ValueChanged += OnUpdate;
 		}
 		
 		await Fetch();
+		
+		await m_OffersDescriptor.Load();
 		
 		Loaded = true;
 	}
@@ -92,19 +85,9 @@ public class OffersProcessor : IInitializable, IDisposable
 		return snapshot?.Image ?? string.Empty;
 	}
 
-	public string GetTitle(string _OfferID)
-	{
-		OfferSnapshot snapshot = GetSnapshot(_OfferID);
-		
-		return snapshot?.Title ?? string.Empty;
-	}
+	public string GetTitle(string _OfferID) => m_OffersDescriptor.GetTitle(_OfferID);
 
-	public string GetDescription(string _OfferID)
-	{
-		OfferSnapshot snapshot = GetSnapshot(_OfferID);
-		
-		return snapshot?.Description ?? string.Empty;
-	}
+	public string GetDescription(string _OfferID) => m_OffersDescriptor.GetDescription(_OfferID);
 
 	public string GetSongID(string _OfferID)
 	{
@@ -131,20 +114,6 @@ public class OffersProcessor : IInitializable, IDisposable
 		}
 		
 		return snapshot.AdsCount;
-	}
-
-	async void OnLanguageSelect()
-	{
-		if (m_Data == null)
-			return;
-		
-		m_Data.ValueChanged -= OnUpdate;
-		m_Data              =  null;
-		Loaded              =  false;
-		
-		await Load();
-		
-		m_SignalBus.Fire<OffersDataUpdateSignal>();
 	}
 
 	async void OnUpdate(object _Sender, EventArgs _Args)

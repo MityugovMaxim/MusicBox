@@ -1,11 +1,8 @@
 using UnityEngine;
-using Zenject;
 
 public class UIProductImage : UIEntity
 {
 	[SerializeField] WebImage m_Image;
-
-	[Inject] ProductsProcessor m_ProductsProcessor;
 
 	string m_ProductID;
 

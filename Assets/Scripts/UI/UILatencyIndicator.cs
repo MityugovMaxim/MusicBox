@@ -51,12 +51,13 @@ public class UILatencyIndicator : UIEntity
 		
 		m_AudioManager.SetLatency(m_Latency);
 		
-		m_StatisticProcessor.LogAudioLatencyState(
-			m_AudioManager.GetAudioOutputName(),
-			m_AudioManager.GetAudioOutputID(),
-			m_AudioManager.GetAudioOutputType(),
-			m_AudioManager.GetLatency()
-		);
+		// TODO: Uncomment after moving from splash
+		// m_StatisticProcessor.LogAudioLatencyState(
+		// 	m_AudioManager.GetAudioOutputName(),
+		// 	m_AudioManager.GetAudioOutputID(),
+		// 	m_AudioManager.GetAudioOutputType(),
+		// 	m_AudioManager.GetLatency()
+		// );
 	}
 
 	static string GetOutputIcon(AudioOutputType _OutputType)

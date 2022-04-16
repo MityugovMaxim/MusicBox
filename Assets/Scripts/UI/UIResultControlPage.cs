@@ -7,11 +7,6 @@ using Zenject;
 
 public class UIResultControlPage : UIResultMenuPage
 {
-	const int RESTART_ADS_COUNT = 2;
-	const int LEAVE_ADS_COUNT   = 3;
-	const int NEXT_ADS_COUNT    = 2;
-	const int RATE_US_COUNT     = 2;
-
 	public override ResultMenuPageType Type => ResultMenuPageType.Control;
 
 	[SerializeField] UISongImage     m_Image;
@@ -23,6 +18,7 @@ public class UIResultControlPage : UIResultMenuPage
 	[SerializeField] UISongPlatforms m_Platforms;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] SongsManager       m_SongsManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
@@ -33,7 +29,7 @@ public class UIResultControlPage : UIResultMenuPage
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
 	int m_RestartAdsCount;
-	int m_RateUsCount;
+	int m_ReviewRequestCount;
 
 	string m_SongID;
 
@@ -87,7 +83,7 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		if (songMenu != null)
-			songMenu.Setup(GetLevelID(1));
+			songMenu.Setup(GetSongID(1));
 		
 		m_SongController.Leave();
 		
@@ -112,23 +108,24 @@ public class UIResultControlPage : UIResultMenuPage
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 	}
 
-	string GetLevelID(int _Offset)
+	string GetSongID(int _Offset)
 	{
-		List<string> levelIDs = m_SongsManager.GetLibrarySongIDs();
+		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
 		
-		int index = levelIDs.IndexOf(m_SongID);
-		if (index >= 0 && index < levelIDs.Count)
-			return levelIDs[MathUtility.Repeat(index + _Offset, levelIDs.Count)];
-		else if (levelIDs.Count > 0)
-			return levelIDs.FirstOrDefault();
-		else return m_SongID;
+		int index = songIDs.IndexOf(m_SongID);
+		if (index >= 0 && index < songIDs.Count)
+			return songIDs[MathUtility.Repeat(index + _Offset, songIDs.Count)];
+		else if (songIDs.Count > 0)
+			return songIDs.FirstOrDefault();
+		else
+			return m_SongID;
 	}
 
 	protected override void OnShowFinished()
 	{
-		m_RateUsCount++;
+		m_ReviewRequestCount++;
 		
-		if (m_RateUsCount == RATE_US_COUNT)
+		if (m_ReviewRequestCount == m_ConfigProcessor.ReviewRequestCount)
 		{
 			#if UNITY_IOS
 			UnityEngine.iOS.Device.RequestStoreReview();
@@ -167,7 +164,7 @@ public class UIResultControlPage : UIResultMenuPage
 		{
 			m_RestartAdsCount++;
 			
-			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
 				return true;
 			
 			m_RestartAdsCount = 0;
@@ -189,7 +186,7 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_NextAdsCount++;
 		
-		if (m_NextAdsCount < NEXT_ADS_COUNT)
+		if (m_NextAdsCount < m_ConfigProcessor.SongNextAdsCount)
 			return;
 		
 		m_NextAdsCount = 0;
@@ -208,7 +205,7 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_LeaveAdsCount++;
 		
-		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
 			return;
 		
 		m_LeaveAdsCount = 0;

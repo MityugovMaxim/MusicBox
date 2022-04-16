@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.GameMenu)]
-public class UIGameMenu : UIMenu, IInitializable, IDisposable
+public class UIGameMenu : UIMenu
 {
 	[SerializeField] UISongLabel m_Label;
 
@@ -31,19 +30,13 @@ public class UIGameMenu : UIMenu, IInitializable, IDisposable
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	void RegisterAudioSourceChanged()
+	protected override void OnShowStarted()
 	{
-		// if (Shown)
-		// 	Pause();
+		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Pause);
 	}
 
-	void IInitializable.Initialize()
+	protected override void OnHideStarted()
 	{
-		//m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-	}
-
-	void IDisposable.Dispose()
-	{
-		//m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Pause);
 	}
 }

@@ -17,12 +17,10 @@ public class SongSnapshot
 	public int                                 Level             { get; }
 	public string                              Title             { get; }
 	public string                              Artist            { get; }
-	public SongMode                           Mode              { get; }
+	public SongMode                            Mode              { get; }
 	public SongBadge                           Badge             { get; }
 	public float                               BPM               { get; }
 	public float                               Speed             { get; }
-	public float                               Ratio             { get; }
-	public float                               Invincibility     { get; }
 	public long                                DefaultPayout     { get; }
 	public long                                BronzePayout      { get; }
 	public long                                SilverPayout      { get; }
@@ -46,10 +44,8 @@ public class SongSnapshot
 		Artist            = _Data.GetString("artist", string.Empty);
 		Mode              = _Data.GetEnum<SongMode>("mode");
 		Badge             = _Data.GetEnum<SongBadge>("badge");
-		Ratio             = _Data.GetFloat("ratio", 0.75f);
 		BPM               = _Data.GetFloat("bpm");
 		Speed             = _Data.GetFloat("speed");
-		Invincibility     = _Data.GetFloat("invincibility", 0.75f);
 		DefaultPayout     = _Data.GetLong("default_payout");
 		BronzePayout      = _Data.GetLong("bronze_payout");
 		SilverPayout      = _Data.GetLong("silver_payout");
@@ -216,25 +212,11 @@ public class SongsProcessor
 		return snapshot?.BPM ?? 0;
 	}
 
-	public float GetRatio(string _SongID)
-	{
-		SongSnapshot snapshot = GetSnapshot(_SongID);
-		
-		return snapshot?.Ratio ?? 0;
-	}
-
 	public float GetSpeed(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Speed ?? 0;
-	}
-
-	public float GetInvincibility(string _SongID)
-	{
-		SongSnapshot snapshot = GetSnapshot(_SongID);
-		
-		return snapshot?.Invincibility ?? 0;
 	}
 
 	public int GetLevel(string _SongID)

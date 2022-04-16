@@ -8,7 +8,7 @@ public class HapticProcessor : IInitializable, IDisposable
 {
 	const string HAPTIC_ENABLED_KEY = "HAPTIC_ENABLED";
 
-	public bool HapticSupported => m_Haptic.SupportsHaptic;
+	public bool HapticSupported => m_Haptic != null && m_Haptic.SupportsHaptic;
 
 	public bool HapticEnabled
 	{
@@ -24,17 +24,10 @@ public class HapticProcessor : IInitializable, IDisposable
 		}
 	}
 
-	SignalBus m_SignalBus;
-	Haptic    m_Haptic;
-	bool      m_HapticEnabled;
+	[Inject] SignalBus m_SignalBus;
 
-	[Inject]
-	public void Construct(SignalBus _SignalBus)
-	{
-		m_SignalBus     = _SignalBus;
-		m_Haptic        = Haptic.Create();
-		m_HapticEnabled = PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 1) > 0;
-	}
+	Haptic m_Haptic;
+	bool   m_HapticEnabled;
 
 	public void Process(Haptic.Type _HapticType)
 	{
@@ -49,6 +42,9 @@ public class HapticProcessor : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
+		m_Haptic        = Haptic.Create();
+		m_HapticEnabled = PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 1) > 0;
+		
 		m_SignalBus.Subscribe<DoubleSuccessSignal>(ImpactHeavy);
 		m_SignalBus.Subscribe<HoldSuccessSignal>(ImpactMedium);
 		m_SignalBus.Subscribe<TapSuccessSignal>(ImpactMedium);

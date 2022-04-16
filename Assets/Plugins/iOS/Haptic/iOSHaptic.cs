@@ -1,5 +1,4 @@
-#if UNITY_IOS && !UNITY_EDITOR
-
+#if UNITY_IOS
 using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.iOS;
@@ -55,31 +54,31 @@ public class iOSHaptic : Haptic
 		{
 			case Type.Selection:
 				HapticSelection();
-				return;
+				break;
 			case Type.Success:
 				HapticSuccess();
-				return;
+				break;
 			case Type.Warning:
 				HapticWarning();
-				return;
+				break;
 			case Type.Failure:
 				HapticFailure();
-				return;
+				break;
 			case Type.ImpactLight:
 				HapticLightImpact();
-				return;
+				break;
 			case Type.ImpactMedium:
 				HapticMediumImpact();
-				return;
+				break;
 			case Type.ImpactHeavy:
 				HapticHeavyImpact();
-				return;
+				break;
 			case Type.ImpactRigid:
 				HapticRigidImpact();
-				return;
+				break;
 			case Type.ImpactSoft:
 				HapticSoftImpact();
-				return;
+				break;
 		}
 	}
 }

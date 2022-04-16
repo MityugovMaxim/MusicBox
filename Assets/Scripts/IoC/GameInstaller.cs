@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using Zenject;
 using Object = UnityEngine.Object;
 
@@ -113,8 +112,9 @@ public class GameInstaller : MonoInstaller
 		
 		InstallProcessor<MenuProcessor>();
 		
-		InstallProcessor<SoundProcessor>();
 		InstallProcessor<SocialProcessor>();
+		InstallProcessor<ConfigProcessor>();
+		InstallProcessor<SoundProcessor>();
 		InstallProcessor<ProfileProcessor>();
 		InstallProcessor<ApplicationProcessor>();
 		InstallProcessor<StorageProcessor>();
@@ -133,6 +133,10 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<ProgressProcessor>();
 		InstallProcessor<ScoresProcessor>();
 		InstallProcessor<RevivesProcessor>();
+		
+		InstallProcessor<NewsDescriptor>();
+		InstallProcessor<OffersDescriptor>();
+		InstallProcessor<ProductsDescriptor>();
 		
 		InstallProcessor<HealthManager>();
 		InstallProcessor<ScoreManager>();
@@ -168,16 +172,16 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		
-		Container.DeclareSignal<TapSuccessSignal>();
-		Container.DeclareSignal<TapFailSignal>();
+		Container.DeclareSignal<TapSuccessSignal>().OptionalSubscriber();
+		Container.DeclareSignal<TapFailSignal>().OptionalSubscriber();
 		
-		Container.DeclareSignal<DoubleSuccessSignal>();
-		Container.DeclareSignal<DoubleFailSignal>();
+		Container.DeclareSignal<DoubleSuccessSignal>().OptionalSubscriber();
+		Container.DeclareSignal<DoubleFailSignal>().OptionalSubscriber();
 		
-		Container.DeclareSignal<HoldHitSignal>();
-		Container.DeclareSignal<HoldMissSignal>();
-		Container.DeclareSignal<HoldSuccessSignal>();
-		Container.DeclareSignal<HoldFailSignal>();
+		Container.DeclareSignal<HoldHitSignal>().OptionalSubscriber();
+		Container.DeclareSignal<HoldMissSignal>().OptionalSubscriber();
+		Container.DeclareSignal<HoldSuccessSignal>().OptionalSubscriber();
+		Container.DeclareSignal<HoldFailSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<ScoreSignal>().OptionalSubscriber();
 		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();

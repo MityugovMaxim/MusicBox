@@ -5,10 +5,11 @@ using Zenject;
 public class UILoginMenu : UIMenu
 {
 	[Inject] SocialProcessor      m_SocialProcessor;
+	[Inject] ConfigProcessor      m_ConfigProcessor;
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
 	[Inject] AdsProcessor         m_AdsProcessor;
 	[Inject] SongsProcessor       m_SongsProcessor;
-	[Inject] ScoresProcessor       m_ScoresProcessor;
+	[Inject] ScoresProcessor      m_ScoresProcessor;
 	[Inject] NewsProcessor        m_NewsProcessor;
 	[Inject] OffersProcessor      m_OffersProcessor;
 	[Inject] ProductsProcessor    m_ProductsProcessor;
@@ -25,6 +26,8 @@ public class UILoginMenu : UIMenu
 	{
 		while (!await m_SocialProcessor.Login())
 			await Task.Delay(2500);
+		
+		await m_ConfigProcessor.Load();
 		
 		await m_ApplicationProcessor.Load();
 		

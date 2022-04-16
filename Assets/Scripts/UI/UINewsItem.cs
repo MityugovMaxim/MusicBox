@@ -18,7 +18,7 @@ public class UINewsItem : UIGroupLayout
 
 	[SerializeField] UINewsImage m_Image;
 	[SerializeField] TMP_Text    m_Title;
-	[SerializeField] TMP_Text    m_Message;
+	[SerializeField] TMP_Text    m_Description;
 	[SerializeField] TMP_Text    m_Date;
 
 	[Inject] NewsProcessor      m_NewsProcessor;
@@ -36,7 +36,7 @@ public class UINewsItem : UIGroupLayout
 		m_Image.Setup(m_NewsID);
 		
 		m_Title.text   = m_NewsProcessor.GetTitle(m_NewsID);
-		m_Message.text = m_NewsProcessor.GetMessage(m_NewsID);
+		m_Description.text = m_NewsProcessor.GetDescription(m_NewsID);
 		m_Date.text    = m_NewsProcessor.GetDate(m_NewsID);
 		m_URL          = m_NewsProcessor.GetURL(m_NewsID);
 	}

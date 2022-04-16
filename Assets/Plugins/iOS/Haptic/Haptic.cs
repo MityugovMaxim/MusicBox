@@ -1,5 +1,3 @@
-using Zenject;
-
 public abstract class Haptic
 {
 	public enum Type
@@ -18,14 +16,14 @@ public abstract class Haptic
 
 	public abstract bool SupportsHaptic { get; }
 
-	SignalBus m_SignalBus;
-
 	public static Haptic Create()
 	{
-		#if UNITY_IOS && !UNITY_EDITOR
-		Haptic haptic = new iOSHaptic();
-		#else
+		#if UNITY_EDITOR
 		Haptic haptic = new EditorHaptic();
+		#elif UNITY_IOS
+		Haptic haptic = new iOSHaptic();
+		#elif UNITY_ANDROID
+		Haptic haptic = new AndroidHaptic();
 		#endif
 		
 		haptic.Initialize();
@@ -33,7 +31,7 @@ public abstract class Haptic
 		return haptic;
 	}
 
-	public abstract void Process(Type _Type);
-
 	protected abstract void Initialize();
+
+	public abstract void Process(Type _Type);
 }

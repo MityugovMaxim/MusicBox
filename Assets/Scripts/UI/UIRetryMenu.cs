@@ -10,22 +10,11 @@ public class UIRetryMenu : UIMenu
 	[SerializeField] TMP_Text   m_Message;
 	[SerializeField] GameObject m_CancelButton;
 
-	HapticProcessor    m_HapticProcessor;
-	StatisticProcessor m_StatisticProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string m_Reason;
 	Action m_Retry;
 	Action m_Cancel;
-
-	[Inject]
-	public void Construct(
-		HapticProcessor    _HapticProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_HapticProcessor    = _HapticProcessor;
-		m_StatisticProcessor = _StatisticProcessor;
-	}
 
 	public void Setup(string _Reason, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
 	{

@@ -12,6 +12,7 @@ public class SongController
 {
 	[Inject] AudioManager       m_AudioManager;
 	[Inject] UISongContainer    m_SongContainer;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] StorageProcessor   m_StorageProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
@@ -77,7 +78,7 @@ public class SongController
 			return false;
 		}
 		
-		float ratio    = m_SongsProcessor.GetRatio(m_SongID);
+		float ratio    = m_ConfigProcessor.SongRatio;
 		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
 		float duration = m_SongContainer.Size / speed;
 		
@@ -86,7 +87,7 @@ public class SongController
 		m_Player.Setup(ratio, duration, music, asf, Finish);
 		
 		m_ScoreManager.Setup(m_SongID);
-		m_HealthManager.Setup(m_SongID, Death);
+		m_HealthManager.Setup(Death);
 		
 		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
 		if (gameMenu != null)

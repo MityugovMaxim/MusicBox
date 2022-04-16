@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using AudioBox.Logging;
 using UnityEngine.Scripting;
@@ -38,3 +39,4 @@ public class EditorAudioManager : AudioManager
 		return "speaker_id";
 	}
 }
+#endif

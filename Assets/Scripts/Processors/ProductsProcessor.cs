@@ -36,11 +36,18 @@ public class ProductSnapshot
 public class ProductsDataUpdateSignal { }
 
 [Preserve]
+public class ProductsDescriptor : DescriptorProcessor<ProductsDataUpdateSignal>
+{
+	protected override string Path => "products_descriptors";
+}
+
+[Preserve]
 public class ProductsProcessor
 {
 	bool Loaded { get; set; }
 
-	[Inject] SignalBus m_SignalBus;
+	[Inject] SignalBus          m_SignalBus;
+	[Inject] ProductsDescriptor m_ProductsDescriptor;
 
 	readonly List<ProductSnapshot> m_Snapshots = new List<ProductSnapshot>();
 
@@ -56,6 +63,8 @@ public class ProductsProcessor
 		
 		await Fetch();
 		
+		await m_ProductsDescriptor.Load();
+		
 		Loaded = true;
 	}
 
@@ -67,6 +76,10 @@ public class ProductsProcessor
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
+
+	public string GetTitle(string _ProductID) => m_ProductsDescriptor.GetTitle(_ProductID);
+
+	public string GetDescription(string _ProductID) => m_ProductsDescriptor.GetDescription(_ProductID);
 
 	public ProductType GetType(string _ProductID)
 	{
@@ -92,18 +105,6 @@ public class ProductsProcessor
 		}
 		
 		return productSnapshot.Coins;
-	}
-
-	public string GetCoinsProductID(long _Coins)
-	{
-		ProductSnapshot snapshot = m_Snapshots
-			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.Type == ProductType.Consumable)
-			.OrderBy(_Snapshot => _Snapshot.Coins)
-			.Aggregate((_A, _B) => _A.Coins < _B.Coins && _A.Coins >= _Coins ? _A : _B);
-		
-		return snapshot?.ID;
 	}
 
 	public float GetDiscount(string _ProductID)
@@ -158,6 +159,18 @@ public class ProductsProcessor
 		}
 		
 		return snapshot.NoAds;
+	}
+
+	public string GetCoinsProductID(long _Coins)
+	{
+		ProductSnapshot snapshot = m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.Type == ProductType.Consumable)
+			.OrderBy(_Snapshot => _Snapshot.Coins)
+			.Aggregate((_A, _B) => _A.Coins < _B.Coins && _A.Coins >= _Coins ? _A : _B);
+		
+		return snapshot?.ID;
 	}
 
 	async void OnUpdate(object _Sender, EventArgs _Args)

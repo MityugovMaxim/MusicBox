@@ -5,14 +5,12 @@ using Zenject;
 [Menu(MenuType.ReviveMenu)]
 public class UIReviveMenu : UIMenu
 {
-	const int RESTART_ADS_COUNT = 2;
-	const int LEAVE_ADS_COUNT   = 2;
-
 	[SerializeField] UISongImage m_Image;
 	[SerializeField] UISongMode  m_Restart;
 	[SerializeField] UIUnitLabel m_Coins;
 
 	[Inject] AdsProcessor       m_AdsProcessor;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
@@ -176,7 +174,7 @@ public class UIReviveMenu : UIMenu
 		{
 			m_RestartAdsCount++;
 			
-			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
 				return true;
 			
 			m_RestartAdsCount = 0;
@@ -198,7 +196,7 @@ public class UIReviveMenu : UIMenu
 		
 		m_LeaveAdsCount++;
 		
-		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
 			return false;
 		
 		m_LeaveAdsCount = 0;

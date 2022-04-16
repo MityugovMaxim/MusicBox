@@ -19,10 +19,9 @@ public class HealthManager : IInitializable, IDisposable
 {
 	const int MAX_HEALTH = 4;
 
-	[Inject] SignalBus      m_SignalBus;
-	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] SignalBus       m_SignalBus;
+	[Inject] ConfigProcessor m_ConfigProcessor;
 
-	string m_SongID;
 	Action m_Death;
 	int    m_Health;
 	float  m_InvincibilityDuration;
@@ -42,13 +41,11 @@ public class HealthManager : IInitializable, IDisposable
 		m_SignalBus.Unsubscribe<HoldFailSignal>(Damage);
 	}
 
-	public void Setup(string _SongID, Action _Death)
+	public void Setup(Action _Death)
 	{
-		m_SongID = _SongID;
-		m_Death  = _Death;
-		
+		m_Death                 = _Death;
 		m_InvincibilityTime     = 0;
-		m_InvincibilityDuration = m_SongsProcessor.GetInvincibility(m_SongID);
+		m_InvincibilityDuration = m_ConfigProcessor.SongIFrames;
 	}
 
 	public void Restore()

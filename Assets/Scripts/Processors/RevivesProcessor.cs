@@ -117,23 +117,4 @@ public class RevivesProcessor
 		
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new ReviveSnapshot(_Data)));
 	}
-
-	ReviveSnapshot GetSnapshot(string _ReviveID)
-	{
-		if (m_Snapshots.Count == 0)
-			return null;
-		
-		if (string.IsNullOrEmpty(_ReviveID))
-		{
-			Debug.LogError("[RevivesProcessor] Get snapshot failed. Revive ID is null or empty.");
-			return null;
-		}
-		
-		ReviveSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ReviveID);
-		
-		if (snapshot == null)
-			Debug.LogErrorFormat("[RevivesProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _ReviveID);
-		
-		return snapshot;
-	}
 }

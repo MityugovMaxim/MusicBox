@@ -1,3 +1,4 @@
+#if UNITY_ANDROID
 using UnityEngine;
 
 public class AndroidHaptic : Haptic
@@ -7,6 +8,11 @@ public class AndroidHaptic : Haptic
 	public override bool SupportsHaptic => true;
 
 	AndroidJavaObject m_HapticController;
+
+	protected override void Initialize()
+    	{
+    		m_HapticController = new AndroidJavaObject(CLASS_NAME);
+    	}
 
 	public override void Process(Type _Type)
 	{
@@ -44,9 +50,5 @@ public class AndroidHaptic : Haptic
 				break;
 		}
 	}
-
-	protected override void Initialize()
-	{
-		m_HapticController = new AndroidJavaObject(CLASS_NAME);
-	}
 }
+#endif

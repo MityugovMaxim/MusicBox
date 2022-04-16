@@ -1,6 +1,9 @@
+#if UNITY_ANDROID
 using System;
 using UnityEngine;
+using UnityEngine.Scripting;
 
+[Preserve]
 public class AndroidAudioManager : AudioManager
 {
 	class AudioSourceChanged : AndroidJavaProxy
@@ -12,6 +15,7 @@ public class AndroidAudioManager : AudioManager
 			m_Action = _Action;
 		}
 
+		[Preserve]
 		public void Invoke()
 		{
 			m_Action?.Invoke();
@@ -55,3 +59,4 @@ public class AndroidAudioManager : AudioManager
 		return m_AudioController.Call<string>("GetAudioOutputID");
 	}
 }
+#endif

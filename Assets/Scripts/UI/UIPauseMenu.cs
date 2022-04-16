@@ -5,14 +5,12 @@ using Zenject;
 [Menu(MenuType.PauseMenu)]
 public class UIPauseMenu : UIMenu
 {
-	const int RESTART_ADS_COUNT = 2;
-	const int LEAVE_ADS_COUNT   = 3;
-
 	[SerializeField] UISongImage   m_Image;
 	[SerializeField] UISongLabel   m_Label;
 	[SerializeField] UIHapticState m_HapticState;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
 	[Inject] AdsProcessor       m_AdsProcessor;
@@ -118,7 +116,7 @@ public class UIPauseMenu : UIMenu
 		{
 			m_RestartAdsCount++;
 			
-			if (m_RestartAdsCount < RESTART_ADS_COUNT)
+			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
 				return true;
 			
 			m_RestartAdsCount = 0;
@@ -140,7 +138,7 @@ public class UIPauseMenu : UIMenu
 		
 		m_LeaveAdsCount++;
 		
-		if (m_LeaveAdsCount < LEAVE_ADS_COUNT)
+		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
 			return;
 		
 		m_LeaveAdsCount = 0;

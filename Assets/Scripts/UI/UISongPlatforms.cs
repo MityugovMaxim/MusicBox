@@ -10,7 +10,6 @@ public class UISongPlatforms : UIEntity
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] UrlProcessor       m_UrlProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
 
 	string m_SongID;
 	string m_SpotifyURL;

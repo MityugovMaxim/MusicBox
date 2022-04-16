@@ -1,3 +1,4 @@
+#if UNITY_IOS
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Scripting;
@@ -69,3 +70,4 @@ public class iOSAudioManager : AudioManager
 		m_AudioSourceChanged?.Invoke();
 	}
 }
+#endif

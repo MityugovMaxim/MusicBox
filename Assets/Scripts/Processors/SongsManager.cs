@@ -6,10 +6,9 @@ using Zenject;
 [Preserve]
 public class SongsManager
 {
-	[Inject] ProfileProcessor  m_ProfileProcessor;
-	[Inject] SongsProcessor    m_SongsProcessor;
-	[Inject] ScoresProcessor   m_ScoresProcessor;
-	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] ScoresProcessor  m_ScoresProcessor;
 
 	public List<string> GetLibrarySongIDs()
 	{

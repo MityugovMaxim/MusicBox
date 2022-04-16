@@ -55,34 +55,15 @@ public class ProfileProcessor
 
 	bool Loaded { get; set; }
 
-	readonly SignalBus         m_SignalBus;
-	readonly SocialProcessor   m_SocialProcessor;
-	readonly ProgressProcessor m_ProgressProcessor;
-	readonly ProductsProcessor  m_ProductsProcessor;
-	readonly OffersProcessor   m_OffersProcessor;
-	readonly MenuProcessor     m_MenuProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] SocialProcessor   m_SocialProcessor;
+	[Inject] ProgressProcessor m_ProgressProcessor;
+	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
 
 	ProfileSnapshot m_ProfileSnapshot;
 
 	DatabaseReference m_ProfileData;
-
-	[Inject]
-	public ProfileProcessor(
-		SignalBus         _SignalBus,
-		SocialProcessor   _SocialProcessor,
-		ProgressProcessor _ProgressProcessor,
-		ProductsProcessor  _ProductsProcessor,
-		OffersProcessor   _OffersProcessor,
-		MenuProcessor     _MenuProcessor
-	)
-	{
-		m_SignalBus         = _SignalBus;
-		m_SocialProcessor   = _SocialProcessor;
-		m_ProgressProcessor = _ProgressProcessor;
-		m_ProductsProcessor  = _ProductsProcessor;
-		m_OffersProcessor   = _OffersProcessor;
-		m_MenuProcessor     = _MenuProcessor;
-	}
 
 	public async Task LoadProfile()
 	{

@@ -146,7 +146,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 			Shrink();
 	}
 
-	void IDeselectHandler.OnDeselect(BaseEventData eventData)
+	void IDeselectHandler.OnDeselect(BaseEventData _EventData)
 	{
 		const float anchorThreshold = 0.7f;
 		

@@ -379,7 +379,7 @@ public class UIRounded : SpriteGraphic
 	{
 		float length = Mathf.PI * _Radius * 0.5f;
 		
-		int count = Mathf.FloorToInt(length / 4);
+		const int count = 10;
 		int quads = count - 1;
 		
 		Quaternion rotation = Quaternion.Euler(0, 0, -90.0f / quads);

@@ -25,7 +25,7 @@ public class UISplashMenu : UIMenu
 		
 		await Task.Delay(1500);
 		
-		if (SetupCount == 0 || true)
+		if (SetupCount == 0)
 		{
 			SetupCount = 1;
 			await m_MenuProcessor.Show(MenuType.SetupMenu);

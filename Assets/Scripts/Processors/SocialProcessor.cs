@@ -276,11 +276,11 @@ public class SocialProcessor : IInitializable, IDisposable
 		}
 		
 		m_User.LinkAndRetrieveDataWithCredentialAsync(_Credential).ContinueWith(
-			task =>
+			_Task =>
 			{
-				if (task.Exception != null)
+				if (_Task.Exception != null)
 				{
-					foreach (Exception innerException in task.Exception.Flatten().InnerExceptions)
+					foreach (Exception innerException in _Task.Exception.Flatten().InnerExceptions)
 					{
 						if (innerException is FirebaseAccountLinkException linkException && linkException.UserInfo.UpdatedCredential.IsValid())
 						{
@@ -292,7 +292,7 @@ public class SocialProcessor : IInitializable, IDisposable
 					
 					completionSource.SetResult(null);
 				}
-				else if (task.IsCompleted)
+				else if (_Task.IsCompleted)
 				{
 					Debug.LogFormat("[SocialProcessor] Link success. UserID: {0} Name: {1} Provider: {2}.", m_User.UserId, m_User.DisplayName, _Credential.Provider);
 					completionSource.SetResult(m_User);
