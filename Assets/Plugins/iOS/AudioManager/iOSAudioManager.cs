@@ -7,25 +7,25 @@ using UnityEngine.Scripting;
 public class iOSAudioManager : AudioManager
 {
 	[DllImport("__Internal")]
-	static extern void AudioManager_Register(RemoteCommandHandler _AudioSourceChangedHandler);
+	static extern void AudioController_Register(RemoteCommandHandler _AudioSourceChangedHandler);
 
 	[DllImport("_Internal")]
-	static extern void AudioManager_Unregister();
+	static extern void AudioController_Unregister();
 
 	[DllImport("__Internal")]
-	static extern void AudioManager_EnableAudio();
+	static extern void AudioController_EnableAudio();
 
 	[DllImport("__Internal")]
-	static extern void AudioManager_DisableAudio();
+	static extern void AudioController_DisableAudio();
 
 	[DllImport("__Internal")]
-	static extern string AudioManager_GetOutputName();
+	static extern string AudioController_GetOutputName();
 
 	[DllImport("__Internal")]
-	static extern string AudioManager_GetOutputUID();
+	static extern string AudioController_GetOutputUID();
 
 	[DllImport("__Internal")]
-	static extern int AudioManager_GetOutputType();
+	static extern int AudioController_GetOutputType();
 
 	static Action m_AudioSourceChanged;
 
@@ -33,35 +33,35 @@ public class iOSAudioManager : AudioManager
 	{
 		m_AudioSourceChanged = _AudioSourceChanged;
 		
-		AudioManager_Register(AudioSourceChangedHandler);
+		AudioController_Register(AudioSourceChangedHandler);
 	}
 
 	protected override void Unload()
 	{
-		AudioManager_Unregister();
+		AudioController_Unregister();
 	}
 
 	public override void SetAudioActive(bool _Value)
 	{
 		if (_Value)
-			AudioManager_EnableAudio();
+			AudioController_EnableAudio();
 		else
-			AudioManager_DisableAudio();
+			AudioController_DisableAudio();
 	}
 
 	public override string GetAudioOutputName()
 	{
-		return AudioManager_GetOutputName();
+		return AudioController_GetOutputName();
 	}
 
 	public override string GetAudioOutputID()
 	{
-		return AudioManager_GetOutputUID();
+		return AudioController_GetOutputUID();
 	}
 
 	public override AudioOutputType GetAudioOutputType()
 	{
-		return (AudioOutputType)AudioManager_GetOutputType();
+		return (AudioOutputType)AudioController_GetOutputType();
 	}
 
 	[AOT.MonoPInvokeCallback(typeof(RemoteCommandHandler))]

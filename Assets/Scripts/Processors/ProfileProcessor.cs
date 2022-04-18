@@ -9,21 +9,6 @@ using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
 using Zenject;
 
-[Preserve]
-public class ProfileDataUpdateSignal { }
-
-public class ProfileItem
-{
-	public string ID        { [UsedImplicitly] get; }
-	public long   Timestamp { [UsedImplicitly] get; }
-
-	public ProfileItem(string _ID, long _Timestamp)
-	{
-		ID        = _ID;
-		Timestamp = _Timestamp;
-	}
-}
-
 public class ProfileSnapshot
 {
 	public long                              Coins        { get; }
@@ -61,6 +46,9 @@ public class ProfileTransaction
 		Timestamp     = _Data.GetLong("timestamp");
 	}
 }
+
+[Preserve]
+public class ProfileDataUpdateSignal { }
 
 [Preserve]
 public class ProfileProcessor

@@ -29,6 +29,7 @@ public class ProgressSnapshot
 [Preserve]
 public class ProgressDataUpdateSignal { }
 
+[Preserve]
 public class ProgressProcessor
 {
 	bool Loaded { get; set; }
