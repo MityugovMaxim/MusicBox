@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
-using Firebase.Functions;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -58,35 +56,17 @@ public class RevivesProcessor
 		if (m_Snapshots.Count == 0)
 			return 0;
 		
+		int minCount = m_Snapshots.Min(_Snapshot => _Snapshot.Count);
+		int maxCount = m_Snapshots.Max(_Snapshot => _Snapshot.Count);
+		int count    = Mathf.Clamp(_Count, minCount, maxCount);
+		
 		ReviveSnapshot snapshot = m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
-			.Aggregate((_A, _B) => _A.Count <= _B.Count && _A.Count >= _Count ? _A : _B);
+			.Where(_Snapshot => _Snapshot.Count >= count)
+			.Aggregate((_A, _B) => _A.Coins <= _B.Coins ? _A : _B);
 		
 		return snapshot?.Coins ?? 0;
-	}
-
-	public async Task<bool> Revive(int _Count)
-	{
-		HttpsCallableReference revive = FirebaseFunctions.DefaultInstance.GetHttpsCallable("Revive");
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["count"] = _Count;
-		
-		bool success = false;
-		try
-		{
-			HttpsCallableResult result = await revive.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-			Debug.LogError("[RevivesProcessor] Revive failed.");
-		}
-		
-		return success;
 	}
 
 	async void OnUpdate(object _Sender, ValueChangedEventArgs _Args)

@@ -83,7 +83,7 @@ public class UIProductMenu : UISlideMenu
 			await m_CompleteGroup.ShowAsync();
 			
 			await Task.WhenAll(
-				m_ProfileProcessor.LoadProfile(),
+				m_ProfileProcessor.Load(),
 				Task.Delay(1500)
 			);
 			

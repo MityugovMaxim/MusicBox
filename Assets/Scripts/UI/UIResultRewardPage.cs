@@ -1,11 +1,9 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Firebase.Extensions;
-using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
@@ -108,7 +106,13 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_ContinueGroup.Hide();
 		m_LoaderGroup.Show();
 		
-		bool success = await FinishLevel();
+		SongFinishRequest request = new SongFinishRequest(
+			m_SongID,
+			m_ScoreManager.GetScore(),
+			m_ScoreManager.GetAccuracy()
+		);
+		
+		bool success = await request.SendAsync();
 		
 		if (success)
 		{
@@ -220,6 +224,9 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			await discProgress.ProgressAsync();
 			
+			if (m_TargetRank == ScoreRank.None)
+				return;
+			
 			if (m_TargetRank <= progressData.Rank)
 			{
 				await Task.WhenAny(
@@ -259,33 +266,5 @@ public class UIResultRewardPage : UIResultMenuPage
 			m_Duration,
 			_Token
 		).ContinueWithOnMainThread(_Task => _Label.Play(), _Token);
-	}
-
-	async Task<bool> FinishLevel()
-	{
-		HttpsCallableReference finishSong = FirebaseFunctions.DefaultInstance.GetHttpsCallable("FinishSong");
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["song_id"]  = m_SongID;
-		data["rank"]     = (int)m_ScoreManager.GetRank();
-		data["accuracy"] = m_ScoreManager.GetAccuracy();
-		data["score"]    = m_ScoreManager.GetScore();
-		
-		bool success;
-		
-		try
-		{
-			HttpsCallableResult result = await finishSong.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-			
-			success = false;
-		}
-		
-		return success;
 	}
 }

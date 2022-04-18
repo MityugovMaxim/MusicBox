@@ -108,7 +108,7 @@ public class iOSMessageProcessor : MessageProcessor
 	{
 		Unity.Notifications.iOS.iOSNotificationCenter.RemoveAllScheduledNotifications();
 		
-		Unity.Notifications.iOSiOSNotificationCenter.ApplicationBadge = 0;
+		Unity.Notifications.iOS.iOSNotificationCenter.ApplicationBadge = 0;
 	}
 }
 #endif

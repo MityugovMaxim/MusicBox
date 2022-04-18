@@ -40,9 +40,11 @@ public class UIMainSongsPage : UIMainMenuPage
 		
 		CreateLibrary();
 		
-		CreateProducts();
+		CreateProductsLocked();
 		
-		CreateLocked();
+		CreateCoinsLocked();
+		
+		CreateLevelLocked();
 	}
 
 	void CreateLibrary()
@@ -52,14 +54,21 @@ public class UIMainSongsPage : UIMainMenuPage
 		CreateItems(string.Empty, songIDs);
 	}
 
-	void CreateProducts()
+	void CreateProductsLocked()
 	{
 		List<string> songIDs = m_SongsManager.GetProductSongIDs();
 		
 		CreateItems(GetLocalization("SONGS_PRODUCTS"), songIDs);
 	}
 
-	void CreateLocked()
+	void CreateCoinsLocked()
+	{
+		List<string> songIDs = m_SongsManager.GetCoinsSongIDs();
+		
+		CreateItems(GetLocalization("SONGS_COINS", "<sprite name=coins_icon>"), songIDs);
+	}
+
+	void CreateLevelLocked()
 	{
 		Dictionary<int, string[]> groups = m_SongsManager.GetLockedSongIDs();
 		

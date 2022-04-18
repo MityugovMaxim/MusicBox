@@ -120,4 +120,9 @@ public static class MathUtility
 		int value = _Value % _Length;
 		return value < 0 ? value + _Length : value;
 	}
+
+	public static long Lerp(long _Source, long _Target, float _Phase)
+	{
+		return _Source + (long)((_Target - _Source) * (double)_Phase);
+	}
 }

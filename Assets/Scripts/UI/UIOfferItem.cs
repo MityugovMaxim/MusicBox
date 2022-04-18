@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -26,13 +27,14 @@ public class UIOfferItem : UIGroupLayout
 	[Inject] OffersProcessor       m_OffersProcessor;
 	[Inject] OffersManager         m_OffersManager;
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
-	[Inject] StatisticProcessor    m_StatisticProcessor;
 
-	string m_OfferID;
+	string         m_OfferID;
+	Action<string> m_Process;
 
-	public void Setup(string _OfferID)
+	public void Setup(string _OfferID, Action<string> _Process = null)
 	{
 		m_OfferID = _OfferID;
+		m_Process = _Process;
 		
 		m_Image.Setup(m_OfferID);
 		
@@ -44,15 +46,9 @@ public class UIOfferItem : UIGroupLayout
 		ProcessButton();
 	}
 
-	public async void Progress()
+	public void Process()
 	{
-		m_StatisticProcessor.LogMainMenuOffersPageItemClick(m_OfferID);
-		
-		await m_OffersManager.Process(m_OfferID);
-		
-		ProcessLabel();
-		
-		ProcessButton();
+		m_Process?.Invoke(m_OfferID);
 	}
 
 	void ProcessLabel()
@@ -70,6 +66,6 @@ public class UIOfferItem : UIGroupLayout
 
 	void ProcessButton()
 	{
-		m_Button.interactable = m_OffersManager.IsAvailable(m_OfferID);
+		m_Button.interactable = m_Process != null;
 	}
 }

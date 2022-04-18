@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,7 @@ using UnityEngine.Scripting;
 using Object = UnityEngine.Object;
 
 [Preserve]
+[SuppressMessage("ReSharper", "UnusedMember.Local")]
 public class StorageProcessor
 {
 	static readonly Dictionary<string, Task<Texture2D>> m_TextureTasks   = new Dictionary<string, Task<Texture2D>>();

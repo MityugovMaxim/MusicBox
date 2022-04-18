@@ -47,7 +47,9 @@ public class UIReviveMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_RevivesProcessor.Revive(m_Count);
+		SongReviveRequest request = new SongReviveRequest(m_Count);
+		
+		bool success = await request.SendAsync();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -67,7 +69,8 @@ public class UIReviveMenu : UIMenu
 				"song_revive_coins",
 				"SONG_REVIVE_ERROR_TITLE",
 				"SONG_REVIVE_ERROR_MESSAGE",
-				ReviveCoins
+				ReviveCoins,
+				() => { }
 			);
 		}
 		
@@ -102,7 +105,8 @@ public class UIReviveMenu : UIMenu
 				"song_revive_ads",
 				"SONG_REVIVE_ERROR_TITLE",
 				"SONG_REVIVE_ERROR_MESSAGE",
-				ReviveAds
+				ReviveAds,
+				() => { }
 			);
 		}
 		
@@ -189,15 +193,15 @@ public class UIReviveMenu : UIMenu
 		}
 	}
 
-	async Task<bool> ProcessLeaveAds()
+	async Task ProcessLeaveAds()
 	{
 		if (m_ProfileProcessor.HasNoAds())
-			return false;
+			return;
 		
 		m_LeaveAdsCount++;
 		
 		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
-			return false;
+			return;
 		
 		m_LeaveAdsCount = 0;
 		
@@ -206,8 +210,6 @@ public class UIReviveMenu : UIMenu
 		await m_AdsProcessor.Interstitial();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-		
-		return true;
 	}
 
 	void ProcessCoins()

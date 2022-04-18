@@ -2,10 +2,8 @@ using UnityEngine;
 
 public class Spectrum : MonoBehaviour
 {
-	const int SAMPLES = 64;
-
-	static readonly float[] m_Buffer   = new float[SAMPLES];
-	static readonly float[] m_Spectrum = new float[SAMPLES];
+	static readonly float[] m_Buffer   = new float[64];
+	static readonly float[] m_Spectrum = new float[64];
 
 	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
 
@@ -30,10 +28,10 @@ public class Spectrum : MonoBehaviour
 	{
 		m_AudioSource.GetSpectrumData(m_Buffer, _Channel, m_FFT);
 		
-		for (int i = 0; i < SAMPLES / 2; i++)
+		for (int i = 0; i < 32; i++)
 		{
-			float spectrum = Mathf.Sqrt(m_Buffer[i]) * Mathf.Sqrt(Mathf.Log(i + 1));
-			int   index    = SAMPLES / 2 * _Channel + i;
+			float spectrum = Mathf.Sqrt(m_Buffer[i]) * Mathf.Sqrt(Mathf.Log(i + 2));
+			int   index    = 32 * _Channel + i;
 			
 			m_Spectrum[index] = Mathf.Max(m_Spectrum[index], spectrum);
 		}

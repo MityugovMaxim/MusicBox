@@ -13,8 +13,7 @@ public class UIInputIndicator : UIEntity
 	[SerializeField] UIRounded m_Bad;
 	[SerializeField] UIRounded m_Fail;
 
-	[Inject] SignalBus    m_SignalBus;
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] SignalBus m_SignalBus;
 
 	CancellationTokenSource m_TokenSource;
 
@@ -22,76 +21,33 @@ public class UIInputIndicator : UIEntity
 	{
 		base.OnEnable();
 		
-		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Subscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Subscribe<HoldMissSignal>(RegisterHoldMiss);
-		m_SignalBus.Subscribe<HoldHitSignal>(RegisterHoldHit);
-		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterHoldMiss);
-		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHoldHit);
-		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
+		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
 	}
 
-	void RegisterTapSuccess(TapSuccessSignal _Signal)
+	void RegisterScore(ScoreSignal _Signal)
 	{
-		Process(_Signal.Progress);
-	} 
-
-	void RegisterTapFail(TapFailSignal _Signal)
-	{
-		Play(m_Fail);
-	}
-
-	void RegisterDoubleSuccess(DoubleSuccessSignal _Signal)
-	{
-		Process(_Signal.Progress);
-	}
-
-	void RegisterDoubleFail(DoubleFailSignal _Signal)
-	{
-		Play(m_Fail);
-	}
-
-	void RegisterHoldSuccess(HoldSuccessSignal _Signal)
-	{
-		Process(_Signal.MaxProgress - _Signal.MinProgress);
-	}
-
-	void RegisterHoldMiss(HoldMissSignal _Signal)
-	{
-		Play(m_Bad);
-	}
-
-	void RegisterHoldHit(HoldHitSignal _Signal)
-	{
-		Process(_Signal.Progress);
-	}
-
-	void RegisterHoldFail(HoldFailSignal _Signal)
-	{
-		Play(m_Fail);
-	}
-
-	void Process(float _Progress)
-	{
+		switch (_Signal.Grade)
+		{
+			case ScoreGrade.Perfect:
+				Play(m_Perfect);
+				break;
+			case ScoreGrade.Good:
+				Play(m_Good);
+				break;
+			case ScoreGrade.Bad:
+				Play(m_Bad);
+				break;
+			case ScoreGrade.Fail:
+				Play(m_Fail);
+				break;
+		}
 	}
 
 	async void Play(UIRounded _Outline)

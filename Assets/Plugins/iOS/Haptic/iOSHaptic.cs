@@ -1,6 +1,5 @@
 #if UNITY_IOS
 using System.Runtime.InteropServices;
-using UnityEngine;
 using UnityEngine.iOS;
 
 public class iOSHaptic : Haptic

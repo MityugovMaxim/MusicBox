@@ -5,7 +5,8 @@ using UnityEngine;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
-public class UIHealthHandle : UIEntity
+public class 
+	UIHealthHandle : UIEntity
 {
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_DamageParameterID  = Animator.StringToHash("Damage");

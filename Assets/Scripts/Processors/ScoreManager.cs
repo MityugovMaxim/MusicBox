@@ -33,11 +33,6 @@ public enum ScoreGrade
 [Preserve]
 public class ScoreManager : IInitializable, IDisposable
 {
-	const float HOLD_PERFECT_MULTIPLIER = 1600;
-	const float HOLD_GOOD_MULTIPLIER    = 800;
-	const float HOLD_BAD_MULTIPLIER     = 100;
-	const float HOLD_HIT_MULTIPLIER     = 10;
-
 	long Score { get; set; }
 	int  Combo { get; set; }
 
@@ -216,15 +211,9 @@ public class ScoreManager : IInitializable, IDisposable
 
 	public ScoreRank GetRank()
 	{
-		int       accuracy = GetAccuracy();
-		ScoreRank maxRank  = ScoreRank.None;
-		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
-		{
-			int threshold = m_SongsProcessor.GetThreshold(m_SongID, rank);
-			if (accuracy >= threshold && rank >= maxRank)
-				maxRank = rank;
-		}
-		return maxRank;
+		int accuracy = GetAccuracy();
+		
+		return m_SongsProcessor.GetRank(m_SongID, accuracy);
 	}
 
 	public long GetScore()
@@ -348,19 +337,19 @@ public class ScoreManager : IInitializable, IDisposable
 		{
 			grade = ScoreGrade.Perfect;
 			m_HoldPerfect++;
-			AddScore(_Signal.Progress * HOLD_PERFECT_MULTIPLIER);
+			AddScore(_Signal.Progress * m_ConfigProcessor.HoldPerfectMultiplier);
 		}
 		else if (_Signal.Progress >= m_ConfigProcessor.ScoreGoodThreshold)
 		{
 			grade = ScoreGrade.Good;
 			m_HoldGood++;
-			AddScore(_Signal.Progress * HOLD_GOOD_MULTIPLIER);
+			AddScore(_Signal.Progress * m_ConfigProcessor.HoldGoodMultiplier);
 		}
 		else
 		{
 			grade = ScoreGrade.Bad;
 			m_HoldBad++;
-			AddScore(_Signal.Progress * HOLD_BAD_MULTIPLIER);
+			AddScore(_Signal.Progress * m_ConfigProcessor.HoldBadMultiplier);
 		}
 		
 		Combo++;
@@ -389,7 +378,7 @@ public class ScoreManager : IInitializable, IDisposable
 		else if (progress >= m_ConfigProcessor.ScoreGoodThreshold)
 			grade = ScoreGrade.Good;
 		
-		AddScore(progress * HOLD_HIT_MULTIPLIER);
+		AddScore(progress * m_ConfigProcessor.HoldHitMultiplier);
 		
 		ProcessScore(grade);
 	}

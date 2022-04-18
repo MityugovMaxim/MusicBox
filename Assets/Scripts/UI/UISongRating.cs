@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using AudioBox.Logging;
-using Firebase.Functions;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -49,21 +45,8 @@ public class UISongRating : UIEntity
 		if (m_SourceRating == m_TargetRating)
 			return;
 		
-		HttpsCallableReference function = FirebaseFunctions.DefaultInstance.GetHttpsCallable("SongRating");
+		SongRatingRequest request = new SongRatingRequest(m_SongID, m_TargetRating);
 		
-		Dictionary<string, object> data = new Dictionary<string,object>()
-		{
-			{ "song_id", m_SongID },
-			{ "rating", m_TargetRating }
-		};
-		
-		try
-		{
-			await function.CallAsync(data);
-		}
-		catch (Exception exception)
-		{
-			Log.Exception(this, exception);
-		}
+		await request.SendAsync();
 	}
 }

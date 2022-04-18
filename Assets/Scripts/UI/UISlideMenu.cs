@@ -23,7 +23,14 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		float phase    = 1 - m_Content.anchorMax.y;
 		float duration = ShowDuration * phase;
 		
-		await ExpandAsync(duration, _Instant, token);
+		try
+		{
+			await ExpandAsync(duration, _Instant, token);
+		}
+		catch (TaskCanceledException) { }
+		
+		if (token.IsCancellationRequested)
+			return;
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -43,7 +50,14 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		float phase    = m_Content.anchorMax.y;
 		float duration = ShowDuration * phase;
 		
-		await ShrinkAsync(duration, _Instant, token);
+		try
+		{
+			await ShrinkAsync(duration, _Instant, token);
+		}
+		catch (TaskCanceledException) { }
+		
+		if (token.IsCancellationRequested)
+			return;
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;

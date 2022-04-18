@@ -14,7 +14,7 @@ public class ProfileDataUpdateSignal { }
 
 public class ProfileItem
 {
-	public string ID        { get; }
+	public string ID        { [UsedImplicitly] get; }
 	public long   Timestamp { [UsedImplicitly] get; }
 
 	public ProfileItem(string _ID, long _Timestamp)
@@ -26,32 +26,48 @@ public class ProfileItem
 
 public class ProfileSnapshot
 {
-	public long                  Coins    { get; }
-	public int                   Level    { get; }
-	public int                   Discs    { get; }
-	public IReadOnlyList<string> SongIDs   { get; }
-	public IReadOnlyList<string> OfferIDs   { get; }
-	public IReadOnlyList<string> ProductsIDs { get; }
+	public long                              Coins        { get; }
+	public int                               Level        { get; }
+	public int                               Discs        { get; }
+	public IReadOnlyList<string>             SongIDs      { get; }
+	public IReadOnlyList<string>             OfferIDs     { get; }
+	public IReadOnlyList<ProfileTransaction> Transactions { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
-		Coins       = _Data.GetLong("coins");
-		Discs       = _Data.GetInt("discs");
-		Level       = _Data.GetInt("level", 1);
-		SongIDs    = _Data.GetChildKeys("levels");
-		OfferIDs    = _Data.GetChildKeys("offers");
-		ProductsIDs = _Data.GetChildKeys("products");
+		Coins        = _Data.GetLong("coins");
+		Discs        = _Data.GetInt("discs");
+		Level        = _Data.GetInt("level", 1);
+		SongIDs      = _Data.GetChildKeys("song_ids");
+		OfferIDs     = _Data.GetChildKeys("offer_ids");
+		Transactions = _Data.Child("transactions").Children
+			.Select(_Transaction => new ProfileTransaction(_Transaction))
+			.ToList();
 	}
 }
 
+public class ProfileTransaction
+{
+	public string ID            { [UsedImplicitly] get; }
+	public string TransactionID { [UsedImplicitly] get; }
+	public string ProductID     { [UsedImplicitly] get; }
+	public long   Timestamp     { [UsedImplicitly] get; }
+
+	public ProfileTransaction(DataSnapshot _Data)
+	{
+		ID            = _Data.Key;
+		TransactionID = _Data.GetString("transaction_id");
+		ProductID     = _Data.GetString("product_id");
+		Timestamp     = _Data.GetLong("timestamp");
+	}
+}
+
+[Preserve]
 public class ProfileProcessor
 {
-	public int                   Level      => m_ProgressProcessor.ClampLevel(m_ProfileSnapshot?.Level ?? 1);
-	public int                   Discs      => m_ProfileSnapshot?.Discs ?? 0;
-	public long                  Coins      => m_ProfileSnapshot?.Coins ?? 0;
-	public IReadOnlyList<string> SongIDs    => m_ProfileSnapshot?.SongIDs;
-	public IReadOnlyList<string> OfferIDs   => m_ProfileSnapshot?.OfferIDs;
-	public IReadOnlyList<string> ProductIDs => m_ProfileSnapshot?.ProductsIDs;
+	public long Coins => m_Snapshot?.Coins ?? 0;
+	public int  Discs => m_Snapshot?.Discs ?? 0;
+	public int  Level => m_ProgressProcessor.ClampLevel(m_Snapshot?.Level ?? 1);
 
 	bool Loaded { get; set; }
 
@@ -61,11 +77,11 @@ public class ProfileProcessor
 	[Inject] ProductsProcessor m_ProductsProcessor;
 	[Inject] MenuProcessor     m_MenuProcessor;
 
-	ProfileSnapshot m_ProfileSnapshot;
+	ProfileSnapshot m_Snapshot;
 
 	DatabaseReference m_ProfileData;
 
-	public async Task LoadProfile()
+	public async Task Load()
 	{
 		if (m_ProfileData != null && m_ProfileData.Key != m_SocialProcessor.UserID)
 		{
@@ -87,11 +103,6 @@ public class ProfileProcessor
 		Loaded = true;
 	}
 
-	public float GetProgress()
-	{
-		return m_ProgressProcessor.GetProgress(Discs);
-	}
-
 	public List<string> GetVisibleProductIDs()
 	{
 		return m_ProductsProcessor.GetProductIDs()
@@ -100,24 +111,45 @@ public class ProfileProcessor
 			.ToList();
 	}
 
-	public bool HasSong(string _LevelID)
+	public bool HasSong(string _SongID)
 	{
-		return SongIDs.Contains(_LevelID);
+		if (m_Snapshot == null || m_Snapshot.SongIDs == null)
+			return false;
+		
+		return m_Snapshot.SongIDs.Contains(_SongID);
 	}
 
 	public bool HasOffer(string _OfferID)
 	{
-		return OfferIDs.Contains(_OfferID);
+		if (m_Snapshot == null || m_Snapshot.OfferIDs == null)
+			return false;
+		
+		return m_Snapshot.OfferIDs.Contains(_OfferID);
 	}
 
 	public bool HasProduct(string _ProductID)
 	{
-		return m_ProductsProcessor.GetType(_ProductID) == ProductType.NonConsumable && ProductIDs.Contains(_ProductID);
+		if (m_Snapshot == null || m_Snapshot.Transactions == null)
+			return false;
+		
+		ProductType productType = m_ProductsProcessor.GetType(_ProductID);
+		
+		if (productType != ProductType.NonConsumable)
+			return false;
+		
+		return m_Snapshot.Transactions.Any(_Transaction => _Transaction.ProductID == _ProductID);
 	}
 
 	public bool HasNoAds()
 	{
-		return ProductIDs.Any(m_ProductsProcessor.IsNoAds);
+		if (m_Snapshot == null || m_Snapshot.Transactions == null)
+			return false;
+		
+		List<string> productIDs = m_Snapshot.Transactions
+			.Select(_Transaction => _Transaction.ProductID)
+			.ToList();
+		
+		return productIDs.Any(m_ProductsProcessor.IsNoAds);
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)
@@ -165,6 +197,6 @@ public class ProfileProcessor
 			return;
 		}
 		
-		m_ProfileSnapshot = new ProfileSnapshot(profileSnapshot);
+		m_Snapshot = new ProfileSnapshot(profileSnapshot);
 	}
 }

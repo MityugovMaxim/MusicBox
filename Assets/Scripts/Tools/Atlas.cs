@@ -18,14 +18,12 @@ public class Atlas
 
 	class Entry
 	{
-		public string ID         { get; }
 		public Anchor Anchor     { get; }
 		public Sprite Sprite     { get; }
 		public int    References { get; set; }
 
-		public Entry(string _ID, Anchor _Anchor, Sprite _Sprite)
+		public Entry(Anchor _Anchor, Sprite _Sprite)
 		{
-			ID         = _ID;
 			Anchor     = _Anchor;
 			Sprite     = _Sprite;
 			References = 0;
@@ -147,7 +145,7 @@ public class Atlas
 		
 		sprite.name = _ID;
 		
-		m_Entries[sprite.name] = new Entry(_ID, anchor, sprite);
+		m_Entries[sprite.name] = new Entry(anchor, sprite);
 		m_Entries[sprite.name].References++;
 		
 		return sprite;

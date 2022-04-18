@@ -35,6 +35,10 @@ public class UILoginMenu : UIMenu
 		
 		await m_AmbientProcessor.Load();
 		
+		SongLibraryRequest request = new SongLibraryRequest();
+		
+		await request.SendAsync();
+		
 		await Task.WhenAll(
 			m_ProductsProcessor.Load(),
 			m_OffersProcessor.Load(),
@@ -43,12 +47,12 @@ public class UILoginMenu : UIMenu
 			m_SongsProcessor.Load(),
 			m_ScoresProcessor.Load(),
 			m_RevivesProcessor.Load(),
-			m_ProfileProcessor.LoadProfile()
+			m_ProfileProcessor.Load()
 		);
 		
 		await Task.WhenAll(
 			m_StoreProcessor.Load(),
-			m_AdsProcessor.LoadAds()
+			m_AdsProcessor.Load()
 		);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);

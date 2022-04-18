@@ -7,9 +7,8 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 {
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] StatisticProcessor m_StatisticProcessor;
-	[Inject] AmbientProcessor   m_AmbientProcessor;
+	[Inject] SignalBus        m_SignalBus;
+	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	void IInitializable.Initialize()
 	{

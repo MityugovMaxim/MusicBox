@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Firebase.Functions;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
@@ -129,32 +128,6 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		return completionSource.Task;
 	}
 
-	public string GetTitle(string _ProductID)
-	{
-		Product product = GetProduct(_ProductID);
-		
-		if (product == null)
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get title failed. Product with ID '{0}' not found.", _ProductID);
-			return "-";
-		}
-		
-		return product.metadata.localizedTitle;
-	}
-
-	public string GetDescription(string _ProductID)
-	{
-		Product product = GetProduct(_ProductID);
-		
-		if (product == null)
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get description failed. Product with ID '{0}' not found.", _ProductID);
-			return "-";
-		}
-		
-		return product.metadata.localizedDescription;
-	}
-
 	public string GetPrice(string _ProductID)
 	{
 		Product product = GetProduct(_ProductID);
@@ -221,32 +194,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	async void Validate(Product _Product)
 	{
-		HttpsCallableReference validateReceipt = FirebaseFunctions.DefaultInstance.GetHttpsCallable("ValidateReceipt");
+		ProductPurchaseRequest request = new ProductPurchaseRequest(
+			_Product.definition.id,
+			_Product.receipt
+		);
 		
-		Dictionary<string, object> data = new Dictionary<string, object>()
-		{
-			{ "product_id", _Product.definition.id },
-			{ "receipt", _Product.receipt },
-		};
-		
-		bool success;
-		
-		try
-		{
-			HttpsCallableResult result = await validateReceipt.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch
-		{
-			Debug.LogError("[StoreProcessor] Validation failed.");
-			
-			success = false;
-		}
-		
-		#if UNITY_EDITOR
-		success = true;
-		#endif
+		bool success = await request.SendAsync();
 		
 		if (success)
 		{

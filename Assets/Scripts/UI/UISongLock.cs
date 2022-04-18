@@ -10,8 +10,6 @@ public class UISongLock : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		bool locked = m_SongsManager.IsSongLockedByLevel(m_SongID);
-		
-		gameObject.SetActive(locked);
+		gameObject.SetActive(m_SongsManager.IsSongLockedByLevel(m_SongID));
 	}
 }

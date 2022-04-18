@@ -28,13 +28,13 @@ public class UISplashMenu : UIMenu
 		if (SetupCount == 0)
 		{
 			SetupCount = 1;
-			await m_MenuProcessor.Show(MenuType.SetupMenu);
-			await m_MenuProcessor.Hide(MenuType.SplashMenu, true);
+			await m_MenuProcessor.Show(MenuType.SetupMenu, true);
+			await m_MenuProcessor.Hide(MenuType.SplashMenu);
 		}
 		else
 		{
-			await m_MenuProcessor.Show(MenuType.LoginMenu);
-			await m_MenuProcessor.Hide(MenuType.SplashMenu, true);
+			await m_MenuProcessor.Show(MenuType.LoginMenu, true);
+			await m_MenuProcessor.Hide(MenuType.SplashMenu);
 			
 			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
 			

@@ -18,8 +18,7 @@ public class UILatencyIndicator : UIEntity
 	[SerializeField] float         m_MinLimit = -1.0f;
 	[SerializeField] float         m_MaxLimit = 1.0f;
 
-	[Inject] AudioManager       m_AudioManager;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] AudioManager m_AudioManager;
 
 	CancellationTokenSource m_TokenSource;
 

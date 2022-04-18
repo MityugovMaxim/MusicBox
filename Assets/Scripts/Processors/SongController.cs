@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AudioBox.ASF;
 using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -55,7 +54,9 @@ public class SongController
 		
 		m_Player = null;
 		
-		SongPlayer player = Resources.Load<SongPlayer>(skin);
+		await ResourceManager.UnloadAsync();
+		
+		SongPlayer player = await ResourceManager.LoadAsync<SongPlayer>(skin);
 		if (ReferenceEquals(player, null))
 		{
 			Log.Error(this, "Load song failed. Player with ID '{0}' is null.", m_SongID);
@@ -116,6 +117,10 @@ public class SongController
 		
 		m_HealthManager.Restore();
 		m_ScoreManager.Restore();
+		
+		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
+		if (reviveMenu != null)
+			reviveMenu.Setup(m_SongID);
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Play(m_AudioManager.GetLatency());
@@ -213,6 +218,10 @@ public class SongController
 		m_HealthManager.Restore();
 		m_ScoreManager.Restore();
 		
+		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
+		if (reviveMenu != null)
+			reviveMenu.Setup(m_SongID);
+		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Clear();
 		m_Player.Play(m_AudioManager.GetLatency());
@@ -233,8 +242,6 @@ public class SongController
 		m_RewindToken = null;
 		
 		m_Player.Stop();
-		
-		Resources.UnloadAsset(m_Player.Music);
 		
 		GameObject.Destroy(m_Player.gameObject);
 		
@@ -260,11 +267,6 @@ public class SongController
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await Task.Delay(600);
-		
-		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
-		
-		if (reviveMenu != null)
-			reviveMenu.Setup(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.ReviveMenu);
 		
@@ -314,7 +316,7 @@ public class SongController
 		try
 		{
 			return UnityTask.Phase(
-				_Phase => m_Player.Time = ASFMath.Lerp(source, target, _Phase),
+				_Phase => m_Player.Time = EaseFunction.EaseOutQuad.Get(source, target, _Phase),
 				duration,
 				_Token
 			);

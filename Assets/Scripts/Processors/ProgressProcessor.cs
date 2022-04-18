@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -9,17 +10,19 @@ using Zenject;
 
 public class ProgressSnapshot
 {
-	public bool Active   { get; }
-	public int  Level    { get; }
-	public int  MinLimit { get; }
-	public int  MaxLimit { get; }
+	public bool         Active  { get; }
+	public int          Level   { get; }
+	public int          Discs   { get; }
+	public long         Coins   { get; }
+	public List<string> SongIDs { get; }
 
 	public ProgressSnapshot(DataSnapshot _Data)
 	{
-		Active   = _Data.GetBool("active");
-		Level    = _Data.GetInt("level");
-		MinLimit = _Data.GetInt("min_limit");
-		MaxLimit = _Data.GetInt("max_limit");
+		Active  = _Data.GetBool("active");
+		Level   = _Data.GetInt("level");
+		Discs   = _Data.GetInt("discs");
+		Coins   = _Data.GetLong("coins");
+		SongIDs = _Data.GetChildKeys("song_ids");
 	}
 }
 
@@ -32,7 +35,7 @@ public class ProgressProcessor
 
 	readonly SignalBus m_SignalBus;
 
-	readonly List<ProgressSnapshot> m_ProgressSnapshots = new List<ProgressSnapshot>();
+	readonly List<ProgressSnapshot> m_Snapshots = new List<ProgressSnapshot>();
 
 	DatabaseReference m_Data;
 
@@ -55,33 +58,50 @@ public class ProgressProcessor
 		Loaded = true;
 	}
 
-	public int GetLevel(int _Discs)
+	public int GetSongLevel(string _SongID)
 	{
-		if (m_ProgressSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return 1;
 		
-		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+		ProgressSnapshot[] snapshots = m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.MinLimit <= _Discs)
+			.Where(_Snapshot => _Snapshot.SongIDs != null && _Snapshot.SongIDs.Count > 0)
+			.Where(_Snapshot => _Snapshot.SongIDs.Contains(_SongID))
+			.ToArray();
+		
+		return snapshots.Length > 0
+			? snapshots.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B).Level
+			: 1;
+	}
+
+	public long GetCoins(int _Level)
+	{
+		ProgressSnapshot snapshot = GetSnapshot(_Level);
+		
+		return snapshot?.Coins ?? 0;
+	}
+
+	public List<string> GetSongIDs(int _Level)
+	{
+		ProgressSnapshot snapshot = GetSnapshot(_Level);
+		
+		if (snapshot == null || snapshot.SongIDs == null)
+			return new List<string>();
+		
+		return snapshot.SongIDs;
+	}
+
+	public int GetLevel(int _Discs)
+	{
+		if (m_Snapshots.Count == 0)
+			return 1;
+		
+		ProgressSnapshot progressSnapshot = m_Snapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.Discs <= _Discs)
 			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
 		
 		return progressSnapshot?.Level ?? 1;
-	}
-
-	public float GetProgress(int _Discs)
-	{
-		if (m_ProgressSnapshots.Count == 0)
-			return 0;
-		
-		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.MinLimit <= _Discs)
-			.Aggregate((_A, _B) => _A.MaxLimit > _B.MaxLimit ? _A : _B);
-		
-		int minDiscs = progressSnapshot?.MinLimit ?? 0;
-		int maxDiscs = progressSnapshot?.MaxLimit ?? 0;
-		
-		return Mathf.InverseLerp(minDiscs, maxDiscs, _Discs);
 	}
 
 	public int ClampLevel(int _Level)
@@ -93,10 +113,10 @@ public class ProgressProcessor
 
 	public int GetMinLevel()
 	{
-		if (m_ProgressSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return 1;
 		
-		return m_ProgressSnapshots
+		return m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.Level)
 			.DefaultIfEmpty(1)
@@ -105,10 +125,10 @@ public class ProgressProcessor
 
 	public int GetMaxLevel()
 	{
-		if (m_ProgressSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return 1;
 		
-		return m_ProgressSnapshots
+		return m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.Level)
 			.DefaultIfEmpty(1)
@@ -117,32 +137,32 @@ public class ProgressProcessor
 
 	public int GetMinLimit(int _Level)
 	{
-		if (m_ProgressSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return 0;
 		
 		int level = ClampLevel(_Level);
 		
-		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+		ProgressSnapshot progressSnapshot = m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		
-		return progressSnapshot?.MinLimit ?? 0;
+		return progressSnapshot?.Discs ?? 0;
 	}
 
 	public int GetMaxLimit(int _Level)
 	{
-		if (m_ProgressSnapshots.Count == 0)
+		if (m_Snapshots.Count == 0)
 			return 0;
 		
-		int level = ClampLevel(_Level);
+		int level = ClampLevel(_Level + 1);
 		
-		ProgressSnapshot progressSnapshot = m_ProgressSnapshots
+		ProgressSnapshot progressSnapshot = m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		
-		return progressSnapshot?.MaxLimit ?? 0;
+		return progressSnapshot?.Discs ?? 0;
 	}
 
 	async void OnUpdate(object _Sender, EventArgs _Args)
@@ -159,7 +179,7 @@ public class ProgressProcessor
 
 	async Task Fetch()
 	{
-		m_ProgressSnapshots.Clear();
+		m_Snapshots.Clear();
 		
 		DataSnapshot progressSnapshots = await m_Data.GetValueAsync(15000, 2);
 		
@@ -170,8 +190,21 @@ public class ProgressProcessor
 		}
 		
 		foreach (DataSnapshot progressSnapshot in progressSnapshots.Children)
-			m_ProgressSnapshots.Add(new ProgressSnapshot(progressSnapshot));
+			m_Snapshots.Add(new ProgressSnapshot(progressSnapshot));
 		
 		m_SignalBus.Fire<ProgressDataUpdateSignal>();
+	}
+
+	ProgressSnapshot GetSnapshot(int _Level)
+	{
+		if (m_Snapshots.Count == 0)
+			return null;
+		
+		ProgressSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.Level == _Level);
+		
+		if (snapshot == null)
+			Log.Error(this, "Get snapshot failed. Snapshot with Level '{0}' is null.");
+		
+		return snapshot;
 	}
 }

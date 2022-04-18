@@ -14,7 +14,6 @@ public class SongSnapshot
 {
 	public string                              ID                { get; }
 	public bool                                Active            { get; }
-	public int                                 Level             { get; }
 	public string                              Title             { get; }
 	public string                              Artist            { get; }
 	public SongMode                            Mode              { get; }
@@ -39,7 +38,6 @@ public class SongSnapshot
 	{
 		ID                = _Data.Key;
 		Active            = _Data.GetBool("active");
-		Level             = _Data.GetInt("level");
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
 		Mode              = _Data.GetEnum<SongMode>("mode");
@@ -54,10 +52,10 @@ public class SongSnapshot
 		Price             = _Data.GetLong("price");
 		Platforms         = _Data.GetStringDictionary("platforms");
 		Skin              = _Data.GetString("skin", "default");
-		BronzeThreshold   = _Data.GetInt("bronze_threshold", 5);
-		SilverThreshold   = _Data.GetInt("silver_threshold", 40);
-		GoldThreshold     = _Data.GetInt("gold_threshold", 90);
-		PlatinumThreshold = _Data.GetInt("platinum_threshold", 95);
+		BronzeThreshold   = _Data.GetInt("bronze_threshold");
+		SilverThreshold   = _Data.GetInt("silver_threshold");
+		GoldThreshold     = _Data.GetInt("gold_threshold");
+		PlatinumThreshold = _Data.GetInt("platinum_threshold");
 		Order             = _Data.GetInt("order");
 	}
 }
@@ -219,39 +217,48 @@ public class SongsProcessor
 		return snapshot?.Speed ?? 0;
 	}
 
-	public int GetLevel(string _SongID)
+	public ScoreRank GetRank(string _SongID, int _Accuracy)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Level ?? 0;
+		if (snapshot == null)
+			return ScoreRank.None;
+		
+		if (_Accuracy >= snapshot.PlatinumThreshold)
+			return ScoreRank.Platinum;
+		else if (_Accuracy >= snapshot.GoldThreshold)
+			return ScoreRank.Gold;
+		else if (_Accuracy >= snapshot.SilverThreshold)
+			return ScoreRank.Silver;
+		else if (_Accuracy >= snapshot.BronzeThreshold)
+			return ScoreRank.Bronze;
+		else
+			return ScoreRank.None;
 	}
 
 	public int GetThreshold(string _SongID, ScoreRank _Rank)
 	{
-		if (_Rank < ScoreRank.None)
-			return 0;
-		
-		const int maxThreshold = 100;
-		
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		if (snapshot == null)
-			return maxThreshold;
+			return 0;
 		
 		switch (_Rank)
 		{
-			case ScoreRank.None:
-				return 0;
-			case ScoreRank.Bronze:
-				return snapshot.BronzeThreshold;
-			case ScoreRank.Silver:
-				return snapshot.SilverThreshold;
-			case ScoreRank.Gold:
-				return snapshot.GoldThreshold;
 			case ScoreRank.Platinum:
 				return snapshot.PlatinumThreshold;
+			
+			case ScoreRank.Gold:
+				return snapshot.GoldThreshold;
+			
+			case ScoreRank.Silver:
+				return snapshot.SilverThreshold;
+			
+			case ScoreRank.Bronze:
+				return snapshot.BronzeThreshold;
+			
 			default:
-				return maxThreshold;
+				return 0;
 		}
 	}
 

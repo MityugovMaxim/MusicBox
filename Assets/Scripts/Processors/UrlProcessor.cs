@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
@@ -78,7 +79,7 @@ public class UrlProcessor
 		
 		if (_Parameters == null || !_Parameters.TryGetValue("product_id", out string productID))
 		{
-			await SelectMainPage(MainMenuPageType.Store, _Instant);
+			await SelectMainPage(MainMenuPageType.Store, _Parameters, _Instant);
 			return;
 		}
 		
@@ -109,7 +110,7 @@ public class UrlProcessor
 		
 		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
 		{
-			await SelectMainPage(MainMenuPageType.Songs, _Instant);
+			await SelectMainPage(MainMenuPageType.Songs, _Parameters, _Instant);
 			return;
 		}
 		
@@ -133,20 +134,21 @@ public class UrlProcessor
 
 	Task ProcessNews(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.News, _Instant);
+		return SelectMainPage(MainMenuPageType.News, _Parameters, _Instant);
 	}
 
 	Task ProcessOffers(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Offers, _Instant);
+		return SelectMainPage(MainMenuPageType.Offers, _Parameters, _Instant);
 	}
 
 	Task ProcessProfile(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Profile, _Instant);
+		return SelectMainPage(MainMenuPageType.Profile, _Parameters, _Instant);
 	}
 
-	async Task SelectMainPage(MainMenuPageType _PageType, bool _Instant)
+	[SuppressMessage("ReSharper", "UnusedParameter.Local")]
+	async Task SelectMainPage(MainMenuPageType _PageType, Dictionary<string, string> _Parameters, bool _Instant)
 	{
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		

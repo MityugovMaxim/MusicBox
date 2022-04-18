@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using AudioBox.Logging;
 using UnityEngine;
 
 [Serializable]
@@ -18,6 +19,13 @@ public class StateBehaviour : StateMachineBehaviour
 	public static void RegisterComplete(Animator _Animator, string _ID, Action _Complete)
 	{
 		StateBehaviour[] states = GetBehaviours(_Animator, _ID);
+		
+		if (states == null || states.Length == 0)
+		{
+			Log.Warning(nameof(StateBehaviour), "Register complete failed. Animator: '{0}' ID: '{1}'.", _Animator.name, _ID);
+			return;
+		}
+		
 		foreach (StateBehaviour state in states)
 		{
 			if (state != null)
@@ -28,6 +36,10 @@ public class StateBehaviour : StateMachineBehaviour
 	public static void UnregisterComplete(Animator _Animator, string _ID, Action _Complete)
 	{
 		StateBehaviour[] states = GetBehaviours(_Animator, _ID);
+		
+		if (states == null || states.Length == 0)
+			return;
+		
 		foreach (StateBehaviour state in states)
 		{
 			if (state != null)

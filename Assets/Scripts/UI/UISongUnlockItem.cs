@@ -10,13 +10,14 @@ public class UISongUnlockItem : UIEntity
 	[Preserve]
 	public class Pool : UIEntityPool<UISongUnlockItem> { }
 
+	const string PLAY_STATE = "play";
+
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	[SerializeField] UISongImage m_Image;
 
-	[Header("Sounds")]
-	[SerializeField, Sound] string m_PlaySound;
+	[SerializeField, Sound] string m_Sound;
 
 	[Inject] SoundProcessor  m_SoundProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
@@ -34,14 +35,14 @@ public class UISongUnlockItem : UIEntity
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		StateBehaviour.RegisterComplete(m_Animator, "play", InvokePlayFinished);
+		m_Animator.RegisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		StateBehaviour.UnregisterComplete(m_Animator, "play", InvokePlayFinished);
+		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	public void Setup(string _SongID)
@@ -74,7 +75,7 @@ public class UISongUnlockItem : UIEntity
 		
 		if (!_Instant && gameObject.activeInHierarchy)
 		{
-			m_SoundProcessor.Play(m_PlaySound);
+			m_SoundProcessor.Play(m_Sound);
 			
 			m_HapticProcessor.Process(Haptic.Type.ImpactMedium);
 			
@@ -94,7 +95,6 @@ public class UISongUnlockItem : UIEntity
 		
 		m_Animator.ResetTrigger(m_PlayParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
-		m_Animator.Update(0);
 	}
 
 	void InvokePlayFinished()

@@ -5,13 +5,14 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-[RequireComponent(typeof(Animator))]
 public class UILevelProgress : UIGroup
 {
+	const string COLLECT_STATE = "collect";
+
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	public float Progress
+	float Progress
 	{
 		get => m_Progress;
 		set
@@ -56,21 +57,15 @@ public class UILevelProgress : UIGroup
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
-		
-		StateBehaviour.RegisterComplete(m_Animator, "collect", InvokeCollectFinished);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		StateBehaviour.UnregisterComplete(m_Animator, "collect", InvokeCollectFinished);
 	}
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
 		base.OnValidate();
+		
+		if (Application.isPlaying)
+			return;
 		
 		ProcessProgress();
 	}
@@ -98,11 +93,11 @@ public class UILevelProgress : UIGroup
 		ProcessProgress();
 	}
 
-	public Task ProgressAsync()
+	public async Task ProgressAsync()
 	{
 		m_SoundProcessor.Start(m_ProgressSound);
 		
-		return UnityTask.Lerp(
+		await UnityTask.Lerp(
 			_Value => Progress = _Value,
 			m_SourceProgress,
 			m_TargetProgress,
@@ -118,12 +113,9 @@ public class UILevelProgress : UIGroup
 		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		m_CollectFinished = () => completionSource.SetResult(true);
+		m_CollectFinished = () => completionSource.TrySetResult(true);
 		
-		if (m_Animator != null)
-			m_Animator.SetTrigger(m_CollectParameterID);
-		else
-			InvokeCollectFinished();
+		m_Animator.SetTrigger(m_CollectParameterID);
 		
 		return completionSource.Task;
 	}
@@ -132,12 +124,8 @@ public class UILevelProgress : UIGroup
 	{
 		InvokeCollectFinished();
 		
-		if (m_Animator == null)
-			return;
-		
 		m_Animator.ResetTrigger(m_CollectParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
-		m_Animator.Update(0);
 	}
 
 	[Preserve]
@@ -157,9 +145,16 @@ public class UILevelProgress : UIGroup
 
 	protected override void OnShowStarted()
 	{
-		base.OnShowStarted();
-		
 		Restore();
+		
+		m_Animator.RegisterComplete(COLLECT_STATE, InvokeCollectFinished);
+	}
+
+	protected override void OnHideFinished()
+	{
+		Restore();
+		
+		m_Animator.UnregisterComplete(COLLECT_STATE, InvokeCollectFinished);
 	}
 
 	void InvokeCollectFinished()

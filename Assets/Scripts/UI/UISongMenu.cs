@@ -1,16 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Firebase.Functions;
 using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.SongMenu)]
 public class UISongMenu : UISlideMenu
 {
-	const int PLAY_ADS_COUNT = 4;
-
 	[SerializeField] UISongBackground m_Background;
 	[SerializeField] UISongImage      m_Image;
 	[SerializeField] UISongDiscs      m_Discs;
@@ -24,6 +20,7 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UIGroup          m_CompleteGroup;
 
 	[Inject] SignalBus          m_SignalBus;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongsManager       m_SongsManager;
@@ -56,6 +53,11 @@ public class UISongMenu : UISlideMenu
 		
 		m_StatisticProcessor.LogSongMenuUnlockClick(m_SongID);
 		
+		long coins = m_SongsProcessor.GetPrice(m_SongID);
+		
+		if (!await m_ProfileProcessor.CheckCoins(coins))
+			return;
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await Task.WhenAll(
@@ -63,7 +65,9 @@ public class UISongMenu : UISlideMenu
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		bool success = await UnlockLevel(m_SongID);
+		SongUnlockRequest request = new SongUnlockRequest(m_SongID);
+		
+		bool success = await request.SendAsync();
 		
 		if (success)
 		{
@@ -76,9 +80,11 @@ public class UISongMenu : UISlideMenu
 			await m_CompleteGroup.ShowAsync();
 			
 			await Task.WhenAll(
-				m_ProfileProcessor.LoadProfile(),
+				m_ProfileProcessor.Load(),
 				Task.Delay(1500)
 			);
+			
+			m_Play.Setup(m_SongID);
 			
 			m_PlayGroup.Show();
 			m_CompleteGroup.Hide();
@@ -87,7 +93,13 @@ public class UISongMenu : UISlideMenu
 		{
 			m_StatisticProcessor.LogSongMenuUnlockFailed(m_SongID);
 			
-			m_HapticProcessor.Process(Haptic.Type.Failure);
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"unlock_song",
+				"SONG_UNLOCK_ERROR_TITLE",
+				"SONG_UNLOCK_ERROR_MESSAGE",
+				Unlock,
+				() => { }
+			);
 			
 			await Task.WhenAll(
 				m_UnlockGroup.ShowAsync(),
@@ -135,9 +147,9 @@ public class UISongMenu : UISlideMenu
 		Select(m_SongID);
 	}
 
-	public void Setup(string _LevelID)
+	public void Setup(string _SongID)
 	{
-		Select(_LevelID);
+		Select(_SongID);
 	}
 
 	string GetLevelID(int _Offset)
@@ -170,9 +182,9 @@ public class UISongMenu : UISlideMenu
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
-	void Select(string _LevelID)
+	void Select(string _SongID)
 	{
-		m_SongID = _LevelID;
+		m_SongID = _SongID;
 		
 		m_Background.Setup(m_SongID, !Shown);
 		m_Image.Setup(m_SongID);
@@ -197,36 +209,6 @@ public class UISongMenu : UISlideMenu
 		
 		if (Shown)
 			m_PreviewSource.Play(m_SongID);
-	}
-
-	async Task<bool> UnlockLevel(string _LevelID)
-	{
-		long coins = m_SongsProcessor.GetPrice(_LevelID);
-		
-		if (!await m_ProfileProcessor.CheckCoins(coins))
-			return false;
-		
-		HttpsCallableReference unlockLevel = FirebaseFunctions.DefaultInstance.GetHttpsCallable("UnlockLevel");
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		data["level_id"] = _LevelID;
-		
-		bool success;
-		
-		try
-		{
-			HttpsCallableResult result = await unlockLevel.CallAsync(data);
-			
-			success = (bool)result.Data;
-		}
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-			
-			success = false;
-		}
-		
-		return success;
 	}
 
 	async Task<bool> ProcessPlayAds()
@@ -263,7 +245,7 @@ public class UISongMenu : UISlideMenu
 		{
 			m_PlayAdsCount++;
 			
-			if (m_PlayAdsCount < PLAY_ADS_COUNT)
+			if (m_PlayAdsCount < m_ConfigProcessor.SongPlayAdsCount)
 				return true;
 			
 			m_PlayAdsCount = 0;

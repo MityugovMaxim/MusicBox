@@ -11,7 +11,10 @@ public class UIMainOffersPage : UIMainMenuPage
 
 	[Inject] SignalBus        m_SignalBus;
 	[Inject] OffersManager    m_OffersManager;
+	[Inject] MenuProcessor    m_MenuProcessor;
 	[Inject] UIOfferItem.Pool m_ItemPool;
+
+	bool m_Processing;
 
 	readonly List<UIOfferItem> m_Items = new List<UIOfferItem>();
 
@@ -51,7 +54,7 @@ public class UIMainOffersPage : UIMainMenuPage
 				
 				UIOfferItem item = m_ItemPool.Spawn(m_Container);
 				
-				item.Setup(offerID);
+				item.Setup(offerID, ProcessOffer);
 				
 				m_Items.Add(item);
 			}
@@ -81,5 +84,70 @@ public class UIMainOffersPage : UIMainMenuPage
 			if (!_Instant)
 				await Task.Delay(150);
 		}
+	}
+
+	async void ProcessOffer(string _OfferID)
+	{
+		if (m_Processing)
+			return;
+		
+		m_Processing = true;
+		
+		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu);
+		
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		int progress = m_OffersManager.GetProgress(_OfferID);
+		int target   = m_OffersManager.GetTarget(_OfferID);
+		
+		bool success = progress < target
+			? await m_OffersManager.ProgressOffer(_OfferID)
+			: await m_OffersManager.CollectOffer(_OfferID);
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+		
+		if (success)
+		{
+			Refresh();
+		}
+		else
+		{
+			if (progress < target)
+				await OfferProgressRetry(_OfferID);
+			else
+				await OfferCollectRetry(_OfferID);
+		}
+		
+		await m_MenuProcessor.Hide(MenuType.BlockMenu);
+		
+		m_SignalBus.Subscribe<OffersDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		
+		m_Processing = false;
+	}
+
+	Task OfferProgressRetry(string _OfferID)
+	{
+		return m_MenuProcessor.RetryLocalizedAsync(
+			"offer_progress",
+			"OFFER_PROGRESS_ERROR_TITLE",
+			"OFFER_PROGRESS_ERROR_MESSAGE",
+			() => ProcessOffer(_OfferID),
+			() => { }
+		);
+	}
+
+	Task OfferCollectRetry(string _OfferID)
+	{
+		return m_MenuProcessor.RetryLocalizedAsync(
+			"offer_collect",
+			"OFFER_COLLECT_ERROR_TITLE",
+			"OFFER_COLLECT_ERROR_MESSAGE",
+			() => ProcessOffer(_OfferID),
+			() => { }
+		);
 	}
 }

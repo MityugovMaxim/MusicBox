@@ -220,13 +220,13 @@ public class AdsProviderUnity : IAdsProvider, IUnityAdsInitializationListener, I
 
 public class AdsProviderSnapshot
 {
-	public bool   Active { get; }
 	public string ID     { get; }
+	public bool   Active { get; }
 
 	public AdsProviderSnapshot(DataSnapshot _Data)
 	{
-		Active = _Data.GetBool("active");
 		ID     = _Data.Key;
+		Active = _Data.GetBool("active");
 	}
 }
 
@@ -246,7 +246,7 @@ public class AdsProcessor
 		m_AdsProviders = _AdsProviders;
 	}
 
-	public async Task LoadAds()
+	public async Task Load()
 	{
 		if (m_AdsProvidersData == null)
 		{

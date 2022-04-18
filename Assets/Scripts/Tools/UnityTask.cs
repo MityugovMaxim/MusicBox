@@ -15,6 +15,11 @@ public class UnityTask : MonoBehaviour
 		m_Instance = this;
 	}
 
+	void OnDestroy()
+	{
+		m_Instance = null;
+	}
+
 	void OnEnable()
 	{
 		StartCoroutine(YieldRoutine());
@@ -57,7 +62,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();
@@ -141,7 +146,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();
@@ -168,7 +173,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();
@@ -195,7 +200,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();
@@ -222,7 +227,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();
@@ -249,7 +254,7 @@ public class UnityTask : MonoBehaviour
 		_Token.Register(
 			() =>
 			{
-				if (routine != null)
+				if (routine != null && !ReferenceEquals(m_Instance, null))
 					m_Instance.StopCoroutine(routine);
 				
 				completionSource.TrySetCanceled();

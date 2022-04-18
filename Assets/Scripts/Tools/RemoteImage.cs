@@ -161,10 +161,7 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 					: await m_StorageProcessor.LoadTextureAsync(Path, CancellationToken.None);
 			}
 		}
-		catch (TaskCanceledException)
-		{
-			Debug.LogFormat(this, "[WebImage] Load sprite cancelled. Path: {0}.", Path);
-		}
+		catch (TaskCanceledException) { }
 		catch (Exception exception)
 		{
 			Debug.LogException(exception);
@@ -190,7 +187,7 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 			Sprite = m_Default;
 			
 			m_Graphic.enabled = true;
-			Loaded            = false;
+			Loaded            = true;
 			
 			if (m_LoaderGroup != null)
 				m_LoaderGroup.Hide();

@@ -35,10 +35,10 @@ public class UINewsItem : UIGroupLayout
 		
 		m_Image.Setup(m_NewsID);
 		
-		m_Title.text   = m_NewsProcessor.GetTitle(m_NewsID);
+		m_Title.text       = m_NewsProcessor.GetTitle(m_NewsID);
 		m_Description.text = m_NewsProcessor.GetDescription(m_NewsID);
-		m_Date.text    = m_NewsProcessor.GetDate(m_NewsID);
-		m_URL          = m_NewsProcessor.GetURL(m_NewsID);
+		m_Date.text        = m_NewsProcessor.GetDate(m_NewsID);
+		m_URL              = m_NewsProcessor.GetURL(m_NewsID);
 	}
 
 	public async void Open()

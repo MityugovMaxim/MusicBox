@@ -24,10 +24,10 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UILevelProgress m_LevelProgress;
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
+	[SerializeField] UIUnitLabel     m_Coins;
 
 	[Inject] ScoreManager          m_ScoreManager;
 	[Inject] ProgressProcessor     m_ProgressProcessor;
-	[Inject] SongsManager          m_SongsManager;
 	[Inject] MenuProcessor         m_MenuProcessor;
 	[Inject] StatisticProcessor    m_StatisticProcessor;
 	[Inject] UISongUnlockItem.Pool m_ItemPool;
@@ -110,7 +110,11 @@ public class UIResultLevelPage : UIResultMenuPage
 			
 			await m_LevelProgress.CollectAsync();
 			
-			await UnlockItems();
+			await CoinsAsync(progressData.Level + 1);
+			
+			await Task.Delay(500);
+			
+			await UnlockAsync();
 			
 			await Task.Delay(1500);
 			
@@ -129,7 +133,9 @@ public class UIResultLevelPage : UIResultMenuPage
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		List<string> songIDs = m_SongsManager.GetLockedSongIDs(_Level);
+		m_Coins.gameObject.SetActive(false);
+		
+		List<string> songIDs = m_ProgressProcessor.GetSongIDs(_Level);
 		
 		foreach (string songID in songIDs)
 		{
@@ -157,7 +163,16 @@ public class UIResultLevelPage : UIResultMenuPage
 		resultMenu.Play(ResultMenuPageType.Control);
 	}
 
-	async Task UnlockItems()
+	async Task CoinsAsync(int _Level)
+	{
+		long coins = m_ProgressProcessor.GetCoins(_Level);
+		
+		m_Coins.gameObject.SetActive(coins > 0);
+		
+		await UnityTask.Phase(_Phase => m_Coins.Value = MathUtility.Lerp(0, coins, _Phase), 2);
+	}
+
+	async Task UnlockAsync()
 	{
 		foreach (UISongUnlockItem item in m_Items)
 		{
