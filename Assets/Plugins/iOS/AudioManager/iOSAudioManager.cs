@@ -22,7 +22,7 @@ public class iOSAudioManager : AudioManager
 	static extern string AudioController_GetOutputName();
 
 	[DllImport("__Internal")]
-	static extern string AudioController_GetOutputUID();
+	static extern string AudioController_GetOutputID();
 
 	[DllImport("__Internal")]
 	static extern int AudioController_GetOutputType();
@@ -56,7 +56,7 @@ public class iOSAudioManager : AudioManager
 
 	public override string GetAudioOutputID()
 	{
-		return AudioController_GetOutputUID();
+		return AudioController_GetOutputID();
 	}
 
 	public override AudioOutputType GetAudioOutputType()
