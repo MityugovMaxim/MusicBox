@@ -4,12 +4,19 @@ public class Spectrum : MonoBehaviour
 {
 	static readonly float[] m_Buffer   = new float[64];
 	static readonly float[] m_Spectrum = new float[64];
+	static readonly float[] m_Falloff  = new float[32];
 
 	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
 
 	[SerializeField] AudioSource m_AudioSource;
 	[SerializeField] float       m_Dampen = 1.25f;
 	[SerializeField] FFTWindow   m_FFT    = FFTWindow.BlackmanHarris;
+
+	void Awake()
+	{
+		for (int i = 0; i < 32; i++)
+			m_Falloff[i] = Mathf.Sqrt(Mathf.Log(Mathf.Max(2, i + 1)));
+	}
 
 	void Update()
 	{
@@ -30,7 +37,7 @@ public class Spectrum : MonoBehaviour
 		
 		for (int i = 0; i < 32; i++)
 		{
-			float spectrum = Mathf.Sqrt(m_Buffer[i]) * Mathf.Sqrt(Mathf.Log(i + 2));
+			float spectrum = Mathf.Sqrt(m_Buffer[i]) * m_Falloff[i];
 			int   index    = 32 * _Channel + i;
 			
 			m_Spectrum[index] = Mathf.Max(m_Spectrum[index], spectrum);

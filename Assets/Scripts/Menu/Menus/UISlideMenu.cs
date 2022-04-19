@@ -139,6 +139,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
 	void IDropHandler.OnDrop(PointerEventData _EventData)

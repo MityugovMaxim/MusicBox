@@ -57,6 +57,13 @@ public abstract class AudioManager : IInitializable, IDisposable
 		PlayerPrefs.SetFloat(key, _Latency);
 	}
 
+	public bool HasSettings()
+	{
+		string key = LATENCY_KEY + GetAudioOutputName();
+		
+		return PlayerPrefs.HasKey(key);
+	}
+
 	void InvokeAudioSourceChanged()
 	{
 		m_SignalBus.Fire<AudioSourceChangedSignal>();

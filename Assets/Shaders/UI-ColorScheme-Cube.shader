@@ -135,7 +135,7 @@ Shader "UI/ColorScheme/Cube"
 				
 				color.rgb = lerp(
 					color.rgb,
-					shine.rgb + color.rgb * reflectionColor * normal.a * 10 * _Strength,
+					_BackgroundSecondaryColor * 0.1 + shine.rgb * reflectionColor * normal.a * 10 * _Strength,
 					step(0.1, normal.a)
 				);
 				

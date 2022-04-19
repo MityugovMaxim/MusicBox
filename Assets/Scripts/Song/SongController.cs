@@ -101,6 +101,11 @@ public class SongController
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
 		
+		m_Player.Time = -m_Player.Duration;
+		m_Player.Sample();
+		
+		await UnityTask.Yield();
+		
 		return true;
 	}
 

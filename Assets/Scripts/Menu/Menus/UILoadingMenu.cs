@@ -9,6 +9,7 @@ public class UILoadingMenu : UIMenu
 
 	[Inject] SongController m_SongController;
 	[Inject] MenuProcessor  m_MenuProcessor;
+	[Inject] AudioManager   m_AudioManager;
 
 	string m_SongID;
 
@@ -23,6 +24,8 @@ public class UILoadingMenu : UIMenu
 	{
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
+		
+		await ProcessAudioOutput();
 		
 		Task<bool> load = m_SongController.Load(m_SongID);
 		
@@ -58,5 +61,17 @@ public class UILoadingMenu : UIMenu
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 		}
+	}
+
+	Task ProcessAudioOutput()
+	{
+		if (m_AudioManager.HasSettings())
+			return Task.FromResult(true);
+		
+		UISetupMenu setupMenu = m_MenuProcessor.GetMenu<UISetupMenu>();
+		
+		return m_MenuProcessor.Show(MenuType.SetupMenu)
+			.ContinueWith(_Task => UnityTask.While(() => setupMenu.Shown))
+			.ContinueWith(_Task => Task.Delay(1000));
 	}
 }
