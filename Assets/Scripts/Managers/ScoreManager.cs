@@ -40,13 +40,13 @@ public class ScoreManager : IInitializable, IDisposable
 	{
 		get
 		{
-			if (Combo >= m_ConfigProcessor.ComboX8)
+			if (Combo >= ComboX8)
 				return 8;
-			else if (Combo >= m_ConfigProcessor.ComboX6)
+			else if (Combo >= ComboX6)
 				return 6;
-			else if (Combo >= m_ConfigProcessor.ComboX4)
+			else if (Combo >= ComboX4)
 				return 4;
-			else if (Combo >= m_ConfigProcessor.ComboX2)
+			else if (Combo >= ComboX2)
 				return 2;
 			else
 				return 1;
@@ -58,32 +58,53 @@ public class ScoreManager : IInitializable, IDisposable
 		get
 		{
 			int minProgress;
-			if (Combo >= m_ConfigProcessor.ComboX8)
-				minProgress = m_ConfigProcessor.ComboX8;
-			else if (Combo >= m_ConfigProcessor.ComboX6)
-				minProgress = m_ConfigProcessor.ComboX6;
-			else if (Combo >= m_ConfigProcessor.ComboX4)
-				minProgress = m_ConfigProcessor.ComboX4;
-			else if (Combo >= m_ConfigProcessor.ComboX2)
-				minProgress = m_ConfigProcessor.ComboX2;
+			if (Combo >= ComboX8)
+				minProgress = ComboX8;
+			else if (Combo >= ComboX6)
+				minProgress = ComboX6;
+			else if (Combo >= ComboX4)
+				minProgress = ComboX4;
+			else if (Combo >= ComboX2)
+				minProgress = ComboX2;
 			else
 				minProgress = 0;
 			
 			int maxProgress;
-			if (Combo >= m_ConfigProcessor.ComboX8)
-				maxProgress = m_ConfigProcessor.ComboX8;
-			else if (Combo >= m_ConfigProcessor.ComboX6)
-				maxProgress = m_ConfigProcessor.ComboX8;
-			else if (Combo >= m_ConfigProcessor.ComboX4)
-				maxProgress = m_ConfigProcessor.ComboX6;
-			else if (Combo >= m_ConfigProcessor.ComboX2)
-				maxProgress = m_ConfigProcessor.ComboX4;
+			if (Combo >= ComboX8)
+				maxProgress = ComboX8;
+			else if (Combo >= ComboX6)
+				maxProgress = ComboX8;
+			else if (Combo >= ComboX4)
+				maxProgress = ComboX6;
+			else if (Combo >= ComboX2)
+				maxProgress = ComboX4;
 			else
-				maxProgress = m_ConfigProcessor.ComboX2;
+				maxProgress = ComboX2;
 			
 			return Mathf.InverseLerp(minProgress, maxProgress - 1, Combo);
 		}
 	}
+
+	int ComboX8 { get; set; }
+	int ComboX6 { get; set; }
+	int ComboX4 { get; set; }
+	int ComboX2 { get; set; }
+
+	float ScorePerfectThreshold { get; set; }
+	float ScoreGoodThreshold    { get; set; }
+
+	float TapPerfectMultiplier { get; set; }
+	float TapGoodMultiplier    { get; set; }
+	float TapBadMultiplier     { get; set; }
+
+	float DoublePerfectMultiplier { get; set; }
+	float DoubleGoodMultiplier    { get; set; }
+	float DoubleBadMultiplier     { get; set; }
+
+	float HoldPerfectMultiplier { get; set; }
+	float HoldGoodMultiplier    { get; set; }
+	float HoldBadMultiplier     { get; set; }
+	float HoldHitMultiplier     { get; set; }
 
 	[Inject] SignalBus        m_SignalBus;
 	[Inject] ScoresProcessor  m_ScoresProcessor;
@@ -139,6 +160,27 @@ public class ScoreManager : IInitializable, IDisposable
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
+		
+		ComboX8 = m_ConfigProcessor.ComboX8;
+		ComboX6 = m_ConfigProcessor.ComboX6;
+		ComboX4 = m_ConfigProcessor.ComboX4;
+		ComboX2 = m_ConfigProcessor.ComboX2;
+		
+		ScorePerfectThreshold = m_ConfigProcessor.ScorePerfectThreshold;
+		ScoreGoodThreshold    = m_ConfigProcessor.ScoreGoodThreshold;
+		
+		TapPerfectMultiplier = m_ConfigProcessor.TapPerfectMultiplier;
+		TapGoodMultiplier    = m_ConfigProcessor.TapGoodMultiplier;
+		TapBadMultiplier     = m_ConfigProcessor.TapBadMultiplier;
+		
+		DoublePerfectMultiplier = m_ConfigProcessor.DoublePerfectMultiplier;
+		DoubleGoodMultiplier    = m_ConfigProcessor.DoubleGoodMultiplier;
+		DoubleBadMultiplier     = m_ConfigProcessor.DoubleBadMultiplier;
+		
+		HoldPerfectMultiplier = m_ConfigProcessor.HoldPerfectMultiplier;
+		HoldGoodMultiplier    = m_ConfigProcessor.HoldGoodMultiplier;
+		HoldBadMultiplier     = m_ConfigProcessor.HoldBadMultiplier;
+		HoldHitMultiplier     = m_ConfigProcessor.HoldHitMultiplier;
 	}
 
 	public void Restore()
@@ -261,23 +303,23 @@ public class ScoreManager : IInitializable, IDisposable
 	void RegisterTapSuccess(TapSuccessSignal _Signal)
 	{
 		ScoreGrade grade;
-		if (_Signal.Progress >= m_ConfigProcessor.ScorePerfectThreshold)
+		if (_Signal.Progress >= ScorePerfectThreshold)
 		{
 			grade = ScoreGrade.Perfect;
 			m_TapPerfect++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.TapPerfectMultiplier);
+			AddScore(_Signal.Progress * TapPerfectMultiplier);
 		}
-		else if (_Signal.Progress >= m_ConfigProcessor.ScoreGoodThreshold)
+		else if (_Signal.Progress >= ScoreGoodThreshold)
 		{
 			grade = ScoreGrade.Good;
 			m_TapGood++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.TapGoodMultiplier);
+			AddScore(_Signal.Progress * TapGoodMultiplier);
 		}
 		else
 		{
 			grade = ScoreGrade.Bad;
 			m_TapBad++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.TapBadMultiplier);
+			AddScore(_Signal.Progress * TapBadMultiplier);
 		}
 		
 		Combo++;
@@ -297,23 +339,23 @@ public class ScoreManager : IInitializable, IDisposable
 	void RegisterDoubleSuccess(DoubleSuccessSignal _Signal)
 	{
 		ScoreGrade grade;
-		if (_Signal.Progress >= m_ConfigProcessor.ScorePerfectThreshold)
+		if (_Signal.Progress >= ScorePerfectThreshold)
 		{
 			grade = ScoreGrade.Perfect;
 			m_DoublePerfect++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.DoublePerfectMultiplier);
+			AddScore(_Signal.Progress * DoublePerfectMultiplier);
 		}
-		else if (_Signal.Progress >= m_ConfigProcessor.ScoreGoodThreshold)
+		else if (_Signal.Progress >= ScoreGoodThreshold)
 		{
 			grade = ScoreGrade.Good;
 			m_DoubleGood++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.DoubleGoodMultiplier);
+			AddScore(_Signal.Progress * DoubleGoodMultiplier);
 		}
 		else
 		{
 			grade = ScoreGrade.Bad;
 			m_DoubleBad++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.DoubleBadMultiplier);
+			AddScore(_Signal.Progress * DoubleBadMultiplier);
 		}
 		
 		Combo++;
@@ -333,23 +375,23 @@ public class ScoreManager : IInitializable, IDisposable
 	void RegisterHoldSuccess(HoldSuccessSignal _Signal)
 	{
 		ScoreGrade grade;
-		if (_Signal.Progress >= m_ConfigProcessor.ScorePerfectThreshold)
+		if (_Signal.Progress >= ScorePerfectThreshold)
 		{
 			grade = ScoreGrade.Perfect;
 			m_HoldPerfect++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.HoldPerfectMultiplier);
+			AddScore(_Signal.Progress * HoldPerfectMultiplier);
 		}
-		else if (_Signal.Progress >= m_ConfigProcessor.ScoreGoodThreshold)
+		else if (_Signal.Progress >= ScoreGoodThreshold)
 		{
 			grade = ScoreGrade.Good;
 			m_HoldGood++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.HoldGoodMultiplier);
+			AddScore(_Signal.Progress * HoldGoodMultiplier);
 		}
 		else
 		{
 			grade = ScoreGrade.Bad;
 			m_HoldBad++;
-			AddScore(_Signal.Progress * m_ConfigProcessor.HoldBadMultiplier);
+			AddScore(_Signal.Progress * HoldBadMultiplier);
 		}
 		
 		Combo++;
@@ -373,12 +415,12 @@ public class ScoreManager : IInitializable, IDisposable
 		float progress = 1.0f - _Signal.Progress;
 		
 		ScoreGrade grade = ScoreGrade.None;
-		if (progress >= m_ConfigProcessor.ScorePerfectThreshold)
+		if (progress >= ScorePerfectThreshold)
 			grade = ScoreGrade.Perfect;
-		else if (progress >= m_ConfigProcessor.ScoreGoodThreshold)
+		else if (progress >= ScoreGoodThreshold)
 			grade = ScoreGrade.Good;
 		
-		AddScore(progress * m_ConfigProcessor.HoldHitMultiplier);
+		AddScore(progress * HoldHitMultiplier);
 		
 		ProcessScore(grade);
 	}
