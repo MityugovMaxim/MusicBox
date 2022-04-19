@@ -123,6 +123,8 @@ Shader "UI/ColorScheme/Cube"
 				
 				fixed4 color = tex2D(_MainTex, IN.uv) * IN.color;
 				
+				fixed4 shine = BACKGROUND_BY_RANGE(color, 0.1, 0.95);
+				
 				#ifdef BACKGROUND_SCHEME
 				color.rgb *= BACKGROUND_BY_RANGE(color, 0.15, 0.8);
 				#endif
@@ -131,7 +133,11 @@ Shader "UI/ColorScheme/Cube"
 				color.rgb *= FOREGROUND_BY_RANGE(color, 0.15, 0.8);
 				#endif
 				
-				color.rgb += color.rgb * reflectionColor * reflectionColor * normal.a * 60 * _Strength;
+				color.rgb = lerp(
+					color.rgb,
+					shine.rgb + color.rgb * reflectionColor * normal.a * 10 * _Strength,
+					step(0.1, normal.a)
+				);
 				
 				color = useUIMask(color, IN.mask);
 				

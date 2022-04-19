@@ -98,11 +98,11 @@ public class UIProfile : UIEntity
 		
 		Username = m_SocialProcessor.GetUsername();
 		
-		Discs = m_ProfileProcessor.Discs;
+		Coins = m_ProfileProcessor.Coins;
 		
 		Level = m_ProfileProcessor.Level;
 		
-		Coins = m_ProfileProcessor.Coins;
+		Discs = m_ProfileProcessor.Discs;
 	}
 
 	public void Open()

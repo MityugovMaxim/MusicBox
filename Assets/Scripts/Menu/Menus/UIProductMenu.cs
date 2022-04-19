@@ -19,8 +19,7 @@ public class UIProductMenu : UISlideMenu
 	[SerializeField] UIGroup             m_CompleteGroup;
 	[SerializeField] SongPreview         m_Preview;
 
-	[SerializeField, Sound] string m_SuccessSound;
-	[SerializeField, Sound] string m_FailSound;
+	[SerializeField, Sound] string m_PurchaseSound;
 
 	[Inject] SignalBus              m_SignalBus;
 	[Inject] ProductsProcessor      m_ProductsProcessor;
@@ -78,7 +77,7 @@ public class UIProductMenu : UISlideMenu
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
-			m_SoundProcessor.Play(m_SuccessSound);
+			m_SoundProcessor.Play(m_PurchaseSound);
 			
 			await m_CompleteGroup.ShowAsync();
 			
@@ -93,8 +92,13 @@ public class UIProductMenu : UISlideMenu
 		{
 			m_StatisticProcessor.LogProductMenuPurchaseFailed(m_ProductID);
 			
-			m_HapticProcessor.Process(Haptic.Type.Failure);
-			m_SoundProcessor.Play(m_FailSound);
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"product_purchase",
+				"PRODUCT_PURCHASE_ERROR_TITLE",
+				"PRODUCT_PURCHASE_ERROR_MESSAGE",
+				Purchase,
+				() => { }
+			);
 			
 			await Task.WhenAll(
 				m_PurchaseGroup.ShowAsync(),

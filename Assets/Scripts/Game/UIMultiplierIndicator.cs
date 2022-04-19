@@ -9,7 +9,13 @@ public class UIMultiplierIndicator : UIEntity
 	[SerializeField] UIMultiplierProgress m_MultiplierProgress;
 	[SerializeField] UIMultiplierLabel    m_MultiplierLabel;
 
-	[Inject] SignalBus m_SignalBus;
+	[SerializeField, Sound] string m_MultiplierX2Sound;
+	[SerializeField, Sound] string m_MultiplierX4Sound;
+	[SerializeField, Sound] string m_MultiplierX6Sound;
+	[SerializeField, Sound] string m_MultiplierX8Sound;
+
+	[Inject] SignalBus      m_SignalBus;
+	[Inject] SoundProcessor m_SoundProcessor;
 
 	int   m_Multiplier;
 	float m_Progress;
@@ -57,7 +63,10 @@ public class UIMultiplierIndicator : UIEntity
 		List<Task> tasks = new List<Task>();
 		if (_Multiplier > m_Multiplier)
 		{
+			string multiplierSound = GetMultiplierSound(_Multiplier);
+			
 			m_MultiplierLabel.Multiplier = _Multiplier;
+			tasks.Add(m_SoundProcessor.PlayAsync(multiplierSound));
 			tasks.Add(m_MultiplierProgress.PlayAsync());
 			tasks.Add(m_MultiplierLabel.PlayAsync());
 		}
@@ -91,5 +100,17 @@ public class UIMultiplierIndicator : UIEntity
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	string GetMultiplierSound(int _Multiplier)
+	{
+		if (_Multiplier <= 2)
+			return m_MultiplierX2Sound;
+		else if (_Multiplier <= 4)
+			return m_MultiplierX4Sound;
+		else if (_Multiplier <= 6)
+			return m_MultiplierX6Sound;
+		else
+			return m_MultiplierX8Sound;
 	}
 }

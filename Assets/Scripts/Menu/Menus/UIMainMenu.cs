@@ -78,8 +78,6 @@ public class UIMainMenu : UIMenu
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
-		
-		//Application.deepLinkActivated += ProcessDeepLink;
 	}
 
 	protected override void OnHideStarted()
@@ -89,8 +87,6 @@ public class UIMainMenu : UIMenu
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProgressDataUpdateSignal>(Refresh);
-		
-		Application.deepLinkActivated -= ProcessDeepLink;
 	}
 
 	protected override void OnHideFinished()

@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Cycles:
   - m_BeforeDelay: 0
     m_AfterDelay: 0
-    m_Duration: 10
+    m_Duration: 3
     m_Curve:
       serializedVersion: 2
       m_Curve:
@@ -141,7 +141,34 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 0
-  m_Type: 0
+  - m_BeforeDelay: 0
+    m_AfterDelay: 0
+    m_Duration: 0.4
+    m_Curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+  m_Type: 1
   m_Source: {x: 1.25, y: 1.25, z: 1}
   m_Target: {x: 1, y: 1, z: 1}
   m_AutoPlay: 1
@@ -336,10 +363,15 @@ PrefabInstance:
       propertyPath: m_Name
       value: image
       objectReference: {fileID: 0}
+    - target: {fileID: 5618488929194124887, guid: 756cec71fec1940de91ef09b0b53fb9f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5835271791757659927, guid: 756cec71fec1940de91ef09b0b53fb9f,
         type: 3}
       propertyPath: m_Width
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5835271791757659927, guid: 756cec71fec1940de91ef09b0b53fb9f,
         type: 3}

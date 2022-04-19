@@ -37316,6 +37316,15 @@ MonoBehaviour:
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
   m_Label: {fileID: 2780176800959194470}
+  m_Graphic: {fileID: 9154311297704941466}
+  m_DefaultColor: {r: 1, g: 1, b: 1, a: 0.69803923}
+  m_PerfectColor: {r: 0.514151, g: 0.83156264, b: 1, a: 0}
+  m_GoodColor: {r: 0.495283, g: 1, b: 0.8488446, a: 0}
+  m_BadColor: {r: 1, g: 0.66635185, b: 0.36320752, a: 0}
+  m_FailColor: {r: 1, g: 0.3537736, b: 0.53332925, a: 0}
+  m_SourcePosition: 25
+  m_TargetPosition: 0
+  m_Duration: 0.1
 --- !u!225 &6491637371982171375
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -42323,6 +42332,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MultiplierProgress: {fileID: 6913370309102154396}
   m_MultiplierLabel: {fileID: 7460803032042635797}
+  m_MultiplierX2Sound: Multiplier X2
+  m_MultiplierX4Sound: Multiplier X4
+  m_MultiplierX6Sound: Multiplier X6
+  m_MultiplierX8Sound: Multiplier X8
 --- !u!1 &6891978868443420517
 GameObject:
   m_ObjectHideFlags: 0
@@ -47171,10 +47184,10 @@ RectTransform:
   m_Father: {fileID: 947731523305448805}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 260, y: 24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5615597238857579226
 CanvasRenderer:
@@ -57732,4 +57745,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ScoreLabel: {fileID: 5895786785735060930}
-  m_Duration: 0.15
+  m_Duration: 0.4

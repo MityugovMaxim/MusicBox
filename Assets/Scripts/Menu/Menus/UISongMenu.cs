@@ -19,6 +19,8 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UIGroup          m_LoaderGroup;
 	[SerializeField] UIGroup          m_CompleteGroup;
 
+	[SerializeField, Sound] string m_UnlockSound;
+
 	[Inject] SignalBus          m_SignalBus;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ProfileProcessor   m_ProfileProcessor;
@@ -27,6 +29,7 @@ public class UISongMenu : UISlideMenu
 	[Inject] AdsProcessor       m_AdsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
+	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string m_SongID;
@@ -76,6 +79,7 @@ public class UISongMenu : UISlideMenu
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
+			m_SoundProcessor.Play(m_UnlockSound);
 			
 			await m_CompleteGroup.ShowAsync();
 			

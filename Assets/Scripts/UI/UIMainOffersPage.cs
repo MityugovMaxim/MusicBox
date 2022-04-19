@@ -9,9 +9,13 @@ public class UIMainOffersPage : UIMainMenuPage
 
 	[SerializeField] RectTransform m_Container;
 
+	[SerializeField, Sound] string m_CollectSound;
+
 	[Inject] SignalBus        m_SignalBus;
 	[Inject] OffersManager    m_OffersManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] HapticProcessor  m_HapticProcessor;
+	[Inject] SoundProcessor   m_SoundProcessor;
 	[Inject] UIOfferItem.Pool m_ItemPool;
 
 	bool m_Processing;
@@ -103,7 +107,9 @@ public class UIMainOffersPage : UIMainMenuPage
 		int progress = m_OffersManager.GetProgress(_OfferID);
 		int target   = m_OffersManager.GetTarget(_OfferID);
 		
-		bool success = progress < target
+		bool collect = progress < target;
+		
+		bool success = collect
 			? await m_OffersManager.ProgressOffer(_OfferID)
 			: await m_OffersManager.CollectOffer(_OfferID);
 		
@@ -111,11 +117,17 @@ public class UIMainOffersPage : UIMainMenuPage
 		
 		if (success)
 		{
+			if (collect)
+			{
+				m_HapticProcessor.Process(Haptic.Type.Success);
+				m_SoundProcessor.Play(m_CollectSound);
+			}
+			
 			Refresh();
 		}
 		else
 		{
-			if (progress < target)
+			if (collect)
 				await OfferProgressRetry(_OfferID);
 			else
 				await OfferCollectRetry(_OfferID);

@@ -1,11 +1,25 @@
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 public class UIComboIndicator : UIGroup
 {
 	[SerializeField] UIUnitLabel m_Label;
+	[SerializeField] Graphic     m_Graphic;
+	[SerializeField] Color       m_DefaultColor;
+	[SerializeField] Color       m_PerfectColor;
+	[SerializeField] Color       m_GoodColor;
+	[SerializeField] Color       m_BadColor;
+	[SerializeField] Color       m_FailColor;
+	[SerializeField] float       m_SourcePosition;
+	[SerializeField] float       m_TargetPosition;
+	[SerializeField] float       m_Duration;
 
 	[Inject] SignalBus m_SignalBus;
+
+	CancellationTokenSource m_TokenSource;
 
 	protected override void Awake()
 	{
@@ -21,13 +35,89 @@ public class UIComboIndicator : UIGroup
 		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
 	}
 
-	void RegisterScore(ScoreSignal _Signal)
+	async void RegisterScore(ScoreSignal _Signal)
 	{
-		m_Label.Value = _Signal.Combo;
+		Color color = m_DefaultColor;
+		switch (_Signal.Grade)
+		{
+			case ScoreGrade.Perfect:
+				color = m_PerfectColor;
+				break;
+			case ScoreGrade.Good:
+				color = m_GoodColor;
+				break;
+			case ScoreGrade.Bad:
+				color = m_BadColor;
+				break;
+			case ScoreGrade.Fail:
+				color = m_FailColor;
+				break;
+		}
+		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
 		
 		if (_Signal.Combo > 0)
-			Show();
-		else
-			Hide();
+			Show(true);
+		
+		try
+		{
+			if (m_Label.Value < _Signal.Combo)
+			{
+				m_Label.Value = _Signal.Combo;
+				
+				await Task.WhenAll(
+					ColorAsync(color, m_DefaultColor, token),
+					PositionAsync(m_SourcePosition, m_TargetPosition, token)
+				);
+			}
+			else
+			{
+				m_Label.Value = _Signal.Combo;
+				
+				await ColorAsync(m_Graphic.color, color, token);
+			}
+		}
+		catch (TaskCanceledException) { }
+		
+		if (token.IsCancellationRequested)
+			return;
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+		
+		if (_Signal.Combo <= 0)
+			Hide(true);
+	}
+
+	Task ColorAsync(Color _Source, Color _Target, CancellationToken _Token = default)
+	{
+		return UnityTask.Phase(
+			_Phase =>
+			{
+				m_Graphic.color = EaseFunction.EaseOutQuad.Get(_Source, _Target, _Phase);
+			},
+			m_Duration,
+			_Token
+		);
+	}
+
+	Task PositionAsync(float _Source, float _Target, CancellationToken _Token = default)
+	{
+		Vector2 source = new Vector2(_Source, 0);
+		Vector2 target = new Vector2(_Target, 0);
+		
+		return UnityTask.Phase(
+			_Phase =>
+			{
+				m_Graphic.rectTransform.localPosition = EaseFunction.EaseInQuad.Get(source, target, _Phase);
+			},
+			m_Duration,
+			_Token
+		);
 	}
 }
