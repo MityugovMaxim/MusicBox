@@ -26,7 +26,7 @@ public class SongPlayer : ASFPlayer
 		Music    = _Music;
 		
 		m_Finished   = _Finished;
-		m_FinishTime = Music.length + Duration;
+		m_FinishTime = Music.length + Duration * Ratio;
 		
 		m_InputArea.anchorMin = new Vector2(0, 1.0f - Ratio);
 		m_InputArea.anchorMax = new Vector2(1, 1.0f - Ratio);

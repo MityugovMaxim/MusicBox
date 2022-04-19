@@ -267,7 +267,7 @@ public class SongController
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await Task.Delay(600);
+		await Task.Delay(400);
 		
 		await m_MenuProcessor.Show(MenuType.ReviveMenu);
 		

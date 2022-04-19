@@ -35,10 +35,13 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] float              m_Duration = 1.5f;
 	[SerializeField] AnimationCurve     m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
 
+	[SerializeField, Sound] string m_UnitSound;
+
 	[Inject] ScoresProcessor    m_ScoresProcessor;
 	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
@@ -260,11 +263,23 @@ public class UIResultRewardPage : UIResultMenuPage
 	Task UnitAsync(UICascadeUnitLabel _Label, double _Value, CancellationToken _Token = default)
 	{
 		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
+		m_SoundProcessor.Start(m_UnitSound);
 		
-		return UnityTask.Phase(
+		Task task = UnityTask.Phase(
 			_Phase => _Label.Value = (long)(_Value * m_Curve.Evaluate(_Phase)),
 			m_Duration,
 			_Token
-		).ContinueWithOnMainThread(_Task => _Label.Play(), _Token);
+		);
+		
+		task = task.ContinueWithOnMainThread(
+			_Task =>
+			{
+				m_SoundProcessor.Stop(m_UnitSound);
+				_Label.Play();
+			},
+			_Token
+		);
+		
+		return task;
 	}
 }

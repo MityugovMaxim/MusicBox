@@ -26,9 +26,13 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ContinueGroup;
 	[SerializeField] UIUnitLabel     m_Coins;
 
+	[SerializeField, Sound] string m_UnitSound;
+
 	[Inject] ScoreManager          m_ScoreManager;
 	[Inject] ProgressProcessor     m_ProgressProcessor;
 	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] SoundProcessor        m_SoundProcessor;
+	[Inject] HapticProcessor       m_HapticProcessor;
 	[Inject] StatisticProcessor    m_StatisticProcessor;
 	[Inject] UISongUnlockItem.Pool m_ItemPool;
 
@@ -165,9 +169,17 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	async Task CoinsAsync(int _Level)
 	{
+		const float duration = 1.5f;
+		
 		long coins = m_ProgressProcessor.GetCoins(_Level);
 		
 		m_Coins.gameObject.SetActive(coins > 0);
+		
+		if (coins <= 0)
+			return;
+		
+		m_HapticProcessor.Play(Haptic.Type.Selection, 30, duration);
+		m_SoundProcessor.Start(m_UnitSound);
 		
 		await UnityTask.Phase(_Phase => m_Coins.Value = MathUtility.Lerp(0, coins, _Phase), 2);
 	}
