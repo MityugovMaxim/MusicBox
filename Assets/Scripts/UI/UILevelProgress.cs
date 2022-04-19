@@ -38,6 +38,7 @@ public class UILevelProgress : UIGroup
 
 	[Header("Sounds")]
 	[SerializeField, Sound] string m_ProgressSound;
+	[SerializeField, Sound] string m_CollectSound;
 	[SerializeField, Sound] string m_LevelSound;
 
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
@@ -114,6 +115,8 @@ public class UILevelProgress : UIGroup
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		m_CollectFinished = () => completionSource.TrySetResult(true);
+		
+		m_SoundProcessor.Play(m_CollectSound);
 		
 		m_Animator.SetTrigger(m_CollectParameterID);
 		

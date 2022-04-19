@@ -181,7 +181,12 @@ public class UIResultLevelPage : UIResultMenuPage
 		m_HapticProcessor.Play(Haptic.Type.Selection, 30, duration);
 		m_SoundProcessor.Start(m_UnitSound);
 		
-		await UnityTask.Phase(_Phase => m_Coins.Value = MathUtility.Lerp(0, coins, _Phase), 2);
+		await UnityTask.Phase(
+			_Phase => m_Coins.Value = MathUtility.Lerp(0, coins, _Phase),
+			duration
+		);
+		
+		m_SoundProcessor.Stop(m_UnitSound);
 	}
 
 	async Task UnlockAsync()

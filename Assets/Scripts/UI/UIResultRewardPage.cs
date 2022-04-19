@@ -40,6 +40,8 @@ public class UIResultRewardPage : UIResultMenuPage
 	[Inject] ScoresProcessor    m_ScoresProcessor;
 	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
@@ -48,6 +50,8 @@ public class UIResultRewardPage : UIResultMenuPage
 	string      m_SongID;
 	ScoreRank   m_SourceRank;
 	ScoreRank   m_TargetRank;
+	int         m_SourceLevel;
+	int         m_TargetLevel;
 	int         m_SourceAccuracy;
 	int         m_TargetAccuracy;
 	long        m_SourceScore;
@@ -68,6 +72,8 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_TargetAccuracy = m_ScoreManager.GetAccuracy();
 		m_TargetScore    = m_ScoreManager.GetScore();
 		m_Coins          = m_SongsProcessor.GetPayout(m_SongID, m_SourceRank, m_TargetRank);
+		m_SourceLevel    = m_ProgressProcessor.ClampLevel(m_ProfileProcessor.Level);
+		m_TargetLevel    = m_ProgressProcessor.GetMaxLevel();
 		
 		ProcessProgress();
 		
@@ -145,7 +151,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		if (resultMenu == null)
 			return;
 		
-		ResultMenuPageType pageType = m_TargetRank > m_SourceRank
+		ResultMenuPageType pageType = m_SourceLevel != m_TargetLevel && m_TargetRank > m_SourceRank
 			? ResultMenuPageType.Level
 			: ResultMenuPageType.Control;
 		
