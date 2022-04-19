@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Firebase.RemoteConfig;
 using UnityEngine.Scripting;
@@ -62,7 +65,7 @@ public class ConfigProcessor
 	public int   SongPlayAdsCount        => GetInt(SONG_PLAY_ADS_COUNT);
 	public int   ReviewRequestCount      => GetInt(REVIEW_REQUEST_COUNT);
 
-	static readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
+	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
 		// Game
 		{ COMBO_X2, 10 },
@@ -89,26 +92,33 @@ public class ConfigProcessor
 		{ HOLD_HIT_MULTIPLIER, 10 },
 		
 		// Score
-		{ SCORE_PERFECT_THRESHOLD, 0.9f },
-		{ SCORE_GOOD_THRESHOLD, 0.4f },
+		{ SCORE_PERFECT_THRESHOLD, 0.9 },
+		{ SCORE_GOOD_THRESHOLD, 0.4 },
 		
 		// Ads
 		{ SONG_RESTART_ADS_COUNT, 2 },
 		{ SONG_LEAVE_ADS_COUNT, 3 },
 		{ SONG_NEXT_ADS_COUNT, 2 },
 		{ SONG_PLAY_ADS_COUNT, 4 },
+		
+		{ REVIEW_REQUEST_COUNT, 2 }
 	};
 
 	public async Task Load()
 	{
+		foreach (string key in m_DefaultValues.Keys.ToArray())
+			m_DefaultValues[key] = Convert.ToString(m_DefaultValues[key], CultureInfo.InvariantCulture);
+		
 		await FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(m_DefaultValues);
 		
-		await FirebaseRemoteConfig.DefaultInstance.FetchAsync();
+		await FirebaseRemoteConfig.DefaultInstance.FetchAsync(TimeSpan.Zero);
+		
+		await FirebaseRemoteConfig.DefaultInstance.ActivateAsync();
 	}
 
-	static int GetInt(string _Key) => (int)GetLong(_Key);
+	static int GetInt(string _Key) => Convert.ToInt32(GetValue(_Key).StringValue, CultureInfo.InvariantCulture);
 
-	static float GetFloat(string _Key) => (float)GetDouble(_Key);
+	static float GetFloat(string _Key) => Convert.ToSingle(GetValue(_Key).StringValue, CultureInfo.InvariantCulture);
 
 	static bool GetBool(string _Key) => GetValue(_Key).BooleanValue;
 
