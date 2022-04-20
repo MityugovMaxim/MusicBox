@@ -132,10 +132,12 @@ public class UISongMenu : UISlideMenu
 		}
 		
 		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
-		if (loadingMenu != null)
-			loadingMenu.Setup(m_SongID);
+		
+		loadingMenu.Setup(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.LoadingMenu);
+		
+		loadingMenu.Load();
 		
 		await m_PlayGroup.ShowAsync(true);
 		await m_LoaderGroup.HideAsync(true);

@@ -59,7 +59,7 @@ public abstract class AudioManager : IInitializable, IDisposable
 
 	public bool HasSettings()
 	{
-		string key = LATENCY_KEY + GetAudioOutputName();
+		string key = LATENCY_KEY + GetAudioOutputID();
 		
 		return PlayerPrefs.HasKey(key);
 	}

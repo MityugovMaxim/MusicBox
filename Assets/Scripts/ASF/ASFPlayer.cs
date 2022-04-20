@@ -52,6 +52,8 @@ namespace AudioBox.ASF
 
 		public ASFPlayerState State { get; private set; } = ASFPlayerState.Stop;
 
+		protected AudioSource AudioSource => m_AudioSource;
+
 		float MinTime => m_Duration * (m_Ratio - 1);
 
 		float MaxTime => m_Duration * m_Ratio;

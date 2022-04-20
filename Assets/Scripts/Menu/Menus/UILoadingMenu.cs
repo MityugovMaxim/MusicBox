@@ -5,11 +5,20 @@ using Zenject;
 [Menu(MenuType.LoadingMenu)]
 public class UILoadingMenu : UIMenu
 {
+	const string TUTORIAL_KEY = "TUTORIAL";
+
+	static bool Tutorial
+	{
+		get => PlayerPrefs.GetInt(TUTORIAL_KEY, 0) > 0;
+		set => PlayerPrefs.SetInt(TUTORIAL_KEY, value ? 1 : 0);
+	}
+
 	[SerializeField] UISongImage m_Image;
 
-	[Inject] SongController m_SongController;
-	[Inject] MenuProcessor  m_MenuProcessor;
-	[Inject] AudioManager   m_AudioManager;
+	[Inject] TutorialController m_TutorialController;
+	[Inject] SongController     m_SongController;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] AudioManager       m_AudioManager;
 
 	string m_SongID;
 
@@ -20,13 +29,61 @@ public class UILoadingMenu : UIMenu
 		m_Image.Setup(m_SongID);
 	}
 
-	protected override async void OnShowFinished()
+	public async void Load()
 	{
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
 		
 		await ProcessAudioOutput();
 		
+		if (Tutorial)
+			await LoadSong();
+		else
+			await LoadTutorial();
+	}
+
+	async Task LoadTutorial()
+	{
+		Tutorial = true;
+		
+		Task<bool> load = m_TutorialController.Load(m_SongID);
+		
+		await Task.WhenAll(
+			load,
+			Task.Delay(2000)
+		);
+		
+		bool success = load.Result;
+		
+		if (success)
+		{
+			await Task.Delay(500);
+			
+			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
+			
+			m_TutorialController.Start();
+		}
+		else
+		{
+			UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
+			
+			songMenu.Setup(m_SongID);
+			
+			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			await m_MenuProcessor.Show(MenuType.SongMenu, true);
+			
+			await m_MenuProcessor.ErrorLocalizedAsync(
+				"tutorial_load",
+				"TUTORIAL_LOAD_ERROR_TITLE",
+				"TUTORIAL_LOAD_ERROR_MESSAGE"
+			);
+			
+			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
+		}
+	}
+
+	async Task LoadSong()
+	{
 		Task<bool> load = m_SongController.Load(m_SongID);
 		
 		await Task.WhenAll(
@@ -54,7 +111,7 @@ public class UILoadingMenu : UIMenu
 			await m_MenuProcessor.Show(MenuType.SongMenu, true);
 			
 			await m_MenuProcessor.ErrorLocalizedAsync(
-				"song_load_error",
+				"song_load",
 				"SONG_LOAD_ERROR_TITLE",
 				"SONG_LOAD_ERROR_MESSAGE"
 			);
@@ -63,15 +120,17 @@ public class UILoadingMenu : UIMenu
 		}
 	}
 
-	Task ProcessAudioOutput()
+	async Task ProcessAudioOutput()
 	{
 		if (m_AudioManager.HasSettings())
-			return Task.FromResult(true);
+			return;
 		
 		UISetupMenu setupMenu = m_MenuProcessor.GetMenu<UISetupMenu>();
 		
-		return m_MenuProcessor.Show(MenuType.SetupMenu)
-			.ContinueWith(_Task => UnityTask.While(() => setupMenu.Shown))
-			.ContinueWith(_Task => Task.Delay(1000));
+		await m_MenuProcessor.Show(MenuType.SetupMenu);
+		
+		await UnityTask.While(() => setupMenu.Shown);
+		
+		await Task.Delay(1500);
 	}
 }

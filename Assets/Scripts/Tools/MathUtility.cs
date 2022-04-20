@@ -125,4 +125,9 @@ public static class MathUtility
 	{
 		return _Source + (long)((_Target - _Source) * (double)_Phase);
 	}
+
+	public static double Lerp(double _Source, double _Target, float _Phase)
+	{
+		return _Source + (_Target - _Source) * _Phase;
+	}
 }

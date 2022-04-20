@@ -15,6 +15,8 @@ public class
 
 	[Inject] SoundProcessor m_SoundProcessor;
 
+	bool m_Damaged;
+
 	Animator m_Animator;
 	Action   m_DamageFinished;
 
@@ -38,8 +40,11 @@ public class
 
 	public void Restore()
 	{
+		m_Damaged = false;
+		
 		InvokeDamageFinished();
 		
+		m_Animator.ResetTrigger(m_DamageParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
@@ -48,9 +53,14 @@ public class
 		await DamageAsync();
 	}
 
-	public Task DamageAsync(CancellationToken _Token = default)
+	Task DamageAsync(CancellationToken _Token = default)
 	{
-		Restore();
+		if (m_Damaged)
+			return Task.FromResult(true);
+		
+		m_Damaged = true;
+		
+		InvokeDamageFinished();
 		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		

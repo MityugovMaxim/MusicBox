@@ -25,11 +25,13 @@ public class SongPlayer : ASFPlayer
 		Duration = _Duration;
 		Music    = _Music;
 		
-		m_Finished   = _Finished;
-		m_FinishTime = Music.length + Duration * Ratio;
+		float position = 1.0f - Ratio;
 		
-		m_InputArea.anchorMin = new Vector2(0, 1.0f - Ratio);
-		m_InputArea.anchorMax = new Vector2(1, 1.0f - Ratio);
+		m_Finished   = _Finished;
+		m_FinishTime = Music.length + Duration * position;
+		
+		m_InputArea.anchorMin = new Vector2(0, position);
+		m_InputArea.anchorMax = new Vector2(1, position);
 		
 		AddTrack(new ASFTapTrack(m_TapTrack));
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));
@@ -52,11 +54,6 @@ public class SongPlayer : ASFPlayer
 		base.Sample();
 		
 		m_InputReceiver.Process();
-		
-		#if UNITY_EDITOR
-		if (Music == null)
-			return;
-		#endif
 		
 		if (Time >= m_FinishTime)
 			m_Finished?.Invoke();

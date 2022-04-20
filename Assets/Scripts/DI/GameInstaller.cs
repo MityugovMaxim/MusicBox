@@ -83,6 +83,8 @@ public class GameInstaller : MonoInstaller
 	{
 		Container.BindFactory<SongPlayer, SongPlayer, SongPlayer.Factory>().FromFactory<PrefabFactory<SongPlayer>>();
 		
+		Container.BindFactory<TutorialPlayer, TutorialPlayer, TutorialPlayer.Factory>().FromFactory<PrefabFactory<TutorialPlayer>>();
+		
 		Container.BindFactory<UIMenu, UIMenu, UIMenu.Factory>().FromFactory<PrefabFactory<UIMenu>>();
 		
 		Container.BindFactory<UIBackgroundItem, UIBackgroundItem, UIBackgroundItem.Factory>().FromFactory<PrefabFactory<UIBackgroundItem>>();
@@ -142,6 +144,7 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<ScoreManager>();
 		
 		Container.BindInterfacesAndSelfTo<SongController>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<TutorialController>().FromNew().AsSingle();
 	}
 
 	void InstallProcessor<T>()

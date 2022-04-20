@@ -49,14 +49,6 @@ public class UILatencyIndicator : UIEntity
 		StopProcess();
 		
 		m_AudioManager.SetLatency(m_Latency);
-		
-		// TODO: Uncomment after moving from splash
-		// m_StatisticProcessor.LogAudioLatencyState(
-		// 	m_AudioManager.GetAudioOutputName(),
-		// 	m_AudioManager.GetAudioOutputID(),
-		// 	m_AudioManager.GetAudioOutputType(),
-		// 	m_AudioManager.GetLatency()
-		// );
 	}
 
 	static string GetOutputIcon(AudioOutputType _OutputType)

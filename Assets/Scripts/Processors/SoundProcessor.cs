@@ -103,7 +103,7 @@ public class SoundProcessor
 		}
 	}
 
-	AudioClip GetSound(string _SoundID)
+	public AudioClip GetSound(string _SoundID)
 	{
 		if (string.IsNullOrEmpty(_SoundID))
 		{
@@ -132,7 +132,7 @@ public class SoundProcessor
 		return sound;
 	}
 
-	float GetPitch(string _SoundID)
+	public float GetPitch(string _SoundID)
 	{
 		SoundInfo soundInfo = GetSoundInfo(_SoundID);
 		
