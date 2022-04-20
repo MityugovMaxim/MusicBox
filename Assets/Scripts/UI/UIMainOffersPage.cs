@@ -107,11 +107,11 @@ public class UIMainOffersPage : UIMainMenuPage
 		int progress = m_OffersManager.GetProgress(_OfferID);
 		int target   = m_OffersManager.GetTarget(_OfferID);
 		
-		bool collect = progress < target;
-		
+		bool collect = progress >= target;
+
 		bool success = collect
-			? await m_OffersManager.ProgressOffer(_OfferID)
-			: await m_OffersManager.CollectOffer(_OfferID);
+			? await m_OffersManager.CollectOffer(_OfferID)
+			: await m_OffersManager.ProgressOffer(_OfferID);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -128,9 +128,9 @@ public class UIMainOffersPage : UIMainMenuPage
 		else
 		{
 			if (collect)
-				await OfferProgressRetry(_OfferID);
-			else
 				await OfferCollectRetry(_OfferID);
+			else
+				await OfferProgressRetry(_OfferID);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu);

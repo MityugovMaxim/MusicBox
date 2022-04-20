@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -8,20 +9,30 @@ public class UISetupMenu : UIMenu
 
 	[Inject] MenuProcessor m_MenuProcessor;
 
+	TaskCompletionSource<bool> m_CompletionSource;
+
 	protected override void OnHideFinished()
 	{
 		m_MenuProcessor.RemoveMenu(MenuType.SetupMenu);
 	}
 
-	public async void Complete()
+	public Task Process()
+	{
+		m_CompletionSource?.TrySetResult(true);
+		
+		m_CompletionSource = new TaskCompletionSource<bool>();
+		
+		m_LatencyIndicator.Process();
+		
+		return m_CompletionSource.Task;
+	}
+
+	public void Complete()
 	{
 		m_LatencyIndicator.Complete();
 		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		await m_MenuProcessor.Hide(MenuType.SetupMenu, true);
+		m_CompletionSource.TrySetResult(true);
 		
-		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-		
-		await loginMenu.Login();
+		m_CompletionSource = null;
 	}
 }

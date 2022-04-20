@@ -10,8 +10,8 @@ public class MenuPrebuild
 	#if UNITY_EDITOR
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>();
 	#else
-	/// PREBUILD_START
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()
+	/// PREBUILD_START
 	{
 		{ typeof(UIBannerMenu), MenuType.BannerMenu },
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
@@ -28,8 +28,10 @@ public class MenuPrebuild
 		{ typeof(UIResultMenu), MenuType.ResultMenu },
 		{ typeof(UIRetryMenu), MenuType.RetryMenu },
 		{ typeof(UIReviveMenu), MenuType.ReviveMenu },
+		{ typeof(UISetupMenu), MenuType.SetupMenu },
 		{ typeof(UISocialMenu), MenuType.SocialMenu },
 		{ typeof(UISongMenu), MenuType.SongMenu },
+		{ typeof(UISplashMenu), MenuType.SplashMenu },
 	};
 	/// PREBUILD_END
 	#endif

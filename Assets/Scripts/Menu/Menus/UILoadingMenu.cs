@@ -125,12 +125,14 @@ public class UILoadingMenu : UIMenu
 		if (m_AudioManager.HasSettings())
 			return;
 		
-		UISetupMenu setupMenu = m_MenuProcessor.GetMenu<UISetupMenu>();
-		
 		await m_MenuProcessor.Show(MenuType.SetupMenu);
 		
-		await UnityTask.While(() => setupMenu.Shown);
+		UISetupMenu setupMenu = m_MenuProcessor.GetMenu<UISetupMenu>();
 		
-		await Task.Delay(1500);
+		await setupMenu.Process();
+		
+		await m_MenuProcessor.Hide(MenuType.SetupMenu);
+		
+		await Task.Delay(500);
 	}
 }
