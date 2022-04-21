@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Advertisements;
@@ -230,31 +231,27 @@ public class AdsProviderSnapshot
 	}
 }
 
+[Preserve]
 public class AdsProcessor
 {
 	bool Loaded { get; set; }
 
-	readonly IAdsProvider[] m_AdsProviders;
+	[Inject] IAdsProvider[] m_AdsProviders;
+	[Inject] AudioManager   m_AudioManager;
 
-	readonly List<AdsProviderSnapshot> m_AdsProviderSnapshots = new List<AdsProviderSnapshot>();
+	readonly List<AdsProviderSnapshot> m_Snapshots = new List<AdsProviderSnapshot>();
 
-	DatabaseReference m_AdsProvidersData;
-
-	[Inject]
-	public AdsProcessor(IAdsProvider[] _AdsProviders)
-	{
-		m_AdsProviders = _AdsProviders;
-	}
+	DatabaseReference m_Data;
 
 	public async Task Load()
 	{
-		if (m_AdsProvidersData == null)
+		if (m_Data == null)
 		{
-			m_AdsProvidersData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ads_providers");
-			m_AdsProvidersData.ValueChanged += OnAdsProvidersUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ads_providers");
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchAdsProviders();
+		await Fetch();
 		
 		List<Task<bool>> tasks = new List<Task<bool>>();
 		
@@ -275,15 +272,15 @@ public class AdsProcessor
 		Loaded = true;
 	}
 
-	public List<string> GetAdsProviderIDs()
+	List<string> GetAdsProviderIDs()
 	{
-		return m_AdsProviderSnapshots
+		return m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
 
-	public IAdsProvider GetAdsProvider(string _AdsProviderID)
+	IAdsProvider GetAdsProvider(string _AdsProviderID)
 	{
 		if (string.IsNullOrEmpty(_AdsProviderID))
 			return null;
@@ -295,8 +292,12 @@ public class AdsProcessor
 	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
-			if (await provider.Interstitial())
-				return true;
+			if (!await provider.Interstitial())
+				continue;
+			
+			m_AudioManager.SetAudioActive(true);
+			
+			return true;
 		}
 		
 		return false;
@@ -306,41 +307,41 @@ public class AdsProcessor
 	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
-			if (await provider.Rewarded())
-				return true;
+			if (!await provider.Rewarded())
+				continue;
+			
+			m_AudioManager.SetAudioActive(true);
+			
+			return true;
 		}
 		
 		return false;
 	}
 
-	async void OnAdsProvidersUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[AdsProcessor] Updating ads data...");
+		Log.Info(this, "Updating ads data...");
 		
-		await FetchAdsProviders();
+		await Fetch();
 		
-		Debug.Log("[AdsProcessor] Update ads data complete.");
+		Log.Info(this, "Update ads data complete.");
 	}
 
-	async Task FetchAdsProviders()
+	async Task Fetch()
 	{
-		m_AdsProviderSnapshots.Clear();
+		m_Snapshots.Clear();
 		
-		DataSnapshot adsProviderSnapshots = await m_AdsProvidersData.OrderByChild("order").GetValueAsync(15000, 2);
+		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
 		
-		if (adsProviderSnapshots == null)
+		if (dataSnapshot == null)
 		{
-			Debug.LogError("[AdsProcessor] Fetch ads providers failed.");
+			Log.Error(this, "Fetch ads data failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot adsProviderSnapshot in adsProviderSnapshots.Children)
-		{
-			AdsProviderSnapshot adsProvider = new AdsProviderSnapshot(adsProviderSnapshot);
-			m_AdsProviderSnapshots.Add(adsProvider);
-		}
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new AdsProviderSnapshot(_Data)));
 	}
 }

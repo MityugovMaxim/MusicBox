@@ -125,21 +125,21 @@ RouteObserver* m_RouteObserver;
 
 extern "C"
 {
-    void AudioController_Register(CommandHandler _AudioSourceChanged)
-    {
-        if (m_RouteObserver != NULL)
-            [m_RouteObserver remove];
-        
-        m_RouteObserver = [[RouteObserver new] init:_AudioSourceChanged];
-    }
+	void AudioController_Register(CommandHandler _AudioSourceChanged)
+	{
+		if (m_RouteObserver != NULL)
+			[m_RouteObserver remove];
+		
+		m_RouteObserver = [[RouteObserver new] init:_AudioSourceChanged];
+	}
 
-    void AudioController_Unregister()
-    {
-        if (m_RouteObserver == NULL)
-            return;
-        
-        [m_RouteObserver remove];
-    }
+	void AudioController_Unregister()
+	{
+		if (m_RouteObserver == NULL)
+			return;
+		
+		[m_RouteObserver remove];
+	}
 
 	const char* AudioController_GetOutputName()
 	{

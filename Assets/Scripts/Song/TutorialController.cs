@@ -10,13 +10,9 @@ public class TutorialController
 	const string TUTORIAL_PATH  = "tutorial";
 	const float  TUTORIAL_SPEED = 800;
 
-	[Inject] AudioManager           m_AudioManager;
 	[Inject] UISongContainer        m_SongContainer;
 	[Inject] ConfigProcessor        m_ConfigProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
-	[Inject] SoundProcessor         m_SoundProcessor;
-	[Inject] AmbientProcessor       m_AmbientProcessor;
-	[Inject] MusicProcessor         m_MusicProcessor;
 	[Inject] ScoreManager           m_ScoreManager;
 	[Inject] HealthManager          m_HealthManager;
 	[Inject] TutorialPlayer.Factory m_TutorialFactory;

@@ -45,10 +45,4 @@ public class UIGameMenu : UIMenu
 		if (_Pause && Shown)
 			Pause();
 	}
-
-	void OnApplicationFocus(bool _Focus)
-	{
-		if (!_Focus && Shown)
-			Pause();
-	}
 }
