@@ -186,7 +186,6 @@ extern "C"
 			mode:AVAudioSessionModeSpokenAudio
 			options:AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
 			error:nil];
-		UnitySetAudioSessionActive(true);
 	}
 
 	void AudioController_DisableAudio()

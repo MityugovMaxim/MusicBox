@@ -33,6 +33,8 @@ public class MenuPrebuildGenerator : IPreprocessBuildWithReport
 		if (sourceIndex < 0 || targetIndex < 0)
 			return;
 		
+		MenuPrebuild.Initialize();
+		
 		KeyValuePair<Type, MenuType>[] data = MenuPrebuild.GetMenuTypes();
 		
 		StringBuilder builder = new StringBuilder();

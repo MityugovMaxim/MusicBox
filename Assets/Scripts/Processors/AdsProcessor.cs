@@ -297,6 +297,8 @@ public class AdsProcessor
 			
 			m_AudioManager.SetAudioActive(true);
 			
+			await UnityTask.Yield();
+			
 			return true;
 		}
 		
@@ -311,6 +313,8 @@ public class AdsProcessor
 				continue;
 			
 			m_AudioManager.SetAudioActive(true);
+			
+			await UnityTask.Yield();
 			
 			return true;
 		}

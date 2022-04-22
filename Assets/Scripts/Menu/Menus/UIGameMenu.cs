@@ -40,9 +40,13 @@ public class UIGameMenu : UIMenu
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Pause);
 	}
 
-	void OnApplicationPause(bool _Pause)
+	async void OnApplicationFocus(bool _Focus)
 	{
-		if (_Pause && Shown)
-			Pause();
+		if (_Focus || !Shown)
+			return;
+		
+		m_SongController.Pause();
+		
+		await m_MenuProcessor.Show(MenuType.PauseMenu, true);
 	}
 }
