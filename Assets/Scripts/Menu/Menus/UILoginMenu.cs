@@ -21,6 +21,7 @@ public class UILoginMenu : UIMenu
 	[Inject] MenuProcessor        m_MenuProcessor;
 	[Inject] LanguageProcessor    m_LanguageProcessor;
 	[Inject] AmbientProcessor     m_AmbientProcessor;
+	[Inject] BannersProcessor     m_BannersProcessor;
 
 	public async Task Login()
 	{
@@ -47,7 +48,8 @@ public class UILoginMenu : UIMenu
 			m_SongsProcessor.Load(),
 			m_ScoresProcessor.Load(),
 			m_RevivesProcessor.Load(),
-			m_ProfileProcessor.Load()
+			m_ProfileProcessor.Load(),
+			m_BannersProcessor.Load()
 		);
 		
 		await Task.WhenAll(
@@ -63,7 +65,9 @@ public class UILoginMenu : UIMenu
 		if (bannerMenu != null)
 			await bannerMenu.Process();
 		
-		await m_MenuProcessor.Hide(MenuType.BannerMenu);
+		await m_MenuProcessor.Hide(MenuType.BannerMenu, true);
+		
+		m_MenuProcessor.RemoveMenu(MenuType.BannerMenu);
 		
 		await m_MessageProcessor.LoadMessages();
 		

@@ -1,10 +1,15 @@
 using System;
 using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.SocialMenu)]
 public class UISocialMenu : UISlideMenu
 {
+	[SerializeField] GameObject m_AppleSignIn;
+	[SerializeField] GameObject m_GoogleSignIn;
+	[SerializeField] GameObject m_FacebookSignIn;
+
 	[Inject] SocialProcessor    m_SocialProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
@@ -40,6 +45,23 @@ public class UISocialMenu : UISlideMenu
 			GetLocalization("FACEBOOK_SIGN_IN_ERROR_TITLE"),
 			GetLocalization("FACEBOOK_SIGN_IN_ERROR_MESSAGE")
 		);
+	}
+
+	protected override void OnShowStarted()
+	{
+		#if UNITY_EDITOR
+		m_AppleSignIn.SetActive(true);
+		m_GoogleSignIn.SetActive(true);
+		m_FacebookSignIn.SetActive(true);
+		#elif UNITY_IOS
+		m_AppleSignIn.SetActive(true);
+		m_GoogleSignIn.SetActive(true);
+		m_FacebookSignIn.SetActive(true);
+		#elif UNITY_ANDROID
+		m_AppleSignIn.SetActive(false);
+		m_GoogleSignIn.SetActive(true);
+		m_FacebookSignIn.SetActive(true);
+		#endif
 	}
 
 	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 534665189750097455}
   - component: {fileID: 2418508000668132556}
+  - component: {fileID: 6486003794738061478}
   - component: {fileID: 2443794813856764739}
   m_Layer: 5
   m_Name: label
@@ -45,6 +46,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1391292526990285876}
   m_CullTransparentMesh: 0
+--- !u!114 &6486003794738061478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391292526990285876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Key: SOCIAL_SIGN_IN_APPLE
+  m_Options: 0
+  m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &2443794813856764739
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -108,7 +126,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}

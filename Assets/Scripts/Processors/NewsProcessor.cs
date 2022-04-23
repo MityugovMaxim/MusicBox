@@ -11,7 +11,6 @@ public class NewsSnapshot
 {
 	public string ID        { get; }
 	public bool   Active    { get; }
-	public string Image     { get; }
 	public long   Timestamp { get; }
 	public string URL       { get; }
 	public int    Order     { get; }
@@ -20,7 +19,6 @@ public class NewsSnapshot
 	{
 		ID        = _Data.Key;
 		Active    = _Data.GetBool("active");
-		Image     = _Data.GetString("image");
 		Timestamp = _Data.GetLong("timestamp");
 		URL       = _Data.GetString("url");
 		Order     = _Data.GetInt("order");
@@ -71,13 +69,6 @@ public class NewsProcessor
 			.OrderByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
-	}
-
-	public string GetImage(string _NewsID)
-	{
-		NewsSnapshot snapshot = GetSnapshot(_NewsID);
-		
-		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetTitle(string _NewsID) => m_NewsDescriptor.GetTitle(_NewsID);

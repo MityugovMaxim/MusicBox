@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -18,6 +19,7 @@ public class UIResultControlPage : UIResultMenuPage
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
+	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] SongsManager       m_SongsManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
@@ -36,8 +38,9 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_SongID = _SongID;
 		
+		m_Discs.Rank = m_ScoreManager.GetRank();
+		
 		m_Image.Setup(m_SongID);
-		m_Discs.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
 		m_Rating.Setup(m_SongID);
 		m_Mode.Setup(m_SongID);

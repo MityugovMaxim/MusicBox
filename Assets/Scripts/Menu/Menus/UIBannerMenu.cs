@@ -8,10 +8,10 @@ public class UIBannerMenu : UIMenu
 {
 	[SerializeField] UIBannerItem m_BannerItem;
 
-	[Inject] SocialProcessor    m_SocialProcessor;
-	[Inject] BannersProcessor   m_BannersProcessor;
-	[Inject] UrlProcessor       m_UrlProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SocialProcessor      m_SocialProcessor;
+	[Inject] BannersProcessor     m_BannersProcessor;
+	[Inject] UrlProcessor         m_UrlProcessor;
+	[Inject] ApplicationProcessor m_ApplicationProcessor;
 
 	readonly HashSet<string> m_BannerIDs = new HashSet<string>();
 
@@ -27,46 +27,31 @@ public class UIBannerMenu : UIMenu
 			if (CheckBanner(bannerID))
 				continue;
 			
-			bool permanent = m_BannersProcessor.CheckPermanent(bannerID);
-			
 			m_BannerItem.Setup(bannerID);
 			
 			await m_BannerItem.ShowAsync();
 			
-			UIBannerItem.BannerState state = await m_BannerItem.Process(permanent);
+			UIBannerItem.BannerState state = await m_BannerItem.Process();
 			
-			if (state == UIBannerItem.BannerState.Open)
+			switch (state)
 			{
-				await OpenBanner(bannerID);
-				break;
+				case UIBannerItem.BannerState.None:
+					await UnityTask.While(() => true);
+					break;
+				
+				case UIBannerItem.BannerState.Open:
+					ViewBanner(bannerID);
+					string url = m_BannersProcessor.GetURL(bannerID);
+					await m_BannerItem.HideAsync();
+					await m_UrlProcessor.ProcessURL(url);
+					return;
+				
+				case UIBannerItem.BannerState.Close:
+					ViewBanner(bannerID);
+					await m_BannerItem.HideAsync();
+					break;
 			}
-			else
-			{
-				CloseBanner(bannerID);
-			}
-			
-			await UnityTask.While(() => permanent);
-			
-			await m_BannerItem.HideAsync();
 		}
-	}
-
-	async Task OpenBanner(string _BannerID)
-	{
-		m_StatisticProcessor.LogBannerMenuOpenClick(_BannerID);
-		
-		string url = m_BannersProcessor.GetURL(_BannerID);
-		
-		await m_UrlProcessor.ProcessURL(url);
-		
-		ViewBanner(_BannerID);
-	}
-
-	void CloseBanner(string _BannerID)
-	{
-		m_StatisticProcessor.LogBannerMenuCloseClick(_BannerID);
-		
-		ViewBanner(_BannerID);
 	}
 
 	protected override void OnShowStarted()
@@ -76,6 +61,9 @@ public class UIBannerMenu : UIMenu
 
 	bool CheckBanner(string _BannerID)
 	{
+		if (m_BannersProcessor.IsPermanent(_BannerID) && m_ApplicationProcessor.ClientVersion == m_ApplicationProcessor.ServerVersion)
+			return true;
+		
 		string userID = m_SocialProcessor.UserID;
 		
 		return m_BannerIDs.Contains(_BannerID) || PlayerPrefs.HasKey($"BANNER_{userID}_{_BannerID}");

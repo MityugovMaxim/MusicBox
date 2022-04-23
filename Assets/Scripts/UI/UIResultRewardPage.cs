@@ -129,7 +129,18 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 			
-			Skip();
+			ResultMenuPageType pageType = m_SourceLevel != m_TargetLevel && m_TargetRank > m_SourceRank
+				? ResultMenuPageType.Level
+				: ResultMenuPageType.Control;
+			
+			UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+			
+			if (resultMenu == null)
+				return;
+			
+			await resultMenu.Select(pageType);
+			
+			resultMenu.Play(pageType);
 		}
 		else
 		{
@@ -148,23 +159,20 @@ public class UIResultRewardPage : UIResultMenuPage
 	async void Skip()
 	{
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+		
 		if (resultMenu == null)
 			return;
 		
-		ResultMenuPageType pageType = m_SourceLevel != m_TargetLevel && m_TargetRank > m_SourceRank
-			? ResultMenuPageType.Level
-			: ResultMenuPageType.Control;
+		await resultMenu.Select(ResultMenuPageType.Control);
 		
-		await resultMenu.Select(pageType);
-		
-		resultMenu.Play(pageType);
+		resultMenu.Play(ResultMenuPageType.Control);
 	}
 
 	void ProcessTitle()
 	{
 		m_Title.Text = m_SourceScore > m_TargetScore
 			? GetLocalization("RESULT_NEW_RECORD")
-			: GetLocalization("RESULT_TITLE");
+			: GetLocalization("RESULT_REWARD");
 	}
 
 	void ProcessProgress()

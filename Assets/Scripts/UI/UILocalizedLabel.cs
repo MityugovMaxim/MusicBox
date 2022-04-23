@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using AudioBox.Logging;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -6,6 +8,18 @@ using Zenject;
 [RequireComponent(typeof(TMP_Text))]
 public class UILocalizedLabel : UIEntity
 {
+	[Flags]
+	public enum Options
+	{
+		None    = 0,
+		Format  = 1 << 0,
+		Postfix = 1 << 1,
+		Prefix  = 1 << 2,
+		Trim    = 1 << 3,
+		Upper   = 1 << 4,
+		Lower   = 1 << 5,
+	}
+
 	TMP_Text Label
 	{
 		get
@@ -16,9 +30,11 @@ public class UILocalizedLabel : UIEntity
 		}
 	}
 
-	[SerializeField] string   m_LocalizationKey;
-	[SerializeField] bool     m_Trim;
-	[SerializeField] string[] m_Data;
+	[SerializeField, HideInInspector] string   m_Key;
+	[SerializeField, HideInInspector] Options  m_Options;
+	[SerializeField, HideInInspector] string[] m_Data;
+	[SerializeField, HideInInspector] string   m_Prefix;
+	[SerializeField, HideInInspector] string   m_Postfix;
 
 	TMP_Text m_Label;
 
@@ -45,29 +61,83 @@ public class UILocalizedLabel : UIEntity
 
 	void ProcessText()
 	{
-		string text = GetText();
+		string text = m_LocalizationProcessor.Get(m_Key);
 		
-		if (m_Trim)
-			text = text.Trim();
+		text = Format(text);
+		text = Prefix(text);
+		text = Postfix(text);
+		text = Trim(text);
+		text = Upper(text);
+		text = Lower(text);
 		
 		Label.text = text; 
 	}
 
-	string GetText()
+	string Format(string _Text)
 	{
-		if (m_Data == null || m_Data.Length == 0)
-			return m_LocalizationProcessor.Get(m_LocalizationKey);
+		if (!CheckOptions(Options.Format) || m_Data == null)
+			return _Text;
 		
-		switch (m_Data.Length)
+		try
 		{
-			case 1:
-				return m_LocalizationProcessor.Format(m_LocalizationKey, m_Data[0]);
-			case 2:
-				return m_LocalizationProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1]);
-			case 3:
-				return m_LocalizationProcessor.Format(m_LocalizationKey, m_Data[0], m_Data[1], m_Data[2]);
-			default:
-				return m_LocalizationProcessor.Format(m_LocalizationKey, m_Data.OfType<object>().ToArray());
+			switch (m_Data.Length)
+			{
+				case 0:
+					return _Text;
+				case 1:
+					return string.Format(_Text, m_Data[0]);
+				case 2:
+					return string.Format(_Text, m_Data[0], m_Data[1]);
+				case 3:
+					return string.Format(_Text, m_Data[0], m_Data[1], m_Data[2]);
+				default:
+					return string.Format(_Text, m_Data.OfType<object>().ToArray());
+			}
 		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
+		
+		return _Text;
+	}
+
+	string Upper(string _Text)
+	{
+		return CheckOptions(Options.Upper) ? _Text.ToUpperInvariant() : _Text;
+	}
+
+	string Lower(string _Text)
+	{
+		return CheckOptions(Options.Lower) ? _Text.ToLowerInvariant() : _Text;
+	}
+
+	string Prefix(string _Text)
+	{
+		return CheckOptions(Options.Prefix) && !string.IsNullOrEmpty(m_Prefix)
+			? m_Prefix + _Text
+			: _Text;
+	}
+
+	string Postfix(string _Text)
+	{
+		return CheckOptions(Options.Postfix) && !string.IsNullOrEmpty(m_Postfix)
+			? _Text + m_Postfix
+			: _Text;
+	}
+
+	string Trim(string _Text)
+	{
+		return CheckOptions(Options.Trim) ? _Text.Trim() : _Text;
+	}
+
+	bool CheckOptions(Options _Options)
+	{
+		return CheckOptions(m_Options, _Options);
+	}
+
+	public static bool CheckOptions(Options _Options, Options _Check)
+	{
+		return (_Options & _Check) == _Check;
 	}
 }

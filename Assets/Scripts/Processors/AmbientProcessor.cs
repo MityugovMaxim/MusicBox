@@ -204,7 +204,7 @@ public class AmbientProcessor : MonoBehaviour
 
 	async void ProcessAmbient()
 	{
-		if (m_AudioSource.isPlaying || m_Paused)
+		if (m_AudioSource == null || m_AudioSource.isPlaying || m_Paused)
 			return;
 		
 		while (m_AmbientSnapshots != null && m_AmbientSnapshots.Count > 0)

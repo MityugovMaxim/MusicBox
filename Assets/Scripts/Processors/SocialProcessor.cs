@@ -86,7 +86,7 @@ public class SocialProcessor : IInitializable, IDisposable
 			return device;
 		
 		return Guest
-			? m_LocalizationProcessor.Get("PROFILE_GUEST")
+			? m_LocalizationProcessor.Get("COMMON_GUEST")
 			: SystemInfo.deviceModel;
 	}
 

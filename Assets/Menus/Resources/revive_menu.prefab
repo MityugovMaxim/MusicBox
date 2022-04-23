@@ -340,7 +340,7 @@ GameObject:
   - component: {fileID: 1773717116789884151}
   - component: {fileID: 8731252845689225329}
   m_Layer: 5
-  m_Name: label
+  m_Name: title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -362,8 +362,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 600, y: 200}
+  m_AnchoredPosition: {x: 0, y: -40}
+  m_SizeDelta: {x: 600, y: 160}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &8959128649338027545
 CanvasRenderer:
@@ -385,9 +385,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: SONG_REVIVE_TITLE
-  m_Trim: 0
+  m_Key: REVIVE_TITLE
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &8731252845689225329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,12 +436,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 48
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 48
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1007,8 +1009,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -260.33334, y: -297.5238}
-  m_SizeDelta: {x: -520.6667, y: -595.0476}
+  m_AnchoredPosition: {x: 0, y: -8.533325}
+  m_SizeDelta: {x: -0.000045776367, y: -133.12012}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8826910918028740119
 MonoBehaviour:

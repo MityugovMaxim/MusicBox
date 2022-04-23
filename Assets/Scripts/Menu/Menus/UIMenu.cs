@@ -45,7 +45,7 @@ public class UIMenu : UIGroup
 
 	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		if (m_Blur != null)
+		if (m_Blur != null && Application.isPlaying)
 			await m_Blur.BlurAsync();
 		
 		await base.ShowAnimation(_Duration, _Instant, _Token);

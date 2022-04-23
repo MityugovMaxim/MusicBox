@@ -133,10 +133,12 @@ Shader "UI/ColorScheme/Cube"
 				color.rgb *= FOREGROUND_BY_RANGE(color, 0.15, 0.8);
 				#endif
 				
+				color.rgb = lerp(color.rgb, _BackgroundSecondaryColor.rgb, normal.a);
+				
 				color.rgb = lerp(
 					color.rgb,
-					_BackgroundSecondaryColor * 0.1 + shine.rgb * reflectionColor * normal.a * 10 * _Strength,
-					step(0.1, normal.a)
+					_BackgroundSecondaryColor * 0.3 + shine.rgb * reflectionColor * normal.a * 10 * _Strength,
+					normal.a
 				);
 				
 				color = useUIMask(color, IN.mask);

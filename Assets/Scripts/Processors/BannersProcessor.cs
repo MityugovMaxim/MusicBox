@@ -7,6 +7,24 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
+public class BannerSnapshot
+{
+	public string ID        { get; }
+	public bool   Active    { get; }
+	public string Language  { get; }
+	public bool   Permanent { get; }
+	public string URL       { get; }
+
+	public BannerSnapshot(DataSnapshot _Data)
+	{
+		ID        = _Data.Key;
+		Active    = _Data.GetBool("active");
+		Language  = _Data.GetString("language");
+		Permanent = _Data.GetBool("permanent");
+		URL       = _Data.GetString("url");
+	}
+}
+
 [Preserve]
 public class BannersDataUpdateSignal { }
 
@@ -55,19 +73,6 @@ public class BannersProcessor : IInitializable, IDisposable
 			.ToList();
 	}
 
-	public string GetImage(string _BannerID)
-	{
-		BannerSnapshot snapshot = GetSnapshot(_BannerID);
-		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[BannersProcessor] Get image failed. Snapshot with ID '{0}' is null.", _BannerID);
-			return string.Empty;
-		}
-		
-		return snapshot.Image;
-	}
-
 	public string GetURL(string _BannerID)
 	{
 		BannerSnapshot snapshot = GetSnapshot(_BannerID);
@@ -81,45 +86,7 @@ public class BannersProcessor : IInitializable, IDisposable
 		return snapshot.URL;
 	}
 
-	public (int major, int minor, int patch) GetVersion(string _BannerID)
-	{
-		BannerSnapshot snapshot = GetSnapshot(_BannerID);
-		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[BannersProcessor] Get version failed. Snapshot with ID '{0}' is null.", _BannerID);
-			return (0, 0, 0);
-		}
-		
-		string version = snapshot.Version;
-		
-		if (string.IsNullOrEmpty(version))
-			return (0, 0, 0);
-		
-		string[] data = version.Split(new char[] { '.', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
-		
-		int major;
-		if (data.Length >= 1 && !string.IsNullOrEmpty(data[0]))
-			int.TryParse(data[0], out major);
-		else
-			major = 1;
-		
-		int minor;
-		if (data.Length >= 2 && !string.IsNullOrEmpty(data[1]))
-			int.TryParse(data[1], out minor);
-		else
-			minor = 0;
-		
-		int patch;
-		if (data.Length >= 3 && !string.IsNullOrEmpty(data[2]))
-			int.TryParse(data[1], out patch);
-		else
-			patch = 0;
-		
-		return (major, minor, patch);
-	}
-
-	public bool CheckPermanent(string _BannerID)
+	public bool IsPermanent(string _BannerID)
 	{
 		BannerSnapshot snapshot = GetSnapshot(_BannerID);
 		

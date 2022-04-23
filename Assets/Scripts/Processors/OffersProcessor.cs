@@ -11,7 +11,6 @@ public class OfferSnapshot
 {
 	public string ID          { get; }
 	public bool   Active      { get; }
-	public string Image       { get; }
 	public string SongID      { get; }
 	public long   Coins       { get; }
 	public int    AdsCount    { get; }
@@ -22,7 +21,6 @@ public class OfferSnapshot
 	{
 		ID        = _Data.Key;
 		Active    = _Data.GetBool("active");
-		Image     = _Data.GetString("image");
 		SongID    = _Data.GetString("song_id");
 		Coins     = _Data.GetLong("coins");
 		AdsCount  = _Data.GetInt("ads_count");
@@ -76,13 +74,6 @@ public class OffersProcessor
 			.ThenByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
-	}
-
-	public string GetImage(string _OfferID)
-	{
-		OfferSnapshot snapshot = GetSnapshot(_OfferID);
-		
-		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetTitle(string _OfferID) => m_OffersDescriptor.GetTitle(_OfferID);

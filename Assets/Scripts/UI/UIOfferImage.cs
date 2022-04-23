@@ -1,11 +1,8 @@
 using UnityEngine;
-using Zenject;
 
 public class UIOfferImage : UIEntity
 {
 	[SerializeField] WebImage m_Image;
-
-	[Inject] OffersProcessor m_OffersProcessor;
 
 	string m_OfferID;
 
@@ -13,8 +10,6 @@ public class UIOfferImage : UIEntity
 	{
 		m_OfferID = _OfferID;
 		
-		string image = m_OffersProcessor.GetImage(m_OfferID);
-		
-		m_Image.Path = $"Thumbnails/Offers/{image}.jpg";
+		m_Image.Path = $"Thumbnails/Offers/{m_OfferID}.jpg";
 	}
 }

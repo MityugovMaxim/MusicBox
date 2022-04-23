@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -19,32 +20,13 @@ public class ApplicationSnapshot
 	}
 }
 
-public class BannerSnapshot
-{
-	public string ID        { get; }
-	public bool   Active    { get; }
-	public string Image     { get; }
-	public string Language  { get; }
-	public bool   Permanent { get; }
-	public string Version   { get; }
-	public string URL       { get; }
-
-	public BannerSnapshot(DataSnapshot _Data)
-	{
-		ID        = _Data.Key;
-		Active    = _Data.GetBool("active");
-		Language  = _Data.GetString("language");
-		Image     = _Data.GetString("image");
-		Permanent = _Data.GetBool("permanent");
-		Version   = _Data.GetString("version");
-		URL       = _Data.GetString("url");
-	}
-}
-
 [Preserve]
 public class ApplicationProcessor
 {
 	const string CACHE_VERSION_KEY = "CACHE_VERSION";
+
+	public string ClientVersion => Application.version ?? string.Empty;
+	public string ServerVersion => m_Snapshot?.Version ?? string.Empty;
 
 	static string CacheVersion
 	{
@@ -106,16 +88,17 @@ public class ApplicationProcessor
 
 	void TryClearCache()
 	{
-		(int sourceMajor, int sourceMinor, int sourcePatch) = GetVersion(CacheVersion);
-		(int targetMajor, int targetMinor, int targetPatch) = GetVersion(m_Snapshot.Version);
+		string cacheVersion  = CacheVersion;
+		string clientVersion = ClientVersion;
 		
-		if (sourceMajor != targetMajor || sourceMinor != targetMinor || sourcePatch != targetPatch)
+		if (cacheVersion == clientVersion)
 			return;
 		
-		Debug.LogFormat(
-			"[ApplicationProcessor] Clear cache. Cache version: '{0}.{1}.{2}' Application version: '{3}.{4}.{5}'.",
-			sourceMajor, sourceMinor, sourcePatch,
-			targetMajor, targetMinor, targetPatch
+		Log.Info(
+			this,
+			"Clear cache. Cache version: '{0}' Client version: '{1}'.",
+			cacheVersion,
+			clientVersion
 		);
 		
 		try
@@ -125,42 +108,13 @@ public class ApplicationProcessor
 			foreach (string directory in directories)
 				Directory.Delete(directory, true);
 			
-			CacheVersion = m_Snapshot.Version;
+			CacheVersion = ClientVersion;
 			
-			Debug.LogError("[ApplicationProcessor] Clear cache success.");
+			Log.Info(this, "Clear cache success. Cache version: '{0}' Client version: '{1}'.", CacheVersion, ClientVersion);
 		}
 		catch (Exception exception)
 		{
-			Debug.LogError("[ApplicationProcessor] Clear cache failed.");
-			Debug.LogException(exception);
+			Log.Exception(this, exception, "Clear cache failed. Cache version: '{0}' Client version: '{1}'.", CacheVersion, ClientVersion);
 		}
-	}
-
-	static (int Major, int Minor, int Patch) GetVersion(string _Version)
-	{
-		if (string.IsNullOrEmpty(_Version))
-			return (0, 0, 0);
-		
-		string[] data = _Version.Split(new char[] { '.', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
-		
-		int major;
-		if (data.Length >= 1 && !string.IsNullOrEmpty(data[0]))
-			int.TryParse(data[0], out major);
-		else
-			major = 1;
-		
-		int minor;
-		if (data.Length >= 2 && !string.IsNullOrEmpty(data[1]))
-			int.TryParse(data[1], out minor);
-		else
-			minor = 0;
-		
-		int patch;
-		if (data.Length >= 3 && !string.IsNullOrEmpty(data[2]))
-			int.TryParse(data[1], out patch);
-		else
-			patch = 0;
-		
-		return (major, minor, patch);
 	}
 }

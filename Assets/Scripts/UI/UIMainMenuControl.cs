@@ -96,8 +96,6 @@ public class UIMainMenuControl : UIEntity
 				ReadStore();
 				break;
 		}
-		
-		PlayerPrefs.Save();
 	}
 
 	void ProcessOffersBadge()
