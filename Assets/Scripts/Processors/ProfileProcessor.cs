@@ -55,13 +55,12 @@ public class ProfileProcessor
 {
 	public long Coins => m_Snapshot?.Coins ?? 0;
 	public int  Discs => m_Snapshot?.Discs ?? 0;
-	public int  Level => m_ProgressProcessor.ClampLevel(m_Snapshot?.Level ?? 1);
+	public int  Level => m_Snapshot?.Level ?? 1;
 
 	bool Loaded { get; set; }
 
 	[Inject] SignalBus         m_SignalBus;
 	[Inject] SocialProcessor   m_SocialProcessor;
-	[Inject] ProgressProcessor m_ProgressProcessor;
 	[Inject] ProductsProcessor m_ProductsProcessor;
 	[Inject] MenuProcessor     m_MenuProcessor;
 

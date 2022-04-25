@@ -117,7 +117,7 @@ public class UIProfile : UIEntity
 	void ProcessDiscs()
 	{
 		m_DiscsLabel.text = m_ProgressProcessor != null && Level < m_ProgressProcessor.GetMaxLevel()
-			? $"{Discs}/{m_ProgressProcessor.GetMaxLimit(Level)}"
+			? $"{Discs}/{m_ProgressProcessor.GetDiscs(Level + 1)}"
 			: Discs.ToString();
 	}
 

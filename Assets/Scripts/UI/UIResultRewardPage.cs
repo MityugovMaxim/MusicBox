@@ -11,6 +11,8 @@ public class UIResultRewardPage : UIResultMenuPage
 {
 	public override ResultMenuPageType Type => ResultMenuPageType.Reward;
 
+	public override bool Valid => m_SourceAccuracy > m_TargetAccuracy || m_Coins > 0;
+
 	[SerializeField] UICascadeTMPLabel  m_Title;
 	[SerializeField] UIDiscProgress[]   m_DiscsProgress;
 	[SerializeField] UIDiscs            m_Discs;
@@ -22,20 +24,16 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	[SerializeField, Sound] string m_UnitSound;
 
-	[Inject] ScoresProcessor   m_ScoresProcessor;
-	[Inject] ScoreManager      m_ScoreManager;
-	[Inject] SongsProcessor    m_SongsProcessor;
-	[Inject] ProfileProcessor  m_ProfileProcessor;
-	[Inject] ProgressProcessor m_ProgressProcessor;
-	[Inject] MenuProcessor     m_MenuProcessor;
-	[Inject] SoundProcessor    m_SoundProcessor;
-	[Inject] HapticProcessor   m_HapticProcessor;
+	[Inject] ScoresProcessor m_ScoresProcessor;
+	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] SongsProcessor  m_SongsProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	string    m_SongID;
 	ScoreRank m_SourceRank;
 	ScoreRank m_TargetRank;
-	int       m_SourceLevel;
-	int       m_TargetLevel;
 	int       m_SourceAccuracy;
 	int       m_TargetAccuracy;
 	long      m_SourceScore;
@@ -54,8 +52,6 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_TargetAccuracy = m_ScoreManager.GetAccuracy();
 		m_TargetScore    = m_ScoreManager.GetScore();
 		m_Coins          = m_SongsProcessor.GetPayout(m_SongID, m_SourceRank, m_TargetRank);
-		m_SourceLevel    = m_ProfileProcessor.Level;
-		m_TargetLevel    = m_ProgressProcessor.GetMaxLevel();
 		
 		m_ScoreLabel.Value = 0;
 		m_CoinsLabel.Value = 0;
@@ -98,18 +94,7 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 			
-			ResultMenuPageType pageType = m_SourceLevel != m_TargetLevel && m_TargetRank > m_SourceRank
-				? ResultMenuPageType.Level
-				: ResultMenuPageType.Control;
-			
-			UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
-			
-			if (resultMenu == null)
-				return;
-			
-			await resultMenu.Select(pageType);
-			
-			resultMenu.Play(pageType);
+			Next();
 		}
 		else
 		{
@@ -120,21 +105,16 @@ public class UIResultRewardPage : UIResultMenuPage
 				"SONG_FINISH_ERROR_TITLE",
 				"SONG_FINISH_ERROR_MESSAGE",
 				Continue,
-				Skip
+				Next
 			);
 		}
 	}
 
-	async void Skip()
+	void Next()
 	{
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
 		
-		if (resultMenu == null)
-			return;
-		
-		await resultMenu.Select(ResultMenuPageType.Control);
-		
-		resultMenu.Play(ResultMenuPageType.Control);
+		resultMenu.Next();
 	}
 
 	void ProcessActions()
@@ -145,10 +125,15 @@ public class UIResultRewardPage : UIResultMenuPage
 		
 		for (ScoreRank rank = m_SourceRank; rank <= m_TargetRank; rank++)
 		{
-			if (m_SourceAccuracy >= m_TargetAccuracy)
-				continue;
+			ScoreRank next = rank + 1;
 			
-			UIDiscProgress discProgress = GetDiscProgress(rank + 1);
+			if (next > ScoreRank.Platinum)
+				break;
+			
+			if (m_SourceAccuracy >= m_TargetAccuracy)
+				break;
+			
+			UIDiscProgress discProgress = GetDiscProgress(next);
 			
 			if (discProgress == null)
 				continue;
@@ -165,7 +150,7 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			m_Actions.Enqueue(discProgress.ProgressAsync);
 			
-			if (discProgress.Rank <= m_TargetRank)
+			if (next <= m_TargetRank)
 				m_Actions.Enqueue(() => CollectDisc(discProgress));
 		}
 		

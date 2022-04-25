@@ -58,6 +58,8 @@ public class UILevelProgress : UIGroup
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
+		
+		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
 	}
 
 	#if UNITY_EDITOR
@@ -79,6 +81,8 @@ public class UILevelProgress : UIGroup
 		float _TargetProgress
 	)
 	{
+		Restore();
+		
 		m_SourceLevel.Level = _SourceLevel;
 		m_TargetLevel.Level = _TargetLevel;
 		
@@ -88,8 +92,6 @@ public class UILevelProgress : UIGroup
 		
 		m_Target.anchorMin = new Vector2(0, 0);
 		m_Target.anchorMax = new Vector2(m_SourceProgress, 1);
-		
-		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
 		
 		ProcessProgress();
 	}
@@ -126,6 +128,9 @@ public class UILevelProgress : UIGroup
 	void Restore()
 	{
 		InvokeCollectFinished();
+		
+		if (m_Animator == null)
+			return;
 		
 		m_Animator.ResetTrigger(m_CollectParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);

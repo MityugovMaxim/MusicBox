@@ -1,30 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Firebase.Extensions;
 using UnityEngine;
 using Zenject;
 
 public class UIResultLevelPage : UIResultMenuPage
 {
-	class ProgressData
-	{
-		public int   Level          { get; }
-		public float Source { get; }
-		public float Target { get; }
-
-		public ProgressData(int _Level, float _Source, float _Target)
-		{
-			Level  = _Level;
-			Source = _Source;
-			Target = _Target;
-		}
-	}
-
 	public override ResultMenuPageType Type => ResultMenuPageType.Level;
+
+	public override bool Valid => m_SourceLevel < m_MaxLevel && m_SourceDiscs > m_TargetDiscs;
 
 	[SerializeField] UILevelProgress m_LevelProgress;
 	[SerializeField] UIGroup         m_ItemsGroup;
+	[SerializeField] UIUnitLabel     m_CoinsLabel;
 	[SerializeField] UIGroup         m_ContinueGroup;
-	[SerializeField] UIUnitLabel     m_Coins;
 
 	[SerializeField, Sound] string m_UnitSound;
 
@@ -36,16 +26,17 @@ public class UIResultLevelPage : UIResultMenuPage
 	[Inject] StatisticProcessor    m_StatisticProcessor;
 	[Inject] UISongUnlockItem.Pool m_ItemPool;
 
-	readonly Queue<ProgressData>    m_ProgressData = new Queue<ProgressData>();
-	readonly List<UISongUnlockItem> m_Items        = new List<UISongUnlockItem>();
+	readonly List<UISongUnlockItem> m_Items   = new List<UISongUnlockItem>();
+	readonly Queue<Func<Task>>      m_Actions = new Queue<Func<Task>>();
 
 	string m_SongID;
-	int    m_SourceDiscs;
-	int    m_TargetDiscs;
 	int    m_MinLevel;
 	int    m_MaxLevel;
+	int    m_SourceDiscs;
+	int    m_TargetDiscs;
 	int    m_SourceLevel;
 	int    m_TargetLevel;
+	long   m_Coins;
 
 	public override void Setup(string _SongID)
 	{
@@ -55,91 +46,83 @@ public class UIResultLevelPage : UIResultMenuPage
 		m_MaxLevel    = m_ProgressProcessor.GetMaxLevel();
 		m_SourceDiscs = m_ScoreManager.GetSourceDiscs();
 		m_TargetDiscs = m_ScoreManager.GetTargetDiscs();
-		m_SourceLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(m_SourceDiscs), m_MinLevel, m_MaxLevel);
-		m_TargetLevel = Mathf.Clamp(m_ProgressProcessor.GetLevel(m_TargetDiscs), m_MinLevel, m_MaxLevel);
-		
-		ProcessProgress();
+		m_SourceLevel = m_ProgressProcessor.GetLevel(m_SourceDiscs);
+		m_TargetLevel = m_ProgressProcessor.GetLevel(m_TargetDiscs);
 		
 		m_LevelProgress.Hide(true);
 		m_ItemsGroup.Hide(true);
 		m_ContinueGroup.Hide(true);
-	}
-
-	void ProcessProgress()
-	{
-		m_ProgressData.Clear();
 		
-		for (int level = m_SourceLevel; level <= m_TargetLevel; level++)
-		{
-			if (level >= m_MaxLevel)
-				break;
-			
-			int minLimit = m_ProgressProcessor.GetMinLimit(level);
-			int maxLimit = m_ProgressProcessor.GetMaxLimit(level);
-			
-			m_ProgressData.Enqueue(
-				new ProgressData(
-					level,
-					Mathf.InverseLerp(minLimit, maxLimit, m_SourceDiscs),
-					Mathf.InverseLerp(minLimit, maxLimit, m_TargetDiscs)
-				)
-			);
-		}
+		ProcessActions();
+		
+		ProcessProgress();
 	}
 
 	public override async void Play()
 	{
-		while (m_ProgressData.Count > 0)
-		{
-			ProgressData progressData = m_ProgressData.Dequeue();
-			
-			m_LevelProgress.Setup(
-				progressData.Level,
-				progressData.Level + 1,
-				progressData.Source,
-				progressData.Target
-			);
-			
-			ProcessItems(progressData.Level + 1);
-			
-			await Task.WhenAll(
-				m_LevelProgress.ShowAsync(),
-				m_ItemsGroup.ShowAsync()
-			);
-			
-			await m_LevelProgress.ProgressAsync();
-			
-			if (m_ProgressData.Count == 0)
-				break;
-			
-			await m_LevelProgress.CollectAsync();
-			
-			await CoinsAsync(progressData.Level + 1);
-			
-			await Task.Delay(500);
-			
-			await UnlockAsync();
-			
-			await Task.Delay(1500);
-			
-			await Task.WhenAll(
-				m_LevelProgress.HideAsync(),
-				m_ItemsGroup.HideAsync()
-			);
-		}
-		
-		m_ContinueGroup.Show();
+		while (m_Actions.Count > 0)
+			await m_Actions.Dequeue().Invoke();
 	}
 
-	void ProcessItems(int _Level)
+	public void Continue()
 	{
+		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_SongID);
+		
+		m_ContinueGroup.Hide();
+		
+		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+		
+		resultMenu.Next();
+	}
+
+	void ProcessActions()
+	{
+		m_Actions.Clear();
+		
+		for (int level = m_SourceLevel; level <= m_TargetLevel; level++)
+		{
+			int levelClosure = level;
+			
+			m_Actions.Enqueue(() => SetupProgress(levelClosure));
+			m_Actions.Enqueue(ShowProgress);
+			m_Actions.Enqueue(() => m_ItemsGroup.ShowAsync());
+			m_Actions.Enqueue(m_LevelProgress.ProgressAsync);
+			
+			if (level >= m_TargetLevel)
+				break;
+			
+			m_Actions.Enqueue(m_LevelProgress.CollectAsync);
+			m_Actions.Enqueue(() => Task.Delay(1000));
+			m_Actions.Enqueue(PlayCoins);
+			m_Actions.Enqueue(PlayItems);
+			m_Actions.Enqueue(() => Task.Delay(1000));
+			
+			if (level + 1 >= m_MaxLevel)
+				break;
+			
+			m_Actions.Enqueue(() => m_ItemsGroup.HideAsync());
+			m_Actions.Enqueue(HideProgress);
+		}
+		
+		m_Actions.Enqueue(ShowControl);
+	}
+
+	void ProcessProgress()
+	{
+		int sourceLevel = Mathf.Clamp(m_SourceLevel, m_MinLevel, m_MaxLevel);
+		int targetLevel = Mathf.Clamp(sourceLevel + 1, m_MinLevel, m_MaxLevel);
+		
+		m_CoinsLabel.Value = 0;
+		m_CoinsLabel.gameObject.SetActive(false);
+		m_Coins = m_ProgressProcessor.GetCoins(targetLevel);
+		
+		m_ContinueGroup.Hide(true);
+		
 		foreach (UISongUnlockItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		m_Coins.gameObject.SetActive(false);
-		
-		List<string> songIDs = m_ProgressProcessor.GetSongIDs(_Level);
+		List<string> songIDs = m_ProgressProcessor.GetSongIDs(targetLevel);
 		
 		foreach (string songID in songIDs)
 		{
@@ -151,45 +134,65 @@ public class UIResultLevelPage : UIResultMenuPage
 		}
 	}
 
-	public async void Continue()
+	Task SetupProgress(int _Level)
 	{
-		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_SongID);
+		int   sourceLevel    = Mathf.Clamp(_Level, m_MinLevel, m_MaxLevel);
+		int   targetLevel    = Mathf.Clamp(sourceLevel + 1, m_MinLevel, m_MaxLevel);
+		float sourceProgress = m_ProgressProcessor.GetProgress(sourceLevel, m_SourceDiscs);
+		float targetProgress = m_ProgressProcessor.GetProgress(sourceLevel, m_TargetDiscs);
 		
-		m_ContinueGroup.Hide();
+		m_LevelProgress.Setup(sourceLevel, targetLevel, sourceProgress, targetProgress);
 		
-		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+		m_CoinsLabel.Value = 0;
+		m_CoinsLabel.gameObject.SetActive(false);
 		
-		if (resultMenu == null)
-			return;
+		foreach (UISongUnlockItem item in m_Items)
+			m_ItemPool.Despawn(item);
+		m_Items.Clear();
 		
-		await resultMenu.Select(ResultMenuPageType.Control);
+		List<string> songIDs = m_ProgressProcessor.GetSongIDs(targetLevel);
 		
-		resultMenu.Play(ResultMenuPageType.Control);
+		foreach (string songID in songIDs)
+		{
+			UISongUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
+			
+			item.Setup(songID);
+			
+			m_Items.Add(item);
+		}
+		
+		return Task.FromResult(true);
 	}
 
-	async Task CoinsAsync(int _Level)
+	Task ShowProgress()
+	{
+		return m_LevelProgress.ShowAsync();
+	}
+
+	Task HideProgress()
+	{
+		return m_LevelProgress.HideAsync();
+	}
+
+	Task PlayCoins()
 	{
 		const float duration = 1.5f;
 		
-		long coins = m_ProgressProcessor.GetCoins(_Level);
+		m_CoinsLabel.gameObject.SetActive(m_Coins > 0);
 		
-		m_Coins.gameObject.SetActive(coins > 0);
-		
-		if (coins <= 0)
-			return;
+		if (m_Coins <= 0)
+			return Task.FromResult(true);
 		
 		m_HapticProcessor.Play(Haptic.Type.Selection, 30, duration);
 		m_SoundProcessor.Start(m_UnitSound);
 		
-		await UnityTask.Phase(
-			_Phase => m_Coins.Value = MathUtility.Lerp(0, coins, _Phase),
+		return UnityTask.Phase(
+			_Phase => m_CoinsLabel.Value = MathUtility.Lerp(0, m_Coins, _Phase),
 			duration
-		);
-		
-		m_SoundProcessor.Stop(m_UnitSound);
+		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_UnitSound));
 	}
 
-	async Task UnlockAsync()
+	async Task PlayItems()
 	{
 		foreach (UISongUnlockItem item in m_Items)
 		{
@@ -198,5 +201,10 @@ public class UIResultLevelPage : UIResultMenuPage
 				Task.Delay(250)
 			);
 		}
+	}
+
+	Task ShowControl()
+	{
+		return m_ContinueGroup.ShowAsync();
 	}
 }

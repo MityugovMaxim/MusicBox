@@ -75,6 +75,13 @@ public class ProgressProcessor
 			: 1;
 	}
 
+	public int GetDiscs(int _Level)
+	{
+		ProgressSnapshot snapshot = GetSnapshot(_Level);
+		
+		return snapshot?.Discs ?? 0;
+	}
+
 	public long GetCoins(int _Level)
 	{
 		ProgressSnapshot snapshot = GetSnapshot(_Level);
@@ -94,22 +101,34 @@ public class ProgressProcessor
 
 	public int GetLevel(int _Discs)
 	{
-		if (m_Snapshots.Count == 0)
-			return 1;
+		int minLevel = GetMinLevel();
+		int maxLevel = GetMaxLevel();
 		
-		ProgressSnapshot progressSnapshot = m_Snapshots
+		if (m_Snapshots.Count == 0)
+			return minLevel;
+		
+		ProgressSnapshot snapshot = m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Discs <= _Discs)
 			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
 		
-		return progressSnapshot?.Level ?? 1;
+		return snapshot != null
+			? Mathf.Clamp(snapshot.Level, minLevel, maxLevel)
+			: minLevel;
 	}
 
-	public int ClampLevel(int _Level)
+	public float GetProgress(int _Level, int _Discs)
 	{
-		int minLevel = GetMinLevel();
-		int maxLevel = GetMaxLevel();
-		return Mathf.Clamp(_Level, minLevel, maxLevel);
+		int minThreshold = GetDiscs(_Level);
+		int maxThreshold = GetDiscs(_Level + 1);
+		
+		if (_Discs >= maxThreshold)
+			return 1;
+		
+		if (_Discs <= minThreshold)
+			return 0;
+		
+		return Mathf.InverseLerp(minThreshold, maxThreshold, _Discs);
 	}
 
 	public int GetMinLevel()
@@ -134,36 +153,6 @@ public class ProgressProcessor
 			.Select(_Snapshot => _Snapshot.Level)
 			.DefaultIfEmpty(1)
 			.Max();
-	}
-
-	public int GetMinLimit(int _Level)
-	{
-		if (m_Snapshots.Count == 0)
-			return 0;
-		
-		int level = ClampLevel(_Level);
-		
-		ProgressSnapshot progressSnapshot = m_Snapshots
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.Level >= level)
-			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
-		
-		return progressSnapshot?.Discs ?? 0;
-	}
-
-	public int GetMaxLimit(int _Level)
-	{
-		if (m_Snapshots.Count == 0)
-			return 0;
-		
-		int level = ClampLevel(_Level + 1);
-		
-		ProgressSnapshot progressSnapshot = m_Snapshots
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.Level >= level)
-			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
-		
-		return progressSnapshot?.Discs ?? 0;
 	}
 
 	async void OnUpdate(object _Sender, EventArgs _Args)
@@ -201,7 +190,14 @@ public class ProgressProcessor
 		if (m_Snapshots.Count == 0)
 			return null;
 		
-		ProgressSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.Level == _Level);
+		int minLevel = GetMinLevel();
+		int maxLevel = GetMaxLevel();
+		int level    = Mathf.Clamp(_Level, minLevel, maxLevel);
+		
+		ProgressSnapshot snapshot = m_Snapshots
+			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.Level >= level)
+			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		
 		if (snapshot == null)
 			Log.Error(this, "Get snapshot failed. Snapshot with Level '{0}' is null.");

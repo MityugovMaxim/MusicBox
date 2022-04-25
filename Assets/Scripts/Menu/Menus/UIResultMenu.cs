@@ -1,12 +1,13 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public enum ResultMenuPageType
 {
-	Reward,
-	Level,
-	Control
+	Reward  = 0,
+	Level   = 1,
+	Control = 2,
 }
 
 [Menu(MenuType.ResultMenu)]
@@ -15,11 +16,13 @@ public class UIResultMenu : UIMenu
 	[SerializeField] UISongBackground   m_Background;
 	[SerializeField] UIResultMenuPage[] m_Pages;
 
-	string m_SongID;
+	string             m_SongID;
+	ResultMenuPageType m_PageType;
 
 	public void Setup(string _SongID)
 	{
-		m_SongID = _SongID;
+		m_SongID   = _SongID;
+		m_PageType = ResultMenuPageType.Reward;
 		
 		m_Background.Setup(m_SongID);
 		
@@ -27,8 +30,59 @@ public class UIResultMenu : UIMenu
 			page.Setup(m_SongID);
 	}
 
-	public Task Select(ResultMenuPageType _PageType, bool _Instant = false)
+	public async void Next()
 	{
+		ResultMenuPageType pageType;
+		switch (m_PageType)
+		{
+			case ResultMenuPageType.Reward:
+				pageType = ResultMenuPageType.Level;
+				break;
+			
+			case ResultMenuPageType.Level:
+				pageType = ResultMenuPageType.Control;
+				break;
+			
+			default:
+				return;
+		}
+		
+		UIResultMenuPage page = GetPage(pageType);
+		
+		if (page != null && page.Valid)
+		{
+			await SelectPage(pageType);
+			
+			page.Play();
+		}
+		else
+		{
+			Next();
+		}
+	}
+
+	protected override void OnShowStarted()
+	{
+		SelectPage(m_PageType, true);
+	}
+
+	protected override void OnShowFinished()
+	{
+		UIResultMenuPage page = GetPage(m_PageType);
+		
+		page.Play();
+	}
+
+	protected override void OnHideFinished()
+	{
+		foreach (UIResultMenuPage page in m_Pages)
+			page.Hide(true);
+	}
+
+	Task SelectPage(ResultMenuPageType _PageType, bool _Instant = false)
+	{
+		m_PageType = _PageType;
+		
 		List<Task> tasks = new List<Task>();
 		foreach (UIResultMenuPage page in m_Pages)
 		{
@@ -40,28 +94,8 @@ public class UIResultMenu : UIMenu
 		return Task.WhenAll(tasks);
 	}
 
-	public void Play(ResultMenuPageType _PageType)
+	UIResultMenuPage GetPage(ResultMenuPageType _PageType)
 	{
-		foreach (UIResultMenuPage page in m_Pages)
-		{
-			if (page.Type == _PageType)
-				page.Play();
-		}
-	}
-
-	protected override void OnShowStarted()
-	{
-		Select(ResultMenuPageType.Reward, true);
-	}
-
-	protected override void OnShowFinished()
-	{
-		Play(ResultMenuPageType.Reward);
-	}
-
-	protected override void OnHideFinished()
-	{
-		foreach (UIResultMenuPage page in m_Pages)
-			page.Hide(true);
+		return m_Pages.FirstOrDefault(_Page => _Page.Type == _PageType);
 	}
 }

@@ -2,6 +2,8 @@ using Zenject;
 
 public abstract class UIResultMenuPage : UIPage<ResultMenuPageType>
 {
+	public abstract bool Valid { get; }
+
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	protected string GetLocalization(string _Key)

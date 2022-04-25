@@ -39,31 +39,38 @@ public class ConfigProcessor
 	const string SONG_NEXT_ADS_COUNT    = "song_next_ads_count";
 	const string SONG_PLAY_ADS_COUNT    = "song_play_ads_count";
 
+	const string ACCURACY_PERFECT_MULTIPLIER = "accuracy_perfect_multipler";
+	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multipler";
+	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multipler";
+
 	const string REVIEW_REQUEST_COUNT = "review_request_count";
 
-	public int   ComboX2                 => GetInt(COMBO_X2);
-	public int   ComboX4                 => GetInt(COMBO_X4);
-	public int   ComboX6                 => GetInt(COMBO_X6);
-	public int   ComboX8                 => GetInt(COMBO_X8);
-	public float SongRatio               => GetFloat(SONG_RATIO);
-	public float SongIFrames             => GetFloat(SONG_IFRAMES);
-	public float TapPerfectMultiplier    => GetFloat(TAP_PERFECT_MULTIPLIER);
-	public float TapGoodMultiplier       => GetFloat(TAP_GOOD_MULTIPLIER);
-	public float TapBadMultiplier        => GetFloat(TAP_BAD_MULTIPLIER);
-	public float DoublePerfectMultiplier => GetFloat(DOUBLE_PERFECT_MULTIPLIER);
-	public float DoubleGoodMultiplier    => GetFloat(DOUBLE_GOOD_MULTIPLIER);
-	public float DoubleBadMultiplier     => GetFloat(DOUBLE_BAD_MULTIPLIER);
-	public float HoldPerfectMultiplier   => GetFloat(HOLD_PERFECT_MULTIPLIER);
-	public float HoldGoodMultiplier      => GetFloat(HOLD_GOOD_MULTIPLIER);
-	public float HoldBadMultiplier       => GetFloat(HOLD_BAD_MULTIPLIER);
-	public float HoldHitMultiplier       => GetFloat(HOLD_HIT_MULTIPLIER);
-	public float ScorePerfectThreshold   => GetFloat(SCORE_PERFECT_THRESHOLD);
-	public float ScoreGoodThreshold      => GetFloat(SCORE_GOOD_THRESHOLD);
-	public int   SongRestartAdsCount     => GetInt(SONG_RESTART_ADS_COUNT);
-	public int   SongLeaveAdsCount       => GetInt(SONG_LEAVE_ADS_COUNT);
-	public int   SongNextAdsCount        => GetInt(SONG_NEXT_ADS_COUNT);
-	public int   SongPlayAdsCount        => GetInt(SONG_PLAY_ADS_COUNT);
-	public int   ReviewRequestCount      => GetInt(REVIEW_REQUEST_COUNT);
+	public int   ComboX2                   => GetInt(COMBO_X2);
+	public int   ComboX4                   => GetInt(COMBO_X4);
+	public int   ComboX6                   => GetInt(COMBO_X6);
+	public int   ComboX8                   => GetInt(COMBO_X8);
+	public float SongRatio                 => GetFloat(SONG_RATIO);
+	public float SongIFrames               => GetFloat(SONG_IFRAMES);
+	public float TapPerfectMultiplier      => GetFloat(TAP_PERFECT_MULTIPLIER);
+	public float TapGoodMultiplier         => GetFloat(TAP_GOOD_MULTIPLIER);
+	public float TapBadMultiplier          => GetFloat(TAP_BAD_MULTIPLIER);
+	public float DoublePerfectMultiplier   => GetFloat(DOUBLE_PERFECT_MULTIPLIER);
+	public float DoubleGoodMultiplier      => GetFloat(DOUBLE_GOOD_MULTIPLIER);
+	public float DoubleBadMultiplier       => GetFloat(DOUBLE_BAD_MULTIPLIER);
+	public float HoldPerfectMultiplier     => GetFloat(HOLD_PERFECT_MULTIPLIER);
+	public float HoldGoodMultiplier        => GetFloat(HOLD_GOOD_MULTIPLIER);
+	public float HoldBadMultiplier         => GetFloat(HOLD_BAD_MULTIPLIER);
+	public float HoldHitMultiplier         => GetFloat(HOLD_HIT_MULTIPLIER);
+	public float ScorePerfectThreshold     => GetFloat(SCORE_PERFECT_THRESHOLD);
+	public float ScoreGoodThreshold        => GetFloat(SCORE_GOOD_THRESHOLD);
+	public int   SongRestartAdsCount       => GetInt(SONG_RESTART_ADS_COUNT);
+	public int   SongLeaveAdsCount         => GetInt(SONG_LEAVE_ADS_COUNT);
+	public int   SongNextAdsCount          => GetInt(SONG_NEXT_ADS_COUNT);
+	public int   SongPlayAdsCount          => GetInt(SONG_PLAY_ADS_COUNT);
+	public int   ReviewRequestCount        => GetInt(REVIEW_REQUEST_COUNT);
+	public float AccuracyPerfectMultiplier => GetFloat(ACCURACY_PERFECT_MULTIPLIER);
+	public float AccuracyGoodMultiplier    => GetFloat(ACCURACY_GOOD_MULTIPLIER);
+	public float AccuracyBadMultiplier     => GetFloat(ACCURACY_BAD_MULTIPLIER);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
@@ -101,6 +108,12 @@ public class ConfigProcessor
 		{ SONG_NEXT_ADS_COUNT, 2 },
 		{ SONG_PLAY_ADS_COUNT, 4 },
 		
+		// Accuracy
+		{ ACCURACY_PERFECT_MULTIPLIER, 1.0f },
+		{ ACCURACY_GOOD_MULTIPLIER, 0.9f },
+		{ ACCURACY_BAD_MULTIPLIER, 0.7f },
+		
+		// Other
 		{ REVIEW_REQUEST_COUNT, 2 }
 	};
 

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
@@ -8,6 +7,8 @@ using Zenject;
 public class UIResultControlPage : UIResultMenuPage
 {
 	public override ResultMenuPageType Type => ResultMenuPageType.Control;
+
+	public override bool Valid => true;
 
 	[SerializeField] UISongImage     m_Image;
 	[SerializeField] UISongDiscs     m_Discs;
@@ -20,6 +21,8 @@ public class UIResultControlPage : UIResultMenuPage
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ScoreManager       m_ScoreManager;
+	[Inject] ScoresProcessor    m_ScoresProcessor;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
 	[Inject] SongsManager       m_SongsManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
@@ -79,21 +82,32 @@ public class UIResultControlPage : UIResultMenuPage
 		
 		m_Preview.Stop();
 		
-		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
-		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Songs);
-		
-		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
-		if (songMenu != null)
-			songMenu.Setup(GetSongID(1));
-		
 		m_SongController.Leave();
 		
-		await m_MenuProcessor.Show(MenuType.SongMenu);
-		await m_MenuProcessor.Show(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		mainMenu.Select(MainMenuPageType.Songs);
+		
+		string songID = GetNextSongID();
+		
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		
+		if (string.IsNullOrEmpty(songID))
+		{
+			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			await m_MenuProcessor.Hide(MenuType.ResultMenu);
+		}
+		else
+		{
+			UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
+			
+			songMenu.Setup(songID);
+			
+			await m_MenuProcessor.Show(MenuType.SongMenu);
+			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+		}
 	}
 
 	public async void Restart()
@@ -110,17 +124,13 @@ public class UIResultControlPage : UIResultMenuPage
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 	}
 
-	string GetSongID(int _Offset)
+	string GetNextSongID()
 	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
-		
-		int index = songIDs.IndexOf(m_SongID);
-		if (index >= 0 && index < songIDs.Count)
-			return songIDs[MathUtility.Repeat(index + _Offset, songIDs.Count)];
-		else if (songIDs.Count > 0)
-			return songIDs.FirstOrDefault();
-		else
-			return m_SongID;
+		return m_SongsManager.GetLibrarySongIDs()
+			.Where(_SongID => _SongID != m_SongID)
+			.OrderBy(m_ScoresProcessor.GetRank)
+			.ThenByDescending(m_ProgressProcessor.GetSongLevel)
+			.FirstOrDefault();
 	}
 
 	protected override void OnShowFinished()

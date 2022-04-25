@@ -212,9 +212,9 @@ public class ScoreManager : IInitializable, IDisposable
 
 	public int GetAccuracy()
 	{
-		const float perfectMultiplier = 1;
-		const float goodMultiplier    = 0.9f;
-		const float badMultiplier     = 0.7f;
+		float perfectMultiplier = m_ConfigProcessor.AccuracyPerfectMultiplier;
+		float goodMultiplier    = m_ConfigProcessor.AccuracyGoodMultiplier;
+		float badMultiplier     = m_ConfigProcessor.AccuracyBadMultiplier;
 		
 		float tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
 		float doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
