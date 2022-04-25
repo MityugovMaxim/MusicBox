@@ -10,6 +10,8 @@ public static class GoogleAuth
 		return iOSGoogleAuth.LoginAsync();
 		#elif UNITY_ANDROID
 		return AndroidGoogleAuth.LoginAsync();
+		#else
+		return Task.FromResult<(string, string)>((null, null));
 		#endif
 	}
 }
