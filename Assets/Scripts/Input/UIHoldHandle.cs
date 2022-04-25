@@ -148,10 +148,7 @@ public class UIHoldHandle : UIHandle
 		m_Hold      = false;
 		m_Processed = true;
 		
-		if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
-			ProcessSuccess();
-		else
-			ProcessFail();
+		ProcessSuccess();
 	}
 
 	void ProcessHit()

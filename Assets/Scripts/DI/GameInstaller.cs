@@ -176,6 +176,8 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		
+		Container.DeclareSignal<InputMissSignal>().OptionalSubscriber();
+		
 		Container.DeclareSignal<TapSuccessSignal>().OptionalSubscriber();
 		Container.DeclareSignal<TapFailSignal>().OptionalSubscriber();
 		

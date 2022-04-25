@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Zenject;
 
 public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
 	[SerializeField] RectTransform m_InputArea;
+
+	[Inject] SignalBus m_SignalBus;
 
 	readonly Dictionary<int, Rect>           m_Pointers        = new Dictionary<int, Rect>();
 	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
@@ -63,6 +66,8 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		
 		m_Pointers[pointerID] = area;
 		
+		_EventData.Use();
+		
 		foreach (UIHandle handle in m_ActiveHandles)
 		{
 			if (handle == null)
@@ -71,11 +76,11 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			if (handle.Select(area) && SelectHandle(handle, pointerID))
 			{
 				handle.TouchDown(pointerID, area);
-				break;
+				return;
 			}
 		}
 		
-		_EventData.Use();
+		m_SignalBus.Fire<InputMissSignal>();
 	}
 
 	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
