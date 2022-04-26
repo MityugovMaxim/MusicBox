@@ -26,7 +26,7 @@ public class UILoginMenu : UIMenu
 	public async Task Login()
 	{
 		while (!await m_SocialProcessor.Login())
-			await Task.Delay(2500);
+			await Task.Delay(1500);
 		
 		await m_ConfigProcessor.Load();
 		
