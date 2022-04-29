@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase;
 using Firebase.Auth;
 using UnityEngine;
@@ -28,8 +29,7 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	public async Task<bool> Login()
 	{
-		if (m_Auth == null)
-			m_Auth = FirebaseAuth.DefaultInstance;
+		m_Auth = FirebaseAuth.DefaultInstance;
 		
 		try
 		{
@@ -160,6 +160,8 @@ public class SocialProcessor : IInitializable, IDisposable
 		{
 			(string idToken, string accessToken) = await GoogleAuth.LoginAsync();
 			
+			UserProfile profile = GoogleAuth.GetProfile();
+			
 			Credential credential = GoogleAuthProvider.GetCredential(idToken, accessToken);
 			
 			m_User = await Link(credential, _Credential => credential = _Credential);
@@ -169,6 +171,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			
 			if (m_User == null)
 				m_User = await m_Auth.SignInAnonymouslyAsync();
+			
+			await Merge(profile);
 			
 			credential.Dispose();
 			
@@ -252,11 +256,13 @@ public class SocialProcessor : IInitializable, IDisposable
 		if (string.IsNullOrEmpty(_Profile.DisplayName))
 			_Profile.DisplayName = m_User.DisplayName;
 		
-		if (_Profile.PhotoUrl == null)
+		if (string.IsNullOrEmpty(_Profile.PhotoUrl?.ToString()))
 			_Profile.PhotoUrl = m_User.PhotoUrl;
 		
 		try
 		{
+			await m_User.TokenAsync(true);
+			
 			await m_User.UpdateUserProfileAsync(_Profile);
 		}
 		catch (Exception exception)
@@ -294,7 +300,7 @@ public class SocialProcessor : IInitializable, IDisposable
 				}
 				else if (_Task.IsCompleted)
 				{
-					Debug.LogFormat("[SocialProcessor] Link success. UserID: {0} Name: {1} Provider: {2}.", m_User.UserId, m_User.DisplayName, _Credential.Provider);
+					Log.Info(this, "Link success. UserID: {0} Name: {1} Provider: {2}.", m_User.UserId, m_User.DisplayName, _Credential.Provider);
 					completionSource.SetResult(m_User);
 				}
 				else

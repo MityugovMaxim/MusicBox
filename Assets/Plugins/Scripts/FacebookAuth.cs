@@ -40,7 +40,7 @@ public static class FacebookAuth
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
 		FB.LogInWithReadPermissions(
-			new string[] { "public_profile", "email" },
+			new string[] { "public_profile", "email", "user_friends" },
 			_Result =>
 			{
 				if (_Result.Cancelled)

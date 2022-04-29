@@ -1,6 +1,7 @@
 #if UNITY_ANDROID
 using System;
 using System.Threading.Tasks;
+using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -62,6 +63,39 @@ public static class AndroidGoogleAuth
 	static Action<string, string> m_Success;
 	static Action                 m_Canceled;
 	static Action<string>         m_Failed;
+
+	public static UserProfile GetProfile()
+	{
+		return new UserProfile()
+		{
+			DisplayName = GetName(),
+			PhotoUrl    = new Uri(GetPhoto())
+		};
+	}
+
+	static string GetEmail()
+	{
+		using (AndroidJavaClass auth = new AndroidJavaClass(CLASS_NAME))
+		{
+			return auth.CallStatic<string>("GetEmail");
+		}
+	}
+
+	static string GetName()
+	{
+		using (AndroidJavaClass auth = new AndroidJavaClass(CLASS_NAME))
+		{
+			return auth.CallStatic<string>("GetName");
+		}
+	}
+
+	static string GetPhoto()
+	{
+		using (AndroidJavaClass auth = new AndroidJavaClass(CLASS_NAME))
+		{
+			return auth.CallStatic<string>("GetPhoto");
+		}
+	}
 
 	public static Task<(string IDToken, string AccessToken)> LoginAsync()
 	{
