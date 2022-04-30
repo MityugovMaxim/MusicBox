@@ -1,23 +1,29 @@
 using System;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.SocialMenu)]
 public class UISocialMenu : UISlideMenu
 {
-	[SerializeField] GameObject m_AppleSignIn;
-	[SerializeField] GameObject m_GoogleSignIn;
-	[SerializeField] GameObject m_FacebookSignIn;
+	[SerializeField] TMP_InputField m_Email;
+	[SerializeField] TMP_InputField m_Password;
 
-	[Inject] SocialProcessor    m_SocialProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SocialProcessor m_SocialProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
+
+	public void SignInEmail()
+	{
+		SignIn(
+			() => m_SocialProcessor.AttachEmail(m_Email.text, m_Password.text),
+			"Sign in with Email failed",
+			"Check your Internet connection and try to sign in with Email again"
+		);
+	}
 
 	public void SignInApple()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("apple");
-		
 		SignIn(
 			m_SocialProcessor.AttachAppleID,
 			GetLocalization("APPLE_SIGN_IN_ERROR_TITLE"),
@@ -27,8 +33,6 @@ public class UISocialMenu : UISlideMenu
 
 	public void SignInGoogle()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("google");
-		
 		SignIn(
 			m_SocialProcessor.AttachGoogleID,
 			GetLocalization("GOOGLE_SIGN_IN_ERROR_TITLE"),
@@ -38,8 +42,6 @@ public class UISocialMenu : UISlideMenu
 
 	public void SignInFacebook()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("facebook");
-		
 		SignIn(
 			m_SocialProcessor.AttachFacebookID,
 			GetLocalization("FACEBOOK_SIGN_IN_ERROR_TITLE"),
@@ -49,19 +51,8 @@ public class UISocialMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
-		#if UNITY_EDITOR
-		m_AppleSignIn.SetActive(true);
-		m_GoogleSignIn.SetActive(true);
-		m_FacebookSignIn.SetActive(true);
-		#elif UNITY_IOS
-		m_AppleSignIn.SetActive(true);
-		m_GoogleSignIn.SetActive(true);
-		m_FacebookSignIn.SetActive(true);
-		#elif UNITY_ANDROID
-		m_AppleSignIn.SetActive(false);
-		m_GoogleSignIn.SetActive(true);
-		m_FacebookSignIn.SetActive(true);
-		#endif
+		m_Email.text    = string.Empty;
+		m_Password.text = string.Empty;
 	}
 
 	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)

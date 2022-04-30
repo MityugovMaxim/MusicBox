@@ -49,6 +49,15 @@ public class UISongMenu : UISlideMenu
 		Select(GetLevelID(-1));
 	}
 
+	public async void Settings()
+	{
+		UISongSettingsMenu songSettingsMenu = m_MenuProcessor.GetMenu<UISongSettingsMenu>();
+		
+		songSettingsMenu.Setup(m_SongID);
+		
+		await m_MenuProcessor.Show(MenuType.SongSettingsMenu);
+	}
+
 	public async void Unlock()
 	{
 		if (!m_SongsManager.IsSongLockedByCoins(m_SongID))

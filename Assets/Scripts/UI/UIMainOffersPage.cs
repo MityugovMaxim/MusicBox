@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -8,10 +10,12 @@ public class UIMainOffersPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 
 	[SerializeField] RectTransform m_Container;
+	[SerializeField] UIEntity      m_Control;
 
 	[SerializeField, Sound] string m_CollectSound;
 
 	[Inject] SignalBus        m_SignalBus;
+	[Inject] OffersProcessor  m_OffersProcessor;
 	[Inject] OffersManager    m_OffersManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
 	[Inject] HapticProcessor  m_HapticProcessor;
@@ -21,6 +25,50 @@ public class UIMainOffersPage : UIMainMenuPage
 	bool m_Processing;
 
 	readonly List<UIOfferItem> m_Items = new List<UIOfferItem>();
+
+	public void CreateOffer()
+	{
+		m_OffersProcessor.CreateSnapshot();
+		
+		Refresh();
+	}
+
+	public async void Upload()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		try
+		{
+			await m_OffersProcessor.Upload();
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception, "Upload offers failed.");
+			
+			string message = exception.GetBaseException().Message;
+			
+			await m_MenuProcessor.ErrorAsync(
+				"upload_offers",
+				"Upload failed",
+				message
+			);
+		}
+		
+		Refresh();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	public async void Restore()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_OffersProcessor.Load();
+		
+		Refresh();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
 
 	protected override void OnShowStarted()
 	{
@@ -80,6 +128,8 @@ public class UIMainOffersPage : UIMainMenuPage
 				m_Items.Add(item);
 			}
 		}
+		
+		m_Control.BringToFront();
 		
 		for (int i = m_Items.Count - 1; i >= 0; i--)
 		{

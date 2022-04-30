@@ -10,14 +10,20 @@ using Zenject;
 
 public class ProductSnapshot
 {
-	public string                ID       { get; }
-	public bool                  Active   { get; }
-	public ProductType           Type     { get; }
-	public bool                  Promo    { get; }
-	public bool                  NoAds    { get; }
-	public long                  Coins    { get; }
-	public float                 Discount { get; }
-	public IReadOnlyList<string> SongIDs { get; }
+	public string       ID       { get; set; }
+	public bool         Active   { get; set; }
+	public ProductType  Type     { get; set; }
+	public bool         Promo    { get; set; }
+	public bool         NoAds    { get; set; }
+	public long         Coins    { get; set; }
+	public float        Discount { get; set; }
+	public List<string> SongIDs  { get; set; }
+
+	public ProductSnapshot(string _ProductID)
+	{
+		ID      = _ProductID;
+		SongIDs = new List<string>();
+	}
 
 	public ProductSnapshot(DataSnapshot _Data)
 	{
@@ -29,6 +35,21 @@ public class ProductSnapshot
 		Discount = _Data.GetFloat("discount");
 		NoAds    = _Data.GetBool("no_ads");
 		SongIDs  = _Data.GetChildKeys("song_ids");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["active"]   = Active;
+		data["type"]     = (int)Type;
+		data["promo"]    = Promo;
+		data["coins"]    = Coins;
+		data["discount"] = Discount;
+		data["no_ads"]   = NoAds;
+		data["song_ids"] = SongIDs;
+		
+		return data;
 	}
 }
 
@@ -72,7 +93,6 @@ public class ProductsProcessor
 	{
 		return m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
@@ -202,7 +222,41 @@ public class ProductsProcessor
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new ProductSnapshot(_Data)));
 	}
 
-	ProductSnapshot GetSnapshot(string _ProductID)
+	public async Task Upload(params string[] _ProductIDs)
+	{
+		if (_ProductIDs == null || _ProductIDs.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (string productID in _ProductIDs)
+		{
+			ProductSnapshot snapshot = GetSnapshot(productID);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child(productID).SetValueAsync(data);
+		}
+		
+		await Fetch();
+		
+		Loaded = true;
+	}
+
+	public ProductSnapshot CreateSnapshot()
+	{
+		DatabaseReference reference = m_Data.Push();
+		
+		string productID = reference.Key;
+		
+		ProductSnapshot snapshot = new ProductSnapshot(productID);
+		
+		m_Snapshots.Insert(0, snapshot);
+		
+		return snapshot;
+	}
+
+	public ProductSnapshot GetSnapshot(string _ProductID)
 	{
 		if (m_Snapshots.Count == 0)
 			return null;

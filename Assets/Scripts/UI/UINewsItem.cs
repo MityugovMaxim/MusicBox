@@ -41,6 +41,30 @@ public class UINewsItem : UIGroupLayout
 		m_URL              = m_NewsProcessor.GetURL(m_NewsID);
 	}
 
+	public async void Settings()
+	{
+		UINewsSettingsMenu newsSettingsMenu = m_MenuProcessor.GetMenu<UINewsSettingsMenu>();
+		
+		newsSettingsMenu.Setup(m_NewsID);
+		
+		await m_MenuProcessor.Show(MenuType.NewsSettingsMenu);
+	}
+
+	public void Remove()
+	{
+		m_NewsProcessor.RemoveSnapshot(m_NewsID);
+	}
+
+	public void MoveUp()
+	{
+		m_NewsProcessor.MoveSnapshot(m_NewsID, -1);
+	}
+
+	public void MoveDown()
+	{
+		m_NewsProcessor.MoveSnapshot(m_NewsID, 1);
+	}
+
 	public async void Open()
 	{
 		m_StatisticProcessor.LogMainMenuNewsPageItemClick(m_NewsID);

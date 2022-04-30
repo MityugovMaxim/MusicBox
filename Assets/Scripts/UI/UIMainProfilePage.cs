@@ -78,6 +78,27 @@ public class UIMainProfilePage : UIMainMenuPage
 		await m_MenuProcessor.Show(MenuType.ProductMenu);
 	}
 
+	public async void Localization()
+	{
+		await m_MenuProcessor.Show(MenuType.LocalizationMenu);
+	}
+
+	public async void Progress()
+	{
+		await m_MenuProcessor.Show(MenuType.ProgressMenu);
+	}
+
+	public async void Permissions()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		PermissionsRequest request = new PermissionsRequest();
+		
+		await request.SendAsync();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();

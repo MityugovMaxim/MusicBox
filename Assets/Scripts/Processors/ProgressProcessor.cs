@@ -10,11 +10,18 @@ using Zenject;
 
 public class ProgressSnapshot
 {
-	public bool         Active  { get; }
-	public int          Level   { get; }
-	public int          Discs   { get; }
-	public long         Coins   { get; }
-	public List<string> SongIDs { get; }
+	public int          Level   { get; set; }
+	public bool         Active  { get; set; }
+	public int          Discs   { get; set; }
+	public long         Coins   { get; set; }
+	public List<string> SongIDs { get; set; }
+
+	public ProgressSnapshot(int _Level)
+	{
+		Level   = _Level;
+		Discs   = int.MaxValue;
+		SongIDs = new List<string>();
+	}
 
 	public ProgressSnapshot(DataSnapshot _Data)
 	{
@@ -23,6 +30,19 @@ public class ProgressSnapshot
 		Discs   = _Data.GetInt("discs");
 		Coins   = _Data.GetLong("coins");
 		SongIDs = _Data.GetChildKeys("song_ids");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["level"]    = Level;
+		data["active"]   = Active;
+		data["discs"]    = Discs;
+		data["coins"]    = Coins;
+		data["song_ids"] = SongIDs.ToDictionary(_SongID => _SongID, _SongID => true);
+		
+		return data;
 	}
 }
 
@@ -57,6 +77,15 @@ public class ProgressProcessor
 		await Fetch();
 		
 		Loaded = true;
+	}
+
+	public List<int> GetLevels()
+	{
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.OrderBy(_Snapshot => _Snapshot.Level)
+			.Select(_Snapshot => _Snapshot.Level)
+			.ToList();
 	}
 
 	public int GetSongLevel(string _SongID)
@@ -185,7 +214,39 @@ public class ProgressProcessor
 		m_SignalBus.Fire<ProgressDataUpdateSignal>();
 	}
 
-	ProgressSnapshot GetSnapshot(int _Level)
+	public async Task Upload(params int[] _Levels)
+	{
+		if (_Levels == null || _Levels.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (int level in _Levels)
+		{
+			ProgressSnapshot snapshot = GetSnapshot(level);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child($"level_{level}").SetValueAsync(data);
+		}
+		
+		await Fetch();
+		
+		Loaded = true;
+	}
+
+	public ProgressSnapshot CreateSnapshot()
+	{
+		int level = m_Snapshots.Select(_Snapshot => _Snapshot.Level).Max() + 1;
+		
+		ProgressSnapshot snapshot = new ProgressSnapshot(level);
+		
+		m_Snapshots.Add(snapshot);
+		
+		return snapshot;
+	}
+
+	public ProgressSnapshot GetSnapshot(int _Level)
 	{
 		if (m_Snapshots.Count == 0)
 			return null;

@@ -7,25 +7,24 @@ public class UIMainStorePage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.Store;
 
 	[SerializeField] RectTransform m_Container;
+	[SerializeField] UIEntity      m_Control;
 
-	SignalBus        m_SignalBus;
-	ProfileProcessor m_ProfileProcessor;
-	UIProductItem.Pool m_ItemPool;
+	[Inject] SignalBus          m_SignalBus;
+	[Inject] ProductsProcessor  m_ProductsProcessor;
+	[Inject] ProductsDescriptor m_ProductsDescriptor;
+	[Inject] UIProductItem.Pool m_ItemPool;
 
 	List<string> m_ProductIDs;
 
 	readonly List<UIProductItem> m_Items = new List<UIProductItem>();
 
-	[Inject]
-	public void Construct(
-		SignalBus        _SignalBus,
-		ProfileProcessor _ProfileProcessor,
-		UIProductItem.Pool _ItemPool
-	)
+	public void CreateProduct()
 	{
-		m_SignalBus        = _SignalBus;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_ItemPool         = _ItemPool;
+		ProductSnapshot snapshot = m_ProductsProcessor.CreateSnapshot();
+		
+		m_ProductsDescriptor.CreateDescriptor(snapshot.ID);
+		
+		Refresh();
 	}
 
 	protected override void OnShowStarted()
@@ -48,7 +47,7 @@ public class UIMainStorePage : UIMainMenuPage
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		m_ProductIDs = m_ProfileProcessor.GetVisibleProductIDs();
+		m_ProductIDs = m_ProductsProcessor.GetProductIDs();
 		
 		if (m_ProductIDs == null || m_ProductIDs.Count == 0)
 			return;
@@ -64,5 +63,7 @@ public class UIMainStorePage : UIMainMenuPage
 			
 			m_Items.Add(item);
 		}
+		
+		m_Control.BringToFront();
 	}
 }

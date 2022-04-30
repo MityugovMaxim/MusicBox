@@ -33,6 +33,8 @@ public class GameInstaller : MonoInstaller
 		
 		InstallAudioManager();
 		
+		InstallFileManager();
+		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas).AsSingle();
 		Container.BindInterfacesAndSelfTo<UISongContainer>().FromInstance(m_SongContainer).AsSingle();
 		
@@ -156,6 +158,7 @@ public class GameInstaller : MonoInstaller
 	{
 		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<OffersManager>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ProductsManager>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
@@ -204,5 +207,16 @@ public class GameInstaller : MonoInstaller
 		#endif
 		
 		Container.DeclareSignal<AudioSourceChangedSignal>().OptionalSubscriber();
+	}
+
+	void InstallFileManager()
+	{
+		#if UNITY_EDITOR
+		Container.Bind<IFileManager>().To<EditorFileManager>().FromNew().AsSingle();
+		#elif UNITY_IOS
+		Container.Bind<IFileManager>().To<iOSFileManager>().FromNew().AsSingle();
+		#elif UNITY_ANDROID
+		Container.Bind<IFileManager>().To<AndroidFileManager>().FromNew().AsSingle();
+		#endif
 	}
 }

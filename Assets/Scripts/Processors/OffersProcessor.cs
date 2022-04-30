@@ -9,13 +9,19 @@ using Zenject;
 
 public class OfferSnapshot
 {
-	public string ID          { get; }
-	public bool   Active      { get; }
-	public string SongID      { get; }
-	public long   Coins       { get; }
-	public int    AdsCount    { get; }
-	public long   Timestamp   { get; }
-	public int    Order       { get; }
+	public string ID        { get; }
+	public bool   Active    { get; set; }
+	public string SongID    { get; set; }
+	public long   Coins     { get; set; }
+	public int    AdsCount  { get; set; }
+	public long   Timestamp { get; }
+	[HideProperty]
+	public int    Order     { get; set; }
+
+	public OfferSnapshot(string _OfferID)
+	{
+		ID = _OfferID;
+	}
 
 	public OfferSnapshot(DataSnapshot _Data)
 	{
@@ -26,6 +32,20 @@ public class OfferSnapshot
 		AdsCount  = _Data.GetInt("ads_count");
 		Timestamp = _Data.GetLong("timestamp");
 		Order     = _Data.GetInt("order");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["active"]    = Active;
+		data["song_id"]   = SongID;
+		data["coins"]     = Coins;
+		data["ads_count"] = AdsCount;
+		data["timestamp"] = Timestamp;
+		data["order"]     = Order;
+		
+		return data;
 	}
 }
 
@@ -69,7 +89,6 @@ public class OffersProcessor
 	{
 		return m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
 			.OrderBy(_Snapshot => _Snapshot.Order)
 			.ThenByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
@@ -136,7 +155,96 @@ public class OffersProcessor
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new OfferSnapshot(_Data)));
 	}
 
-	OfferSnapshot GetSnapshot(string _OfferID)
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (OfferSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[snapshot.ID] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await m_OffersDescriptor.Upload();
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
+	}
+
+	public async Task Upload(params string[] _OfferIDs)
+	{
+		if (_OfferIDs == null || _OfferIDs.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (string offerID in _OfferIDs)
+		{
+			OfferSnapshot snapshot = GetSnapshot(offerID);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child(offerID).SetValueAsync(data);
+			
+		}
+		
+		await m_OffersDescriptor.Upload(_OfferIDs);
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
+	}
+
+	public void MoveSnapshot(string _OfferID, int _Offset)
+	{
+		int sourceIndex = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _OfferID);
+		int targetIndex = sourceIndex + _Offset;
+		
+		if (sourceIndex < 0 || sourceIndex >= m_Snapshots.Count || targetIndex < 0 || targetIndex >= m_Snapshots.Count)
+			return;
+		
+		(m_Snapshots[sourceIndex], m_Snapshots[targetIndex]) = (m_Snapshots[targetIndex], m_Snapshots[sourceIndex]);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
+		
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
+	}
+
+	public OfferSnapshot CreateSnapshot()
+	{
+		DatabaseReference reference = m_Data.Push();
+		
+		string offerID = reference.Key;
+		
+		OfferSnapshot snapshot = new OfferSnapshot(offerID);
+		
+		m_Snapshots.Insert(0, snapshot);
+		
+		m_OffersDescriptor.CreateDescriptor(snapshot.ID);
+		
+		return snapshot;
+	}
+
+	public void RemoveSnapshot(string _OfferID)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _OfferID);
+		
+		m_OffersDescriptor.RemoveDescriptor(_OfferID);
+		
+		m_SignalBus.Fire<OffersDataUpdateSignal>();
+	}
+
+	public OfferSnapshot GetSnapshot(string _OfferID)
 	{
 		if (m_Snapshots.Count == 0)
 			return null;

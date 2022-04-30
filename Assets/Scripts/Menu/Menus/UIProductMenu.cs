@@ -111,6 +111,15 @@ public class UIProductMenu : UISlideMenu
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
+	public async void Settings()
+	{
+		UIProductSettingsMenu productSettingsMenu = m_MenuProcessor.GetMenu<UIProductSettingsMenu>();
+		
+		productSettingsMenu.Setup(m_ProductID);
+		
+		await m_MenuProcessor.Show(MenuType.ProductSettingsMenu);
+	}
+
 	public void Next()
 	{
 		m_StatisticProcessor.LogProductMenuNextClick(m_ProductID);
@@ -127,7 +136,7 @@ public class UIProductMenu : UISlideMenu
 
 	string GetProductID(int _Offset)
 	{
-		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
+		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
 		int index = productIDs.IndexOf(m_ProductID);
 		if (index >= 0 && index < productIDs.Count)
 			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];

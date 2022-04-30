@@ -1,4 +1,5 @@
 using System;
+using AudioBox.Logging;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -26,6 +27,7 @@ public class UIOfferItem : UIGroupLayout
 
 	[Inject] OffersProcessor       m_OffersProcessor;
 	[Inject] OffersManager         m_OffersManager;
+	[Inject] MenuProcessor         m_MenuProcessor;
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	string         m_OfferID;
@@ -44,6 +46,30 @@ public class UIOfferItem : UIGroupLayout
 		ProcessLabel();
 		
 		ProcessButton();
+	}
+
+	public async void Settings()
+	{
+		UIOfferSettingsMenu offerSettingsMenu = m_MenuProcessor.GetMenu<UIOfferSettingsMenu>();
+		
+		offerSettingsMenu.Setup(m_OfferID);
+		
+		await m_MenuProcessor.Show(MenuType.OfferSettingsMenu);
+	}
+
+	public void Remove()
+	{
+		m_OffersProcessor.RemoveSnapshot(m_OfferID);
+	}
+
+	public void MoveUp()
+	{
+		m_OffersProcessor.MoveSnapshot(m_OfferID, -1);
+	}
+
+	public void MoveDown()
+	{
+		m_OffersProcessor.MoveSnapshot(m_OfferID, 1);
 	}
 
 	public void Process()

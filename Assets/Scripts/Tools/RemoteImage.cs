@@ -24,9 +24,15 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 		}
 	}
 
+	public bool URL
+	{
+		get => m_URL;
+		set => m_URL = value;
+	}
+
 	protected T Graphic => m_Graphic;
 
-	protected abstract Sprite Sprite { get; set; }
+	public abstract Sprite Sprite { get; set; }
 
 	bool Loaded { get; set; }
 
@@ -124,7 +130,7 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		if (m_Atlas == null && !m_URL)
+		if (m_Atlas == null && !m_URL && m_AtlasSize > m_Size)
 			m_Atlas = Atlas.Create(m_AtlasSize, new Vector2Int(m_Size, m_Size));
 		
 		if (m_Atlas != null && m_Atlas.TryAlloc(Path, out Sprite sprite))

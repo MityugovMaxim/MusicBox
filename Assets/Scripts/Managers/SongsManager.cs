@@ -11,6 +11,11 @@ public class SongsManager
 	[Inject] ProgressProcessor m_ProgressProcessor;
 	[Inject] ScoresProcessor   m_ScoresProcessor;
 
+	public List<string> GetSongIDs()
+	{
+		return m_SongsProcessor.GetSongIDs();
+	}
+
 	public List<string> GetLibrarySongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()
@@ -57,38 +62,46 @@ public class SongsManager
 
 	public bool IsSongLockedByProduct(string _SongID)
 	{
-		if (m_ProfileProcessor.HasSong(_SongID))
-			return false;
+		return false;
 		
-		SongMode songMode = m_SongsProcessor.GetMode(_SongID);
-		
-		if (songMode != SongMode.Product)
-			return false;
-		
-		return true;
+		// if (m_ProfileProcessor.HasSong(_SongID))
+		// 	return false;
+		//
+		// SongMode songMode = m_SongsProcessor.GetMode(_SongID);
+		//
+		// if (songMode != SongMode.Product)
+		// 	return false;
+		//
+		// return true;
 	}
 
 	public bool IsSongLockedByLevel(string _SongID)
 	{
-		if (IsSongAvailable(_SongID))
-			return false;
+		return false;
 		
-		int currentLevel  = m_ProfileProcessor.Level;
-		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
-		
-		return currentLevel < requiredLevel;
+		// if (IsSongAvailable(_SongID))
+		// 	return false;
+		//
+		// int currentLevel  = m_ProfileProcessor.Level;
+		// int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
+		//
+		// return currentLevel < requiredLevel;
 	}
 
 	public bool IsSongLockedByCoins(string _SongID)
 	{
-		if (IsSongAvailable(_SongID))
-			return false;
+		return false;
 		
-		return m_SongsProcessor.GetPrice(_SongID) > 0;
+		// if (IsSongAvailable(_SongID))
+		// 	return false;
+		//
+		// return m_SongsProcessor.GetPrice(_SongID) > 0;
 	}
 
 	public bool IsSongAvailable(string _SongID)
 	{
-		return m_ProfileProcessor.HasSong(_SongID);
+		return true;
+		
+		// return m_ProfileProcessor.HasSong(_SongID);
 	}
 }

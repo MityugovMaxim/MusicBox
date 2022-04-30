@@ -68,6 +68,36 @@ public class LocalizationProcessor
 		m_TokenSource = null;
 	}
 
+	public Task Restore()
+	{
+		string language = m_Language;
+		
+		m_Language = null;
+		
+		return Load(language);
+	}
+
+	public Task Upload()
+	{
+		string path = $"Localization/{m_Language}.lang";
+		
+		string json = Json.Serialize(m_Localization);
+		
+		return m_StorageProcessor.UploadJson(path, json, Encoding.Unicode);
+	}
+
+	public Dictionary<string, string> GetLocalization()
+	{
+		return new Dictionary<string, string>(m_Localization);
+	}
+
+	public void SetLocalization(Dictionary<string, string> _Localization)
+	{
+		m_Localization.Clear();
+		foreach (var entry in _Localization)
+			m_Localization[entry.Key] = entry.Value;
+	}
+
 	public string Format(string _Key, object _Arg)
 	{
 		if (string.IsNullOrEmpty(_Key))

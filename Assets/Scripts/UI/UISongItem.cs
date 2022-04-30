@@ -13,19 +13,35 @@ public class UISongItem : UIEntity, IPointerClickHandler
 	[SerializeField] UISongLock  m_Lock;
 	[SerializeField] UISongBadge m_Badge;
 
+	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string m_SongID;
 
-	public void Setup(string _LevelID)
+	public void Setup(string _SongID)
 	{
-		m_SongID = _LevelID;
+		m_SongID = _SongID;
 		
 		m_Image.Setup(m_SongID);
 		m_Discs.Setup(m_SongID);
 		m_Lock.Setup(m_SongID);
 		m_Badge.Setup(m_SongID);
+	}
+
+	public void Remove()
+	{
+		m_SongsProcessor.RemoveSnapshot(m_SongID);
+	}
+
+	public void MoveUp()
+	{
+		m_SongsProcessor.MoveSnapshot(m_SongID, -1);
+	}
+
+	public void MoveDown()
+	{
+		m_SongsProcessor.MoveSnapshot(m_SongID, 1);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

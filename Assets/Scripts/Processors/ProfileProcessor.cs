@@ -90,14 +90,6 @@ public class ProfileProcessor
 		Loaded = true;
 	}
 
-	public List<string> GetVisibleProductIDs()
-	{
-		return m_ProductsProcessor.GetProductIDs()
-			.Where(_ProductID => !HasProduct(_ProductID))
-			.OrderByDescending(_ProductID => Mathf.Abs(m_ProductsProcessor.GetDiscount(_ProductID)))
-			.ToList();
-	}
-
 	public bool HasSong(string _SongID)
 	{
 		if (m_Snapshot == null || m_Snapshot.SongIDs == null)

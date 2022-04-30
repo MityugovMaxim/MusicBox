@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -8,12 +10,58 @@ public class UIMainNewsPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.News;
 
 	[SerializeField] RectTransform m_Container;
+	[SerializeField] UIEntity      m_Control;
 
 	[Inject] SignalBus       m_SignalBus;
 	[Inject] NewsProcessor   m_NewsProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
 	[Inject] UINewsItem.Pool m_ItemPool;
 
 	readonly List<UINewsItem> m_Items = new List<UINewsItem>();
+
+	public void CreateNews()
+	{
+		m_NewsProcessor.CreateSnapshot();
+		
+		Refresh();
+	}
+
+	public async void Upload()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		try
+		{
+			await m_NewsProcessor.Upload();
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception, "Upload news failed.");
+			
+			string message = exception.GetBaseException().Message;
+			
+			await m_MenuProcessor.ErrorAsync(
+				"upload_news",
+				"Upload failed",
+				message
+			);
+		}
+		
+		Refresh();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	public async void Restore()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_NewsProcessor.Load();
+		
+		Refresh();
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
 
 	protected override void OnShowStarted()
 	{
@@ -54,6 +102,8 @@ public class UIMainNewsPage : UIMainMenuPage
 			
 			m_Items.Add(item);
 		}
+		
+		m_Control.BringToFront();
 		
 		for (int i = m_Items.Count - 1; i >= 0; i--)
 		{

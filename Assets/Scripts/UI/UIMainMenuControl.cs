@@ -14,11 +14,11 @@ public class UIMainMenuControl : UIEntity
 	[SerializeField] UIBadge            m_NewsBadge;
 	[SerializeField] UIBadge            m_StoreBadge;
 
-	[Inject] SignalBus        m_SignalBus;
-	[Inject] OffersManager    m_OffersManager;
-	[Inject] SocialProcessor  m_SocialProcessor;
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] NewsProcessor    m_NewsProcessor;
+	[Inject] SignalBus         m_SignalBus;
+	[Inject] OffersManager     m_OffersManager;
+	[Inject] NewsProcessor     m_NewsProcessor;
+	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] SocialProcessor   m_SocialProcessor;
 
 	readonly HashSet<string> m_NewsIDs    = new HashSet<string>();
 	readonly HashSet<string> m_OfferIDs   = new HashSet<string>();
@@ -130,7 +130,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
+		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
 		
 		m_StoreBadge.Value = GetUnreadCount(STORE_KEY, productIDs, m_ProductIDs);
 	}
@@ -151,7 +151,7 @@ public class UIMainMenuControl : UIEntity
 
 	void ReadStore()
 	{
-		Read(STORE_KEY, m_ProfileProcessor.GetVisibleProductIDs(), m_ProductIDs);
+		Read(STORE_KEY, m_ProductsProcessor.GetProductIDs(), m_ProductIDs);
 		
 		m_StoreBadge.Value = 0;
 	}

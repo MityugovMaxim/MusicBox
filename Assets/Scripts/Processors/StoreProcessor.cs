@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
@@ -128,15 +129,19 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		return completionSource.Task;
 	}
 
+	public bool HasProduct(string _ProductID)
+	{
+		Product product = GetProduct(_ProductID);
+		
+		return product?.availableToPurchase ?? false;
+	}
+
 	public string GetPrice(string _ProductID)
 	{
 		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get price failed. Product with ID '{0}' not found.", _ProductID);
 			return "-";
-		}
 		
 		return FormatPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, out string localizedPriceString)
 			? localizedPriceString

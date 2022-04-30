@@ -19,6 +19,49 @@ public class StorageProcessor
 	static readonly Dictionary<string, Task<AudioClip>> m_AudioClipTasks = new Dictionary<string, Task<AudioClip>>();
 	static readonly Dictionary<string, Task<string>>    m_TextTasks      = new Dictionary<string, Task<string>>();
 
+	public Task UploadFile(string _RemotePath, string _LocalPath, CancellationToken _Token = default)
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		if (string.IsNullOrEmpty(_RemotePath))
+		{
+			completionSource.SetResult(false);
+			return completionSource.Task;
+		}
+		
+		if (string.IsNullOrEmpty(_LocalPath))
+		{
+			completionSource.SetResult(false);
+			return completionSource.Task;
+		}
+		
+		if (!File.Exists(_LocalPath))
+		{
+			completionSource.SetResult(false);
+			return completionSource.Task;
+		}
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.GetReference(_RemotePath);
+		
+		reference.PutFileAsync(_LocalPath, cancelToken: _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (_Task.IsFaulted)
+						completionSource.SetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.SetCanceled();
+					else if (_Task.IsCompleted)
+						completionSource.SetResult(true);
+					else
+						completionSource.SetResult(false);
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
+	}
+
 	public Task<Texture2D> LoadTextureAsync(Uri _Uri, CancellationToken _Token = default)
 	{
 		if (_Uri == null)
@@ -177,6 +220,23 @@ public class StorageProcessor
 			);
 		
 		return completionSource.Task;
+	}
+
+	public Task UploadJson(string _RemotePath, string _Json, Encoding _Encoding, CancellationToken _Token = default)
+	{
+		if (string.IsNullOrEmpty(_RemotePath))
+			return null;
+		
+		if (string.IsNullOrEmpty(_Json))
+			return null;
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		
+		byte[] bytes = _Encoding.GetBytes(_Json);
+		
+		byte[] encode = Compression.Compress(bytes);
+		
+		return reference.PutBytesAsync(encode, cancelToken: _Token);
 	}
 
 	static async Task<byte[]> LoadDataAsync(string _RemotePath, bool _Force, CancellationToken _Token = default)

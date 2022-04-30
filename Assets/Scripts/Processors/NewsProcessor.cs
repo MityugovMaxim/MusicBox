@@ -10,10 +10,16 @@ using Zenject;
 public class NewsSnapshot
 {
 	public string ID        { get; }
-	public bool   Active    { get; }
+	public bool   Active    { get; set; }
 	public long   Timestamp { get; }
-	public string URL       { get; }
-	public int    Order     { get; }
+	public string URL       { get; set; }
+	[HideProperty]
+	public int    Order     { get; set; }
+
+	public NewsSnapshot(string _NewsID)
+	{
+		ID = _NewsID;
+	}
 
 	public NewsSnapshot(DataSnapshot _Data)
 	{
@@ -22,6 +28,18 @@ public class NewsSnapshot
 		Timestamp = _Data.GetLong("timestamp");
 		URL       = _Data.GetString("url");
 		Order     = _Data.GetInt("order");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["active"]    = Active;
+		data["timestamp"] = Timestamp;
+		data["url"]       = URL;
+		data["order"]     = Order;
+		
+		return data;
 	}
 }
 
@@ -65,8 +83,8 @@ public class NewsProcessor
 	{
 		return m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
-			.OrderByDescending(_Snapshot => _Snapshot.Timestamp)
+			.OrderBy(_Snapshot => _Snapshot.Order)
+			.ThenByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
@@ -123,7 +141,95 @@ public class NewsProcessor
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new NewsSnapshot(_Data)));
 	}
 
-	NewsSnapshot GetSnapshot(string _NewsID)
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (NewsSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[snapshot.ID] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await m_NewsDescriptor.Upload();
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<NewsDataUpdateSignal>();
+	}
+
+	public async Task Upload(params string[] _NewsIDs)
+	{
+		if (_NewsIDs == null || _NewsIDs.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (string newsID in _NewsIDs)
+		{
+			NewsSnapshot snapshot = GetSnapshot(newsID);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child(newsID).SetValueAsync(data);
+		}
+		
+		await m_NewsDescriptor.Upload(_NewsIDs);
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<NewsDataUpdateSignal>();
+	}
+
+	public void MoveSnapshot(string _NewsID, int _Offset)
+	{
+		int sourceIndex = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _NewsID);
+		int targetIndex = sourceIndex + _Offset;
+		
+		if (sourceIndex < 0 || sourceIndex >= m_Snapshots.Count || targetIndex < 0 || targetIndex >= m_Snapshots.Count)
+			return;
+		
+		(m_Snapshots[sourceIndex], m_Snapshots[targetIndex]) = (m_Snapshots[targetIndex], m_Snapshots[sourceIndex]);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
+		
+		m_SignalBus.Fire<NewsDataUpdateSignal>();
+	}
+
+	public NewsSnapshot CreateSnapshot()
+	{
+		DatabaseReference reference = m_Data.Push();
+		
+		string newsID = reference.Key;
+		
+		NewsSnapshot snapshot = new NewsSnapshot(newsID);
+		
+		m_Snapshots.Insert(0, snapshot);
+		
+		m_NewsDescriptor.CreateDescriptor(snapshot.ID);
+		
+		return snapshot;
+	}
+
+	public void RemoveSnapshot(string _NewsID)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _NewsID);
+		
+		m_NewsDescriptor.RemoveDescriptor(_NewsID);
+		
+		m_SignalBus.Fire<NewsDataUpdateSignal>();
+	}
+
+	public NewsSnapshot GetSnapshot(string _NewsID)
 	{
 		if (m_Snapshots.Count == 0)
 			return null;
