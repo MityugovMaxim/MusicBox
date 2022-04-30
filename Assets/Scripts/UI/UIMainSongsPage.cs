@@ -107,34 +107,34 @@ public class UIMainSongsPage : UIMainMenuPage
 		CreateItems(string.Empty, songIDs);
 	}
 
-	void CreateLibrary()
-	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
-		
-		CreateItems(string.Empty, songIDs);
-	}
-
-	void CreateCoinsLocked()
-	{
-		List<string> songIDs = m_SongsManager.GetCoinsSongIDs();
-		
-		CreateItems(GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>"), songIDs);
-	}
-
-	void CreateProductsLocked()
-	{
-		List<string> songIDs = m_SongsManager.GetProductSongIDs();
-		
-		CreateItems(GetLocalization("SONG_GROUP_PRODUCTS", "<sprite name=shop_icon>"), songIDs);
-	}
-
-	void CreateLevelLocked()
-	{
-		Dictionary<int, string[]> groups = m_SongsManager.GetLockedSongIDs();
-		
-		foreach (var group in groups)
-			CreateItems(GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>"), group.Value);
-	}
+	// void CreateLibrary()
+	// {
+	// 	List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
+	// 	
+	// 	CreateItems(string.Empty, songIDs);
+	// }
+	//
+	// void CreateCoinsLocked()
+	// {
+	// 	List<string> songIDs = m_SongsManager.GetCoinsSongIDs();
+	// 	
+	// 	CreateItems(GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>"), songIDs);
+	// }
+	//
+	// void CreateProductsLocked()
+	// {
+	// 	List<string> songIDs = m_SongsManager.GetProductSongIDs();
+	// 	
+	// 	CreateItems(GetLocalization("SONG_GROUP_PRODUCTS", "<sprite name=shop_icon>"), songIDs);
+	// }
+	//
+	// void CreateLevelLocked()
+	// {
+	// 	Dictionary<int, string[]> groups = m_SongsManager.GetLockedSongIDs();
+	// 	
+	// 	foreach (var group in groups)
+	// 		CreateItems(GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>"), group.Value);
+	// }
 
 	void CreateItems(string _Title, ICollection<string> _SongIDs)
 	{

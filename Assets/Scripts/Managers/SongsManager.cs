@@ -6,7 +6,6 @@ using Zenject;
 [Preserve]
 public class SongsManager
 {
-	[Inject] ProfileProcessor  m_ProfileProcessor;
 	[Inject] SongsProcessor    m_SongsProcessor;
 	[Inject] ProgressProcessor m_ProgressProcessor;
 	[Inject] ScoresProcessor   m_ScoresProcessor;

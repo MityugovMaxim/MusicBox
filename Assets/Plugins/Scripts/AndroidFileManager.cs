@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 public class AndroidFileManager : IFileManager
 {
@@ -15,6 +16,7 @@ public class AndroidFileManager : IFileManager
 			m_Action = _Action;
 		}
 
+		[Preserve]
 		void Invoke(string _Path)
 		{
 			m_Action?.Invoke(_Path);
@@ -30,6 +32,7 @@ public class AndroidFileManager : IFileManager
 			m_Action = _Action;
 		}
 
+		[Preserve]
 		void Invoke()
 		{
 			m_Action?.Invoke();
@@ -45,6 +48,7 @@ public class AndroidFileManager : IFileManager
 			m_Action = _Action;
 		}
 
+		[Preserve]
 		void Invoke(string _Error)
 		{
 			m_Action?.Invoke(_Error);
@@ -60,7 +64,7 @@ public class AndroidFileManager : IFileManager
 	Action         m_Cancel;
 	Action<string> m_Fail;
 
-	Task<string> IFileManager.SelectFile(string _Extension, CancellationToken _Token = default)
+	Task<string> IFileManager.SelectFile(string _Extension, CancellationToken _Token)
 	{
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 
