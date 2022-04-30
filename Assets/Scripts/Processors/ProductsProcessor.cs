@@ -10,6 +10,7 @@ using Zenject;
 
 public class ProductSnapshot
 {
+	[ClipboardProperty]
 	public string       ID       { get; set; }
 	public bool         Active   { get; set; }
 	public ProductType  Type     { get; set; }
@@ -18,6 +19,8 @@ public class ProductSnapshot
 	public long         Coins    { get; set; }
 	public float        Discount { get; set; }
 	public List<string> SongIDs  { get; set; }
+	[HideProperty]
+	public int          Order    { get; set; }
 
 	public ProductSnapshot(string _ProductID)
 	{
@@ -35,6 +38,7 @@ public class ProductSnapshot
 		Discount = _Data.GetFloat("discount");
 		NoAds    = _Data.GetBool("no_ads");
 		SongIDs  = _Data.GetChildKeys("song_ids");
+		Order    = _Data.GetInt("order");
 	}
 
 	public Dictionary<string, object> Serialize()
@@ -48,6 +52,7 @@ public class ProductSnapshot
 		data["discount"] = Discount;
 		data["no_ads"]   = NoAds;
 		data["song_ids"] = SongIDs;
+		data["order"]    = Order;
 		
 		return data;
 	}
@@ -185,9 +190,10 @@ public class ProductsProcessor
 	{
 		ProductSnapshot snapshot = m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
+			.OrderBy(_Snapshot => _Snapshot.Order)
+			.ThenByDescending(_Snapshot => _Snapshot.Coins)
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Type == ProductType.Consumable)
-			.OrderBy(_Snapshot => _Snapshot.Coins)
 			.Aggregate((_A, _B) => _A.Coins < _B.Coins && _A.Coins >= _Coins ? _A : _B);
 		
 		return snapshot?.ID;
@@ -222,6 +228,29 @@ public class ProductsProcessor
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new ProductSnapshot(_Data)));
 	}
 
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (ProductSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[snapshot.ID] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await m_ProductsDescriptor.Upload();
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<ProductsDataUpdateSignal>();
+	}
+
 	public async Task Upload(params string[] _ProductIDs)
 	{
 		if (_ProductIDs == null || _ProductIDs.Length == 0)
@@ -238,9 +267,29 @@ public class ProductsProcessor
 			await m_Data.Child(productID).SetValueAsync(data);
 		}
 		
+		await m_ProductsDescriptor.Upload(_ProductIDs);
+		
 		await Fetch();
 		
 		Loaded = true;
+		
+		m_SignalBus.Fire<ProductsDataUpdateSignal>();
+	}
+
+	public void MoveSnapshot(string _NewsID, int _Offset)
+	{
+		int sourceIndex = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _NewsID);
+		int targetIndex = sourceIndex + _Offset;
+		
+		if (sourceIndex < 0 || sourceIndex >= m_Snapshots.Count || targetIndex < 0 || targetIndex >= m_Snapshots.Count)
+			return;
+		
+		(m_Snapshots[sourceIndex], m_Snapshots[targetIndex]) = (m_Snapshots[targetIndex], m_Snapshots[sourceIndex]);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
+		
+		m_SignalBus.Fire<ProductsDataUpdateSignal>();
 	}
 
 	public ProductSnapshot CreateSnapshot()
@@ -253,7 +302,18 @@ public class ProductsProcessor
 		
 		m_Snapshots.Insert(0, snapshot);
 		
+		m_ProductsDescriptor.CreateDescriptor(snapshot.ID);
+		
 		return snapshot;
+	}
+
+	public void RemoveSnapshot(string _ProductID)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _ProductID);
+		
+		m_ProductsDescriptor.RemoveDescriptor(_ProductID);
+		
+		m_SignalBus.Fire<ProductsDataUpdateSignal>();
 	}
 
 	public ProductSnapshot GetSnapshot(string _ProductID)

@@ -12,6 +12,7 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 	[SerializeField] UIProductDiscount m_Discount;
 	[SerializeField] UIProductPrice    m_Price;
 
+	[Inject] ProductsProcessor  m_ProductsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
@@ -24,6 +25,21 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 		m_Image.Setup(m_ProductID);
 		m_Discount.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
+	}
+
+	public void Remove()
+	{
+		m_ProductsProcessor.RemoveSnapshot(m_ProductID);
+	}
+
+	public void MoveUp()
+	{
+		m_ProductsProcessor.MoveSnapshot(m_ProductID, -1);
+	}
+
+	public void MoveDown()
+	{
+		m_ProductsProcessor.MoveSnapshot(m_ProductID, 1);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

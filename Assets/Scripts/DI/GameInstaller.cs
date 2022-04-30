@@ -12,6 +12,7 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] UISongItem        m_SongItem;
 	[SerializeField] UISongGroup       m_SongGroup;
 	[SerializeField] UIProductItem     m_ProductItem;
+	[SerializeField] UIProductGroup    m_ProductGroup;
 	[SerializeField] UIOfferItem       m_OfferItem;
 	[SerializeField] UINewsItem        m_NewsItem;
 	[SerializeField] UISongUnlockItem  m_SongUnlockItem;
@@ -46,6 +47,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		
 		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
+		InstallPool<UIProductGroup, UIProductGroup.Pool>(m_ProductGroup);
 		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
 		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem);
 		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem);
