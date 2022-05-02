@@ -5,6 +5,11 @@ using System.Text;
 
 public static class StringExtension
 {
+	public static string ToUnique(this string _String, char _Separator, ICollection<string> _Values)
+	{
+		return _Values != null ? _String.ToUnique(_Separator, _Values.Contains) : _String;
+	}
+
 	public static string ToUnique(this string _String, char _Separator, Func<string, bool> _Selector)
 	{
 		if (_Selector == null)

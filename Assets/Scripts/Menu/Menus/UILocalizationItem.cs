@@ -29,7 +29,7 @@ public class UILocalizationItem : UIEntity
 		m_Open   = _Open;
 		m_Remove = _Remove;
 		
-		m_Label.text = !string.IsNullOrEmpty(_Key) ? _Key : "[EMPTY]";
+		m_Label.text = !string.IsNullOrEmpty(Key) ? Key : "[EMPTY]";
 		
 		m_OpenButton.onClick.RemoveAllListeners();
 		m_OpenButton.onClick.AddListener(Open);

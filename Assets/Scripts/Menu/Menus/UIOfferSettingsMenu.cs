@@ -54,6 +54,17 @@ public class UIOfferSettingsMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.OfferSettingsMenu);
 	}
 
+	public async void Restore()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_OffersProcessor.Load();
+		
+		Setup(m_OfferID);
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
 	public async void Upload()
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);

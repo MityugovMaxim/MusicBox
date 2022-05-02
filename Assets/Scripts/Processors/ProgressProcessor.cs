@@ -214,6 +214,27 @@ public class ProgressProcessor
 		m_SignalBus.Fire<ProgressDataUpdateSignal>();
 	}
 
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (ProgressSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[$"level_{snapshot.Level}"] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<ProgressDataUpdateSignal>();
+	}
+
 	public async Task Upload(params int[] _Levels)
 	{
 		if (_Levels == null || _Levels.Length == 0)
@@ -233,6 +254,8 @@ public class ProgressProcessor
 		await Fetch();
 		
 		Loaded = true;
+		
+		m_SignalBus.Fire<ProgressDataUpdateSignal>();
 	}
 
 	public ProgressSnapshot CreateSnapshot()
@@ -246,6 +269,13 @@ public class ProgressProcessor
 		return snapshot;
 	}
 
+	public void RemoveSnapshot(int _Level)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.Level == _Level);
+		
+		m_SignalBus.Fire<ProgressDataUpdateSignal>();
+	}
+
 	public ProgressSnapshot GetSnapshot(int _Level)
 	{
 		if (m_Snapshots.Count == 0)
@@ -256,7 +286,6 @@ public class ProgressProcessor
 		int level    = Mathf.Clamp(_Level, minLevel, maxLevel);
 		
 		ProgressSnapshot snapshot = m_Snapshots
-			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
 		

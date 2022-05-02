@@ -13,8 +13,9 @@ public class UISongSettingsMenu : UIMenu
 	[SerializeField] UIAudioField       m_Music;
 	[SerializeField] UISerializedObject m_Fields;
 
-	[Inject] SongsProcessor m_SongsProcessor;
-	[Inject] MenuProcessor  m_MenuProcessor;
+	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	string       m_SongID;
 	SongSnapshot m_Snapshot;
@@ -46,6 +47,14 @@ public class UISongSettingsMenu : UIMenu
 
 	public async void Back()
 	{
+		m_AmbientProcessor.Resume();
+		
+		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
+		
+		songMenu.Setup(m_SongID);
+		
+		await m_MenuProcessor.Show(MenuType.SongMenu, true);
+		
 		await m_MenuProcessor.Hide(MenuType.SongSettingsMenu);
 	}
 
@@ -84,5 +93,12 @@ public class UISongSettingsMenu : UIMenu
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	protected override async void OnShowFinished()
+	{
+		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
+		
+		m_AmbientProcessor.Pause();
 	}
 }

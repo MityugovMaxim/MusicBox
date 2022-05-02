@@ -17,7 +17,7 @@ public static class AudioSourceExtension
 			float time = 0;
 			while (time < _Duration)
 			{
-				await UnityTask.Yield();
+				await UnityTask.Yield(CancellationToken.None);
 				
 				if (_Token.IsCancellationRequested)
 					return;

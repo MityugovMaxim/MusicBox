@@ -58,6 +58,15 @@ public class UISongMenu : UISlideMenu
 		await m_MenuProcessor.Show(MenuType.SongSettingsMenu);
 	}
 
+	public async void Edit()
+	{
+		UISongEditMenu songEditMenu = m_MenuProcessor.GetMenu<UISongEditMenu>();
+		
+		songEditMenu.Setup(m_SongID);
+		
+		await songEditMenu.Load();
+	}
+
 	public async void Unlock()
 	{
 		if (!m_SongsManager.IsSongLockedByCoins(m_SongID))

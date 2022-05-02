@@ -345,11 +345,11 @@ public class SongController
 		return m_StorageProcessor.LoadAudioClipAsync(path, _Token);
 	}
 
-	async Task<string> LoadASFAsync(string _SongID, CancellationToken _Token = default)
+	Task<string> LoadASFAsync(string _SongID, CancellationToken _Token = default)
 	{
 		string path = $"Songs/{_SongID}.asf";
 		
-		return await m_StorageProcessor.LoadJson(path, _Token);
+		return m_StorageProcessor.LoadJson(path, _Token);
 	}
 
 	void DisableAudio()

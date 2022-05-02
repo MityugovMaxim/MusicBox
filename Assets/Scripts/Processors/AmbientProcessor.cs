@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using Zenject;
@@ -10,15 +11,34 @@ using Random = UnityEngine.Random;
 
 public class AmbientSnapshot
 {
-	public string ID     { get; }
-	public bool   Active { get; }
-	public float  Volume { get; }
+	public string ID     { get; set; }
+	public bool   Active { get; set; }
+	public float  Volume { get; set; }
+	[HideProperty]
+	public int    Order  { get; set; }
+
+	public AmbientSnapshot(string _ID)
+	{
+		ID     = _ID;
+		Volume = 0.5f;
+	}
 
 	public AmbientSnapshot(DataSnapshot _Data)
 	{
 		ID     = _Data.Key;
 		Active = _Data.GetBool("active");
 		Volume = _Data.GetFloat("volume");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["active"] = Active;
+		data["volume"] = Volume;
+		data["order"]  = Order;
+		
+		return data;
 	}
 }
 
@@ -30,12 +50,12 @@ public class AmbientProcessor : MonoBehaviour
 
 	bool Loaded { get; set; }
 
-	readonly List<AmbientSnapshot> m_AmbientSnapshots = new List<AmbientSnapshot>();
+	readonly List<AmbientSnapshot> m_Snapshots = new List<AmbientSnapshot>();
 
 	SignalBus        m_SignalBus;
 	StorageProcessor m_StorageProcessor;
 
-	DatabaseReference m_AmbientData;
+	DatabaseReference m_Data;
 
 	string                  m_AmbientID;
 	bool                    m_Processing;
@@ -43,18 +63,6 @@ public class AmbientProcessor : MonoBehaviour
 	bool                    m_Locked;
 	AudioSource             m_AudioSource;
 	CancellationTokenSource m_TokenSource;
-
-	void Update()
-	{
-		if (Input.GetKeyDown(KeyCode.G))
-		{
-			Pause();
-		}
-		if (Input.GetKeyDown(KeyCode.H))
-		{
-			Resume();
-		}
-	}
 
 	[Inject]
 	public void Construct(SignalBus _SignalBus, StorageProcessor _StorageProcessor)
@@ -69,13 +77,13 @@ public class AmbientProcessor : MonoBehaviour
 
 	public async Task Load()
 	{
-		if (m_AmbientData == null)
+		if (m_Data == null)
 		{
-			m_AmbientData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ambient");
-			m_AmbientData.ValueChanged += OnAmbientUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ambient");
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FetchAmbient();
+		await Fetch();
 		
 		Loaded = true;
 		
@@ -84,15 +92,15 @@ public class AmbientProcessor : MonoBehaviour
 
 	public List<string> GetAmbientIDs()
 	{
-		return m_AmbientSnapshots
-			.Where(_Snapshot => _Snapshot.Active)
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
 
 	public float GetVolume(string _AmbientID)
 	{
-		AmbientSnapshot ambientSnapshot = GetAmbientSnapshot(_AmbientID);
+		AmbientSnapshot ambientSnapshot = GetSnapshot(_AmbientID);
 		
 		if (ambientSnapshot == null)
 		{
@@ -207,11 +215,11 @@ public class AmbientProcessor : MonoBehaviour
 		if (m_AudioSource == null || m_AudioSource.isPlaying || m_Paused)
 			return;
 		
-		while (m_AmbientSnapshots != null && m_AmbientSnapshots.Count > 0)
+		while (m_Snapshots != null && m_Snapshots.Count > 0)
 		{
 			string ambientID = GetAmbientID(m_AmbientID, 1);
 			
-			AmbientSnapshot ambientSnapshot = GetAmbientSnapshot(ambientID);
+			AmbientSnapshot ambientSnapshot = GetSnapshot(ambientID);
 			
 			if (ambientSnapshot == null)
 			{
@@ -225,42 +233,113 @@ public class AmbientProcessor : MonoBehaviour
 		}
 	}
 
-	async void OnAmbientUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
 		Debug.Log("[MusicProcessor] Updating ambient data...");
 		
-		await FetchAmbient();
+		await Fetch();
 		
 		Debug.Log("[MusicProcessor] Update ambient data complete.");
 		
 		ProcessAmbient();
 	}
 
-	async Task FetchAmbient()
+	async Task Fetch()
 	{
-		m_AmbientSnapshots.Clear();
+		m_Snapshots.Clear();
 		
-		DataSnapshot dataSnapshot = await m_AmbientData.GetValueAsync();
+		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync();
 		
-		foreach (DataSnapshot ambientSnapshot in dataSnapshot.Children)
+		if (dataSnapshot == null)
 		{
-			AmbientSnapshot ambient = new AmbientSnapshot(ambientSnapshot);
-			if (ambient.Active)
-				m_AmbientSnapshots.Add(ambient);
+			Log.Error(this, "Fetch ambient failed.");
+			return;
 		}
 		
-		for (int i = 0; i < m_AmbientSnapshots.Count; i++)
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new AmbientSnapshot(_Data)));
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
 		{
-			int j = Random.Range(i, m_AmbientSnapshots.Count);
+			int j = Random.Range(i, m_Snapshots.Count);
 			
-			(m_AmbientSnapshots[i], m_AmbientSnapshots[j]) = (m_AmbientSnapshots[j], m_AmbientSnapshots[i]);
+			(m_Snapshots[i], m_Snapshots[j]) = (m_Snapshots[j], m_Snapshots[i]);
 		}
 	}
 
-	AmbientSnapshot GetAmbientSnapshot(string _AmbientID)
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (AmbientSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[snapshot.ID] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await Fetch();
+		
+		Loaded = true;
+	}
+
+	public async Task Upload(params string[] _AmbientIDs)
+	{
+		if (_AmbientIDs == null || _AmbientIDs.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (string ambientID in _AmbientIDs)
+		{
+			AmbientSnapshot snapshot = GetSnapshot(ambientID);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child(ambientID).SetValueAsync(data);
+		}
+		
+		await Fetch();
+		
+		Loaded = true;
+	}
+
+	public void MoveSnapshot(string _AmbientID, int _Offset)
+	{
+		int sourceIndex = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _AmbientID);
+		int targetIndex = sourceIndex + _Offset;
+		
+		if (sourceIndex < 0 || sourceIndex >= m_Snapshots.Count || targetIndex < 0 || targetIndex >= m_Snapshots.Count)
+			return;
+		
+		(m_Snapshots[sourceIndex], m_Snapshots[targetIndex]) = (m_Snapshots[targetIndex], m_Snapshots[sourceIndex]);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
+	}
+
+	public AmbientSnapshot CreateSnapshot(string _AmbientID)
+	{
+		string ambientID = _AmbientID.ToUnique('_', GetAmbientIDs());
+		
+		AmbientSnapshot snapshot = new AmbientSnapshot(ambientID);
+		
+		m_Snapshots.Insert(0, snapshot);
+		
+		return snapshot;
+	}
+
+	public void RemoveSnapshot(string _AmbientID)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _AmbientID);
+	}
+
+	public AmbientSnapshot GetSnapshot(string _AmbientID)
 	{
 		if (string.IsNullOrEmpty(_AmbientID))
 		{
@@ -268,7 +347,7 @@ public class AmbientProcessor : MonoBehaviour
 			return null;
 		}
 		
-		return m_AmbientSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AmbientID);
+		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AmbientID);
 	}
 
 	string GetAmbientID(string _AmbientID, int _Offset)

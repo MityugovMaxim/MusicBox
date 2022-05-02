@@ -9,11 +9,19 @@ using Zenject;
 
 public class BannerSnapshot
 {
-	public string ID        { get; }
-	public bool   Active    { get; }
+	public string ID        { get; set; }
+	public bool   Active    { get; set; }
 	public string Language  { get; }
-	public bool   Permanent { get; }
-	public string URL       { get; }
+	public bool   Permanent { get; set; }
+	public string URL       { get; set; }
+	public int    Order     { get; set; }
+
+	public BannerSnapshot(string _BannerID, string _Language)
+	{
+		ID       = _BannerID;
+		Language = _Language;
+		URL      = string.Empty;
+	}
 
 	public BannerSnapshot(DataSnapshot _Data)
 	{
@@ -22,6 +30,19 @@ public class BannerSnapshot
 		Language  = _Data.GetString("language");
 		Permanent = _Data.GetBool("permanent");
 		URL       = _Data.GetString("url");
+	}
+
+	public Dictionary<string, object> Serialize()
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["active"]    = Active;
+		data["language"]  = Language;
+		data["permanent"] = Permanent;
+		data["url"]       = URL;
+		data["order"]     = Order;
+		
+		return data;
 	}
 }
 
@@ -68,7 +89,6 @@ public class BannersProcessor : IInitializable, IDisposable
 	{
 		return m_Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
@@ -142,7 +162,86 @@ public class BannersProcessor : IInitializable, IDisposable
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new BannerSnapshot(_Data)));
 	}
 
-	BannerSnapshot GetSnapshot(string _BannerID)
+	public async Task Upload()
+	{
+		Loaded = false;
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		foreach (BannerSnapshot snapshot in m_Snapshots)
+		{
+			if (snapshot != null)
+				data[snapshot.ID] = snapshot.Serialize();
+		}
+		
+		await m_Data.SetValueAsync(data);
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<BannersDataUpdateSignal>();
+	}
+
+	public async Task Upload(params string[] _BannerIDs)
+	{
+		if (_BannerIDs == null || _BannerIDs.Length == 0)
+			return;
+		
+		Loaded = false;
+		
+		foreach (string bannerID in _BannerIDs)
+		{
+			BannerSnapshot snapshot = GetSnapshot(bannerID);
+			
+			Dictionary<string, object> data = snapshot?.Serialize();
+			
+			await m_Data.Child(bannerID).SetValueAsync(data);
+		}
+		
+		await Fetch();
+		
+		Loaded = true;
+		
+		m_SignalBus.Fire<BannersDataUpdateSignal>();
+	}
+
+	public void MoveSnapshot(string _BannerID, int _Offset)
+	{
+		int sourceIndex = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _BannerID);
+		int targetIndex = sourceIndex + _Offset;
+		
+		if (sourceIndex < 0 || sourceIndex >= m_Snapshots.Count || targetIndex < 0 || targetIndex >= m_Snapshots.Count)
+			return;
+		
+		(m_Snapshots[sourceIndex], m_Snapshots[targetIndex]) = (m_Snapshots[targetIndex], m_Snapshots[sourceIndex]);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
+		
+		m_SignalBus.Fire<BannersDataUpdateSignal>();
+	}
+
+	public BannerSnapshot CreateSnapshot(string _BannerID)
+	{
+		string bannerID = _BannerID.ToUnique('_', GetBannerIDs());
+		string language = m_LanguageProcessor.Language;
+		
+		BannerSnapshot snapshot = new BannerSnapshot(bannerID, language);
+		
+		m_Snapshots.Insert(0, snapshot);
+		
+		return snapshot;
+	}
+
+	public void RemoveSnapshot(string _BannerID)
+	{
+		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _BannerID);
+		
+		m_SignalBus.Fire<BannersDataUpdateSignal>();
+	}
+
+	public BannerSnapshot GetSnapshot(string _BannerID)
 	{
 		if (string.IsNullOrEmpty(_BannerID))
 		{

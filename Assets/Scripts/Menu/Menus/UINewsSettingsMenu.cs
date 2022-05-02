@@ -54,6 +54,17 @@ public class UINewsSettingsMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.NewsSettingsMenu);
 	}
 
+	public async void Restore()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_NewsProcessor.Load();
+		
+		Setup(m_NewsID);
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
 	public async void Upload()
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
@@ -70,7 +81,7 @@ public class UINewsSettingsMenu : UIMenu
 		}
 		catch (Exception exception)
 		{
-			Log.Exception(this, exception, "Upload news failed. News ID: '{0}'.", m_NewsID);
+			Log.Exception(this, exception, "Upload news failed.");
 			
 			string message = exception.GetBaseException().Message;
 			

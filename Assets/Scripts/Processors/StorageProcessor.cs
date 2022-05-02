@@ -134,7 +134,7 @@ public class StorageProcessor
 	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, CancellationToken _Token = default)
 	{
 		if (string.IsNullOrEmpty(_RemotePath))
-			return null;
+			return Task.FromResult<AudioClip>(null);
 		
 		if (m_AudioClipTasks.TryGetValue(_RemotePath, out Task<AudioClip> task))
 			return task;

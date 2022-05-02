@@ -99,6 +99,16 @@ public class UIMainProfilePage : UIMainMenuPage
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
+	public async void Interstitial()
+	{
+		await m_MenuProcessor.Show(MenuType.InterstitialMenu);
+	}
+
+	public async void Ambient()
+	{
+		await m_MenuProcessor.Show(MenuType.AmbientMenu);
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();

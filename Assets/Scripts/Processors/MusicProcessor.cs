@@ -8,8 +8,6 @@ public class MusicProcessor : MonoBehaviour
 	const float PLAY_FADE_DURATION = 0.5f;
 	const float STOP_FADE_DURATION = 0.25f;
 
-	public bool Playing => m_AudioSource.isPlaying;
-
 	AudioSource m_AudioSource;
 
 	StorageProcessor m_StorageProcessor;
@@ -63,8 +61,15 @@ public class MusicProcessor : MonoBehaviour
 		
 		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(_Path, token);
 		
-		if (audioClip == null || token.IsCancellationRequested)
+		if (token.IsCancellationRequested)
 			return;
+		
+		if (audioClip == null)
+		{
+			m_TokenSource?.Dispose();
+			m_TokenSource = null;
+			return;
+		}
 		
 		m_AudioSource.Stop();
 		m_AudioSource.clip = audioClip;

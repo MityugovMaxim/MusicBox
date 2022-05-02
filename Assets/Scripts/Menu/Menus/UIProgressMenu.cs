@@ -34,16 +34,11 @@ public class UIProgressMenu : UIMenu
 
 	public async void Upload()
 	{
-		int[] levels = m_Items
-			.Where(_Item => _Item != null)
-			.Select(_Item => _Item.Level)
-			.ToArray();
-		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
 		try
 		{
-			await m_ProgressProcessor.Upload(levels);
+			await m_ProgressProcessor.Upload();
 		}
 		catch (Exception exception)
 		{
@@ -119,6 +114,8 @@ public class UIProgressMenu : UIMenu
 
 	void Remove(int _Level)
 	{
+		m_ProgressProcessor.RemoveSnapshot(_Level);
+		
 		bool Predicate(UIProgressItem _Item) => _Item.Level == _Level;
 		
 		List<UIProgressItem> items = m_Items.FindAll(Predicate);

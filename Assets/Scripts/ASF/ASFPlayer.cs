@@ -167,9 +167,9 @@ namespace AudioBox.ASF
 				track.Sample(Time, minTime, maxTime);
 		}
 
-		protected IDictionary<string, object> Serialize()
+		public Dictionary<string, object> Serialize()
 		{
-			IDictionary<string, object> data = new Dictionary<string, object>();
+			Dictionary<string, object> data = new Dictionary<string, object>();
 			
 			foreach (ASFTrack track in m_Tracks)
 			{
@@ -187,7 +187,7 @@ namespace AudioBox.ASF
 			return data;
 		}
 
-		protected void Deserialize(string _ASF)
+		public void Deserialize(string _ASF)
 		{
 			Dictionary<string, object> asf = Json.Deserialize(_ASF) as Dictionary<string, object>;
 			
