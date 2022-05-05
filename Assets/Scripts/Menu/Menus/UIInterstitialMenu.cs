@@ -61,13 +61,7 @@ public class UIInterstitialMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload banners failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_banners",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

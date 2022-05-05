@@ -7,11 +7,11 @@ using UnityEngine.Scripting;
 
 public class AndroidFileManager : IFileManager
 {
-	public class SelectSuccessHandler : AndroidJavaProxy
+	public class SuccessHandler : AndroidJavaProxy
 	{
 		readonly Action<string> m_Action;
 
-		public SelectSuccessHandler(Action<string> _Action) : base(SUCCESS_NAME)
+		public SuccessHandler(Action<string> _Action) : base(SUCCESS_NAME)
 		{
 			m_Action = _Action;
 		}
@@ -23,11 +23,11 @@ public class AndroidFileManager : IFileManager
 		}
 	}
 
-	public class SelectCancelHandler : AndroidJavaProxy
+	public class CancelHandler : AndroidJavaProxy
 	{
 		readonly Action m_Action;
 
-		public SelectCancelHandler(Action _Action) : base(CANCEL_NAME)
+		public CancelHandler(Action _Action) : base(CANCEL_NAME)
 		{
 			m_Action = _Action;
 		}
@@ -39,11 +39,11 @@ public class AndroidFileManager : IFileManager
 		}
 	}
 
-	public class SelectFailHandler : AndroidJavaProxy
+	public class FailHandler : AndroidJavaProxy
 	{
 		readonly Action<string> m_Action;
 
-		public SelectFailHandler(Action<string> _Action) : base(FAIL_NAME)
+		public FailHandler(Action<string> _Action) : base(FAIL_NAME)
 		{
 			m_Action = _Action;
 		}
@@ -56,9 +56,9 @@ public class AndroidFileManager : IFileManager
 	}
 
 	const string CLASS_NAME   = "com.audiobox.filecontroller.FileController";
-	const string SUCCESS_NAME = "com.audiobox.filecontroller.SelectSuccessHandler";
-	const string CANCEL_NAME  = "com.audiobox.filecontroller.SelectCancelHandler";
-	const string FAIL_NAME    = "com.audiobox.filecontroller.SelectFailHandler";
+	const string SUCCESS_NAME = "com.audiobox.filecontroller.SuccessHandler";
+	const string CANCEL_NAME  = "com.audiobox.filecontroller.CancelHandler";
+	const string FAIL_NAME    = "com.audiobox.filecontroller.FailHandler";
 
 	Action<string> m_Success;
 	Action         m_Cancel;
@@ -67,7 +67,7 @@ public class AndroidFileManager : IFileManager
 	Task<string> IFileManager.SelectFile(string _Extension, CancellationToken _Token)
 	{
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
-
+		
 		if (_Token.IsCancellationRequested)
 		{
 			completionSource.SetCanceled();
@@ -85,9 +85,9 @@ public class AndroidFileManager : IFileManager
 			controller.CallStatic(
 				"SelectFile",
 				_Extension,
-				new SelectSuccessHandler(m_Success),
-				new SelectCancelHandler(m_Cancel),
-				new SelectFailHandler(m_Fail)
+				new SuccessHandler(m_Success),
+				new CancelHandler(m_Cancel),
+				new FailHandler(m_Fail)
 			);
 		}
 		

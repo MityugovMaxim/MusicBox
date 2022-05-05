@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -38,7 +40,17 @@ public class UIImageField : UIEntity
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		await m_StorageProcessor.UploadFile(m_RemotePath, m_LocalPath);
+		try
+		{
+			await m_StorageProcessor.UploadFile(m_RemotePath, m_LocalPath);
+		}
+		catch (TaskCanceledException) { }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception, "Upload image failed. Remote path: {0} Local path: {1}.", m_RemotePath, m_LocalPath);
+			
+			await m_MenuProcessor.ExceptionAsync("Upload image failed", exception);
+		}
 		
 		m_Image.URL  = false;
 		m_Image.Path = m_RemotePath;
@@ -57,6 +69,12 @@ public class UIImageField : UIEntity
 			m_LocalPath = await m_FileManager.SelectFile("jpg");
 		}
 		catch (TaskCanceledException) { }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+			
+			await m_MenuProcessor.ExceptionAsync("Select image failed", exception);
+		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu);
 		

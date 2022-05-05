@@ -27,6 +27,16 @@ public class SocialProcessor : IInitializable, IDisposable
 	FirebaseUser m_User;
 	bool         m_Online;
 
+	public Task UpdateAsync()
+	{
+		m_User = FirebaseAuth.DefaultInstance.CurrentUser;
+		
+		if (m_User == null)
+			return Task.FromException(new NullReferenceException("User is null"));
+		
+		return m_User.ReloadAsync().ContinueWith(_Task => m_User.TokenAsync(true));
+	}
+
 	public async Task<bool> Login()
 	{
 		m_Auth = FirebaseAuth.DefaultInstance;

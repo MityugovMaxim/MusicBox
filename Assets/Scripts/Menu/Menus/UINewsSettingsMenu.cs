@@ -83,13 +83,7 @@ public class UINewsSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload news failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"news_upload",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

@@ -96,6 +96,8 @@ public class UIMainProfilePage : UIMainMenuPage
 		
 		await request.SendAsync();
 		
+		await m_SocialProcessor.UpdateAsync();
+		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 

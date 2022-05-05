@@ -45,13 +45,7 @@ public class UIMainOffersPage : UIMainMenuPage
 		{
 			Log.Exception(this, exception, "Upload offers failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_offers",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		Refresh();

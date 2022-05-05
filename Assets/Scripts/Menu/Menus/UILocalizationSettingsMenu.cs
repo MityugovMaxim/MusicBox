@@ -85,13 +85,7 @@ public class UILocalizationSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload localization failed");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_localization",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

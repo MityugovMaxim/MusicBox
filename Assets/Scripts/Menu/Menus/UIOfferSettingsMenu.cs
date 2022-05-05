@@ -83,13 +83,7 @@ public class UIOfferSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload offer failed. Offer ID: '{0}'.", m_OfferID);
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"offer_upload",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

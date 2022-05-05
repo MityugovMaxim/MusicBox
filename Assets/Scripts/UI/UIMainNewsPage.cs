@@ -38,13 +38,7 @@ public class UIMainNewsPage : UIMainMenuPage
 		{
 			Log.Exception(this, exception, "Upload news failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_news",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		Refresh();

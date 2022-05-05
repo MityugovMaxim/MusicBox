@@ -55,6 +55,20 @@ public class MenuProcessor : IInitializable
 		);
 	}
 
+	public Task ExceptionAsync(string _Title, Exception _Exception)
+	{
+		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
+		
+		string message = _Exception != null
+			? _Exception.GetBaseException().Message
+			: "Unknown error";
+		
+		if (errorMenu != null)
+			errorMenu.Setup("exception", _Title, message);
+		
+		return Show(MenuType.ErrorMenu);
+	}
+
 	public Task ErrorAsync(string _ID, string _Title, string _Message)
 	{
 		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();

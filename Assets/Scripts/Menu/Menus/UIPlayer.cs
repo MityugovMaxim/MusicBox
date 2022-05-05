@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using AudioBox.ASF;
+using Melanchall.DryWetMidi.Core;
 using UnityEngine;
 
 public class UIPlayer : ASFPlayer
@@ -30,9 +34,46 @@ public class UIPlayer : ASFPlayer
 		Deserialize(_ASF);
 	}
 
+	public void Deserialize(MidiFile _Midi)
+	{
+		if (_Midi == null)
+			return;
+		
+		ClearTracks();
+		Clear();
+		
+		ASFTapTrack    tapTrack    = new ASFTapTrack(m_TapTrack);
+		ASFDoubleTrack doubleTrack = new ASFDoubleTrack(m_DoubleTrack);
+		ASFHoldTrack   holdTrack   = new ASFHoldTrack(m_HoldTrack);
+		
+		foreach (ASFTapClip tapClip in _Midi.GetTapClips())
+			tapTrack.AddClip(tapClip);
+		
+		foreach (ASFDoubleClip doubleClip in _Midi.GetDoubleClips())
+			doubleTrack.AddClip(doubleClip);
+		
+		foreach (ASFHoldClip holdClip in _Midi.GetHoldClips())
+			holdTrack.AddClip(holdClip);
+		
+		foreach (ASFHoldClip bendClip in _Midi.GetBendClips(1))
+			holdTrack.AddClip(bendClip);
+		
+		foreach (ASFHoldClip bendClip in _Midi.GetBendClips(2))
+			holdTrack.AddClip(bendClip);
+		
+		AddTrack(tapTrack);
+		AddTrack(doubleTrack);
+		AddTrack(holdTrack);
+		
+		Sample();
+	}
+
 	public void Clear()
 	{
 		m_TapTrack.Clear();
+		m_DoubleTrack.Clear();
+		m_HoldTrack.Clear();
+		m_ColorTrack.Clear();
 	}
 
 	public override void Sample()

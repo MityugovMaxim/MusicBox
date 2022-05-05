@@ -67,13 +67,7 @@ public class UIAmbientSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload ambient failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_ambient",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

@@ -38,13 +38,7 @@ public class UIMainSongsPage : UIMainMenuPage
 		{
 			Log.Exception(this, exception, "Upload songs failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_songs",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		Refresh();

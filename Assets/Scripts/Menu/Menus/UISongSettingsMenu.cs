@@ -83,13 +83,7 @@ public class UISongSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload song failed. Song ID: '{0}'.", m_SongID);
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"song_upload",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);

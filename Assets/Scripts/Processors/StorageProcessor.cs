@@ -43,7 +43,9 @@ public class StorageProcessor
 		
 		StorageReference reference = FirebaseStorage.DefaultInstance.GetReference(_RemotePath);
 		
-		reference.PutFileAsync(_LocalPath, cancelToken: _Token)
+		byte[] bytes = File.ReadAllBytes(_LocalPath);
+		
+		reference.PutBytesAsync(bytes, cancelToken: _Token)
 			.ContinueWith(
 				_Task =>
 				{

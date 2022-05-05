@@ -39,13 +39,7 @@ public class UIMainStorePage : UIMainMenuPage
 		{
 			Log.Exception(this, exception, "Upload products failed.");
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"upload_products",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		Refresh();

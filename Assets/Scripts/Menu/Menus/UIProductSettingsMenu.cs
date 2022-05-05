@@ -83,13 +83,7 @@ public class UIProductSettingsMenu : UIMenu
 		{
 			Log.Exception(this, exception, "Upload product failed. Product ID: '{0}'.", m_ProductID);
 			
-			string message = exception.GetBaseException().Message;
-			
-			await m_MenuProcessor.ErrorAsync(
-				"product_upload",
-				"Upload failed",
-				message
-			);
+			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
