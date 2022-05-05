@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AudioBox.ASF;
 using AudioBox.Logging;
 using Facebook.MiniJSON;
-using Facebook.Unity;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.MusicTheory;
@@ -430,7 +429,7 @@ public class UISongEditMenu : UIMenu
 		m_Beat.BPM      = bpm;
 		m_Beat.Time     = 0;
 		
-		await m_Background.Render();
+		await m_Background.RenderAsync();
 		
 		await m_MenuProcessor.Show(MenuType.SongEditMenu);
 		

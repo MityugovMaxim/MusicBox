@@ -170,7 +170,12 @@ public class UIAudioWave : Graphic, IDisposable
 		material.SetColor(m_AvgColorPropertyID, m_AvgColor);
 	}
 
-	public async Task Render()
+	public async void Render()
+	{
+		await RenderAsync();
+	}
+
+	public async Task RenderAsync()
 	{
 		if (m_AudioClip == null || Mathf.Approximately(m_Duration, 0))
 			return;
