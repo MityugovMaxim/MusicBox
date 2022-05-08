@@ -106,21 +106,29 @@ Shader "UI/Pattern"
 				const half2 uv = frac(IN.uv);
 				const half2 id = floor(IN.uv);
 				
-				const float val = remap(noise(id, 5), 0, 1, 0.02, 0.07);
-				
 				const float time = frac(_Time.x * 5);
-				const half fadeIn = smoothstep(0, 0.2, time);
-				const half fadeOut = smoothstep(1, 0.8, time);
-				const float radius = time * 40;
-				const float ring = getRing(id + half2(0.5, 0.5), radius, radius - 10, _Smooth) * fadeIn * fadeOut;
+				const half fade = smoothstep(0, 0.3, time) * smoothstep(1, 0.7, time);
+				const float radius = time * 60;
+				const float thickness = 10;
+				const float ring = getRing(id + half2(0.5, 0.5), radius, radius - thickness, _Smooth) * fade;
 				const float size = lerp(2, 0.25, ring);
 				
-				fixed4 color = tex2D(_MainTex, scale(uv, half2(0.5, 0.5), size)) * IN.color;
-				color.rgb *= color.a * val + color.a * ring * val * 5 + ring * smoothstep(0.065, 0.07, val);
+				const fixed4 dot = tex2D(_MainTex, scale(uv, half2(0.5, 0.5), size));
 				
-				color *= lerp(_SourceColor, _TargetColor, grayscale(color) * 3);
+				const fixed grayscale = (dot.r + dot.g + dot.b) * 0.333333;
 				
-				return color;
+				const fixed background = remap(noise(id, 5), 0, 1, 0.15, 0.3);
+				
+				fixed value = grayscale;
+				value *= background;
+				value += grayscale * ring;
+				value += grayscale * ring * background;
+				value += grayscale * ring * smoothstep(0.25, 0.3, background) * 4;
+				
+				fixed4 color = value * lerp(_SourceColor, _TargetColor, smoothstep(0.85, 1, value));
+				color.a = 1;
+				
+				return color * IN.color;
 			}
 			ENDCG
 		}

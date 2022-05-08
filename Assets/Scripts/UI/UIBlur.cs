@@ -57,6 +57,9 @@ public class UIBlur : MaskableGraphic
 		
 		foreach (Camera camera in Camera.allCameras)
 		{
+			if (!camera.CompareTag("MainCamera"))
+				continue;
+			
 			RenderTexture target = camera.targetTexture;
 			
 			camera.targetTexture = m_BlurTexture;
