@@ -8,9 +8,10 @@ public class Spectrum : MonoBehaviour
 
 	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
 
-	[SerializeField] AudioSource m_AudioSource;
-	[SerializeField] float       m_Dampen = 1.25f;
-	[SerializeField] FFTWindow   m_FFT    = FFTWindow.BlackmanHarris;
+	[SerializeField] AudioSource  m_AudioSource;
+	[SerializeField] float        m_Dampen = 1.25f;
+	[SerializeField] FFTWindow    m_FFT    = FFTWindow.BlackmanHarris;
+	[SerializeField] UISpectrum[] m_Items;
 
 	void Awake()
 	{
@@ -26,7 +27,8 @@ public class Spectrum : MonoBehaviour
 		// Right channel
 		Process(1);
 		
-		Shader.SetGlobalFloatArray(m_SpectrumPropertyID, m_Spectrum);
+		foreach (UISpectrum item in m_Items)
+			item.Sample(m_Spectrum);
 		
 		Dampen();
 	}

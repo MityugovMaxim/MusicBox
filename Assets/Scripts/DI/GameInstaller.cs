@@ -22,6 +22,8 @@ public class GameInstaller : MonoInstaller
 
 	public override void InstallBindings()
 	{
+		Application.targetFrameRate = 60;
+		
 		InstallCulture();
 		
 		InstallSignals();

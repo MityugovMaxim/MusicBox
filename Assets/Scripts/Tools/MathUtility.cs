@@ -76,6 +76,14 @@ public static class MathUtility
 		return Fit(_Rect, _Aspect, new Vector2(0.5f, 0.5f));
 	}
 
+	public static Vector2 Fit(Vector2 _Vector, float _Aspect)
+	{
+		Vector2 h = new Vector2(_Vector.x, _Vector.x / _Aspect);
+		Vector2 v = new Vector2(_Vector.y * _Aspect, _Vector.y);
+		
+		return h.x * h.y <= v.x * v.y ? h : v;
+	}
+
 	public static Rect Fit(Rect _Rect, float _Aspect, Vector2 _Pivot)
 	{
 		Vector2 h = new Vector2(_Rect.width, _Rect.width / _Aspect);
@@ -101,6 +109,14 @@ public static class MathUtility
 		Vector2 position = _Rect.position + Vector2.Scale(_Rect.size - size, _Pivot);
 		
 		return new Rect(position, size);
+	}
+
+	public static Vector2 Fill(Vector2 _Vector, float _Aspect)
+	{
+		Vector2 h = new Vector2(_Vector.x, _Vector.x / _Aspect);
+		Vector2 v = new Vector2(_Vector.y * _Aspect, _Vector.y);
+		
+		return h.x * h.y >= v.x * v.y ? h : v;
 	}
 
 	public static Rect Uniform(Rect _Source, Rect _Target)

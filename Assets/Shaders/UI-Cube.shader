@@ -118,7 +118,7 @@ Shader "UI/Cube"
 				const fixed3 reflectionColor = clamp(reflection.rgb, 0, 1);
 				
 				fixed4 color = tex2D(_MainTex, IN.uv) * IN.color;
-				color.rgb += color.rgb * reflectionColor * reflectionColor * normal.a * 60 * _Strength;
+				color.rgb += color.rgb * reflectionColor * reflectionColor * normal.a * 5 * _Strength;
 				
 				#ifdef UNITY_UI_CLIP_RECT
 				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
