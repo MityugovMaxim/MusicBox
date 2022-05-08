@@ -6,8 +6,6 @@ public class Spectrum : MonoBehaviour
 	static readonly float[] m_Spectrum = new float[64];
 	static readonly float[] m_Falloff  = new float[32];
 
-	static readonly int m_SpectrumPropertyID = Shader.PropertyToID("_Spectrum");
-
 	[SerializeField] AudioSource  m_AudioSource;
 	[SerializeField] float        m_Dampen = 1.25f;
 	[SerializeField] FFTWindow    m_FFT    = FFTWindow.BlackmanHarris;
