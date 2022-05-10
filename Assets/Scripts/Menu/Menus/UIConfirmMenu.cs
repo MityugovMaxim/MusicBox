@@ -7,6 +7,8 @@ using Zenject;
 [Menu(MenuType.ConfirmMenu)]
 public class UIConfirmMenu : UIMenu
 {
+	public string Reason => m_Reason;
+
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Message;
 	[SerializeField] Button   m_ConfirmButton;
