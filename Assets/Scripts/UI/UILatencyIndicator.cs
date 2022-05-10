@@ -80,6 +80,13 @@ public class UILatencyIndicator : UIEntity
 		ProcessLatency();
 	}
 
+	public void Restore()
+	{
+		m_Latency = 0;
+		
+		ProcessLatency();
+	}
+
 	void ProcessSettings()
 	{
 		string          outputName = m_AudioManager.GetAudioOutputName();

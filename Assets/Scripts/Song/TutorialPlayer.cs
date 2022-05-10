@@ -23,8 +23,8 @@ public class TutorialPlayer : ASFPlayer
 	[SerializeField] UITutorialOverlay m_InputGroup;
 	[SerializeField] UITutorialOverlay m_TapGroup;
 	[SerializeField] UITutorialOverlay m_DoubleGroup;
-	[SerializeField] UITutorialOverlay m_HoldSimpleGroup;
-	[SerializeField] UITutorialOverlay m_HoldAdvancedGroup;
+	[SerializeField] UITutorialOverlay m_HoldGroup;
+	[SerializeField] UITutorialOverlay m_BendGroup;
 
 	[SerializeField, Sound] string m_OverlaySound;
 	[SerializeField, Sound] string m_TapSuccessSound;
@@ -56,8 +56,8 @@ public class TutorialPlayer : ASFPlayer
 		m_InputGroup.Setup(Ratio);
 		m_TapGroup.Setup(Ratio);
 		m_DoubleGroup.Setup(Ratio);
-		m_HoldSimpleGroup.Setup(Ratio);
-		m_HoldAdvancedGroup.Setup(Ratio);
+		m_HoldGroup.Setup(Ratio);
+		m_BendGroup.Setup(Ratio);
 		
 		CreateTapTrack();
 		CreateDoubleTrack();
@@ -174,11 +174,11 @@ public class TutorialPlayer : ASFPlayer
 
 	Task DoubleManualAction() => ManualAction(5, 11);
 
-	Task HoldSimpleAutoAction() => AutoAction<HoldHitSignal>(11, 12, m_HoldSimpleGroup);
+	Task HoldSimpleAutoAction() => AutoAction<HoldHitSignal>(11, 12, m_HoldGroup);
 
 	Task HoldSimpleManualAction() => ManualAction(12, 20);
 
-	Task HoldAdvancedAutoAction() => AutoAction<HoldHitSignal>(20, 21, m_HoldAdvancedGroup);
+	Task HoldAdvancedAutoAction() => AutoAction<HoldHitSignal>(20, 21, m_BendGroup);
 
 	Task HoldAdvancedManualAction() => ManualAction(21, 30);
 

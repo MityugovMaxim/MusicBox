@@ -30,23 +30,40 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_Username.onSubmit.AddListener(SetUsername);
 	}
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_Username.onSubmit.RemoveListener(SetUsername);
+	}
+
 	public async void Logout()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignOutClick(m_SocialProcessor.Provider);
+		async void Process()
+		{
+			m_StatisticProcessor.LogMainMenuProfilePageSignOutClick(m_SocialProcessor.Provider);
+			
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_MenuProcessor.Show(MenuType.LoginMenu);
+			
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+			
+			m_SocialProcessor.Logout();
+			
+			UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
+			if (loginMenu != null)
+				await loginMenu.Login();
+		}
 		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_MenuProcessor.Show(MenuType.LoginMenu);
-		
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		
-		m_SocialProcessor.Logout();
-		
-		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
-		if (loginMenu != null)
-			await loginMenu.Login();
+		await m_MenuProcessor.ConfirmLocalizedAsync(
+			"confirm_sign_out",
+			"SIGN_OUT_CONFIRM_TITLE",
+			"SIGN_OUT_CONFIRM_MESSAGE",
+			Process
+		);
 	}
 
 	public async void Login()
@@ -109,7 +126,12 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_Language.Setup(m_LanguageProcessor.Language, SetLanguage);
 		
 		m_LoginControls.SetActive(m_SocialProcessor.Guest);
+		
+		#if UNITY_EDITOR
+		m_LogoutControls.SetActive(true);
+		#else
 		m_LogoutControls.SetActive(!m_SocialProcessor.Guest);
+		#endif
 	}
 
 	async void SetUsername(string _Username)

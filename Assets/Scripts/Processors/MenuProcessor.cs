@@ -65,6 +65,27 @@ public class MenuProcessor : IInitializable
 		return Show(MenuType.ErrorMenu);
 	}
 
+	public Task ConfirmLocalizedAsync(string _ID, string _TitleKey, string _MessageKey, Action _Confirm, Action _Cancel = null)
+	{
+		return ConfirmAsync(
+			_ID,
+			m_LocalizationProcessor.Get(_TitleKey),
+			m_LocalizationProcessor.Get(_MessageKey),
+			_Confirm,
+			_Cancel
+		);
+	}
+
+	public Task ConfirmAsync(string _ID, string _Title, string _Message, Action _Confirm, Action _Cancel = null)
+	{
+		UIConfirmMenu confirmMenu = GetMenu<UIConfirmMenu>();
+		
+		if (confirmMenu != null)
+			confirmMenu.Setup(_ID, _Title, _Message, _Confirm, _Cancel);
+		
+		return Show(MenuType.ConfirmMenu);
+	}
+
 	public async void RetryLocalized(string _ID, string _TitleKey, string _MessageKey, Action _Retry, Action _Cancel = null)
 	{
 		await RetryLocalizedAsync(_ID, _TitleKey, _MessageKey, _Retry, _Cancel);

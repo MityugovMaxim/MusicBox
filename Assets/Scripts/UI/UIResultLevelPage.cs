@@ -9,7 +9,7 @@ public class UIResultLevelPage : UIResultMenuPage
 {
 	public override ResultMenuPageType Type => ResultMenuPageType.Level;
 
-	public override bool Valid => m_SourceLevel < m_MaxLevel && m_SourceDiscs > m_TargetDiscs;
+	public override bool Valid => m_SourceLevel < m_MaxLevel && m_SourceDiscs < m_TargetDiscs;
 
 	[SerializeField] UILevelProgress m_LevelProgress;
 	[SerializeField] UIGroup         m_ItemsGroup;

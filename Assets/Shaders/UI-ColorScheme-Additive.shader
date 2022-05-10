@@ -75,7 +75,6 @@ Shader "UI/ColorScheme/Additive"
 			};
 
 			sampler2D _MainTex;
-			fixed4 _TextureSampleAdd;
 			fixed4 _Color;
 			float _Power;
 
@@ -92,12 +91,12 @@ Shader "UI/ColorScheme/Additive"
 
 			fixed4 frag(const fragData IN) : SV_Target
 			{
-				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
+				half4 color = IN.color * tex2D(_MainTex, IN.uv);
 				
 				#ifdef BACKGROUND_SCHEME
-				color.rgb *= BACKGROUND_BY_RANGE(color, 0.15, 0.8);
+				color.rgb *= BACKGROUND_BY_ALPHA(color);
 				#else
-				color.rgb *= FOREGROUND_BY_RANGE(color, 0.15, 0.8);
+				color.rgb *= FOREGROUND_BY_ALPHA(color);
 				#endif
 				
 				#ifdef UNITY_UI_CLIP_RECT

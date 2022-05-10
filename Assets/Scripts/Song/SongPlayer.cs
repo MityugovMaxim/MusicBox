@@ -55,7 +55,7 @@ public class SongPlayer : ASFPlayer
 		
 		m_InputReceiver.Process();
 		
-		if (Time >= m_FinishTime)
+		if (Time >= m_FinishTime && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();
 	}
 }

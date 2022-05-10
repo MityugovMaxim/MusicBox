@@ -58,8 +58,6 @@ public class UILevelProgress : UIGroup
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
-		
-		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
 	}
 
 	#if UNITY_EDITOR
@@ -92,6 +90,8 @@ public class UILevelProgress : UIGroup
 		
 		m_Target.anchorMin = new Vector2(0, 0);
 		m_Target.anchorMax = new Vector2(m_SourceProgress, 1);
+		
+		ProcessTitle();
 		
 		ProcessProgress();
 	}
@@ -144,6 +144,11 @@ public class UILevelProgress : UIGroup
 		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		m_Label.Play();
+	}
+
+	void ProcessTitle()
+	{
+		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
 	}
 
 	void ProcessProgress()

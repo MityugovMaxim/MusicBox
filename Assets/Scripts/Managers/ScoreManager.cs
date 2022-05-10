@@ -287,11 +287,11 @@ public class ScoreManager : IInitializable, IDisposable
 		int minThreshold = m_SongsProcessor.GetThreshold(m_SongID, _Rank);
 		int maxThreshold = m_SongsProcessor.GetThreshold(m_SongID, _Rank + 1);
 		
-		if (_Accuracy >= maxThreshold)
-			return 1;
-		
 		if (_Accuracy <= minThreshold)
 			return 0;
+		
+		if (_Accuracy >= maxThreshold)
+			return 1;
 		
 		return Mathf.InverseLerp(minThreshold, maxThreshold, _Accuracy);
 	}
