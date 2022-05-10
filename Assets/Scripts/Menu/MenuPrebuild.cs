@@ -15,6 +15,7 @@ public class MenuPrebuild
 	{
 		{ typeof(UIBannerMenu), MenuType.BannerMenu },
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
+		{ typeof(UIConfirmMenu), MenuType.ConfirmMenu },
 		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
 		{ typeof(UILanguageMenu), MenuType.LanguageMenu },
