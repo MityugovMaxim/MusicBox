@@ -6,6 +6,8 @@ using UnityEngine;
 [CustomEditor(typeof(UIGroup), true)]
 public class UIGroupEditor : Editor
 {
+	bool Shown => target is UIGroup group && group.Shown;
+
 	public override void OnInspectorGUI()
 	{
 		base.OnInspectorGUI();
@@ -14,6 +16,7 @@ public class UIGroupEditor : Editor
 		
 		GUILayout.Space(20);
 		
+		GUI.backgroundColor = Shown ? Color.gray : Color.white;
 		if (GUILayout.Button("SHOW"))
 		{
 			Hide();
@@ -21,12 +24,15 @@ public class UIGroupEditor : Editor
 			Save();
 		}
 		
+		GUI.backgroundColor = Shown ? Color.white : Color.gray;
 		if (GUILayout.Button("HIDE"))
 		{
 			Show();
 			Hide();
 			Save();
 		}
+		
+		GUI.backgroundColor = Color.white;
 		
 		GUILayout.Space(20);
 		

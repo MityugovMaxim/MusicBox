@@ -15,8 +15,8 @@ Shader "FX/Fluid"
 	{
 		Tags
 		{
-			"RenderType" = "Transparent"
-			"RenderQueue" = "Transparent"
+			"RenderType" = "Geometry"
+			"RenderQueue" = "Geometry"
 		}
 		
 		Cull Off

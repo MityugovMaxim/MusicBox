@@ -178,7 +178,7 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 		
 		if (texture != null)
 		{
-			texture = m_Blur ? texture.CreateBlur() : texture;
+			texture = m_Blur ? texture.CreateBlur(0.75f) : texture;
 			
 			Sprite = m_Atlas != null ? m_Atlas.Bake(Path, texture) : texture.CreateSprite();
 			

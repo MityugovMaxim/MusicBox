@@ -24,12 +24,13 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	[SerializeField, Sound] string m_UnitSound;
 
-	[Inject] ScoresProcessor m_ScoresProcessor;
-	[Inject] ScoreManager    m_ScoreManager;
-	[Inject] SongsProcessor  m_SongsProcessor;
-	[Inject] MenuProcessor   m_MenuProcessor;
-	[Inject] SoundProcessor  m_SoundProcessor;
-	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] ScoresProcessor       m_ScoresProcessor;
+	[Inject] ScoreManager          m_ScoreManager;
+	[Inject] SongsProcessor        m_SongsProcessor;
+	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] SoundProcessor        m_SoundProcessor;
+	[Inject] HapticProcessor       m_HapticProcessor;
 
 	string    m_SongID;
 	ScoreRank m_SourceRank;
@@ -150,8 +151,10 @@ public class UIResultRewardPage : UIResultMenuPage
 			
 			m_Actions.Enqueue(discProgress.ProgressAsync);
 			
-			if (next <= m_TargetRank)
+			if (m_TargetRank >= next)
 				m_Actions.Enqueue(() => CollectDisc(discProgress));
+			else if (m_TargetRank >= ScoreRank.Bronze)
+				m_Actions.Enqueue(() => HideDisc(discProgress));
 		}
 		
 		if (m_TargetRank > ScoreRank.None)
@@ -164,22 +167,19 @@ public class UIResultRewardPage : UIResultMenuPage
 	void ProcessTitle()
 	{
 		m_Title.Text = m_SourceScore < m_TargetScore
-			? GetLocalization("RESULT_NEW_RECORD")
-			: GetLocalization("RESULT_REWARD");
+			? m_LocalizationProcessor.Get("RESULT_NEW_RECORD")
+			: m_LocalizationProcessor.Get("RESULT_REWARD");
 	}
 
 	void ProcessDiscs()
 	{
 		foreach (UIDiscProgress discProgress in m_DiscsProgress)
-		{
-			if (discProgress != null)
-				discProgress.Hide(true);
-		}
+			discProgress.Hide(true);
 		
 		if (m_SourceRank >= ScoreRank.Platinum)
 			return;
 		
-		if (m_SourceRank >= m_TargetRank && m_SourceAccuracy >= m_TargetAccuracy && m_SourceRank > ScoreRank.None)
+		if (m_SourceRank >= m_TargetRank && m_SourceAccuracy >= m_TargetAccuracy && m_SourceRank >= ScoreRank.Bronze)
 			return;
 		
 		UIDiscProgress source = GetDiscProgress(m_SourceRank + 1);
@@ -199,7 +199,7 @@ public class UIResultRewardPage : UIResultMenuPage
 	{
 		m_Discs.Rank = m_TargetRank >= m_SourceRank ? m_TargetRank : m_SourceRank;
 		
-		if (m_SourceRank >= ScoreRank.Platinum || m_TargetRank >= ScoreRank.None && m_SourceAccuracy >= m_TargetAccuracy)
+		if (m_SourceRank >= ScoreRank.Platinum || m_TargetRank >= ScoreRank.Bronze && m_SourceAccuracy >= m_TargetAccuracy)
 			m_Discs.Show(true);
 		else
 			m_Discs.Hide(true);
@@ -213,7 +213,15 @@ public class UIResultRewardPage : UIResultMenuPage
 	Task CollectDisc(UIDiscProgress _DiscProgress)
 	{
 		return Task.WhenAny(
-			_DiscProgress.CollectAsync().ContinueWithOnMainThread(_Task => _DiscProgress.HideAsync()),
+			_DiscProgress.CollectAsync().ContinueWithOnMainThread(_Task => _DiscProgress.Hide(true)),
+			Task.Delay(250)
+		);
+	}
+
+	Task HideDisc(UIDiscProgress _DiscProgress)
+	{
+		return Task.WhenAny(
+			_DiscProgress.HideAsync(),
 			Task.Delay(250)
 		);
 	}
@@ -228,15 +236,7 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	Task DiscsResult()
 	{
-		List<Task> tasks = new List<Task>();
-		foreach (UIDiscProgress discProgress in m_DiscsProgress)
-		{
-			if (discProgress != null)
-				tasks.Add(discProgress.HideAsync());
-		}
-		tasks.Add(m_Discs.ShowAsync());
-		
-		return Task.WhenAll(tasks);
+		return m_Discs.ShowAsync();
 	}
 
 	Task PlayCoins()

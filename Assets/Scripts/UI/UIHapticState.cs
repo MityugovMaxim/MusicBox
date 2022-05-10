@@ -55,6 +55,8 @@ public class UIHapticState : UIEntity
 		
 		m_Enabled = true;
 		
+		m_HapticProcessor.HapticEnabled = true;
+		
 		m_HapticProcessor.Process(Haptic.Type.Success);
 		
 		m_EnableButton.gameObject.SetActive(false);
@@ -67,6 +69,8 @@ public class UIHapticState : UIEntity
 			return;
 		
 		m_Enabled = false;
+		
+		m_HapticProcessor.HapticEnabled = false;
 		
 		m_EnableButton.gameObject.SetActive(true);
 		m_DisableButton.gameObject.SetActive(false);

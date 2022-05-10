@@ -18,6 +18,7 @@ public class MenuPrebuild
 		{ typeof(UIBannerMenu), MenuType.BannerMenu },
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
 		{ typeof(UIColorMenu), MenuType.ColorMenu },
+		{ typeof(UIConfirmMenu), MenuType.ConfirmMenu },
 		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
 		{ typeof(UIInterstitialMenu), MenuType.InterstitialMenu },

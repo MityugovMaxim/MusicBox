@@ -22,11 +22,12 @@ public class UIRetryMenu : UIMenu
 
 	public void Setup(string _Reason, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
 	{
-		m_Reason       = _Reason;
+		m_Reason = _Reason;
+		m_Retry  = _Retry;
+		m_Cancel = _Cancel;
+		
 		m_Title.text   = _Title;
 		m_Message.text = _Message;
-		m_Retry        = _Retry;
-		m_Cancel       = _Cancel;
 		
 		m_CancelButton.SetActive(m_Cancel != null);
 		

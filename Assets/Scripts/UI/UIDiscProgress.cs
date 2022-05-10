@@ -135,7 +135,6 @@ public class UIDiscProgress : UIGroup
 		
 		m_Animator.ResetTrigger(m_CollectParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
-		m_Animator.Update(0);
 	}
 
 	void ProcessProgress()

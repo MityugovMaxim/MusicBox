@@ -34,4 +34,5 @@ public enum MenuType
 	AmbientMenu              = 31,
 	AmbientSettingsMenu      = 32,
 	ColorMenu                = 33,
+	ConfirmMenu              = 34,
 }

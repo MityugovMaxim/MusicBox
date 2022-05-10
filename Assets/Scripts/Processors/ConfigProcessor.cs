@@ -99,7 +99,7 @@ public class ConfigProcessor
 		{ HOLD_HIT_MULTIPLIER, 10 },
 		
 		// Score
-		{ SCORE_PERFECT_THRESHOLD, 0.9 },
+		{ SCORE_PERFECT_THRESHOLD, 0.8 },
 		{ SCORE_GOOD_THRESHOLD, 0.4 },
 		
 		// Ads

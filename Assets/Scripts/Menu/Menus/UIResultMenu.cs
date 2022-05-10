@@ -57,6 +57,8 @@ public class UIResultMenu : UIMenu
 		}
 		else
 		{
+			m_PageType = pageType;
+			
 			Next();
 		}
 	}

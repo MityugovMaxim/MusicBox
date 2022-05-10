@@ -40,7 +40,7 @@ Shader "UI/Fluid"
 		ZWrite Off
 		ZTest [unity_GUIZTestMode]
 		Fog { Mode Off }
-		Blend One Zero
+		Blend SrcAlpha OneMinusSrcAlpha
 
 		ColorMask [_ColorMask]
 

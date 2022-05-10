@@ -184,8 +184,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.19999999}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 60}
-  m_SizeDelta: {x: 0, y: -120}
+  m_AnchoredPosition: {x: 0, y: 150}
+  m_SizeDelta: {x: 0, y: -300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7453179596892192863
 CanvasRenderer:
@@ -357,9 +357,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_HOLD_SIMPLE
-  m_Trim: 0
+  m_Key: TUTORIAL_HOLD
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &4489237996273306108
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -636,7 +638,7 @@ RectTransform:
   - {fileID: 397521393320900456}
   - {fileID: 3278206909894922572}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 11
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -707,7 +709,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 20}
-  m_SizeDelta: {x: 540, y: 0}
+  m_SizeDelta: {x: 540, y: -693.3306}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &3204764079886753288
 CanvasRenderer:
@@ -729,9 +731,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_HEALTH_INDICATOR
-  m_Trim: 0
+  m_Key: TUTORIAL_HEALTH_INDICATOR
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &4543230880865319427
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -875,7 +879,7 @@ RectTransform:
   - {fileID: 7333155874637530294}
   - {fileID: 8442661819385896315}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 16
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -1115,9 +1119,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_DOUBLE
-  m_Trim: 0
+  m_Key: TUTORIAL_DOUBLE
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &2491553042582843163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1321,7 +1327,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.19999999}
   m_AnchorMax: {x: 1, y: 0.19999999}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 128, y: 240}
+  m_SizeDelta: {x: 128, y: 600}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2176476500541827409
 CanvasRenderer:
@@ -1394,7 +1400,7 @@ RectTransform:
   - {fileID: 5625628549118926043}
   - {fileID: 3954423553964079749}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 13
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -1655,9 +1661,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_HOLD_ADVANCED
-  m_Trim: 0
+  m_Key: TUTORIAL_BEND
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &5777262791045563370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1814,9 +1822,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_COMPLETE
-  m_Trim: 0
+  m_Key: TUTORIAL_COMPLETE
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &6662025799478764891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2069,7 +2079,7 @@ GameObject:
   - component: {fileID: 3449703320399313087}
   - component: {fileID: 7762263256962599404}
   m_Layer: 9
-  m_Name: hold_simple_group
+  m_Name: hold_group
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2090,7 +2100,7 @@ RectTransform:
   - {fileID: 5343453056046675277}
   - {fileID: 2896611592501647869}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 14
+  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2203,9 +2213,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_COMBO_INDICATOR_1
-  m_Trim: 0
+  m_Key: TUTORIAL_COMBO_INDICATOR_1
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &6816759908065442955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2477,7 +2489,7 @@ RectTransform:
   - {fileID: 1913436179807272780}
   - {fileID: 5014631091589662684}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 12
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2640,8 +2652,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.19999999}
-  m_AnchoredPosition: {x: 0, y: -60}
-  m_SizeDelta: {x: 0, y: -120}
+  m_AnchoredPosition: {x: 0, y: -150}
+  m_SizeDelta: {x: 0, y: -300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &33615338665750317
 CanvasRenderer:
@@ -2738,9 +2750,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_COMBO_INDICATOR_2
-  m_Trim: 0
+  m_Key: TUTORIAL_COMBO_INDICATOR_2
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &8097959978289893677
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3085,8 +3099,8 @@ MonoBehaviour:
   m_InputGroup: {fileID: 4012704118351643978}
   m_TapGroup: {fileID: 5570364973030061102}
   m_DoubleGroup: {fileID: 5535669427705575731}
-  m_HoldSimpleGroup: {fileID: 2754409858984622348}
-  m_HoldAdvancedGroup: {fileID: 1824999221884422015}
+  m_HoldGroup: {fileID: 2754409858984622348}
+  m_BendGroup: {fileID: 1824999221884422015}
   m_OverlaySound: Level Collect
   m_TapSuccessSound: Indicator Tap
   m_DoubleSuccessSound: Indicator Double
@@ -3151,9 +3165,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a53c6f3bb7a14e18a47965079d138cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LocalizationKey: TUTORIAL_TAP
-  m_Trim: 0
+  m_Key: TUTORIAL_TAP
+  m_Options: 0
   m_Data: []
+  m_Prefix: 
+  m_Postfix: 
 --- !u!114 &403060145426098135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3279,7 +3295,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &9058052673015976217
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3295,7 +3311,7 @@ RectTransform:
   - {fileID: 6096091774262734849}
   - {fileID: 19817657643958699}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 10
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3323,7 +3339,7 @@ MonoBehaviour:
   m_SourceHeight: 600
   m_TargetHeight: 240
   m_Ratio: 0.8
-  m_Phase: 1
+  m_Phase: 0
 --- !u!225 &8332724985453699981
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -3332,7 +3348,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7757725024098145672}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -3363,7 +3379,7 @@ GameObject:
   - component: {fileID: 5083834085154048078}
   - component: {fileID: 4823004246069466387}
   m_Layer: 9
-  m_Name: hold_advanced_group
+  m_Name: bend_group
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3384,7 +3400,7 @@ RectTransform:
   - {fileID: 3339108738121448629}
   - {fileID: 2015765374257679555}
   m_Father: {fileID: 2974619168941818005}
-  m_RootOrder: 15
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3765,6 +3781,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8752334108981916075, guid: 4fdee45cf740349ab8fe554d476f2f7f,
+        type: 3}
+      propertyPath: m_TargetTexture
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 9154311297704941466, guid: 4fdee45cf740349ab8fe554d476f2f7f,
         type: 3}

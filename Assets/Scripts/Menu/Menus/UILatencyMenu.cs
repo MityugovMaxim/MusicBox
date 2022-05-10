@@ -1,35 +1,31 @@
-using System;
 using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.LatencyMenu)]
-public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
+public class UILatencyMenu : UISlideMenu
 {
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
 	[Inject] SignalBus        m_SignalBus;
 	[Inject] AmbientProcessor m_AmbientProcessor;
 
-	void IInitializable.Initialize()
+	public void Restore()
 	{
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-	}
-
-	void RegisterAudioSourceChanged()
-	{
-		m_LatencyIndicator.Process();
+		m_LatencyIndicator.Restore();
 	}
 
 	protected override void OnShowStarted()
 	{
+		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		
 		m_AmbientProcessor.Pause();
 		
 		m_LatencyIndicator.Process();
+	}
+
+	protected override void OnHideStarted()
+	{
+		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 	}
 
 	protected override void OnHideFinished()
@@ -37,5 +33,10 @@ public class UILatencyMenu : UISlideMenu, IInitializable, IDisposable
 		m_LatencyIndicator.Complete();
 		
 		m_AmbientProcessor.Resume();
+	}
+
+	void RegisterAudioSourceChanged()
+	{
+		m_LatencyIndicator.Process();
 	}
 }

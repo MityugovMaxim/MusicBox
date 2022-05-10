@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Threading.Tasks;
-using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -41,7 +40,10 @@ public class UIResultControlPage : UIResultMenuPage
 	{
 		m_SongID = _SongID;
 		
-		m_Discs.Rank = m_ScoreManager.GetRank();
+		int sourceRank = (int)m_ScoresProcessor.GetRank(m_SongID);
+		int targetRank = (int)m_ScoreManager.GetRank();
+		
+		m_Discs.Rank = (ScoreRank)Mathf.Max(sourceRank, targetRank);
 		
 		m_Image.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
