@@ -1,4 +1,6 @@
+using System;
 using AudioBox.ASF;
+using AudioBox.Logging;
 using Melanchall.DryWetMidi.Core;
 using UnityEngine;
 
@@ -14,6 +16,9 @@ public class UIPlayer : ASFPlayer
 
 	public void Setup(float _Ratio, float _Duration, AudioClip _Music, string _ASF)
 	{
+		Clear();
+		ClearTracks();
+		
 		Ratio    = _Ratio;
 		Duration = _Duration;
 		Music    = _Music;
@@ -28,7 +33,14 @@ public class UIPlayer : ASFPlayer
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));
 		AddTrack(new ASFHoldTrack(m_HoldTrack));
 		
-		Deserialize(_ASF);
+		try
+		{
+			Deserialize(_ASF);
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 	}
 
 	public void Deserialize(MidiFile _Midi)

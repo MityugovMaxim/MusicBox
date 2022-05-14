@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using AudioBox.Compression;
 using UnityEngine;
@@ -9,7 +8,7 @@ namespace AudioBox.ASF
 	{
 		public abstract void Sample(double _Time, double _MinTime, double _MaxTime);
 
-		public abstract object Serialize();
+		public abstract List<object> Serialize();
 
 		public abstract void Deserialize(IList<object> _Data);
 	}
@@ -31,9 +30,9 @@ namespace AudioBox.ASF
 			Context.Clear();
 		}
 
-		public override object Serialize()
+		public override List<object> Serialize()
 		{
-			IList data = new List<object>();
+			List<object> data = new List<object>();
 			
 			foreach (T clip in Clips)
 			{

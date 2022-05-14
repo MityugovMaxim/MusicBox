@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using AudioBox.Compression;
-using Facebook.MiniJSON;
+using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine;
 
 namespace AudioBox.ASF
@@ -179,9 +179,14 @@ namespace AudioBox.ASF
 					continue;
 				}
 				
+				List<object> clips = track.Serialize();
+				
+				if (clips == null || clips.Count == 0)
+					continue;
+				
 				string name = track.GetType().Name;
 				
-				data[name] = track.Serialize();
+				data[name] = clips;
 			}
 			
 			return data;
@@ -189,6 +194,8 @@ namespace AudioBox.ASF
 
 		public void Deserialize(string _ASF)
 		{
+			Debug.LogError("---> ASF: " + _ASF);
+			
 			Dictionary<string, object> asf = Json.Deserialize(_ASF) as Dictionary<string, object>;
 			
 			Deserialize(asf);

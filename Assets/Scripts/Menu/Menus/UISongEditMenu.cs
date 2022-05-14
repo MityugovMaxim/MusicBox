@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AudioBox.ASF;
 using AudioBox.Logging;
-using Facebook.MiniJSON;
+using UnityEngine.Purchasing.MiniJSON;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.MusicTheory;
@@ -546,6 +546,6 @@ public class UISongEditMenu : UIMenu
 	{
 		string path = $"Songs/{m_SongID}.asf";
 		
-		return m_StorageProcessor.LoadJson(path);
+		return m_StorageProcessor.LoadJson(path, true);
 	}
 }
