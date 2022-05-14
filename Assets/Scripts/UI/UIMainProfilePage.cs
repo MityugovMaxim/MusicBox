@@ -9,7 +9,7 @@ public class UIMainProfilePage : UIMainMenuPage
 	[SerializeField] UIProfileImage m_Image;
 	[SerializeField] TMP_InputField m_Username;
 	[SerializeField] UILevel        m_Level;
-	[SerializeField] TMP_Text       m_Coins;
+	[SerializeField] UIUnitLabel    m_Coins;
 	[SerializeField] UILanguageItem m_Language;
 	[SerializeField] GameObject     m_LoginControls;
 	[SerializeField] GameObject     m_LogoutControls;
@@ -120,7 +120,7 @@ public class UIMainProfilePage : UIMainMenuPage
 		m_Image.Setup(m_SocialProcessor.Photo);
 		
 		m_Level.Level   = m_ProfileProcessor.Level;
-		m_Coins.text    = $"{m_ProfileProcessor.Coins}<sprite tint=0 name=coins_icon>";
+		m_Coins.Value   = m_ProfileProcessor.Coins;
 		m_Username.text = m_SocialProcessor.GetUsername();
 		
 		m_Language.Setup(m_LanguageProcessor.Language, SetLanguage);

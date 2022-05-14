@@ -4,35 +4,13 @@ using Zenject;
 
 public class UIProfile : UIEntity
 {
-	public string Username
+	long Coins
 	{
-		get => m_Username;
-		set
-		{
-			if (m_Username == value)
-				return;
-			
-			m_Username = value;
-			
-			ProcessUsername();
-		}
+		get => (long)m_Coins.Value;
+		set => m_Coins.Value = value;
 	}
 
-	public long Coins
-	{
-		get => m_Coins;
-		set
-		{
-			if (m_Coins == value)
-				return;
-			
-			m_Coins = value;
-			
-			ProcessCoins();
-		}
-	}
-
-	public int Discs
+	int Discs
 	{
 		get => m_Discs;
 		set
@@ -46,21 +24,17 @@ public class UIProfile : UIEntity
 		}
 	}
 
-	public int Level
+	int Level
 	{
 		get => m_Level.Level;
 		set => m_Level.Level = value;
 	}
 
 	[SerializeField] UIProfileImage m_Image;
-	[SerializeField] TMP_Text       m_UsernameLabel;
 	[SerializeField] UILevel        m_Level;
-	[SerializeField] TMP_Text       m_CoinsLabel;
+	[SerializeField] UIUnitLabel    m_Coins;
 	[SerializeField] TMP_Text       m_DiscsLabel;
-
-	[SerializeField] string m_Username;
-	[SerializeField] int    m_Discs;
-	[SerializeField] long   m_Coins;
+	[SerializeField] int            m_Discs;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ProgressProcessor  m_ProgressProcessor;
@@ -72,11 +46,7 @@ public class UIProfile : UIEntity
 	{
 		base.OnEnable();
 		
-		ProcessUsername();
-		
 		ProcessDiscs();
-		
-		ProcessCoins();
 	}
 
 	#if UNITY_EDITOR
@@ -84,19 +54,13 @@ public class UIProfile : UIEntity
 	{
 		base.OnValidate();
 		
-		ProcessUsername();
-		
 		ProcessDiscs();
-		
-		ProcessCoins();
 	}
 	#endif
 
 	public void Setup()
 	{
 		m_Image.Setup(m_SocialProcessor.Photo);
-		
-		Username = m_SocialProcessor.GetUsername();
 		
 		Coins = m_ProfileProcessor.Coins;
 		
@@ -119,15 +83,5 @@ public class UIProfile : UIEntity
 		m_DiscsLabel.text = m_ProgressProcessor != null && Level < m_ProgressProcessor.GetMaxLevel()
 			? $"{Discs}/{m_ProgressProcessor.GetDiscs(Level + 1)}"
 			: Discs.ToString();
-	}
-
-	void ProcessUsername()
-	{
-		m_UsernameLabel.text = Username;
-	}
-
-	void ProcessCoins()
-	{
-		m_CoinsLabel.text = $"{Coins}<sprite tint=0 name=coins_icon>";
 	}
 }

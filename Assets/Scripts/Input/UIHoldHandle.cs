@@ -4,6 +4,8 @@ using UnityEngine.Events;
 
 public class UIHoldHandle : UIHandle
 {
+	const float FRAME_ERROR = 20;
+
 	[Serializable]
 	public class HoldEvent : UnityEvent<bool> { }
 
@@ -114,7 +116,13 @@ public class UIHoldHandle : UIHandle
 		m_Hold = true;
 		m_Area = GetLocalRect(_Area);
 		
-		ProcessHit();
+		Rect rect = RectTransform.rect;
+		
+		float distance = Mathf.Abs(m_Area.center.y - rect.center.y);
+		float length   = rect.height + FRAME_ERROR;
+		float progress = 1.0f - distance / length;
+		
+		ProcessHit(progress);
 	}
 
 	public override void TouchUp(int _ID, Rect _Area)
@@ -151,9 +159,9 @@ public class UIHoldHandle : UIHandle
 		ProcessSuccess();
 	}
 
-	void ProcessHit()
+	void ProcessHit(float _Progress)
 	{
-		m_Indicator.Hit(MinProgress, MaxProgress);
+		m_Indicator.Hit(_Progress);
 	}
 
 	void ProcessMiss()

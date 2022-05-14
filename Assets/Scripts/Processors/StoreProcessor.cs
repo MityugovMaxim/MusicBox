@@ -213,13 +213,6 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		}
 	}
 
-	async void RegisterProfileDataUpdate()
-	{
-		await Load();
-		
-		m_SignalBus.Fire<StoreDataUpdateSignal>();
-	}
-
 	async void RegisterProductDataUpdate()
 	{
 		await Load();
@@ -243,13 +236,11 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(RegisterProfileDataUpdate);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
 	}
 

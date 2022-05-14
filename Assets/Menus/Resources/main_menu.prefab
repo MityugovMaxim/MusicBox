@@ -844,7 +844,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 730.30676}
+  m_SizeDelta: {x: 0, y: 730}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &8133772491270258202
 MonoBehaviour:
@@ -1262,7 +1262,7 @@ MonoBehaviour:
   m_Image: {fileID: 7510560949847816483}
   m_Username: {fileID: 7834211672729085749}
   m_Level: {fileID: 534843021187899656}
-  m_Coins: {fileID: 1170570108559721811}
+  m_Coins: {fileID: 4662682092763753753}
   m_Language: {fileID: 4246550697661750084}
   m_LoginControls: {fileID: 8918064977964654891}
   m_LogoutControls: {fileID: 2465743816282708729}
@@ -1740,7 +1740,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0<sprite name=coins_icon>
+  m_text: <sprite tint=0 name=coins_icon><sprite tint=1 name=unit_font_0>
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9b9ec73a0f17e427ba8bd42beb136330, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: cfca0b3424f274bdc815d5525962c667, type: 2}
@@ -1767,7 +1767,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 68.25
+  m_fontSize: 72
   m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1783,7 +1783,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
@@ -4006,6 +4006,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8840732987174320772}
+  - component: {fileID: 4662682092763753753}
   - component: {fileID: 1877347579888476672}
   - component: {fileID: 4548519723529867173}
   - component: {fileID: 1472085633074156231}
@@ -4036,6 +4037,24 @@ RectTransform:
   m_AnchoredPosition: {x: 300, y: -450}
   m_SizeDelta: {x: 600, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &4662682092763753753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8765761659947761263}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d0baef511c4e58b1756212fdc494aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Type: 4
+  m_Position: 1
+  m_Label: {fileID: 1170570108559721811}
+  m_Value: 0
+  m_Sign: 0
+  m_Tint: 0
 --- !u!114 &1877347579888476672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5025,6 +5044,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3478224008e24b98820ee66a570f0a3, type: 3}
+--- !u!224 &4665763922455723099 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 7689369022240537467, guid: d3478224008e24b98820ee66a570f0a3,
+    type: 3}
+  m_PrefabInstance: {fileID: 3059703312141272864}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &7510560949847816483 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4777440246727785987, guid: d3478224008e24b98820ee66a570f0a3,
@@ -5037,12 +5062,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 726bdc56ac434be3b5bc5811c203dc73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!224 &4665763922455723099 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 7689369022240537467, guid: d3478224008e24b98820ee66a570f0a3,
-    type: 3}
-  m_PrefabInstance: {fileID: 3059703312141272864}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3507222867479956281
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5322,6 +5341,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1979161996273457185}
     m_Modifications:
+    - target: {fileID: 3442671478116272657, guid: 4a42a6aadb307439985d6014276ab87f,
+        type: 3}
+      propertyPath: m_TouchDownSound
+      value: Down
+      objectReference: {fileID: 0}
+    - target: {fileID: 3442671478116272657, guid: 4a42a6aadb307439985d6014276ab87f,
+        type: 3}
+      propertyPath: m_TouchClickSound
+      value: Click
+      objectReference: {fileID: 0}
+    - target: {fileID: 3442671478116272657, guid: 4a42a6aadb307439985d6014276ab87f,
+        type: 3}
+      propertyPath: m_TouchClickHaptic
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 6371427267836158977, guid: 4a42a6aadb307439985d6014276ab87f,
         type: 3}
       propertyPath: m_text
@@ -5519,12 +5553,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4a42a6aadb307439985d6014276ab87f, type: 3}
---- !u!1 &7751024744847857286 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6371427267836159007, guid: 4a42a6aadb307439985d6014276ab87f,
-    type: 3}
-  m_PrefabInstance: {fileID: 3745570642619527833}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &7834211672729085749 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6864126460211991980, guid: 4a42a6aadb307439985d6014276ab87f,
@@ -5537,6 +5565,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &7751024744847857286 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6371427267836159007, guid: 4a42a6aadb307439985d6014276ab87f,
+    type: 3}
+  m_PrefabInstance: {fileID: 3745570642619527833}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &7834211672729085747 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6864126460211991978, guid: 4a42a6aadb307439985d6014276ab87f,
@@ -5719,7 +5753,7 @@ PrefabInstance:
     - target: {fileID: 882539935655612301, guid: 25a58907aef48470ba658ad4b3b0aca9,
         type: 3}
       propertyPath: m_fontSize
-      value: 28
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 1976105613004453217, guid: 25a58907aef48470ba658ad4b3b0aca9,
         type: 3}

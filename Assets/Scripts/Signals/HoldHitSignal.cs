@@ -1,4 +1,4 @@
 ﻿public class HoldHitSignal : HoldSignal
 {
-	public HoldHitSignal(float _MinProgress, float _MaxProgress) : base(_MinProgress, _MaxProgress) { }
+	public HoldHitSignal(float _Progress) : base(_Progress, _Progress) { }
 }

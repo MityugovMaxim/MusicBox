@@ -9,11 +9,6 @@ public class UILatencyMenu : UISlideMenu
 	[Inject] SignalBus        m_SignalBus;
 	[Inject] AmbientProcessor m_AmbientProcessor;
 
-	public void Restore()
-	{
-		m_LatencyIndicator.Restore();
-	}
-
 	protected override void OnShowStarted()
 	{
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);

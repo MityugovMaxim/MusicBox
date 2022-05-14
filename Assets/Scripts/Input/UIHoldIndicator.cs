@@ -153,7 +153,7 @@ public class UIHoldIndicator : UIIndicator
 		SignalBus.Fire(new HoldFailSignal(_MinProgress, _MaxProgress));
 	}
 
-	public void Hit(float _MinProgress, float _MaxProgress)
+	public void Hit(float _Progress)
 	{
 		Highlight();
 		
@@ -161,7 +161,7 @@ public class UIHoldIndicator : UIIndicator
 		
 		InvokeCallback();
 		
-		SignalBus.Fire(new HoldHitSignal(_MinProgress, _MaxProgress));
+		SignalBus.Fire(new HoldHitSignal(_Progress));
 	}
 
 	public void Miss(float _MinProgress, float _MaxProgress)

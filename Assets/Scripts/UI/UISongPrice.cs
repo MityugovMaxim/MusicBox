@@ -1,10 +1,9 @@
-using TMPro;
 using UnityEngine;
 using Zenject;
 
 public class UISongPrice : UIEntity
 {
-	[SerializeField] TMP_Text m_Label;
+	[SerializeField] UIUnitLabel m_Coins;
 
 	string m_SongID;
 
@@ -14,8 +13,6 @@ public class UISongPrice : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		long price = m_SongsProcessor.GetPrice(m_SongID);
-		
-		m_Label.text = price.ToString();
+		m_Coins.Value = m_SongsProcessor.GetPrice(m_SongID);
 	}
 }

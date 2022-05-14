@@ -16,6 +16,12 @@ public class UIUnitLabel : UIEntity
 		Coins      = 4,
 	}
 
+	public enum UnitPosition
+	{
+		Right = 0,
+		Left  = 1,
+	}
+
 	public double Value
 	{
 		get => m_Value;
@@ -40,11 +46,12 @@ public class UIUnitLabel : UIEntity
 		NegativeSign           = "-",
 	};
 
-	[SerializeField] UnitType m_Type;
-	[SerializeField] TMP_Text m_Label;
-	[SerializeField] double   m_Value;
-	[SerializeField] bool     m_Sign;
-	[SerializeField] bool     m_Tint;
+	[SerializeField] UnitType     m_Type;
+	[SerializeField] UnitPosition m_Position;
+	[SerializeField] TMP_Text     m_Label;
+	[SerializeField] double       m_Value;
+	[SerializeField] bool         m_Sign;
+	[SerializeField] bool         m_Tint;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -79,11 +86,24 @@ public class UIUnitLabel : UIEntity
 		string sign = m_Sign && _Value > 0 ? "+" : string.Empty;
 		switch (_Type)
 		{
-			case UnitType.Percent:    return string.Format(m_FormatInfo, "{0}{1:0.##}%", sign, _Value);
-			case UnitType.Multiplier: return string.Format(m_FormatInfo, "{0}{1:#,##0.##}*", sign, _Value);
-			case UnitType.Points:     return string.Format(m_FormatInfo, "{0}{1:N}p", sign, Math.Truncate(_Value));
-			case UnitType.Coins:      return string.Format(m_FormatInfo, "{0}{1:N}c", sign, Math.Truncate(_Value));
+			case UnitType.Percent:    return string.Format(m_FormatInfo, GetMask("{0}{1:0.##}", '%'), sign, _Value);
+			case UnitType.Multiplier: return string.Format(m_FormatInfo, GetMask("{0}{1:#,##0.##}", '*'), sign, _Value);
+			case UnitType.Points:     return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'p'), sign, Math.Truncate(_Value));
+			case UnitType.Coins:      return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'c'), sign, Math.Truncate(_Value));
 			default:                  return string.Format(m_FormatInfo, "{0}{1:#,##0.##}", sign, _Value);
+		}
+	}
+
+	string GetMask(string _Mask, char _Unit)
+	{
+		switch (m_Position)
+		{
+			case UnitPosition.Right:
+				return _Mask + _Unit;
+			case UnitPosition.Left:
+				return _Unit + _Mask;
+			default:
+				return _Mask;
 		}
 	}
 
