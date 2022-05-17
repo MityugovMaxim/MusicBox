@@ -44,34 +44,34 @@
 			fixed4 _BackgroundColor;
 			fixed4 _MaxColor;
 			fixed4 _AvgColor;
-			int    _MinTime;
-			int    _MaxTime;
-			int    _Size;
+			float  _MinTime;
+			float  _MaxTime;
+			float  _Size;
 
 			sampler2D _MaxSamples;
 			sampler2D _AvgSamples;
 
-			float2 GetCoord(const int _Index, const int _Size)
+			float2 GetCoord(const float _Index, const float _Size)
 			{
 				const float x = _Index % _Size;
 				const float y = _Index / _Size;
 				return float2(x / _Size, y / _Size);
 			}
 
-			float GetValue(const sampler2D _Samples, const int _Length, const float _Data, const float _Limit)
+			float GetValue(const sampler2D _Samples, const float _Length, const float _Data, const float _Limit)
 			{
 				if (_Length < 1)
 					return _Limit;
 				
-				const int minIndex = floor(_Data);
+				const float minIndex = floor(_Data);
 				if (minIndex < 0 || minIndex >= _Length)
 					return _Limit;
 				
-				const int maxIndex = ceil(_Data);
+				const float maxIndex = ceil(_Data);
 				if (maxIndex < 0 || maxIndex >= _Length)
 					return _Limit;
 				
-				const half phase = frac(_Data);
+				const float phase = frac(_Data);
 				
 				const float minValue = tex2D(_Samples, GetCoord(minIndex, _Size)).a;
 				const float maxValue = tex2D(_Samples, GetCoord(maxIndex, _Size)).a;
@@ -83,7 +83,7 @@
 
 			fragData vert(vertData IN)
 			{
-				const int index = lerp(_MinTime, _MaxTime, IN.uv.y);
+				const float index = lerp(_MinTime, _MaxTime, IN.uv.y);
 				
 				fragData OUT;
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
