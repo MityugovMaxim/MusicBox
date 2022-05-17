@@ -19,6 +19,7 @@ public class SongEditInstaller : MonoInstaller
 	[SerializeField] UICreateDoubleHandle m_CreateDoubleHandle;
 	[SerializeField] UICreateHoldHandle   m_CreateHoldHandle;
 	[SerializeField] UICreateColorHandle  m_CreateColorHandle;
+	[SerializeField] UIRecordHandle       m_RecordHandle;
 
 	public override void InstallBindings()
 	{
@@ -38,6 +39,7 @@ public class SongEditInstaller : MonoInstaller
 		Container.Bind<UICreateDoubleHandle>().FromInstance(m_CreateDoubleHandle).AsSingle();
 		Container.Bind<UICreateHoldHandle>().FromInstance(m_CreateHoldHandle).AsSingle();
 		Container.Bind<UICreateColorHandle>().FromInstance(m_CreateColorHandle).AsSingle();
+		Container.Bind<UIRecordHandle>().FromInstance(m_RecordHandle).AsSingle();
 	}
 
 	void InstallPool<T, TPool>(T _Prefab, int _Capacity = 5) where T : Object where TPool : IMemoryPool

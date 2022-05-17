@@ -48,8 +48,8 @@ public class UIPlayer : ASFPlayer
 		if (_Midi == null)
 			return;
 		
-		ClearTracks();
 		Clear();
+		ClearTracks();
 		
 		ASFTapTrack    tapTrack    = new ASFTapTrack(m_TapTrack);
 		ASFDoubleTrack doubleTrack = new ASFDoubleTrack(m_DoubleTrack);

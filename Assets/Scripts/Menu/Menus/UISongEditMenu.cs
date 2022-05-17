@@ -377,6 +377,7 @@ public class UISongEditMenu : UIMenu
 	[Inject] AudioManager     m_AudioManager;
 	[Inject] AmbientProcessor m_AmbientProcessor;
 	[Inject] IFileManager     m_FileManager;
+	[Inject] UIRecordHandle   m_RecordHandle;
 
 	string m_SongID;
 	double m_Time;
@@ -484,6 +485,17 @@ public class UISongEditMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
+	public void Record()
+	{
+		float latency = m_AudioManager.GetLatency();
+		
+		m_Time = m_Player.Time;
+		
+		m_Player.Play(latency);
+		
+		m_RecordHandle.gameObject.SetActive(true);
+	}
+
 	public void Play()
 	{
 		float latency = m_AudioManager.GetLatency();
@@ -491,13 +503,18 @@ public class UISongEditMenu : UIMenu
 		m_Time = m_Player.Time;
 		
 		m_Player.Play(latency);
+		
+		m_RecordHandle.gameObject.SetActive(false);
 	}
 
 	public void Stop()
 	{
-		m_Player.Time = m_Time;
+		if (m_Player.State != ASFPlayerState.Play)
+			m_Player.Time = m_Time;
 		
 		m_Player.Stop();
+		
+		m_RecordHandle.gameObject.SetActive(false);
 	}
 
 	public async void Midi()
