@@ -253,7 +253,7 @@ public class StorageProcessor
 			if (_Force)
 				await UpdateFileAsync(_RemotePath, localPath, _Token);
 			else
-				UpdateFile(_RemotePath, localPath);
+				UpdateFile(_RemotePath, localPath, _Token);
 			
 			try
 			{
@@ -299,7 +299,7 @@ public class StorageProcessor
 		
 		if (File.Exists(localPath))
 		{
-			UpdateFile(_RemotePath, localPath);
+			UpdateFile(_RemotePath, localPath, _Token);
 			
 			try
 			{
@@ -380,9 +380,9 @@ public class StorageProcessor
 		}
 	}
 
-	static async void UpdateFile(string _RemotePath, string _LocalPath)
+	static async void UpdateFile(string _RemotePath, string _LocalPath, CancellationToken _Token = default)
 	{
-		await UpdateFileAsync(_RemotePath, _LocalPath);
+		await UpdateFileAsync(_RemotePath, _LocalPath, _Token);
 	}
 
 	static async Task UpdateFileAsync(string _RemotePath, string _LocalPath, CancellationToken _Token = default)
@@ -409,7 +409,7 @@ public class StorageProcessor
 		
 		StorageMetadata metadata = await reference.GetMetadataAsync();
 		
-		if (PlayerPrefs.GetString(_RemotePath) == metadata.Md5Hash)
+		if (metadata == null || PlayerPrefs.GetString(_RemotePath) == metadata.Md5Hash)
 			return;
 		
 		Debug.LogFormat("[StorageProcessor] Updating file '{0}'...", _RemotePath);
