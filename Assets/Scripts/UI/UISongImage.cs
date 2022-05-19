@@ -18,6 +18,6 @@ public class UISongImage : UIEntity
 		m_Image.Path = $"Thumbnails/Songs/{m_SongID}.jpg";
 		
 		if (m_Grayscale)
-			m_Album.Grayscale = m_SongsManager.IsSongLockedByLevel(m_SongID) ? 0.975f : 0;
+			m_Album.Grayscale = m_SongsManager.IsSongLockedByLevel(m_SongID) ? 0.8f : 0;
 	}
 }

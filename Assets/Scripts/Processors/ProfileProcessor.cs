@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Compression;
 using Firebase.Database;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -17,6 +18,7 @@ public class ProfileSnapshot
 	public IReadOnlyList<string>             SongIDs      { get; }
 	public IReadOnlyList<string>             OfferIDs     { get; }
 	public IReadOnlyList<ProfileTransaction> Transactions { get; }
+	public IReadOnlyList<ProfileTimer>       Timers       { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
@@ -28,7 +30,37 @@ public class ProfileSnapshot
 		Transactions = _Data.Child("transactions").Children
 			.Select(_Transaction => new ProfileTransaction(_Transaction))
 			.ToList();
+		Timers = _Data.Child("timers").Children
+			.Select(_Timer => new ProfileTimer(_Timer))
+			.ToList();
 	}
+}
+
+public class ProfileTimer
+{
+	public string ID             { [UsedImplicitly] get; }
+	public long   StartTimestamp { [UsedImplicitly] get; }
+	public long   EndTimestamp   { [UsedImplicitly] get; }
+
+	readonly Dictionary<string, object> m_Payload;
+
+	public ProfileTimer(DataSnapshot _Data)
+	{
+		ID             = _Data.Key;
+		StartTimestamp = _Data.GetLong("start_timestamp");
+		EndTimestamp   = _Data.GetLong("end_timestamp");
+		m_Payload      = _Data.Child("payload").GetValue(true) as Dictionary<string, object>;
+	}
+
+	public string GetString(string _Key, string _Default = null) => m_Payload.GetString(_Key, _Default);
+
+	public int GetInt(string _Key, int _Default = 0) => m_Payload.GetInt(_Key, _Default);
+
+	public float GetFloat(string _Key, float _Default = 0) => m_Payload.GetFloat(_Key, _Default);
+
+	public double GetDouble(string _Key, double _Default = 0) => m_Payload.GetDouble(_Key, _Default);
+
+	public long GetLong(string _Key, long _Default = 0) => m_Payload.GetLong(_Key, _Default);
 }
 
 public class ProfileTransaction
@@ -90,28 +122,14 @@ public class ProfileProcessor
 		Loaded = true;
 	}
 
-	public List<string> GetVisibleProductIDs()
-	{
-		return m_ProductsProcessor.GetProductIDs()
-			.Where(_ProductID => !HasProduct(_ProductID))
-			.OrderByDescending(_ProductID => Mathf.Abs(m_ProductsProcessor.GetDiscount(_ProductID)))
-			.ToList();
-	}
-
 	public bool HasSong(string _SongID)
 	{
-		if (m_Snapshot == null || m_Snapshot.SongIDs == null)
-			return false;
-		
-		return m_Snapshot.SongIDs.Contains(_SongID);
+		return m_Snapshot?.SongIDs?.Contains(_SongID) ?? false;
 	}
 
 	public bool HasOffer(string _OfferID)
 	{
-		if (m_Snapshot == null || m_Snapshot.OfferIDs == null)
-			return false;
-		
-		return m_Snapshot.OfferIDs.Contains(_OfferID);
+		return m_Snapshot?.OfferIDs?.Contains(_OfferID) ?? false;
 	}
 
 	public bool HasProduct(string _ProductID)
@@ -137,6 +155,11 @@ public class ProfileProcessor
 			.ToList();
 		
 		return productIDs.Any(m_ProductsProcessor.IsNoAds);
+	}
+
+	public ProfileTimer GetTimer(string _TimerID)
+	{
+		return m_Snapshot?.Timers?.FirstOrDefault(_Timer => _Timer.ID == _TimerID);
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)

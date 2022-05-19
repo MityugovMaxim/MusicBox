@@ -14,10 +14,11 @@ public class ProductSnapshot
 	public bool                  Active   { get; }
 	public ProductType           Type     { get; }
 	public bool                  Promo    { get; }
+	public bool                  Special  { get; }
 	public bool                  NoAds    { get; }
 	public long                  Coins    { get; }
 	public float                 Discount { get; }
-	public IReadOnlyList<string> SongIDs { get; }
+	public IReadOnlyList<string> SongIDs  { get; }
 
 	public ProductSnapshot(DataSnapshot _Data)
 	{
@@ -25,6 +26,7 @@ public class ProductSnapshot
 		Active   = _Data.GetBool("active");
 		Type     = _Data.GetEnum<ProductType>("type");
 		Promo    = _Data.GetBool("promo");
+		Special  = _Data.GetBool("special");
 		Coins    = _Data.GetLong("coins");
 		Discount = _Data.GetFloat("discount");
 		NoAds    = _Data.GetBool("no_ads");
@@ -139,26 +141,21 @@ public class ProductsProcessor
 	{
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[ProductsProcessor] Promo check failed. Snapshot with ID '{0}' is null.", _ProductID);
-			return false;
-		}
+		return snapshot?.Promo ?? false;
+	}
+
+	public bool IsSpecial(string _ProductID)
+	{
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		return snapshot.Promo;
+		return snapshot?.Special ?? false;
 	}
 
 	public bool IsNoAds(string _ProductID)
 	{
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[ProductsProcessor] No ads check failed. Snapshot with ID '{0}' is null.", _ProductID);
-			return false;
-		}
-		
-		return snapshot.NoAds;
+		return snapshot?.NoAds ?? false;
 	}
 
 	public string GetCoinsProductID(long _Coins)

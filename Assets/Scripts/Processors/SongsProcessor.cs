@@ -7,9 +7,6 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-[Preserve]
-public class SongsDataUpdateSignal { }
-
 public class SongSnapshot
 {
 	public string                              ID                { get; }
@@ -18,6 +15,7 @@ public class SongSnapshot
 	public string                              Artist            { get; }
 	public SongMode                            Mode              { get; }
 	public SongBadge                           Badge             { get; }
+	public bool                                Promo             { get; }
 	public float                               BPM               { get; }
 	public float                               Speed             { get; }
 	public long                                DefaultPayout     { get; }
@@ -42,6 +40,7 @@ public class SongSnapshot
 		Artist            = _Data.GetString("artist", string.Empty);
 		Mode              = _Data.GetEnum<SongMode>("mode");
 		Badge             = _Data.GetEnum<SongBadge>("badge");
+		Promo             = _Data.GetBool("promo");
 		BPM               = _Data.GetFloat("bpm");
 		Speed             = _Data.GetFloat("speed");
 		DefaultPayout     = _Data.GetLong("default_payout");
@@ -59,6 +58,9 @@ public class SongSnapshot
 		Order             = _Data.GetInt("order");
 	}
 }
+
+[Preserve]
+public class SongsDataUpdateSignal { }
 
 [Preserve]
 public class SongsProcessor

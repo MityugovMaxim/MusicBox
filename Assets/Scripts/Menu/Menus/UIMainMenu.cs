@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -16,31 +15,13 @@ public enum MainMenuPageType
 public class UIMainMenu : UIMenu
 {
 	[SerializeField] UIProfile         m_Profile;
-	[SerializeField] UIProductPromo    m_ProductPromo;
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
 
-	SignalBus        m_SignalBus;
-	ProfileProcessor m_ProfileProcessor;
-	ProductsProcessor m_ProductsProcessor;
-	UrlProcessor     m_UrlProcessor;
+	[Inject] SignalBus    m_SignalBus;
+	[Inject] UrlProcessor m_UrlProcessor;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Songs;
-
-	[Inject]
-	public void Construct(
-		SignalBus          _SignalBus,
-		ProfileProcessor   _ProfileProcessor,
-		ProductsProcessor   _ProductsProcessor,
-		UrlProcessor       _UrlProcessor,
-		StatisticProcessor _StatisticProcessor
-	)
-	{
-		m_SignalBus        = _SignalBus;
-		m_ProfileProcessor = _ProfileProcessor;
-		m_ProductsProcessor = _ProductsProcessor;
-		m_UrlProcessor     = _UrlProcessor;
-	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant = false)
 	{
@@ -101,10 +82,7 @@ public class UIMainMenu : UIMenu
 
 	void Refresh()
 	{
-		string productID = m_ProfileProcessor.GetVisibleProductIDs().FirstOrDefault(m_ProductsProcessor.IsPromo);
-		
 		m_Profile.Setup();
-		m_ProductPromo.Setup(productID);
 	}
 
 	async void ProcessDeepLink(string _URL)

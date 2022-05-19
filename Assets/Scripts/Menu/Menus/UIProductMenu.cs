@@ -25,6 +25,7 @@ public class UIProductMenu : UISlideMenu
 	[Inject] ProductsProcessor      m_ProductsProcessor;
 	[Inject] StoreProcessor         m_StoreProcessor;
 	[Inject] ProfileProcessor       m_ProfileProcessor;
+	[Inject] ProductsManager        m_ProductsManager;
 	[Inject] SongsProcessor         m_SongsProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
 	[Inject] HapticProcessor        m_HapticProcessor;
@@ -127,7 +128,7 @@ public class UIProductMenu : UISlideMenu
 
 	string GetProductID(int _Offset)
 	{
-		List<string> productIDs = m_ProfileProcessor.GetVisibleProductIDs();
+		List<string> productIDs = m_ProductsManager.GetProductIDs();
 		int index = productIDs.IndexOf(m_ProductID);
 		if (index >= 0 && index < productIDs.Count)
 			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];

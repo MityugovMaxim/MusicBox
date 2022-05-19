@@ -1,34 +1,29 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Scripting;
 using Zenject;
 
-public class UIProductPromo : UIGroupLayout, IPointerClickHandler
+public class UIProductPromo : UIEntity, IPointerClickHandler
 {
+	[Preserve]
+	public class Pool : UIEntityPool<UIProductPromo> { }
+
 	[SerializeField] UIProductImage m_Image;
 	[SerializeField] UIProductLabel m_Label;
 	[SerializeField] UIProductPrice m_Price;
 
-	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	string m_ProductID;
 
-	public async void Setup(string _ProductID)
+	public void Setup(string _ProductID)
 	{
 		m_ProductID = _ProductID;
-		
-		if (string.IsNullOrEmpty(m_ProductID) || m_ProfileProcessor.HasProduct(m_ProductID))
-		{
-			await HideAsync();
-			return;
-		}
 		
 		m_Image.Setup(m_ProductID);
 		m_Label.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
-		
-		await ShowAsync();
 	}
 
 	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

@@ -43,7 +43,8 @@ public class ConfigProcessor
 	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multipler";
 	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multipler";
 
-	const string REVIEW_REQUEST_COUNT = "review_request_count";
+	const string REVIEW_REQUEST_COUNT    = "review_request_count";
+	const string SONG_LIBRARY_GROUP_SIZE = "song_library_group_size";
 
 	public int   ComboX2                   => GetInt(COMBO_X2);
 	public int   ComboX4                   => GetInt(COMBO_X4);
@@ -67,17 +68,18 @@ public class ConfigProcessor
 	public int   SongLeaveAdsCount         => GetInt(SONG_LEAVE_ADS_COUNT);
 	public int   SongNextAdsCount          => GetInt(SONG_NEXT_ADS_COUNT);
 	public int   SongPlayAdsCount          => GetInt(SONG_PLAY_ADS_COUNT);
-	public int   ReviewRequestCount        => GetInt(REVIEW_REQUEST_COUNT);
 	public float AccuracyPerfectMultiplier => GetFloat(ACCURACY_PERFECT_MULTIPLIER);
 	public float AccuracyGoodMultiplier    => GetFloat(ACCURACY_GOOD_MULTIPLIER);
 	public float AccuracyBadMultiplier     => GetFloat(ACCURACY_BAD_MULTIPLIER);
+	public int   ReviewRequestCount        => GetInt(REVIEW_REQUEST_COUNT);
+	public int   SongLibraryGroupSize      => GetInt(SONG_LIBRARY_GROUP_SIZE);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
 		// Game
 		{ COMBO_X2, 10 },
 		{ COMBO_X4, 30 },
-		{ COMBO_X6, 90 },
+		{ COMBO_X6, 60 },
 		{ COMBO_X8, 120 },
 		{ SONG_RATIO, 0.75f },
 		{ SONG_IFRAMES, 0.75f },
@@ -114,7 +116,8 @@ public class ConfigProcessor
 		{ ACCURACY_BAD_MULTIPLIER, 0.7f },
 		
 		// Other
-		{ REVIEW_REQUEST_COUNT, 2 }
+		{ REVIEW_REQUEST_COUNT, 2 },
+		{ SONG_LIBRARY_GROUP_SIZE, 4 },
 	};
 
 	public async Task Load()

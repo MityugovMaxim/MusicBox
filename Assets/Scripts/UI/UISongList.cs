@@ -1,14 +1,15 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UISongGroup : UIEntity
+public class UISongList : UIEntity
 {
 	[Preserve]
-	public class Pool : UIEntityPool<UISongGroup>
+	public class Pool : UIEntityPool<UISongList>
 	{
-		protected override void OnDespawned(UISongGroup _Item)
+		protected override void OnDespawned(UISongList _Item)
 		{
 			base.OnDespawned(_Item);
 			
@@ -18,9 +19,9 @@ public class UISongGroup : UIEntity
 
 	[SerializeField] RectTransform m_Container;
 
-	[Inject] UISongItem.Pool m_ItemPool;
+	[Inject] UISongElement.Pool m_ItemPool;
 
-	readonly List<UISongItem> m_Items = new List<UISongItem>();
+	readonly List<UISongElement> m_Items = new List<UISongElement>();
 
 	public void Setup(ICollection<string> _SongIDs)
 	{
@@ -39,7 +40,7 @@ public class UISongGroup : UIEntity
 			if (string.IsNullOrEmpty(songID))
 				continue;
 			
-			UISongItem item = m_ItemPool.Spawn(m_Container);
+			UISongElement item = m_ItemPool.Spawn(m_Container);
 			
 			if (item == null)
 				continue;
@@ -52,7 +53,7 @@ public class UISongGroup : UIEntity
 
 	void Clear()
 	{
-		foreach (UISongItem item in m_Items)
+		foreach (UISongElement item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 	}

@@ -42,14 +42,14 @@ public class OffersManager
 	public List<string> GetAvailableOfferIDs()
 	{
 		return m_OffersProcessor.GetOfferIDs()
-			.Where(_OfferID => !m_ProfileProcessor.HasOffer(_OfferID))
+			.Where(IsAvailable)
 			.ToList();
 	}
 
 	public List<string> GetCollectedOfferIDs()
 	{
 		return m_OffersProcessor.GetOfferIDs()
-			.Where(_OfferID => m_ProfileProcessor.HasOffer(_OfferID))
+			.Where(IsCollected)
 			.ToList();
 	}
 

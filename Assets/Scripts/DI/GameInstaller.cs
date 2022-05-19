@@ -9,9 +9,19 @@ public class GameInstaller : MonoInstaller
 {
 	[SerializeField] Canvas            m_Canvas;
 	[SerializeField] UISongContainer   m_SongContainer;
-	[SerializeField] UISongItem        m_SongItem;
-	[SerializeField] UISongGroup       m_SongGroup;
-	[SerializeField] UIProductItem     m_ProductItem;
+
+	[SerializeField] UISongHeader  m_SongHeader;
+	[SerializeField] UISongFooter  m_SongFooter;
+	[SerializeField] UISongItem    m_SongItem;
+	[SerializeField] UISongGroup   m_SongGroup;
+	[SerializeField] UISongElement m_SongElement;
+	[SerializeField] UISongList    m_SongList;
+
+	[SerializeField] UIProductPromo   m_ProductPromo;
+	[SerializeField] UIProductSpecial m_ProductSpecial;
+	[SerializeField] UIProductItem    m_ProductItem;
+	[SerializeField] UIProductGroup   m_ProductGroup;
+
 	[SerializeField] UIOfferItem       m_OfferItem;
 	[SerializeField] UINewsItem        m_NewsItem;
 	[SerializeField] UISongUnlockItem  m_SongUnlockItem;
@@ -45,21 +55,33 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticFirebase>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		
+		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
+		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
 		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
+		InstallPool<UIProductGroup, UIProductGroup.Pool>(m_ProductGroup, 1);
 		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
-		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem);
-		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem);
+		
+		InstallPool<UISongHeader, UISongHeader.Pool>(m_SongHeader);
+		InstallPool<UISongFooter, UISongFooter.Pool>(m_SongFooter);
 		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
 		InstallPool<UISongGroup, UISongGroup.Pool>(m_SongGroup);
+		InstallPool<UISongElement, UISongElement.Pool>(m_SongElement);
+		InstallPool<UISongList, UISongList.Pool>(m_SongList);
+		
 		InstallPool<UISongUnlockItem, UISongUnlockItem.Pool>(m_SongUnlockItem);
+		
 		InstallPool<UILanguageItem, UILanguageItem.Pool>(m_LanguageItem);
+		
+		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem);
+		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem);
+		
 		InstallPool<SoundSource, SoundSource.Pool>(m_SoundSource);
 	}
 
-	void InstallPool<TItem, TPool>(TItem _Prefab) where TItem : Object where TPool : IMemoryPool
+	void InstallPool<TItem, TPool>(TItem _Prefab, int _Capacity = 5) where TItem : Object where TPool : IMemoryPool
 	{
 		Container.BindMemoryPool<TItem, TPool>()
-			.WithInitialSize(5)
+			.WithInitialSize(_Capacity)
 			.FromComponentInNewPrefab(_Prefab)
 			.UnderTransformGroup($"[{typeof(TItem).Name}] Pool");
 	}
@@ -158,6 +180,7 @@ public class GameInstaller : MonoInstaller
 	{
 		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<OffersManager>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<ProductsManager>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()

@@ -18,9 +18,9 @@ public class UISongItem : UIEntity, IPointerClickHandler
 
 	string m_SongID;
 
-	public void Setup(string _LevelID)
+	public void Setup(string _SongID)
 	{
-		m_SongID = _LevelID;
+		m_SongID = _SongID;
 		
 		m_Image.Setup(m_SongID);
 		m_Discs.Setup(m_SongID);
