@@ -22,7 +22,14 @@ public class ProductSnapshot
 
 	public ProductSnapshot(DataSnapshot _Data)
 	{
-		ID       = _Data.Key;
+		#if UNITY_IOS
+		ID = _Data.GetString("app_store", _Data.Key);
+		#elif UNITY_ANDROID
+		ID = _Data.GetString("google_play", _Data.Key);
+		#else
+		ID = _Data.Key;
+		#endif
+		
 		Active   = _Data.GetBool("active");
 		Type     = _Data.GetEnum<ProductType>("type");
 		Promo    = _Data.GetBool("promo");
