@@ -38,8 +38,8 @@ public class UITapHandle : UIHandle
 		Rect area = GetLocalRect(_Area);
 		
 		float distance = Mathf.Abs(area.center.y - rect.center.y);
-		float length   = rect.height + FRAME_ERROR;
-		float progress = 1.0f - distance / length;
+		float length   = rect.height;
+		float progress = 1.0f - Mathf.Max(0, distance - FRAME_ERROR) / length;
 		
 		m_Processed = true;
 		
