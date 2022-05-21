@@ -58,13 +58,13 @@ public class UIDoubleHandle : UIHandle
 		if (m_Count < MIN_COUNT)
 			return;
 		
-		Rect rect = RectTransform.rect;
 		Rect area = GetLocalRect(_Area);
+		Rect rect = RectTransform.rect;
 		
-		float position = area.center.y + m_Indicator.InputOffset;
+		float position = area.center.y;
 		float distance = Mathf.Abs(position - rect.center.y);
-		float length   = rect.height;
-		float progress = 1.0f - Mathf.Max(distance - m_Indicator.InputError) / length;
+		float length   = area.height;
+		float progress = 1.0f - distance / length;
 		
 		m_Processed = true;
 		

@@ -7,7 +7,7 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 {
 	[SerializeField] RectTransform m_InputArea;
 
-	float InputError  { get; set; }
+	float InputExtend { get; set; }
 	float InputOffset { get; set; }
 
 	[Inject] SignalBus       m_SignalBus;
@@ -19,6 +19,14 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	readonly List<UIHandle>                  m_ActiveHandles   = new List<UIHandle>();
 
 	bool m_Processing;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		InputExtend = m_ConfigProcessor.InputExtend;
+		InputOffset = m_ConfigProcessor.InputOffset;
+	}
 
 	public void Process()
 	{
@@ -137,14 +145,11 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	{
 		Rect rect = m_InputArea.GetWorldRect();
 		
-		RectOffset padding = new RectOffset(
-			0,
-			0,
-			(int)(InputError + InputOffset),
-			(int)InputError
-		);
+		rect.y      += InputOffset;
+		rect.y      -= InputExtend;
+		rect.height += InputExtend * 2;
 		
-		return padding.Add(rect);
+		return rect;
 	}
 
 	Rect GetZoneArea(PointerEventData _EventData)

@@ -35,10 +35,10 @@ public class UITapHandle : UIHandle
 		Rect rect = RectTransform.rect;
 		Rect area = GetLocalRect(_Area);
 		
-		float position = area.center.y + m_Indicator.InputOffset;
+		float position = area.center.y;
 		float distance = Mathf.Abs(position - rect.center.y);
-		float length   = rect.height;
-		float progress = 1.0f - Mathf.Max(0, distance - m_Indicator.InputError) / length;
+		float length   = area.height;
+		float progress = 1.0f - distance / length;
 		
 		m_Processed = true;
 		

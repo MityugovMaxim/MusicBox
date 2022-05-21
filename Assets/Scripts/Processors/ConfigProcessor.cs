@@ -43,7 +43,7 @@ public class ConfigProcessor
 	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multipler";
 	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multipler";
 
-	const string INPUT_ERROR  = "input_error";
+	const string INPUT_EXTEND = "input_extend";
 	const string INPUT_OFFSET = "input_offset";
 
 	const string REVIEW_REQUEST_COUNT    = "review_request_count";
@@ -74,7 +74,7 @@ public class ConfigProcessor
 	public float AccuracyPerfectMultiplier => GetFloat(ACCURACY_PERFECT_MULTIPLIER);
 	public float AccuracyGoodMultiplier    => GetFloat(ACCURACY_GOOD_MULTIPLIER);
 	public float AccuracyBadMultiplier     => GetFloat(ACCURACY_BAD_MULTIPLIER);
-	public float InputError                => GetFloat(INPUT_ERROR);
+	public float InputExtend               => GetFloat(INPUT_EXTEND);
 	public float InputOffset               => GetFloat(INPUT_OFFSET);
 	public int   ReviewRequestCount        => GetInt(REVIEW_REQUEST_COUNT);
 	public int   SongLibraryGroupSize      => GetInt(SONG_LIBRARY_GROUP_SIZE);
@@ -121,8 +121,8 @@ public class ConfigProcessor
 		{ ACCURACY_BAD_MULTIPLIER, 0.7f },
 		
 		// Input
-		{ INPUT_ERROR, 20 },
-		{ INPUT_OFFSET, 15 },
+		{ INPUT_EXTEND, 30 },
+		{ INPUT_OFFSET, 10 },
 		
 		// Other
 		{ REVIEW_REQUEST_COUNT, 2 },

@@ -117,10 +117,10 @@ public class UIHoldHandle : UIHandle
 		Rect rect      = RectTransform.rect;
 		Rect indicator = GetLocalRect(m_Indicator.GetWorldRect());
 		
-		float position = m_Area.center.y + m_Indicator.InputOffset;
+		float position = m_Area.center.y;
 		float distance = Mathf.Abs(position - indicator.yMin - rect.height * 0.5f);
-		float length   = rect.height;
-		float progress = 1.0f - Mathf.Max(0, distance - m_Indicator.InputError) / length;
+		float length   = m_Area.height;
+		float progress = 1.0f - distance / length;
 		
 		ProcessHit(progress);
 	}
