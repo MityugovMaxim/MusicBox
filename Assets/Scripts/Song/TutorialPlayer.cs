@@ -123,7 +123,7 @@ public class TutorialPlayer : ASFPlayer
 			await Task.Delay(150);
 		}
 		
-		await Task.Delay(2500);
+		await Task.Delay(4000);
 		
 		m_HealthManager.Restore();
 		
@@ -163,7 +163,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_SignalBus.Fire(new TapFailSignal(0));
 		
-		await Task.Delay(1500);
+		await Task.Delay(3000);
 	}
 
 	Task TapAutoAction() => AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup);
