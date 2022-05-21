@@ -114,6 +114,8 @@ public class ScoreManager : IInitializable, IDisposable
 
 	string m_SongID;
 
+	int m_Miss;
+
 	int m_TapPerfect;
 	int m_TapGood;
 	int m_TapBad;
@@ -189,6 +191,8 @@ public class ScoreManager : IInitializable, IDisposable
 
 	public void Restore()
 	{
+		m_Miss = 0;
+		
 		m_TapPerfect = 0;
 		m_TapGood    = 0;
 		m_TapBad     = 0;
@@ -250,6 +254,8 @@ public class ScoreManager : IInitializable, IDisposable
 			count++;
 		}
 		
+		accuracy = Mathf.Max(0, accuracy - m_Miss * goodMultiplier);
+		
 		accuracy = Mathf.Clamp01(accuracy / count);
 		
 		return Mathf.FloorToInt(accuracy * 100);
@@ -299,6 +305,8 @@ public class ScoreManager : IInitializable, IDisposable
 	void RegisterInputMiss()
 	{
 		Combo = 0;
+		
+		m_Miss++;
 		
 		ProcessScore(ScoreGrade.Bad);
 	}
