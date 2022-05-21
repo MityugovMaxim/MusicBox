@@ -83,7 +83,7 @@ public class ProfileTransaction
 public class ProfileDataUpdateSignal { }
 
 [Preserve]
-public class ProfileProcessor
+public class ProfileProcessor : IInitializable, IDisposable
 {
 	public long Coins => m_Snapshot?.Coins ?? 0;
 	public int  Discs => m_Snapshot?.Discs ?? 0;
@@ -99,6 +99,16 @@ public class ProfileProcessor
 	ProfileSnapshot m_Snapshot;
 
 	DatabaseReference m_ProfileData;
+
+	void IInitializable.Initialize()
+	{
+		m_SignalBus.Subscribe<SongsDataUpdateSignal>(OnSongsLibraryUpdate);
+	}
+
+	void IDisposable.Dispose()
+	{
+		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(OnSongsLibraryUpdate);
+	}
 
 	public async Task Load()
 	{
@@ -208,5 +218,16 @@ public class ProfileProcessor
 		}
 		
 		m_Snapshot = new ProfileSnapshot(profileSnapshot);
+	}
+
+	async void OnSongsLibraryUpdate()
+	{
+		SongLibraryRequest request = new SongLibraryRequest();
+		
+		await request.SendAsync();
+		
+		await FetchProfile();
+		
+		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 }
