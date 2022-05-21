@@ -133,16 +133,30 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		_EventData.Use();
 	}
 
-	Rect GetZoneArea(PointerEventData _EventData)
+	Rect GetAreaRect()
 	{
 		Rect rect = m_InputArea.GetWorldRect();
+		
+		RectOffset padding = new RectOffset(
+			0,
+			0,
+			(int)(InputError + InputOffset),
+			(int)InputError
+		);
+		
+		return padding.Add(rect);
+	}
+
+	Rect GetZoneArea(PointerEventData _EventData)
+	{
+		Rect rect = GetAreaRect();
 		
 		Vector2 position = new Vector2(
 			_EventData.pointerCurrentRaycast.worldPosition.x,
 			rect.y + rect.height * 0.5f
 		);
 		
-		Vector2 size = new Vector2(0, rect.height + InputError * 2 + InputOffset);
+		Vector2 size = new Vector2(0, rect.height);
 		
 		return new Rect(position - size * 0.5f, size);
 	}
@@ -154,10 +168,10 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 
 	void EnableHandles()
 	{
-		Rect rect = m_InputArea.GetWorldRect();
+		Rect rect = GetAreaRect();
 		
-		float enterThreshold = rect.yMax + InputError + InputOffset;
-		float exitThreshold  = rect.yMin - InputError;
+		float enterThreshold = rect.yMax;
+		float exitThreshold  = rect.yMin;
 		
 		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
 		{
@@ -189,10 +203,10 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 
 	void DisableHandles()
 	{
-		Rect rect = m_InputArea.GetWorldRect();
+		Rect rect = GetAreaRect();
 		
-		float enterThreshold = rect.yMax + InputError + InputOffset;
-		float exitThreshold  = rect.yMin - InputError;
+		float enterThreshold = rect.yMax;
+		float exitThreshold  = rect.yMin;
 		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
