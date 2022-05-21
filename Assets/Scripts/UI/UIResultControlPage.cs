@@ -145,7 +145,6 @@ public class UIResultControlPage : UIResultMenuPage
 			UnityEngine.iOS.Device.RequestStoreReview();
 			#elif UNITY_ANDROID
 			// TODO: Create review request
-			Log.Info(this, "Request store review");
 			#endif
 		}
 		
