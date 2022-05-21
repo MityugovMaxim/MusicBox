@@ -398,7 +398,7 @@ public class ScoreManager : IInitializable, IDisposable
 		{
 			Combo++;
 			
-			grade = ScoreGrade.Perfect;
+			grade = ScoreGrade.None;
 			m_HoldPerfect++;
 			AddScore(_Signal.Progress * HoldPerfectMultiplier);
 		}
@@ -406,7 +406,7 @@ public class ScoreManager : IInitializable, IDisposable
 		{
 			Combo++;
 			
-			grade = ScoreGrade.Good;
+			grade = ScoreGrade.None;
 			m_HoldGood++;
 			AddScore(_Signal.Progress * HoldGoodMultiplier);
 		}
