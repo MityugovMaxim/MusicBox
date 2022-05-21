@@ -349,7 +349,7 @@ public class SongController
 	{
 		string path = $"Songs/{_SongID}.asf";
 		
-		return await m_StorageProcessor.LoadJson(path, _Token);
+		return await m_StorageProcessor.LoadJson(path, true, _Token);
 	}
 
 	void DisableAudio()
