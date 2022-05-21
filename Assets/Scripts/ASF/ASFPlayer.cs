@@ -142,7 +142,7 @@ namespace AudioBox.ASF
 			m_TokenSource = null;
 		}
 
-		public void Stop()
+		public virtual void Stop()
 		{
 			if (State == ASFPlayerState.Stop)
 				return;
