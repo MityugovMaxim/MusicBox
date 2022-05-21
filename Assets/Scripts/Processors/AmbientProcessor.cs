@@ -25,9 +25,9 @@ public class AmbientSnapshot
 
 public class AmbientProcessor : MonoBehaviour
 {
-	const float PLAY_FADE_DURATION   = 0.5f;
-	const float PAUSE_FADE_DURATION  = 0.5f;
-	const float RESUME_FADE_DURATION = 0.5f;
+	const float PLAY_FADE_DURATION   = 1.0f;
+	const float PAUSE_FADE_DURATION  = 1.0f;
+	const float RESUME_FADE_DURATION = 1.0f;
 
 	bool Loaded { get; set; }
 
