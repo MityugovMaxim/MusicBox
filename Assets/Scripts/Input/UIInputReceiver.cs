@@ -7,7 +7,11 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 {
 	[SerializeField] RectTransform m_InputArea;
 
-	[Inject] SignalBus m_SignalBus;
+	float InputError  { get; set; }
+	float InputOffset { get; set; }
+
+	[Inject] SignalBus       m_SignalBus;
+	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	readonly Dictionary<int, Rect>           m_Pointers        = new Dictionary<int, Rect>();
 	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
@@ -138,7 +142,7 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			rect.y + rect.height * 0.5f
 		);
 		
-		Vector2 size = new Vector2(0, rect.height);
+		Vector2 size = new Vector2(0, rect.height + InputError * 2 + InputOffset);
 		
 		return new Rect(position - size * 0.5f, size);
 	}
@@ -152,8 +156,8 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	{
 		Rect rect = m_InputArea.GetWorldRect();
 		
-		float enterThreshold = rect.yMax;
-		float exitThreshold  = rect.yMin;
+		float enterThreshold = rect.yMax + InputError + InputOffset;
+		float exitThreshold  = rect.yMin - InputError;
 		
 		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
 		{
@@ -187,8 +191,8 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	{
 		Rect rect = m_InputArea.GetWorldRect();
 		
-		float enterThreshold = rect.yMax;
-		float exitThreshold  = rect.yMin;
+		float enterThreshold = rect.yMax + InputError + InputOffset;
+		float exitThreshold  = rect.yMin - InputError;
 		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{

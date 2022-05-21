@@ -106,8 +106,8 @@ public class ConfigProcessor
 		{ HOLD_HIT_MULTIPLIER, 10 },
 		
 		// Score
+		{ SCORE_GOOD_THRESHOLD, 0.5 },
 		{ SCORE_PERFECT_THRESHOLD, 0.8 },
-		{ SCORE_GOOD_THRESHOLD, 0.4 },
 		
 		// Ads
 		{ SONG_RESTART_ADS_COUNT, 2 },
@@ -122,7 +122,7 @@ public class ConfigProcessor
 		
 		// Input
 		{ INPUT_ERROR, 20 },
-		{ INPUT_OFFSET, 10 },
+		{ INPUT_OFFSET, 15 },
 		
 		// Other
 		{ REVIEW_REQUEST_COUNT, 2 },
