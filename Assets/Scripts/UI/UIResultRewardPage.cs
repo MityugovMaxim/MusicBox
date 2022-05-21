@@ -251,9 +251,6 @@ public class UIResultRewardPage : UIResultMenuPage
 
 	Task UnitAsync(UICascadeUnitLabel _Label, double _Value, CancellationToken _Token = default)
 	{
-		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
-		m_SoundProcessor.Start(m_UnitSound);
-		
 		long value = (long)_Value;
 		
 		if (Math.Abs(value) <= 1)
@@ -261,6 +258,9 @@ public class UIResultRewardPage : UIResultMenuPage
 			_Label.Value = value;
 			return Task.FromResult(true);
 		}
+		
+		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
+		m_SoundProcessor.Start(m_UnitSound);
 		
 		return UnityTask.Phase(
 			_Phase => _Label.Value = MathUtility.Lerp(0, value, _Phase),
@@ -273,6 +273,9 @@ public class UIResultRewardPage : UIResultMenuPage
 				
 				_Label.Play();
 			},
+			_Token
+		).ContinueWithOnMainThread(
+			_Task => UnityTask.Delay(250, _Token),
 			_Token
 		);
 	}
