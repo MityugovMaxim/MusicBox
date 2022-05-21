@@ -2,8 +2,7 @@ using UnityEngine;
 
 public class UIDoubleHandle : UIHandle
 {
-	const float FRAME_ERROR = 30;
-	const int   MIN_COUNT   = 2;
+	const int MIN_COUNT = 2;
 
 	protected override bool Processed => m_Processed;
 
@@ -62,9 +61,10 @@ public class UIDoubleHandle : UIHandle
 		Rect rect = RectTransform.rect;
 		Rect area = GetLocalRect(_Area);
 		
-		float distance = Mathf.Abs(area.center.y - rect.center.y);
+		float position = area.center.y + m_Indicator.InputOffset;
+		float distance = Mathf.Abs(position - rect.center.y);
 		float length   = rect.height;
-		float progress = 1.0f - Mathf.Max(distance - FRAME_ERROR) / length;
+		float progress = 1.0f - Mathf.Max(distance - m_Indicator.InputError) / length;
 		
 		m_Processed = true;
 		

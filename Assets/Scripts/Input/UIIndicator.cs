@@ -26,14 +26,18 @@ public abstract class UIIndicator : UIEntity
 		}
 	}
 
+	public float InputError  { get; private set; }
+	public float InputOffset { get; private set; }
+
 	protected Animator    Animator    => m_Animator;
 	protected SignalBus   SignalBus   => m_SignalBus;
 	protected FXProcessor FXProcessor => m_FXProcessor;
 
 	[SerializeField] Animator m_Animator;
 
-	[Inject] SignalBus   m_SignalBus;
-	[Inject] FXProcessor m_FXProcessor;
+	[Inject] SignalBus       m_SignalBus;
+	[Inject] FXProcessor     m_FXProcessor;
+	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	Rect m_ViewRect;
 
@@ -45,6 +49,9 @@ public abstract class UIIndicator : UIEntity
 		base.Awake();
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
+		
+		InputError  = m_ConfigProcessor.InputError;
+		InputOffset = m_ConfigProcessor.InputOffset;
 	}
 
 	public void Setup(RectTransform _Container, ASFClip _Clip, Action<ASFClip> _Callback)

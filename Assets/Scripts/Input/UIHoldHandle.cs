@@ -4,8 +4,6 @@ using UnityEngine.Events;
 
 public class UIHoldHandle : UIHandle
 {
-	const float FRAME_ERROR = 30;
-
 	[Serializable]
 	public class HoldEvent : UnityEvent<bool> { }
 
@@ -119,9 +117,10 @@ public class UIHoldHandle : UIHandle
 		Rect rect      = RectTransform.rect;
 		Rect indicator = GetLocalRect(m_Indicator.GetWorldRect());
 		
-		float distance = Mathf.Abs(m_Area.center.y - indicator.yMin - rect.height * 0.5f);
-		float length   = m_Area.height;
-		float progress = 1.0f - Mathf.Max(0, distance - FRAME_ERROR) / length;
+		float position = m_Area.center.y + m_Indicator.InputOffset;
+		float distance = Mathf.Abs(position - indicator.yMin - rect.height * 0.5f);
+		float length   = rect.height;
+		float progress = 1.0f - Mathf.Max(0, distance - m_Indicator.InputError) / length;
 		
 		ProcessHit(progress);
 	}

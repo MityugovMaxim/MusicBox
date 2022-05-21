@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class UITapHandle : UIHandle
 {
-	const float FRAME_ERROR = 30;
-
 	protected override bool Processed => m_Processed;
 
 	[SerializeField] UITapIndicator m_Indicator;
@@ -37,9 +35,10 @@ public class UITapHandle : UIHandle
 		Rect rect = RectTransform.rect;
 		Rect area = GetLocalRect(_Area);
 		
-		float distance = Mathf.Abs(area.center.y - rect.center.y);
+		float position = area.center.y + m_Indicator.InputOffset;
+		float distance = Mathf.Abs(position - rect.center.y);
 		float length   = rect.height;
-		float progress = 1.0f - Mathf.Max(0, distance - FRAME_ERROR) / length;
+		float progress = 1.0f - Mathf.Max(0, distance - m_Indicator.InputError) / length;
 		
 		m_Processed = true;
 		
