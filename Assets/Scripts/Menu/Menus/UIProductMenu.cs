@@ -21,7 +21,6 @@ public class UIProductMenu : UISlideMenu
 
 	[SerializeField, Sound] string m_PurchaseSound;
 
-	[Inject] SignalBus              m_SignalBus;
 	[Inject] ProductsProcessor      m_ProductsProcessor;
 	[Inject] StoreProcessor         m_StoreProcessor;
 	[Inject] ProfileProcessor       m_ProfileProcessor;

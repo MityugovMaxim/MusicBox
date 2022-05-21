@@ -1,12 +1,13 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 public class UIProfile : UIEntity
 {
 	long Coins
 	{
-		get => (long)m_Coins.Value;
+		[Preserve] get => (long)m_Coins.Value;
 		set => m_Coins.Value = value;
 	}
 
