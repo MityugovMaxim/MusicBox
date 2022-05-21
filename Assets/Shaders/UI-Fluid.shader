@@ -86,7 +86,7 @@ Shader "UI/Fluid"
 			{
 				const fixed value = tex2D(_MainTex, IN.texcoord).r;
 				
-				const fixed4 color = BACKGROUND_BY_RANGE(value, 0.1, 0.95) * value * 0.6;
+				const fixed4 color = BACKGROUND_BY_RANGE(value, 0.3, 0.95) * value * 0.6;
 				
 				return IN.color + color + color * color + smoothstep(0.9, 1, _ForegroundPrimaryColor * value) * 0.6;
 			}
