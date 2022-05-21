@@ -1,28 +1,35 @@
 using System;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
-public class UISongUnlockItem : UIEntity
+public class UIUnlockItem : UIEntity
 {
+	public enum UnlockType
+	{
+		Song  = 0,
+		Coins = 1,
+	}
+
 	[Preserve]
-	public class Pool : UIEntityPool<UISongUnlockItem> { }
+	public class Pool : UIEntityPool<UIUnlockItem> { }
 
 	const string PLAY_STATE = "play";
 
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	[SerializeField] UISongImage m_Image;
+	[SerializeField] WebGraphic  m_Image;
+	[SerializeField] TMP_Text    m_Label;
+	[SerializeField] UIUnitLabel m_Value;
 
 	[SerializeField, Sound] string m_Sound;
 
 	[Inject] SoundProcessor  m_SoundProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
-
-	string m_SongID;
 
 	Animator m_Animator;
 	Action   m_PlayFinished;
@@ -45,11 +52,14 @@ public class UISongUnlockItem : UIEntity
 		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
-	public void Setup(string _SongID)
+	public void Setup(string _Path, string _Label = null, long _Value = 0)
 	{
-		m_SongID = _SongID;
+		m_Image.Path  = _Path;
+		m_Label.text  = _Label;
+		m_Value.Value = _Value;
 		
-		m_Image.Setup(m_SongID);
+		m_Label.gameObject.SetActive(!string.IsNullOrEmpty(_Label));
+		m_Value.gameObject.SetActive(_Value != 0);
 		
 		Restore();
 	}

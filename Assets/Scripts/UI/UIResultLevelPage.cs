@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Firebase.Extensions;
 using UnityEngine;
 using Zenject;
 
@@ -13,21 +12,16 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	[SerializeField] UILevelProgress m_LevelProgress;
 	[SerializeField] UIGroup         m_ItemsGroup;
-	[SerializeField] UIUnitLabel     m_CoinsLabel;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	[SerializeField, Sound] string m_UnitSound;
+	[Inject] ScoreManager       m_ScoreManager;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] UIUnlockItem.Pool  m_ItemPool;
 
-	[Inject] ScoreManager          m_ScoreManager;
-	[Inject] ProgressProcessor     m_ProgressProcessor;
-	[Inject] MenuProcessor         m_MenuProcessor;
-	[Inject] SoundProcessor        m_SoundProcessor;
-	[Inject] HapticProcessor       m_HapticProcessor;
-	[Inject] StatisticProcessor    m_StatisticProcessor;
-	[Inject] UISongUnlockItem.Pool m_ItemPool;
-
-	readonly List<UISongUnlockItem> m_Items   = new List<UISongUnlockItem>();
-	readonly Queue<Func<Task>>      m_Actions = new Queue<Func<Task>>();
+	readonly List<UIUnlockItem> m_Items   = new List<UIUnlockItem>();
+	readonly Queue<Func<Task>>  m_Actions = new Queue<Func<Task>>();
 
 	string m_SongID;
 	int    m_MinLevel;
@@ -36,7 +30,6 @@ public class UIResultLevelPage : UIResultMenuPage
 	int    m_TargetDiscs;
 	int    m_SourceLevel;
 	int    m_TargetLevel;
-	long   m_Coins;
 
 	public override void Setup(string _SongID)
 	{
@@ -93,7 +86,6 @@ public class UIResultLevelPage : UIResultMenuPage
 			
 			m_Actions.Enqueue(m_LevelProgress.CollectAsync);
 			m_Actions.Enqueue(() => Task.Delay(1000));
-			m_Actions.Enqueue(PlayCoins);
 			m_Actions.Enqueue(PlayItems);
 			m_Actions.Enqueue(() => Task.Delay(1000));
 			
@@ -109,29 +101,11 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	void ProcessProgress()
 	{
-		int sourceLevel = Mathf.Clamp(m_SourceLevel, m_MinLevel, m_MaxLevel);
-		int targetLevel = Mathf.Clamp(sourceLevel + 1, m_MinLevel, m_MaxLevel);
-		
-		m_CoinsLabel.Value = 0;
-		m_CoinsLabel.gameObject.SetActive(false);
-		m_Coins = m_ProgressProcessor.GetCoins(targetLevel);
-		
 		m_ContinueGroup.Hide(true);
 		
-		foreach (UISongUnlockItem item in m_Items)
+		foreach (UIUnlockItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
-		
-		List<string> songIDs = m_ProgressProcessor.GetSongIDs(targetLevel);
-		
-		foreach (string songID in songIDs)
-		{
-			UISongUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
-			
-			item.Setup(songID);
-			
-			m_Items.Add(item);
-		}
 	}
 
 	Task SetupProgress(int _Level)
@@ -143,25 +117,40 @@ public class UIResultLevelPage : UIResultMenuPage
 		
 		m_LevelProgress.Setup(sourceLevel, targetLevel, sourceProgress, targetProgress);
 		
-		m_CoinsLabel.Value = 0;
-		m_CoinsLabel.gameObject.SetActive(false);
-		
-		foreach (UISongUnlockItem item in m_Items)
+		foreach (UIUnlockItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		List<string> songIDs = m_ProgressProcessor.GetSongIDs(targetLevel);
+		CreateCoins(targetLevel);
+		
+		CreateSongs(targetLevel);
+		
+		return Task.FromResult(true);
+	}
+
+	void CreateCoins(int _Level)
+	{
+		long coins = m_ProgressProcessor.GetCoins(_Level);
+		
+		UIUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
+		
+		item.Setup("Thumbnails/Coins/coins_1.jpg", null, coins);
+		
+		m_Items.Add(item);
+	}
+
+	void CreateSongs(int _Level)
+	{
+		List<string> songIDs = m_ProgressProcessor.GetSongIDs(_Level);
 		
 		foreach (string songID in songIDs)
 		{
-			UISongUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
+			UIUnlockItem item = m_ItemPool.Spawn(m_ItemsGroup.RectTransform);
 			
-			item.Setup(songID);
+			item.Setup($"Thumbnails/Songs/{songID}.jpg");
 			
 			m_Items.Add(item);
 		}
-		
-		return Task.FromResult(true);
 	}
 
 	Task ShowProgress()
@@ -174,27 +163,9 @@ public class UIResultLevelPage : UIResultMenuPage
 		return m_LevelProgress.HideAsync();
 	}
 
-	Task PlayCoins()
-	{
-		const float duration = 1.5f;
-		
-		m_CoinsLabel.gameObject.SetActive(m_Coins > 0);
-		
-		if (m_Coins <= 0)
-			return Task.FromResult(true);
-		
-		m_HapticProcessor.Play(Haptic.Type.Selection, 30, duration);
-		m_SoundProcessor.Start(m_UnitSound);
-		
-		return UnityTask.Phase(
-			_Phase => m_CoinsLabel.Value = MathUtility.Lerp(0, m_Coins, _Phase),
-			duration
-		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_UnitSound));
-	}
-
 	async Task PlayItems()
 	{
-		foreach (UISongUnlockItem item in m_Items)
+		foreach (UIUnlockItem item in m_Items)
 		{
 			await Task.WhenAny(
 				item.PlayAsync(),

@@ -23,7 +23,7 @@ public class GameInstaller : MonoInstaller
 
 	[SerializeField] UIOfferItem       m_OfferItem;
 	[SerializeField] UINewsItem        m_NewsItem;
-	[SerializeField] UISongUnlockItem  m_SongUnlockItem;
+	[SerializeField] UIUnlockItem      m_UnlockItem;
 	[SerializeField] UIProductSongItem m_ProductSongItem;
 	[SerializeField] UILanguageItem    m_LanguageItem;
 	[SerializeField] SoundSource       m_SoundSource;
@@ -66,7 +66,7 @@ public class GameInstaller : MonoInstaller
 		InstallPool<UISongElement, UISongElement.Pool>(m_SongElement);
 		InstallPool<UISongList, UISongList.Pool>(m_SongList);
 		
-		InstallPool<UISongUnlockItem, UISongUnlockItem.Pool>(m_SongUnlockItem);
+		InstallPool<UIUnlockItem, UIUnlockItem.Pool>(m_UnlockItem);
 		
 		InstallPool<UILanguageItem, UILanguageItem.Pool>(m_LanguageItem);
 		
