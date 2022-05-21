@@ -15,10 +15,10 @@ public class SongsManager
 	{
 		return m_SongsProcessor.GetSongIDs()
 			.Where(IsSongAvailable)
-			.OrderByDescending(m_SongsProcessor.GetBadge)
+			.OrderBy(m_ScoresProcessor.GetRank)
+			.ThenByDescending(m_SongsProcessor.GetBadge)
+			.ThenByDescending(m_SongsProcessor.GetPrice)
 			.ThenByDescending(m_ProgressProcessor.GetSongLevel)
-			.ThenBy(m_ScoresProcessor.GetRank)
-			.ThenBy(m_SongsProcessor.GetPrice)
 			.ToList();
 	}
 
