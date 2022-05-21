@@ -22,8 +22,6 @@ public class UIDoubleIndicator : UIIndicator
 		Animator.ResetTrigger(m_SuccessParameterID);
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetTrigger(m_RestoreParameterID);
-		
-		Animator.Update(0);
 	}
 
 	public void Success(float _Progress)

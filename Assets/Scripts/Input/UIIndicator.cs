@@ -40,6 +40,13 @@ public abstract class UIIndicator : UIEntity
 	ASFClip         m_Clip;
 	Action<ASFClip> m_Callback;
 
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_Animator.keepAnimatorControllerStateOnDisable = true;
+	}
+
 	public void Setup(RectTransform _Container, ASFClip _Clip, Action<ASFClip> _Callback)
 	{
 		Container  = _Container;

@@ -21,11 +21,4 @@ public class UIIndicatorPool<T> : MonoMemoryPool<RectTransform, ASFClip, Action<
 		
 		_Item.Restore();
 	}
-
-	protected override void OnDespawned(T _Item)
-	{
-		_Item.Restore();
-		
-		base.OnDespawned(_Item);
-	}
 }

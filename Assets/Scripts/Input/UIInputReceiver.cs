@@ -32,6 +32,23 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		m_Processing = false;
 	}
 
+	public void Release()
+	{
+		Rect area = m_InputArea.GetWorldRect();
+		
+		foreach (int pointerID in m_Pointers.Keys)
+		foreach (UIHandle handle in m_ActiveHandles)
+		{
+			if (handle == null)
+				continue;
+			
+			if (DeselectHandle(handle, pointerID))
+				handle.TouchUp(pointerID, area);
+		}
+		
+		m_Pointers.Clear();
+	}
+
 	public void RegisterIndicator(UIIndicator _Indicator)
 	{
 		if (_Indicator == null || _Indicator.Handle == null)

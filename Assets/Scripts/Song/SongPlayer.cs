@@ -41,6 +41,13 @@ public class SongPlayer : ASFPlayer
 		Deserialize(_ASF);
 	}
 
+	public override void Stop()
+	{
+		base.Stop();
+		
+		m_InputReceiver.Release();
+	}
+
 	public void Clear()
 	{
 		m_TapTrack.Clear();

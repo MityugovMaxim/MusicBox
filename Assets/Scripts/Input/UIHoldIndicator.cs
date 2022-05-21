@@ -109,7 +109,6 @@ public class UIHoldIndicator : UIIndicator
 		Animator.ResetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		Animator.SetTrigger(m_RestoreParameterID);
-		Animator.Update(0);
 	}
 
 	public void Process(float _Phase)
