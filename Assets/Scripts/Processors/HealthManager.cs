@@ -29,6 +29,7 @@ public class HealthManager : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
+		m_SignalBus.Subscribe<InputMissSignal>(Damage);
 		m_SignalBus.Subscribe<TapFailSignal>(Damage);
 		m_SignalBus.Subscribe<DoubleFailSignal>(Damage);
 		m_SignalBus.Subscribe<HoldFailSignal>(Damage);
@@ -37,6 +38,7 @@ public class HealthManager : IInitializable, IDisposable
 
 	void IDisposable.Dispose()
 	{
+		m_SignalBus.Unsubscribe<InputMissSignal>(Damage);
 		m_SignalBus.Unsubscribe<TapFailSignal>(Damage);
 		m_SignalBus.Unsubscribe<DoubleFailSignal>(Damage);
 		m_SignalBus.Unsubscribe<HoldFailSignal>(Damage);
