@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UIDoubleHandle : UIHandle
 {
-	const float FRAME_ERROR = 20;
+	const float FRAME_ERROR = 30;
 	const int   MIN_COUNT   = 2;
 
 	protected override bool Processed => m_Processed;

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UITapHandle : UIHandle
 {
-	const float FRAME_ERROR = 20;
+	const float FRAME_ERROR = 30;
 
 	protected override bool Processed => m_Processed;
 
