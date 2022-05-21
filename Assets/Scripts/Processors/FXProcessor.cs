@@ -10,9 +10,24 @@ public class FXProcessor : UIEntity
 	[SerializeField] UIFXHighlight   m_Dim;
 	[SerializeField] RectTransform   m_InputArea;
 
+	[Inject] SignalBus       m_SignalBus;
 	[Inject] UITapFX.Pool    m_TapFXPool;
 	[Inject] UIDoubleFX.Pool m_DoubleFXPool;
 	[Inject] UIHoldFX.Pool   m_HoldFXPool;
+
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		m_SignalBus.Subscribe<InputMissSignal>(Dim);
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		m_SignalBus.Unsubscribe<InputMissSignal>(Dim);
+	}
 
 	public async void TapFX(Rect _Rect)
 	{

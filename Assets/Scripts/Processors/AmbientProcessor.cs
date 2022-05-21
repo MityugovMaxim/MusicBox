@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using Zenject;
@@ -123,7 +124,7 @@ public class AmbientProcessor : MonoBehaviour
 		m_Locked = false;
 	}
 
-	public async Task PauseAsync()
+	async Task PauseAsync()
 	{
 		if (m_Locked)
 			return;
@@ -137,7 +138,15 @@ public class AmbientProcessor : MonoBehaviour
 		
 		m_Paused = true;
 		
-		await m_AudioSource.SetVolumeAsync(0, PAUSE_FADE_DURATION, token);
+		try
+		{
+			await m_AudioSource.SetVolumeAsync(0, PAUSE_FADE_DURATION, token);
+		}
+		catch (TaskCanceledException) { }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		if (token.IsCancellationRequested)
 			return;
@@ -148,7 +157,7 @@ public class AmbientProcessor : MonoBehaviour
 		m_TokenSource = null;
 	}
 
-	public async Task ResumeAsync()
+	async Task ResumeAsync()
 	{
 		if (m_Locked)
 			return;
@@ -163,7 +172,15 @@ public class AmbientProcessor : MonoBehaviour
 		m_Paused = false;
 		m_AudioSource.UnPause();
 		
-		await m_AudioSource.SetVolumeAsync(GetVolume(m_AmbientID), RESUME_FADE_DURATION, token);
+		try
+		{
+			await m_AudioSource.SetVolumeAsync(GetVolume(m_AmbientID), RESUME_FADE_DURATION, token);
+		}
+		catch (TaskCanceledException) { }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		if (token.IsCancellationRequested)
 			return;
@@ -193,7 +210,15 @@ public class AmbientProcessor : MonoBehaviour
 		m_AudioSource.clip   = audioClip;
 		m_AudioSource.Play();
 		
-		await m_AudioSource.SetVolumeAsync(GetVolume(_AmbientID), PLAY_FADE_DURATION, token);
+		try
+		{
+			await m_AudioSource.SetVolumeAsync(GetVolume(_AmbientID), PLAY_FADE_DURATION, token);
+		}
+		catch (TaskCanceledException) { }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		if (token.IsCancellationRequested)
 			return;
