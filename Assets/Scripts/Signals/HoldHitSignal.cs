@@ -1,4 +1,9 @@
-﻿public class HoldHitSignal : HoldSignal
+﻿public class HoldHitSignal
 {
-	public HoldHitSignal(float _Progress) : base(_Progress, _Progress) { }
+	public float Progress { get; }
+
+	public HoldHitSignal(float _Progress)
+	{
+		Progress = _Progress;
+	}
 }

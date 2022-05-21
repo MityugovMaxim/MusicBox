@@ -425,16 +425,14 @@ public class ScoreManager : IInitializable, IDisposable
 
 	void RegisterHoldHit(HoldHitSignal _Signal)
 	{
-		float progress = 1.0f - _Signal.Progress;
-		
 		ScoreGrade grade;
-		if (progress >= ScorePerfectThreshold)
+		if (_Signal.Progress >= ScorePerfectThreshold)
 		{
 			Combo++;
 			
 			grade = ScoreGrade.Perfect;
 		}
-		else if (progress >= ScoreGoodThreshold)
+		else if (_Signal.Progress >= ScoreGoodThreshold)
 		{
 			Combo++;
 			
@@ -447,7 +445,7 @@ public class ScoreManager : IInitializable, IDisposable
 			grade = ScoreGrade.Bad;
 		}
 		
-		AddScore(progress * HoldHitMultiplier);
+		AddScore(_Signal.Progress * HoldHitMultiplier);
 		
 		ProcessScore(grade);
 	}
