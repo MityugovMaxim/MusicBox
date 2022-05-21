@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-public class UISongHeader : UISongFrame
+public class UISongHeader : UIStroke
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UISongHeader> { }

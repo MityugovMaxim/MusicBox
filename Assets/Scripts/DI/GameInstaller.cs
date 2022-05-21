@@ -11,7 +11,6 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] UISongContainer   m_SongContainer;
 
 	[SerializeField] UISongHeader  m_SongHeader;
-	[SerializeField] UISongFooter  m_SongFooter;
 	[SerializeField] UISongItem    m_SongItem;
 	[SerializeField] UISongGroup   m_SongGroup;
 	[SerializeField] UISongElement m_SongElement;
@@ -62,7 +61,6 @@ public class GameInstaller : MonoInstaller
 		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
 		
 		InstallPool<UISongHeader, UISongHeader.Pool>(m_SongHeader);
-		InstallPool<UISongFooter, UISongFooter.Pool>(m_SongFooter);
 		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
 		InstallPool<UISongGroup, UISongGroup.Pool>(m_SongGroup);
 		InstallPool<UISongElement, UISongElement.Pool>(m_SongElement);

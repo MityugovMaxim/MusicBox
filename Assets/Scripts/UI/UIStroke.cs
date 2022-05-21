@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-public class UISongFrame : UIEntity
+public class UIStroke : UIEntity
 {
 	[Serializable]
 	public class ColorData

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using Zenject;
 
-using ColorMode = UISongFrame.ColorMode;
+using ColorMode = UIStroke.ColorMode;
 
 public class UIMainMenuSongsPage : UIMainMenuPage
 {
@@ -15,12 +15,10 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] SongsManager      m_SongsManager;
 	[Inject] ConfigProcessor   m_ConfigProcessor;
 	[Inject] UISongHeader.Pool m_HeaderPool;
-	[Inject] UISongFooter.Pool m_FooterPool;
 	[Inject] UISongGroup.Pool  m_GroupPool;
 	[Inject] UISongList.Pool   m_ListPool;
 
 	readonly List<UISongHeader> m_Headers = new List<UISongHeader>();
-	readonly List<UISongFooter> m_Footers = new List<UISongFooter>();
 	readonly List<UISongGroup>  m_Groups  = new List<UISongGroup>();
 	readonly List<UISongList>   m_Lists   = new List<UISongList>();
 
@@ -77,8 +75,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		);
 		
 		CreateList(songIDs);
-		
-		CreateFooter(ColorMode.Blue);
 	}
 
 	void CreateLevelLocked()
@@ -99,8 +95,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 			);
 			
 			CreateList(group.Value);
-			
-			CreateFooter(ColorMode.Red);
 		}
 	}
 
@@ -119,18 +113,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		item.Setup(_Title);
 		
 		m_Headers.Add(item);
-	}
-
-	void CreateFooter(ColorMode _ColorMode)
-	{
-		UISongFooter item = m_FooterPool.Spawn(m_Container);
-		
-		if (item == null)
-			return;
-		
-		item.Mode = _ColorMode;
-		
-		m_Footers.Add(item);
 	}
 
 	void CreateGroup(ICollection<string> _SongIDs)
@@ -162,10 +144,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		foreach (UISongHeader item in m_Headers)
 			m_HeaderPool.Despawn(item);
 		m_Headers.Clear();
-		
-		foreach (UISongFooter item in m_Footers)
-			m_FooterPool.Despawn(item);
-		m_Footers.Clear();
 		
 		foreach (UISongGroup item in m_Groups)
 			m_GroupPool.Despawn(item);
