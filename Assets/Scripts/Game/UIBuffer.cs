@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,6 +28,23 @@ public class UIBuffer : MonoBehaviour
 	protected void OnDisable()
 	{
 		RemoveBuffer();
+	}
+
+	[ContextMenu("Export")]
+	public void Export()
+	{
+		RenderTexture active = RenderTexture.active;
+		RenderTexture.active = m_A;
+		Texture2D texture = new Texture2D(m_A.width, m_A.height, TextureFormat.R8, false, false);
+		texture.ReadPixels(new Rect(0, 0, m_A.width, m_A.height), 0, 0);
+		texture.Apply();
+		RenderTexture.active = active;
+		
+		string path = Path.Combine(Application.dataPath, $"{Guid.NewGuid().ToString()}.png");
+		
+		byte[] data = texture.EncodeToPNG();
+		
+		File.WriteAllBytes(path, data);
 	}
 
 	void CreateBuffer()

@@ -114,7 +114,7 @@ public class UIColorTrackContext : ASFTrackContext<ASFColorClip>, IASFColorSampl
 		SetColor(m_ForegroundSecondaryPropertyID, _Source.ForegroundSecondary, _Target.ForegroundSecondary, _Phase);
 	}
 
-	void SetColor(int _ColorPropertyID, Color _Source, Color _Target, float _Phase)
+	static void SetColor(int _ColorPropertyID, Color _Source, Color _Target, float _Phase)
 	{
 		Color color = Color.Lerp(_Source, _Target, _Phase);
 		

@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using AudioBox.ASF;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
+using Random = UnityEngine.Random;
 
 [Menu(MenuType.ColorMenu)]
 public class UIColorMenu : UIMenu
@@ -12,22 +16,28 @@ public class UIColorMenu : UIMenu
 	[SerializeField] UIColorSlider m_SliderBlue;
 	[SerializeField] UIColorSlider m_SliderAlpha;
 	[SerializeField] TMP_Text      m_HexLabel;
+	[SerializeField] UIColorScheme m_Scheme;
+	[SerializeField] RectTransform m_SchemeContainer;
 
 	[SerializeField] Toggle m_BackgroundPrimaryToggle;
 	[SerializeField] Toggle m_BackgroundSecondaryToggle;
 	[SerializeField] Toggle m_ForegroundPrimaryToggle;
 	[SerializeField] Toggle m_ForegroundSecondaryToggle;
 
-	[SerializeField] Graphic m_BackgroundPrimary;
-	[SerializeField] Graphic m_BackgroundSecondary;
-	[SerializeField] Graphic m_ForegroundPrimary;
-	[SerializeField] Graphic m_ForegroundSecondary;
+	[SerializeField] Graphic    m_BackgroundPrimary;
+	[SerializeField] Graphic    m_BackgroundSecondary;
+	[SerializeField] Graphic    m_ForegroundPrimary;
+	[SerializeField] Graphic    m_ForegroundSecondary;
 
 	[Inject] MenuProcessor m_MenuProcessor;
+
+	ASFColorTrack m_ColorTrack;
 
 	Action<Color, Color, Color, Color> m_Callback;
 
 	Graphic m_Color;
+
+	readonly List<UIColorScheme> m_Schemes = new List<UIColorScheme>();
 
 	protected override void Awake()
 	{
@@ -59,19 +69,70 @@ public class UIColorMenu : UIMenu
 		m_ForegroundSecondaryToggle.onValueChanged.RemoveListener(ForegroundSecondaryMode);
 	}
 
-	public void Setup(
-		Color                              _BackgroundPrimary,
-		Color                              _BackgroundSecondary,
-		Color                              _ForegroundPrimary,
-		Color                              _ForegroundSecondary,
-		Action<Color, Color, Color, Color> _Callback
-	)
+	public void Setup(ASFColorClip _Clip, Action<Color, Color, Color, Color> _Callback)
 	{
-		m_BackgroundPrimary.color   = _BackgroundPrimary;
-		m_BackgroundSecondary.color = _BackgroundSecondary;
-		m_ForegroundPrimary.color   = _ForegroundPrimary;
-		m_ForegroundSecondary.color = _ForegroundSecondary;
+		m_BackgroundPrimary.color   = _Clip.BackgroundPrimary;
+		m_BackgroundSecondary.color = _Clip.BackgroundSecondary;
+		m_ForegroundPrimary.color   = _Clip.ForegroundPrimary;
+		m_ForegroundSecondary.color = _Clip.ForegroundSecondary;
 		m_Callback                  = _Callback;
+		
+		UISongEditMenu songEditMenu = m_MenuProcessor.GetMenu<UISongEditMenu>();
+		if (songEditMenu == null)
+			return;
+		
+		m_ColorTrack = songEditMenu.Player.GetTrack<ASFColorTrack>();
+		
+		foreach (UIColorScheme scheme in m_Schemes)
+			DestroyImmediate(scheme.gameObject);
+		m_Schemes.Clear();
+		
+		m_ColorTrack.SortClips();
+		
+		foreach (ASFColorClip clip in m_ColorTrack.Clips)
+		{
+			UIColorScheme scheme = Instantiate(m_Scheme, m_SchemeContainer, false);
+			
+			scheme.Setup(
+				_Clip == clip,
+				clip.BackgroundPrimary,
+				clip.BackgroundSecondary,
+				clip.ForegroundPrimary,
+				clip.ForegroundSecondary,
+				SelectScheme
+			);
+			
+			m_Schemes.Add(scheme);
+		}
+	}
+
+	public void RandomSchemeA()
+	{
+		m_BackgroundPrimary.color   = RandomColor();
+		m_BackgroundSecondary.color = RandomColor();
+		m_ForegroundPrimary.color   = new Color(1, 1, 1, 0.75f);
+		m_ForegroundSecondary.color = m_BackgroundPrimary.color;
+		
+		ProcessMode();
+	}
+
+	public void RandomSchemeB()
+	{
+		m_BackgroundPrimary.color   = RandomColor();
+		m_BackgroundSecondary.color = RandomColor();
+		m_ForegroundPrimary.color   = new Color(1, 1, 1, 0.75f);
+		m_ForegroundSecondary.color = m_BackgroundSecondary.color;
+		
+		ProcessMode();
+	}
+
+	static Color RandomColor()
+	{
+		return Color.HSVToRGB(
+			Random.value,
+			Random.value,
+			1
+		);
 	}
 
 	public async void Confirm()
@@ -170,6 +231,16 @@ public class UIColorMenu : UIMenu
 
 	void ProcessAlpha(int _Value) => ProcessColor();
 
+	void SelectScheme(Color _BackgroundPrimary, Color _BackgroundSecondary, Color _ForegroundPrimary, Color _ForegroundSecondary)
+	{
+		m_BackgroundPrimary.color   = _BackgroundPrimary;
+		m_BackgroundSecondary.color = _BackgroundSecondary;
+		m_ForegroundPrimary.color   = _ForegroundPrimary;
+		m_ForegroundSecondary.color = _ForegroundSecondary;
+		
+		ProcessMode();
+	}
+
 	void ProcessColor()
 	{
 		if (m_Color == null)
@@ -182,6 +253,8 @@ public class UIColorMenu : UIMenu
 			(byte)m_SliderAlpha.Value
 		);
 		
+		ProcessScheme();
+		
 		ProcessHex();
 	}
 
@@ -193,6 +266,8 @@ public class UIColorMenu : UIMenu
 		m_SliderGreen.Value = color.g;
 		m_SliderBlue.Value  = color.b;
 		m_SliderAlpha.Value = color.a;
+		
+		ProcessScheme();
 		
 		ProcessHex();
 	}
@@ -209,5 +284,36 @@ public class UIColorMenu : UIMenu
 		string hex = ColorUtility.ToHtmlStringRGBA(color);
 		
 		m_HexLabel.text = hex;
+	}
+
+	void ProcessScheme()
+	{
+		UIColorScheme scheme = m_Schemes.FirstOrDefault(_Scheme => _Scheme.Marker);
+		if (scheme != null)
+		{
+			scheme.Setup(
+				true,
+				m_BackgroundPrimary.color,
+				m_BackgroundSecondary.color,
+				m_ForegroundPrimary.color,
+				m_ForegroundSecondary.color,
+				SelectScheme
+			);
+		}
+		
+		IASFColorSampler sampler = m_ColorTrack.Context as IASFColorSampler;
+		
+		if (sampler == null)
+			return;
+		
+		ASFColorClip clip = new ASFColorClip(
+			0,
+			m_BackgroundPrimary.color,
+			m_BackgroundSecondary.color,
+			m_ForegroundPrimary.color,
+			m_ForegroundSecondary.color
+		);
+		
+		sampler.Sample(clip, clip, 1);
 	}
 }

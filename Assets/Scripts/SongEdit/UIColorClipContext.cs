@@ -138,13 +138,7 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 		
 		UIColorMenu colorMenu = m_MenuProcessor.GetMenu<UIColorMenu>();
 		
-		colorMenu.Setup(
-			Clip.BackgroundPrimary,
-			Clip.BackgroundSecondary,
-			Clip.ForegroundPrimary,
-			Clip.ForegroundSecondary,
-			ProcessColors
-		);
+		colorMenu.Setup(Clip, ProcessColors);
 		
 		await m_MenuProcessor.Show(MenuType.ColorMenu);
 	}

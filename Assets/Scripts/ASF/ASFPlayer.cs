@@ -194,8 +194,6 @@ namespace AudioBox.ASF
 
 		public void Deserialize(string _ASF)
 		{
-			Debug.LogError("---> ASF: " + _ASF);
-			
 			Dictionary<string, object> asf = Json.Deserialize(_ASF) as Dictionary<string, object>;
 			
 			Deserialize(asf);

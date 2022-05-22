@@ -366,6 +366,8 @@ public static class ASFMidiParser
 [Menu(MenuType.SongEditMenu)]
 public class UISongEditMenu : UIMenu
 {
+	public UIPlayer Player => m_Player;
+
 	[SerializeField] UIPlayer    m_Player;
 	[SerializeField] UIAudioWave m_Background;
 	[SerializeField] UIBeat      m_Beat;
