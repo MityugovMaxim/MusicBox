@@ -11,48 +11,59 @@ using Zenject;
 public class ProductSnapshot
 {
 	[ClipboardProperty]
-	public string       ID       { get; set; }
-	public bool         Active   { get; set; }
-	public ProductType  Type     { get; set; }
-	public bool         Promo    { get; set; }
-	public bool         NoAds    { get; set; }
-	public long         Coins    { get; set; }
-	public float        Discount { get; set; }
-	public List<string> SongIDs  { get; set; }
+	public string       ID           { get; set; }
+	public bool         Active       { get; set; }
+	public ProductType  Type         { get; set; }
+	public bool         Promo        { get; set; }
+	public bool         NoAds        { get; set; }
+	public long         Coins        { get; set; }
+	public float        Discount     { get; set; }
+	public List<string> SongIDs      { get; set; }
+	[ClipboardProperty]
+	public string       AppStoreID   { get; set; }
+	[ClipboardProperty]
+	public string       GooglePlayID { get; set; }
+
 	[HideProperty]
 	public int          Order    { get; set; }
 
 	public ProductSnapshot(string _ProductID)
 	{
-		ID      = _ProductID;
-		SongIDs = new List<string>();
+		ID           = _ProductID;
+		AppStoreID   = _ProductID;
+		GooglePlayID = _ProductID;
+		SongIDs      = new List<string>();
 	}
 
 	public ProductSnapshot(DataSnapshot _Data)
 	{
-		ID       = _Data.Key;
-		Active   = _Data.GetBool("active");
-		Type     = _Data.GetEnum<ProductType>("type");
-		Promo    = _Data.GetBool("promo");
-		Coins    = _Data.GetLong("coins");
-		Discount = _Data.GetFloat("discount");
-		NoAds    = _Data.GetBool("no_ads");
-		SongIDs  = _Data.GetChildKeys("song_ids");
-		Order    = _Data.GetInt("order");
+		ID           = _Data.Key;
+		Active       = _Data.GetBool("active");
+		Type         = _Data.GetEnum<ProductType>("type");
+		Promo        = _Data.GetBool("promo");
+		Coins        = _Data.GetLong("coins");
+		Discount     = _Data.GetFloat("discount");
+		NoAds        = _Data.GetBool("no_ads");
+		SongIDs      = _Data.GetChildKeys("song_ids");
+		AppStoreID   = _Data.GetString("app_store", ID);
+		GooglePlayID = _Data.GetString("google_play", ID);
+		Order        = _Data.GetInt("order");
 	}
 
 	public Dictionary<string, object> Serialize()
 	{
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		
-		data["active"]   = Active;
-		data["type"]     = (int)Type;
-		data["promo"]    = Promo;
-		data["coins"]    = Coins;
-		data["discount"] = Discount;
-		data["no_ads"]   = NoAds;
-		data["song_ids"] = SongIDs;
-		data["order"]    = Order;
+		data["active"]      = Active;
+		data["type"]        = (int)Type;
+		data["promo"]       = Promo;
+		data["coins"]       = Coins;
+		data["discount"]    = Discount;
+		data["no_ads"]      = NoAds;
+		data["song_ids"]    = SongIDs;
+		data["app_store"]   = AppStoreID;
+		data["google_play"] = GooglePlayID;
+		data["order"]       = Order;
 		
 		return data;
 	}
