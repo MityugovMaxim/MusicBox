@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
@@ -14,6 +15,8 @@ public class UILoadingMenu : UIMenu
 	}
 
 	[SerializeField] UISongImage m_Image;
+	[SerializeField] UIGroup     m_ProgressGroup;
+	[SerializeField] UIProgress  m_Progress;
 
 	[Inject] TutorialController m_TutorialController;
 	[Inject] SongController     m_SongController;
@@ -22,11 +25,19 @@ public class UILoadingMenu : UIMenu
 
 	string m_SongID;
 
+	CancellationTokenSource m_TokenSource;
+
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
 		
+		m_Image.gameObject.SetActive(!string.IsNullOrEmpty(m_SongID));
+		
 		m_Image.Setup(m_SongID);
+		
+		m_ProgressGroup.Hide(true);
+		
+		m_Progress.Progress = 0;
 	}
 
 	public async void Load()
@@ -40,6 +51,11 @@ public class UILoadingMenu : UIMenu
 			await LoadSong();
 		else
 			await LoadTutorial();
+	}
+
+	public void ResetTutorial()
+	{
+		Tutorial = false;
 	}
 
 	async Task LoadTutorial()
@@ -84,12 +100,16 @@ public class UILoadingMenu : UIMenu
 
 	async Task LoadSong()
 	{
-		Task<bool> load = m_SongController.Load(m_SongID);
+		Task<bool> load = m_SongController.Load(m_SongID, ProcessProgress);
+		
+		StartProgress();
 		
 		await Task.WhenAll(
 			load,
 			Task.Delay(2000)
 		);
+		
+		StopProgress();
 		
 		bool success = load.Result;
 		
@@ -134,5 +154,40 @@ public class UILoadingMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.SetupMenu);
 		
 		await Task.Delay(500);
+	}
+
+	void ProcessProgress(float _Progress)
+	{
+		m_Progress.Progress = _Progress;
+	}
+
+	async void StartProgress()
+	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		try
+		{
+			await UnityTask.Delay(15, token);
+			
+			await m_ProgressGroup.ShowAsync();
+		}
+		catch (TaskCanceledException) { }
+		
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+	}
+
+	void StopProgress()
+	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+		
+		m_ProgressGroup.Hide();
 	}
 }

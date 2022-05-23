@@ -60,7 +60,7 @@ public class MusicProcessor : MonoBehaviour
 		
 		try
 		{
-			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(_Path, token);
+			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(_Path, null, token);
 			
 			if (audioClip == null || token.IsCancellationRequested)
 				return;

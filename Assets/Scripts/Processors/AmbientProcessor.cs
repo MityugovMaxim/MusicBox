@@ -200,7 +200,7 @@ public class AmbientProcessor : MonoBehaviour
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", token);
+		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", null, token);
 		
 		if (audioClip == null || token.IsCancellationRequested)
 			return;

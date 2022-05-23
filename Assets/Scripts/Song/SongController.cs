@@ -23,14 +23,16 @@ public class SongController
 	[Inject] HealthManager m_HealthManager;
 	[Inject] ScoreManager  m_ScoreManager;
 
-	string     m_SongID;
-	SongPlayer m_Player;
+	string        m_SongID;
+	Action<float> m_Progress;
+	SongPlayer    m_Player;
 
 	CancellationTokenSource m_RewindToken;
 
-	public async Task<bool> Load(string _SongID)
+	public async Task<bool> Load(string _SongID, Action<float> _Progress)
 	{
-		m_SongID = _SongID;
+		m_SongID   = _SongID;
+		m_Progress = _Progress;
 		
 		if (string.IsNullOrEmpty(m_SongID))
 		{
@@ -79,6 +81,8 @@ public class SongController
 			Log.Error(this, "Load song failed. ASF with ID '{0}' is null.", m_SongID);
 			return false;
 		}
+		
+		m_Progress = null;
 		
 		float ratio    = m_ConfigProcessor.SongRatio;
 		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
@@ -342,14 +346,28 @@ public class SongController
 	{
 		string path = $"Songs/{_SongID}.ogg";
 		
-		return m_StorageProcessor.LoadAudioClipAsync(path, _Token);
+		return m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress, _Token);
 	}
 
-	async Task<string> LoadASFAsync(string _SongID, CancellationToken _Token = default)
+	Task<string> LoadASFAsync(string _SongID, CancellationToken _Token = default)
 	{
 		string path = $"Songs/{_SongID}.asf";
 		
-		return await m_StorageProcessor.LoadJson(path, true, _Token);
+		return m_StorageProcessor.LoadJson(path, true, ProcessASFProgress, _Token);
+	}
+
+	void ProcessMusicProgress(float _Progress)
+	{
+		float progress = MathUtility.Remap(_Progress, 0, 1, 0, 0.95f);
+		
+		m_Progress?.Invoke(progress);
+	}
+
+	void ProcessASFProgress(float _Progress)
+	{
+		float progress = MathUtility.Remap(_Progress, 0, 1, 0.95f, 1);
+		
+		m_Progress?.Invoke(progress);
 	}
 
 	void DisableAudio()

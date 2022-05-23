@@ -18,6 +18,7 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UIGroup          m_UnlockGroup;
 	[SerializeField] UIGroup          m_LoaderGroup;
 	[SerializeField] UIGroup          m_CompleteGroup;
+	[SerializeField] UISongDownload   m_Download;
 
 	[SerializeField, Sound] string m_UnlockSound;
 
@@ -198,6 +199,7 @@ public class UISongMenu : UISlideMenu
 		m_Label.Setup(m_SongID);
 		m_Play.Setup(m_SongID);
 		m_Price.Setup(m_SongID);
+		m_Download.Setup(m_SongID);
 		
 		if (m_SongsManager.IsSongLockedByCoins(m_SongID))
 		{

@@ -157,8 +157,8 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 			if (!string.IsNullOrEmpty(Path))
 			{
 				texture = m_URL
-					? await m_StorageProcessor.LoadTextureAsync(new Uri(Path), CancellationToken.None)
-					: await m_StorageProcessor.LoadTextureAsync(Path, CancellationToken.None);
+					? await m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None)
+					: await m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
 			}
 		}
 		catch (TaskCanceledException) { }

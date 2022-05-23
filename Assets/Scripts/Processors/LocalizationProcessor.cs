@@ -42,6 +42,7 @@ public class LocalizationProcessor
 				$"Localization/{m_Language}.lang",
 				true,
 				Encoding.Unicode,
+				null,
 				token
 			);
 		}

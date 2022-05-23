@@ -32,9 +32,8 @@ public abstract class UIIndicator : UIEntity
 
 	[SerializeField] Animator m_Animator;
 
-	[Inject] SignalBus       m_SignalBus;
-	[Inject] FXProcessor     m_FXProcessor;
-	[Inject] ConfigProcessor m_ConfigProcessor;
+	[Inject] SignalBus   m_SignalBus;
+	[Inject] FXProcessor m_FXProcessor;
 
 	Rect m_ViewRect;
 

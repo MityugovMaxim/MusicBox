@@ -3,13 +3,28 @@ using UnityEngine.UI;
 
 [ExecuteAlways]
 [RequireComponent(typeof(Animator))]
-public class UILoader : UIEntity
+public class UIProgress : UIEntity
 {
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	[SerializeField]              float          m_Progress;
-	[SerializeField, Range(0, 1)] float          m_Size;
-	[SerializeField, Range(0, 1)] float          m_Weight;
+	public float Progress
+	{
+		get => m_Progress;
+		set
+		{
+			if (Mathf.Approximately(m_Progress, value))
+				return;
+			
+			m_Progress = value;
+			
+			ProcessProgress();
+		}
+	}
+
+	float Weight => 1;
+
+	[SerializeField, Range(0, 1)] float          m_Progress;
+	[SerializeField, Range(0, 1)] float          m_Falloff;
 	[SerializeField]              AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField]              Gradient       m_Gradient;
 	[SerializeField]              float          m_MinHeight;
@@ -36,7 +51,7 @@ public class UILoader : UIEntity
 	{
 		base.OnDidApplyAnimationProperties();
 		
-		ProcessLoader();
+		ProcessProgress();
 	}
 
 	#if UNITY_EDITOR
@@ -44,17 +59,16 @@ public class UILoader : UIEntity
 	{
 		base.OnValidate();
 		
-		ProcessLoader();
+		ProcessProgress();
 	}
 	#endif
 
-	void ProcessLoader()
+	void ProcessProgress()
 	{
-		float step = 1.0f / Mathf.Max(1, m_Dots.Length);
+		float step = 1.0f / Mathf.Max(1, m_Dots.Length + 1);
 		
-		float progress = Mathf.Repeat(m_Progress, 1);
-		float min      = progress - m_Size;
-		float max      = progress + m_Size;
+		float min = Progress - m_Falloff;
+		float max = Progress + m_Falloff * Progress;
 		
 		for (int i = 0; i < m_Dots.Length; i++)
 		{
@@ -62,11 +76,7 @@ public class UILoader : UIEntity
 			
 			float position = step * i;
 			
-			float phase = 0;
-			phase += m_Curve.Evaluate(MathUtility.Remap01(position, min, max));
-			phase += m_Curve.Evaluate(MathUtility.Remap01(position, min + 1, max + 1));
-			phase += m_Curve.Evaluate(MathUtility.Remap01(position, min - 1, max - 1));
-			phase *= m_Weight;
+			float phase = m_Curve.Evaluate(MathUtility.Remap01(position, min, max)) * Weight;
 			
 			Vector2 size = dot.rectTransform.sizeDelta;
 			
@@ -75,6 +85,17 @@ public class UILoader : UIEntity
 			dot.rectTransform.sizeDelta = size;
 			
 			dot.color = m_Gradient.Evaluate(phase);
+		}
+	}
+
+	[ContextMenu("Reverse")]
+	public void Reverse()
+	{
+		for (int i = 0; i < m_Dots.Length; i++)
+		{
+			int j = (m_Dots.Length - i) % m_Dots.Length;
+			
+			(m_Dots[i], m_Dots[j]) = (m_Dots[j], m_Dots[i]);
 		}
 	}
 
