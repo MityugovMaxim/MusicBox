@@ -95,6 +95,21 @@ public class UIMainProfilePage : UIMainMenuPage
 		await m_MenuProcessor.Show(MenuType.ProductMenu);
 	}
 
+	public async void Tutorial()
+	{
+		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
+		
+		if (loadingMenu == null)
+			return;
+		
+		loadingMenu.Setup(string.Empty);
+		loadingMenu.ResetTutorial();
+		
+		await loadingMenu.ShowAsync();
+		
+		loadingMenu.Load();
+	}
+
 	protected override void OnShowStarted()
 	{
 		Refresh();

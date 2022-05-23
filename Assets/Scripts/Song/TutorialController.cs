@@ -79,16 +79,28 @@ public class TutorialController
 			return;
 		}
 		
-		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
-		
-		loadingMenu.Setup(m_SongID);
-		
-		await m_MenuProcessor.Show(MenuType.LoadingMenu);
-		
-		GameObject.Destroy(m_Player.gameObject);
-		
-		m_Player = null;
-		
-		loadingMenu.Load();
+		if (string.IsNullOrEmpty(m_SongID))
+		{
+			await m_MenuProcessor.Show(MenuType.MainMenu);
+			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
+			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+			await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
+			
+			GameObject.Destroy(m_Player.gameObject);
+		}
+		else
+		{
+			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
+			
+			loadingMenu.Setup(m_SongID);
+			
+			await m_MenuProcessor.Show(MenuType.LoadingMenu);
+			
+			GameObject.Destroy(m_Player.gameObject);
+			
+			m_Player = null;
+			
+			loadingMenu.Load();
+		}
 	}
 }

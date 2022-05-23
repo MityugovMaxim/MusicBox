@@ -147,7 +147,7 @@ public class TutorialPlayer : ASFPlayer
 				i,
 				i < combo ? 1 : 2,
 				(float)(i % combo) / combo,
-				ScoreGrade.Perfect
+				ScoreGrade.None
 			);
 			
 			await Task.Delay(250);
