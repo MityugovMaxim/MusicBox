@@ -43,13 +43,6 @@ public abstract class StorageProgress : IProgress<DownloadState>
 		m_Progress -= _Action;
 	}
 
-	public void Complete()
-	{
-		Action<float> action = m_Progress;
-		m_Progress = null;
-		action?.Invoke(1);
-	}
-
 	void IProgress<DownloadState>.Report(DownloadState _State)
 	{
 		double state = _State.BytesTransferred;
@@ -299,10 +292,7 @@ public class StorageProcessor
 		
 		if (File.Exists(localPath))
 		{
-			if (_Update)
-				await UpdateFileAsync(_RemotePath, localPath, _Token);
-			else
-				UpdateFile(_RemotePath, localPath);
+			UpdateFile(_RemotePath, localPath);
 			
 			try
 			{
@@ -374,12 +364,8 @@ public class StorageProcessor
 			.ContinueWith(
 				_Task =>
 				{
-					if (_Registry != null && _Registry.ContainsKey(_RemotePath) && _Registry[_RemotePath] != null)
-					{
-						_Registry[_RemotePath].Complete();
+					if (_Registry != null && _Registry.ContainsKey(_RemotePath))
 						_Registry.Remove(_RemotePath);
-					}
-					
 					if (_Task.IsFaulted)
 						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
 					else if (_Task.IsCanceled)
