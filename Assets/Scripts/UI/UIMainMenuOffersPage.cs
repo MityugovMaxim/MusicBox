@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class UIMainOffersPage : UIMainMenuPage
+public class UIMainMenuOffersPage : UIMainMenuPage
 {
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 

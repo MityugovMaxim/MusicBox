@@ -34,7 +34,10 @@ public class UILoginMenu : UIMenu
 		
 		await m_LanguageProcessor.Load();
 		
-		await m_AmbientProcessor.Load();
+		await Task.WhenAny(
+			m_AmbientProcessor.Load(),
+			Task.Delay(250)
+		);
 		
 		SongLibraryRequest request = new SongLibraryRequest();
 		

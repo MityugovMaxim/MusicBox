@@ -77,22 +77,4 @@ public class UILoader : UIEntity
 			dot.color = m_Gradient.Evaluate(phase);
 		}
 	}
-
-	[ContextMenu("Generate")]
-	public void Generate()
-	{
-		Color   sourceColor = new Color(1, 1, 1);
-		Color   targetColor = new Color(0.25f, 0.75f, 1f);
-		Vector2 sourceSize  = new Vector2(20, 20);
-		Vector2 targetSize  = new Vector2(20, 50);
-		Image[] images      = GetComponentsInChildren<Image>();
-		foreach (Image image in images)
-		{
-			float phase = Random.value;
-			
-			image.rectTransform.sizeDelta = Vector2.Lerp(sourceSize, targetSize, phase);
-			
-			image.color = Color.Lerp(sourceColor, targetColor, phase);
-		}
-	}
 }

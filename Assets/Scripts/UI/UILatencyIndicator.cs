@@ -15,8 +15,10 @@ public class UILatencyIndicator : UIEntity
 	[SerializeField] CanvasGroup   m_Group;
 	[SerializeField] RectTransform m_Indicator;
 	[SerializeField] RectTransform m_Handle;
+	[SerializeField] UIUnitLabel   m_LatencyLabel;
 	[SerializeField] float         m_MinLimit = -1.0f;
 	[SerializeField] float         m_MaxLimit = 1.0f;
+	[SerializeField] float         m_Duration = 2;
 
 	[Inject] AudioManager m_AudioManager;
 
@@ -102,6 +104,8 @@ public class UILatencyIndicator : UIEntity
 	{
 		m_Latency = Mathf.Clamp(m_Latency, m_MinLimit, m_MaxLimit);
 		
+		m_LatencyLabel.Value = Mathf.RoundToInt(m_Latency * 1000);
+		
 		float phase = Mathf.InverseLerp(m_MaxLimit, m_MinLimit, m_Latency);
 		
 		Vector2 anchor = new Vector2(0.5f, phase);
@@ -149,6 +153,9 @@ public class UILatencyIndicator : UIEntity
 			Debug.LogException(exception);
 		}
 		
+		if (token.IsCancellationRequested)
+			return;
+		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 	}
@@ -193,16 +200,20 @@ public class UILatencyIndicator : UIEntity
 				m_Indicator.anchorMin = anchor;
 				m_Indicator.anchorMax = anchor;
 			},
-			m_MaxLimit - m_MinLimit,
+			m_Duration,
 			_Token
 		);
 	}
 
 	async Task FlashAsync(CancellationToken _Token = default)
 	{
+		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
+		
+		float delay = m_Duration * pivot + m_Latency;
+		
 		await UnityTask.Phase(
 			_Phase => m_Flash.alpha = 1 - _Phase,
-			m_Latency - m_MinLimit,
+			delay,
 			0.15f,
 			_Token
 		);
@@ -210,7 +221,9 @@ public class UILatencyIndicator : UIEntity
 
 	async Task BeatAsync(CancellationToken _Token = default)
 	{
-		float delay = -m_MinLimit;
+		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
+		
+		float delay = pivot * m_Duration;
 		
 		m_AudioSource.Stop();
 		m_AudioSource.PlayScheduled(AudioSettings.dspTime + delay);

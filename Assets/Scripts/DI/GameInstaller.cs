@@ -7,8 +7,8 @@ using Object = UnityEngine.Object;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] Canvas            m_Canvas;
-	[SerializeField] UISongContainer   m_SongContainer;
+	[SerializeField] Canvas          m_Canvas;
+	[SerializeField] UISongContainer m_SongContainer;
 
 	[SerializeField] UISongHeader  m_SongHeader;
 	[SerializeField] UISongItem    m_SongItem;
@@ -120,8 +120,8 @@ public class GameInstaller : MonoInstaller
 		Container.Bind<MessageProcessor>().To<AndroidMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
-		Container.Bind<MusicProcessor>()
-			.To<MusicProcessor>()
+		Container.Bind<PreviewProcessor>()
+			.To<PreviewProcessor>()
 			.FromNewComponentOnNewGameObject()
 			.WithGameObjectName("MusicProcessor")
 			.UnderTransform(transform)

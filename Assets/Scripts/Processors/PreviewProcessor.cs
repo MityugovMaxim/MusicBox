@@ -5,10 +5,10 @@ using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
-public class MusicProcessor : MonoBehaviour
+public class PreviewProcessor : MonoBehaviour
 {
 	const float PLAY_FADE_DURATION = 0.5f;
-	const float STOP_FADE_DURATION = 0.25f;
+	const float STOP_FADE_DURATION = 0.5f;
 
 	[Inject] StorageProcessor m_StorageProcessor;
 
@@ -24,32 +24,19 @@ public class MusicProcessor : MonoBehaviour
 		m_AudioSource.volume      = 0;
 	}
 
-	public async void PlayPreview(string _SongID)
+	public async void Play(string _SongID)
 	{
-		await PlayPreviewAsync(_SongID);
+		await PlayAsync(_SongID);
 	}
 
-	public async void StopPreview()
+	public async void Stop()
 	{
-		await StopPreviewAsync();
+		await StopAsync();
 	}
 
-	Task PlayPreviewAsync(string _SongID)
+	async Task PlayAsync(string _SongID)
 	{
-		string path = $"Previews/{_SongID}.ogg";
-		
-		return PlayMusicAsync(path);
-	}
-
-	Task StopPreviewAsync()
-	{
-		return StopMusicAsync();
-	}
-
-	async Task PlayMusicAsync(string _Path)
-	{
-		if (string.IsNullOrEmpty(_Path))
-			return;
+		string path = !string.IsNullOrEmpty(_SongID) ? $"Previews/{_SongID}.ogg" : string.Empty;
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
@@ -60,18 +47,22 @@ public class MusicProcessor : MonoBehaviour
 		
 		try
 		{
-			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(_Path, null, token);
+			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(path, null, token);
 			
-			if (audioClip == null || token.IsCancellationRequested)
+			if (token.IsCancellationRequested)
 				return;
-			
-			m_AudioSource.Stop();
-			m_AudioSource.clip = audioClip;
-			m_AudioSource.Play();
 			
 			await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
 			
-			await m_AudioSource.SetVolumeAsync(1, PLAY_FADE_DURATION, token);
+			m_AudioSource.Stop();
+			m_AudioSource.clip = audioClip;
+			
+			if (audioClip != null)
+			{
+				m_AudioSource.Play();
+				
+				await m_AudioSource.SetVolumeAsync(1, PLAY_FADE_DURATION, token);
+			}
 		}
 		catch (TaskCanceledException) { }
 		catch (Exception exception)
@@ -86,7 +77,7 @@ public class MusicProcessor : MonoBehaviour
 		m_TokenSource = null;
 	}
 
-	async Task StopMusicAsync()
+	async Task StopAsync()
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
@@ -98,6 +89,9 @@ public class MusicProcessor : MonoBehaviour
 		try
 		{
 			await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+			
+			m_AudioSource.Stop();
+			m_AudioSource.clip = null;
 		}
 		catch (TaskCanceledException) { }
 		catch (Exception exception)
@@ -107,8 +101,6 @@ public class MusicProcessor : MonoBehaviour
 		
 		if (token.IsCancellationRequested)
 			return;
-		
-		m_AudioSource.Stop();
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;

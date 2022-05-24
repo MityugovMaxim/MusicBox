@@ -45,18 +45,6 @@ public class AmbientProcessor : MonoBehaviour
 	AudioSource             m_AudioSource;
 	CancellationTokenSource m_TokenSource;
 
-	void Update()
-	{
-		if (Input.GetKeyDown(KeyCode.G))
-		{
-			Pause();
-		}
-		if (Input.GetKeyDown(KeyCode.H))
-		{
-			Resume();
-		}
-	}
-
 	[Inject]
 	public void Construct(SignalBus _SignalBus, StorageProcessor _StorageProcessor)
 	{
@@ -200,19 +188,25 @@ public class AmbientProcessor : MonoBehaviour
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", null, token);
-		
-		if (audioClip == null || token.IsCancellationRequested)
-			return;
-		
-		m_AudioSource.Stop();
-		m_AudioSource.volume = 0;
-		m_AudioSource.clip   = audioClip;
-		m_AudioSource.Play();
-		
 		try
 		{
-			await m_AudioSource.SetVolumeAsync(GetVolume(_AmbientID), PLAY_FADE_DURATION, token);
+			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", null, token);
+			
+			if (token.IsCancellationRequested)
+				return;
+			
+			m_AudioSource.Stop();
+			m_AudioSource.volume = 0;
+			m_AudioSource.clip   = audioClip;
+			
+			if (audioClip != null)
+			{
+				m_AudioSource.Play();
+				
+				float volume = GetVolume(_AmbientID);
+				
+				await m_AudioSource.SetVolumeAsync(volume, PLAY_FADE_DURATION, token);
+			}
 		}
 		catch (TaskCanceledException) { }
 		catch (Exception exception)

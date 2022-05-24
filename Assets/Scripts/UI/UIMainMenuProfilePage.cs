@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using Zenject;
 
-public class UIMainProfilePage : UIMainMenuPage
+public class UIMainMenuProfilePage : UIMainMenuPage
 {
 	public override MainMenuPageType Type => MainMenuPageType.Profile;
 

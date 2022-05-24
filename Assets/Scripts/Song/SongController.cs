@@ -18,7 +18,7 @@ public class SongController
 	[Inject] SongPlayer.Factory m_SongFactory;
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] AmbientProcessor   m_AmbientProcessor;
-	[Inject] MusicProcessor     m_MusicProcessor;
+	[Inject] PreviewProcessor   m_PreviewProcessor;
 
 	[Inject] HealthManager m_HealthManager;
 	[Inject] ScoreManager  m_ScoreManager;
@@ -372,7 +372,7 @@ public class SongController
 
 	void DisableAudio()
 	{
-		m_MusicProcessor.StopPreview();
+		m_PreviewProcessor.Stop();
 		m_AmbientProcessor.Unlock();
 		m_AmbientProcessor.Pause();
 		m_AmbientProcessor.Lock();
@@ -380,7 +380,7 @@ public class SongController
 
 	void EnableAudio()
 	{
-		m_MusicProcessor.StopPreview();
+		m_PreviewProcessor.Stop();
 		m_AmbientProcessor.Unlock();
 		m_AmbientProcessor.Resume();
 	}

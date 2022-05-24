@@ -13,15 +13,12 @@ using Object = UnityEngine.Object;
 
 public abstract class StorageProgress : IProgress<DownloadState>
 {
-	public string Path { get; }
-
 	Action<float> m_Progress;
 
 	float m_Value;
 
-	public StorageProgress(string _Path, Action<float> _Progress)
+	public StorageProgress(Action<float> _Progress)
 	{
-		Path       = _Path;
 		m_Progress = _Progress;
 		m_Value    = 0;
 	}
@@ -46,6 +43,13 @@ public abstract class StorageProgress : IProgress<DownloadState>
 		m_Progress -= _Action;
 	}
 
+	public void Complete()
+	{
+		Action<float> action = m_Progress;
+		m_Progress = null;
+		action?.Invoke(1);
+	}
+
 	void IProgress<DownloadState>.Report(DownloadState _State)
 	{
 		double state = _State.BytesTransferred;
@@ -59,7 +63,7 @@ public class StorageProgress<T> : StorageProgress
 {
 	public Task<T> Task { get; }
 
-	public StorageProgress(string _Path, Task<T> _Task, Action<float> _Progress) : base(_Path, _Progress)
+	public StorageProgress(Task<T> _Task, Action<float> _Progress) : base(_Progress)
 	{
 		Task = _Task;
 	}
@@ -69,9 +73,9 @@ public class StorageProgress<T> : StorageProgress
 [SuppressMessage("ReSharper", "UnusedMember.Local")]
 public class StorageProcessor
 {
-	static readonly Dictionary<string, StorageProgress<Texture2D>> m_TextureTasks   = new Dictionary<string, StorageProgress<Texture2D>>();
-	static readonly Dictionary<string, StorageProgress<AudioClip>> m_AudioClipTasks = new Dictionary<string, StorageProgress<AudioClip>>();
-	static readonly Dictionary<string, StorageProgress<string>>    m_TextTasks      = new Dictionary<string, StorageProgress<string>>();
+	static readonly Dictionary<string, StorageProgress<Texture2D>> m_Textures   = new Dictionary<string, StorageProgress<Texture2D>>();
+	static readonly Dictionary<string, StorageProgress<AudioClip>> m_AudioClips = new Dictionary<string, StorageProgress<AudioClip>>();
+	static readonly Dictionary<string, StorageProgress<string>>    m_Texts      = new Dictionary<string, StorageProgress<string>>();
 
 	public bool IsLoaded(string _RemotePath)
 	{
@@ -82,13 +86,13 @@ public class StorageProcessor
 
 	public bool IsLoading(string _RemotePath)
 	{
-		if (m_TextureTasks.ContainsKey(_RemotePath))
+		if (m_Textures.ContainsKey(_RemotePath))
 			return true;
 		
-		if (m_AudioClipTasks.ContainsKey(_RemotePath))
+		if (m_AudioClips.ContainsKey(_RemotePath))
 			return true;
 		
-		if (m_TextTasks.ContainsKey(_RemotePath))
+		if (m_Texts.ContainsKey(_RemotePath))
 			return true;
 		
 		return false;
@@ -96,53 +100,50 @@ public class StorageProcessor
 
 	public void Subscribe(string _RemotePath, Action<float> _Progress)
 	{
-		if (m_TextureTasks.ContainsKey(_RemotePath))
+		if (m_Textures.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_TextureTasks[_RemotePath];
+			StorageProgress progress = m_Textures[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
-		else if (m_AudioClipTasks.ContainsKey(_RemotePath))
+		else if (m_AudioClips.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_AudioClipTasks[_RemotePath];
+			StorageProgress progress = m_AudioClips[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
-		else if (m_TextTasks.ContainsKey(_RemotePath))
+		else if (m_Texts.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_TextTasks[_RemotePath];
+			StorageProgress progress = m_Texts[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
 	}
 
 	public void Unsubscribe(string _RemotePath, Action<float> _Progress)
 	{
-		if (m_TextureTasks.ContainsKey(_RemotePath))
+		if (m_Textures.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_TextureTasks[_RemotePath];
+			StorageProgress progress = m_Textures[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
-		else if (m_AudioClipTasks.ContainsKey(_RemotePath))
+		else if (m_AudioClips.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_AudioClipTasks[_RemotePath];
+			StorageProgress progress = m_AudioClips[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
-		else if (m_TextTasks.ContainsKey(_RemotePath))
+		else if (m_Texts.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_TextTasks[_RemotePath];
+			StorageProgress progress = m_Texts[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
 	}
 
 	public Task<Texture2D> LoadTextureAsync(Uri _Uri, Action<float> _Progress, CancellationToken _Token = default)
 	{
-		if (_Uri == null)
+		string remotePath = _Uri?.ToString() ?? string.Empty;
+		
+		if (string.IsNullOrEmpty(remotePath))
 			return null;
 		
-		string url = _Uri.ToString();
-		
-		if (string.IsNullOrEmpty(url))
-			return null;
-		
-		if (m_TextureTasks.TryGetValue(url, out StorageProgress<Texture2D> progress))
+		if (m_Textures.TryGetValue(remotePath, out StorageProgress<Texture2D> progress))
 		{
 			progress.Subscribe(_Progress);
 			return progress.Task;
@@ -150,18 +151,17 @@ public class StorageProcessor
 		
 		TaskCompletionSource<Texture2D> completionSource = new TaskCompletionSource<Texture2D>();
 		
-		m_TextureTasks[url] = new StorageProgress<Texture2D>(
-			url,
+		m_Textures[remotePath] = new StorageProgress<Texture2D>(
 			completionSource.Task,
 			_Progress
 		);
 		
-		WebRequest.LoadTexture(url, _Token)
+		WebRequest.LoadTexture(remotePath, _Token)
 			.ContinueWith(
 				_Task =>
 				{
-					if (m_TextureTasks.ContainsKey(url))
-						m_TextureTasks.Remove(url);
+					if (m_Textures.ContainsKey(remotePath))
+						m_Textures.Remove(remotePath);
 					if (_Task.IsFaulted)
 						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
 					else if (_Task.IsCanceled)
@@ -177,91 +177,12 @@ public class StorageProcessor
 
 	public Task<Texture2D> LoadTextureAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
 	{
-		if (string.IsNullOrEmpty(_RemotePath))
-			return null;
-		
-		if (m_TextureTasks.TryGetValue(_RemotePath, out StorageProgress<Texture2D> progress))
-		{
-			progress.Subscribe(_Progress);
-			return progress.Task;
-		}
-		
-		TaskCompletionSource<Texture2D> completionSource = new TaskCompletionSource<Texture2D>();
-		
-		progress = new StorageProgress<Texture2D>(
-			_RemotePath,
-			completionSource.Task,
-			_Progress
-		);
-		
-		m_TextureTasks[_RemotePath] = progress;
-		
-		LoadAssetAsync(_RemotePath, WebRequest.LoadTextureFile, progress, _Token)
-			.ContinueWith(
-				_Task =>
-				{
-					if (m_TextureTasks.ContainsKey(_RemotePath))
-						m_TextureTasks.Remove(_RemotePath);
-					if (_Task.IsFaulted)
-						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
-					else if (_Task.IsCanceled)
-						completionSource.TrySetCanceled();
-					else if (_Task.IsCompleted)
-						completionSource.TrySetResult(_Task.Result);
-					else
-						completionSource.TrySetResult(null);
-				},
-				CancellationToken.None
-			);
-		
-		return completionSource.Task;
+		return LoadAsync(_RemotePath, false, _Progress, m_Textures, WebRequest.LoadTextureFile, _Token);
 	}
 
 	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
 	{
-		if (string.IsNullOrEmpty(_RemotePath))
-			return null;
-		
-		if (m_AudioClipTasks.TryGetValue(_RemotePath, out StorageProgress<AudioClip> progress))
-		{
-			progress.Subscribe(_Progress);
-			return progress.Task;
-		}
-		
-		TaskCompletionSource<AudioClip> completionSource = new TaskCompletionSource<AudioClip>();
-		
-		progress = new StorageProgress<AudioClip>(
-			_RemotePath,
-			completionSource.Task,
-			_Progress
-		);
-		
-		m_AudioClipTasks[_RemotePath] = progress;
-		
-		LoadAssetAsync(_RemotePath, WebRequest.LoadAudioClipFile, progress, _Token)
-			.ContinueWith(
-				_Task =>
-				{
-					if (m_AudioClipTasks.ContainsKey(_RemotePath))
-						m_AudioClipTasks.Remove(_RemotePath);
-					if (_Task.IsFaulted)
-						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
-					else if (_Task.IsCanceled)
-						completionSource.TrySetCanceled();
-					else if (_Task.IsCompleted)
-						completionSource.TrySetResult(_Task.Result);
-					else
-						completionSource.TrySetResult(null);
-				},
-				CancellationToken.None
-			);
-		
-		return completionSource.Task;
-	}
-
-	public Task<string> LoadJson(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
-	{
-		return LoadJson(_RemotePath, false, Encoding.UTF8, _Progress, _Token);
+		return LoadAsync(_RemotePath, false, _Progress, m_AudioClips, WebRequest.LoadAudioClipFile, _Token);
 	}
 
 	public Task<string> LoadJson(string _RemotePath, bool _Force, Action<float> _Progress, CancellationToken _Token = default)
@@ -269,17 +190,12 @@ public class StorageProcessor
 		return LoadJson(_RemotePath, _Force, Encoding.UTF8, _Progress, _Token);
 	}
 
-	public Task<string> LoadJson(string _RemotePath, Encoding _Encoding, Action<float> _Progress, CancellationToken _Token = default)
-	{
-		return LoadJson(_RemotePath, false, _Encoding, _Progress, _Token);
-	}
-
 	public Task<string> LoadJson(string _RemotePath, bool _Force, Encoding _Encoding, Action<float> _Progress, CancellationToken _Token = default)
 	{
 		if (string.IsNullOrEmpty(_RemotePath))
 			return null;
 		
-		if (m_TextTasks.TryGetValue(_RemotePath, out StorageProgress<string> progress))
+		if (m_Texts.TryGetValue(_RemotePath, out StorageProgress<string> progress))
 		{
 			progress.Subscribe(_Progress);
 			return progress.Task;
@@ -288,19 +204,18 @@ public class StorageProcessor
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
 		progress = new StorageProgress<string>(
-			_RemotePath,
 			completionSource.Task,
 			_Progress
 		);
 		
-		m_TextTasks[_RemotePath] = progress;
+		m_Texts[_RemotePath] = progress;
 		
 		LoadDataAsync(_RemotePath, _Force, progress, _Token)
 			.ContinueWith(
 				_Task =>
 				{
-					if (m_TextTasks.ContainsKey(_RemotePath))
-						m_TextTasks.Remove(_RemotePath);
+					if (m_Texts.ContainsKey(_RemotePath))
+						m_Texts.Remove(_RemotePath);
 					if (_Task.IsFaulted)
 						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
 					else if (_Task.IsCanceled)
@@ -375,7 +290,7 @@ public class StorageProcessor
 		return null;
 	}
 
-	static async Task<T> LoadAssetAsync<T>(string _RemotePath, Func<string, CancellationToken, Task<T>> _Request, StorageProgress _Progress, CancellationToken _Token = default) where T : Object
+	static async Task<T> LoadAssetAsync<T>(string _RemotePath, bool _Update, Func<string, CancellationToken, Task<T>> _Request, StorageProgress _Progress, CancellationToken _Token = default) where T : Object
 	{
 		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
@@ -384,7 +299,10 @@ public class StorageProcessor
 		
 		if (File.Exists(localPath))
 		{
-			UpdateFile(_RemotePath, localPath);
+			if (_Update)
+				await UpdateFileAsync(_RemotePath, localPath, _Token);
+			else
+				UpdateFile(_RemotePath, localPath);
 			
 			try
 			{
@@ -421,9 +339,60 @@ public class StorageProcessor
 		return null;
 	}
 
-	static async void LoadFile(string _RemotePath, string _LocalPath, StorageProgress _Progress)
+	static Task<T> LoadAsync<T>(
+		string                                   _RemotePath,
+		bool                                     _Update,
+		Action<float>                            _Progress,
+		IDictionary<string, StorageProgress<T>>  _Registry,
+		Func<string, CancellationToken, Task<T>> _Request,
+		CancellationToken                        _Token = default
+	) where T : Object
 	{
-		await LoadFileAsync(_RemotePath, _LocalPath, _Progress);
+		if (string.IsNullOrEmpty(_RemotePath))
+			return Task.FromResult<T>(null);
+		
+		if (_Token.IsCancellationRequested)
+			return Task.FromCanceled<T>(_Token);
+		
+		if (_Registry != null && _Registry.TryGetValue(_RemotePath, out StorageProgress<T> progress) && progress != null)
+		{
+			progress.Subscribe(_Progress);
+			return progress.Task;
+		}
+		
+		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
+		
+		progress = new StorageProgress<T>(
+			completionSource.Task,
+			_Progress
+		);
+		
+		if (_Registry != null)
+			_Registry[_RemotePath] = progress;
+		
+		LoadAssetAsync(_RemotePath, _Update, _Request, progress, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (_Registry != null && _Registry.ContainsKey(_RemotePath) && _Registry[_RemotePath] != null)
+					{
+						_Registry[_RemotePath].Complete();
+						_Registry.Remove(_RemotePath);
+					}
+					
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else if (_Task.IsCompleted)
+						completionSource.TrySetResult(_Task.Result);
+					else
+						completionSource.TrySetResult(null);
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
 	}
 
 	static async Task LoadFileAsync(string _RemotePath, string _LocalPath, StorageProgress _Progress, CancellationToken _Token = default)

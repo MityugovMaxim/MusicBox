@@ -20,16 +20,6 @@ public class UILocalizedLabel : UIEntity
 		Lower   = 1 << 5,
 	}
 
-	TMP_Text Label
-	{
-		get
-		{
-			if (m_Label == null)
-				m_Label = GetComponent<TMP_Text>();
-			return m_Label;
-		}
-	}
-
 	[SerializeField, HideInInspector] string   m_Key;
 	[SerializeField, HideInInspector] Options  m_Options;
 	[SerializeField, HideInInspector] string[] m_Data;
@@ -41,22 +31,27 @@ public class UILocalizedLabel : UIEntity
 	[Inject] SignalBus             m_SignalBus;
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_Label = GetComponent<TMP_Text>();
+	}
+
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
 		ProcessText();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Subscribe<LanguageSelectSignal>(ProcessText);
+		m_SignalBus.Subscribe<LanguageSelectSignal>(ProcessText);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Unsubscribe<LanguageSelectSignal>(ProcessText);
+		m_SignalBus.Unsubscribe<LanguageSelectSignal>(ProcessText);
 	}
 
 	void ProcessText()
@@ -70,7 +65,7 @@ public class UILocalizedLabel : UIEntity
 		text = Upper(text);
 		text = Lower(text);
 		
-		Label.text = text; 
+		m_Label.text = text; 
 	}
 
 	string Format(string _Text)
