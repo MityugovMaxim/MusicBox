@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -15,6 +16,8 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] UIColorTrack    m_ColorTrack;
 	[SerializeField] RectTransform   m_InputArea;
 	[SerializeField] UIInputReceiver m_InputReceiver;
+
+	readonly List<IASFSampler> m_Samplers = new List<IASFSampler>();
 
 	Action m_Finished;
 	double m_FinishTime;
@@ -41,6 +44,16 @@ public class SongPlayer : ASFPlayer
 		Deserialize(_ASF);
 	}
 
+	public void AddListener(IASFSampler _Sampler)
+	{
+		m_Samplers.Add(_Sampler);
+	}
+
+	public void RemoveListener(IASFSampler _Sampler)
+	{
+		m_Samplers.Remove(_Sampler);
+	}
+
 	public override void Stop()
 	{
 		base.Stop();
@@ -61,6 +74,9 @@ public class SongPlayer : ASFPlayer
 		base.Sample();
 		
 		m_InputReceiver.Process();
+		
+		foreach (IASFSampler sampler in m_Samplers)
+			sampler.Sample(Time, m_FinishTime);
 		
 		if (Time >= m_FinishTime && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();

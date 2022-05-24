@@ -4,7 +4,10 @@ using Zenject;
 [Menu(MenuType.GameMenu)]
 public class UIGameMenu : UIMenu
 {
+	public IASFSampler Sampler => m_Timeline;
+
 	[SerializeField] UISongLabel m_Label;
+	[SerializeField] UITimeline  m_Timeline;
 
 	[Inject] SignalBus      m_SignalBus;
 	[Inject] SongController m_SongController;
