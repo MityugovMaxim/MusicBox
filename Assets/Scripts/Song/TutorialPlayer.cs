@@ -53,6 +53,8 @@ public class TutorialPlayer : ASFPlayer
 		m_InputArea.anchorMin = new Vector2(0, position);
 		m_InputArea.anchorMax = new Vector2(1, position);
 		
+		m_InputReceiver.gameObject.SetActive(false);
+		
 		m_InputGroup.Setup(Ratio);
 		m_TapGroup.Setup(Ratio);
 		m_DoubleGroup.Setup(Ratio);
@@ -155,7 +157,7 @@ public class TutorialPlayer : ASFPlayer
 			m_SignalBus.Fire(signal);
 		}
 		
-		await Task.Delay(2500);
+		await Task.Delay(4000);
 		
 		await m_ComboGroup.HideAsync();
 		
@@ -163,7 +165,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_SignalBus.Fire(new TapFailSignal(0));
 		
-		await Task.Delay(3000);
+		await Task.Delay(1500);
 	}
 
 	Task TapAutoAction() => AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup);
@@ -192,6 +194,8 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task AutoAction<TSignal>(double _Source, double _Target, UIGroup _Group)
 	{
+		m_InputReceiver.gameObject.SetActive(false);
+		
 		await UnityTask.Phase(
 			_Phase => Time = MathUtility.Lerp(_Source, _Target, _Phase),
 			(float)(_Target - _Source)
@@ -211,18 +215,24 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_SignalBus.Subscribe<TSignal>(Success);
 		
+		m_InputReceiver.gameObject.SetActive(true);
+		
 		m_InputReceiver.Process();
 		
 		await UnityTask.Until(() => success);
 		
 		m_SignalBus.Unsubscribe<TSignal>(Success);
 		
+		m_InputReceiver.gameObject.SetActive(false);
+		
 		_Group.Hide();
 	}
 
-	Task ManualAction(double _Source, double _Target)
+	async Task ManualAction(double _Source, double _Target)
 	{
-		return UnityTask.Phase(
+		m_InputReceiver.gameObject.SetActive(true);
+		
+		await UnityTask.Phase(
 			_Phase =>
 			{
 				Time = MathUtility.Lerp(_Source, _Target, _Phase);
@@ -230,6 +240,8 @@ public class TutorialPlayer : ASFPlayer
 			},
 			(float)(_Target - _Source)
 		);
+		
+		m_InputReceiver.gameObject.SetActive(false);
 	}
 
 	void PlaySound(string _Sound)
