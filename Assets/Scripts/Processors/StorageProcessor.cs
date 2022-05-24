@@ -72,15 +72,19 @@ public class StorageProcessor
 
 	public bool IsLoaded(string _RemotePath)
 	{
+		if (string.IsNullOrEmpty(_RemotePath))
+			return false;
+		
 		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
-		string directory = Path.GetDirectoryName(path);
-		
-		return Directory.Exists(directory) && File.Exists(path);
+		return File.Exists(path) || Directory.Exists(path);
 	}
 
 	public bool IsLoading(string _RemotePath)
 	{
+		if (string.IsNullOrEmpty(_RemotePath))
+			return false;
+		
 		if (m_Textures.ContainsKey(_RemotePath))
 			return true;
 		
