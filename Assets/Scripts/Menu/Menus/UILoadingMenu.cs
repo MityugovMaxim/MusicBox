@@ -106,7 +106,7 @@ public class UILoadingMenu : UIMenu
 		
 		await Task.WhenAll(
 			load,
-			Task.Delay(2000)
+			Task.Delay(1500)
 		);
 		
 		StopProgress();

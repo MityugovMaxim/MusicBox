@@ -40,7 +40,8 @@ public class UIFXHighlight : UIEntity
 
 	Task AlphaAsync(CancellationToken _Token)
 	{
-		m_CanvasGroup.alpha = m_Source;
+		if (m_CanvasGroup == null)
+			return Task.FromResult(true);
 		
 		return UnityTask.Lerp(
 			_Value => m_CanvasGroup.alpha = _Value,
@@ -54,13 +55,13 @@ public class UIFXHighlight : UIEntity
 
 	Task WidthAsync(CancellationToken _Token)
 	{
+		if (m_Background == null)
+			return Task.FromResult(true);
+		
 		const float sourceMin = 0;
 		const float sourceMax = 1;
 		const float targetMin = 0.45f;
 		const float targetMax = 0.55f;
-		
-		m_Background.anchorMin = new Vector2(sourceMin, m_Background.anchorMin.y);
-		m_Background.anchorMax = new Vector2(sourceMax, m_Background.anchorMax.y);
 		
 		return UnityTask.Phase(
 			_Phase =>
@@ -73,8 +74,7 @@ public class UIFXHighlight : UIEntity
 				m_Background.anchorMin = anchorMin;
 				m_Background.anchorMax = anchorMax;
 			},
-			m_Duration * 0.4f,
-			m_Duration * 0.6f,
+			m_Duration,
 			_Token
 		);
 	}
