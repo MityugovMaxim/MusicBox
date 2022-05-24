@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class UISongDownload : UIEntity
+public class UISongDownload : UIGroup
 {
 	string MusicPath => !string.IsNullOrEmpty(m_SongID) ? $"Songs/{m_SongID}.ogg" : string.Empty;
 	string ASFPath   => !string.IsNullOrEmpty(m_SongID) ? $"Songs/{m_SongID}.asf" : string.Empty;
@@ -39,6 +39,8 @@ public class UISongDownload : UIEntity
 	{
 		base.OnDisable();
 		
+		m_SongID = null;
+		
 		m_StorageProcessor.Unsubscribe(MusicPath, ProcessMusicProgress);
 		m_StorageProcessor.Unsubscribe(ASFPath, ProcessASFProgress);
 	}
@@ -54,8 +56,9 @@ public class UISongDownload : UIEntity
 		
 		if (m_StorageProcessor.IsLoaded(MusicPath) && m_StorageProcessor.IsLoaded(ASFPath))
 		{
-			m_CompleteGroup.Show(true);
+			Hide(true);
 			
+			m_CompleteGroup.Hide(true);
 			m_ProgressGroup.Hide(true);
 			m_DownloadGroup.Hide(true);
 		}
@@ -64,6 +67,8 @@ public class UISongDownload : UIEntity
 			m_StorageProcessor.Subscribe(MusicPath, ProcessMusicProgress);
 			m_StorageProcessor.Subscribe(ASFPath, ProcessASFProgress);
 			
+			Show(true);
+			
 			m_ProgressGroup.Show(true);
 			
 			m_CompleteGroup.Hide(true);
@@ -71,6 +76,8 @@ public class UISongDownload : UIEntity
 		}
 		else
 		{
+			Show(true);
+			
 			m_DownloadGroup.Show(true);
 			
 			m_CompleteGroup.Hide(true);
@@ -82,6 +89,9 @@ public class UISongDownload : UIEntity
 	{
 		RestoreProgress();
 		
+		string musicPath = MusicPath;
+		string asfPath   = ASFPath;
+		
 		try
 		{
 			m_ProgressGroup.Show();
@@ -89,14 +99,21 @@ public class UISongDownload : UIEntity
 			m_DownloadGroup.Hide();
 			m_CompleteGroup.Hide();
 			
-			await m_StorageProcessor.LoadAudioClipAsync(MusicPath, ProcessMusicProgress);
+			await m_StorageProcessor.LoadAudioClipAsync(musicPath, ProcessMusicProgress);
 			
-			await m_StorageProcessor.LoadJson(ASFPath, true, ProcessASFProgress);
+			await m_StorageProcessor.LoadJson(asfPath, true, ProcessASFProgress);
 			
-			m_CompleteGroup.Show();
+			if (musicPath != MusicPath || asfPath != ASFPath)
+				return;
 			
 			m_DownloadGroup.Hide();
 			m_ProgressGroup.Hide();
+			
+			await m_CompleteGroup.ShowAsync();
+			
+			await Task.Delay(1000);
+			
+			Hide();
 		}
 		catch (TaskCanceledException)
 		{

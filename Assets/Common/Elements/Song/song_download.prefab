@@ -75,13 +75,15 @@ GameObject:
   m_Component:
   - component: {fileID: 994910030471552927}
   - component: {fileID: 994910030471552924}
+  - component: {fileID: 6043524681686263443}
+  - component: {fileID: 7984218361939582991}
   m_Layer: 5
   m_Name: song_download
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &994910030471552927
 RectTransform:
   m_ObjectHideFlags: 0
@@ -116,11 +118,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aadc3d7eefc446aa38704bfa71427ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Interactable: 0
+  m_ShowDuration: 0.2
+  m_HideDuration: 0.2
   m_DownloadGroup: {fileID: 994910030908431351}
   m_ProgressGroup: {fileID: 994910029969138604}
   m_CompleteGroup: {fileID: 831049663867297243}
   m_DownloadButton: {fileID: 8066367182816166441}
   m_Progress: {fileID: 5495332880761224077}
+--- !u!225 &6043524681686263443
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994910030471552926}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
+--- !u!114 &7984218361939582991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994910030471552926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c4eab61a114157acd27feab5227c52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Interactable: 1
+  m_ShowDuration: 0.2
+  m_HideDuration: 0.2
 --- !u!1 &994910030908431241
 GameObject:
   m_ObjectHideFlags: 0
