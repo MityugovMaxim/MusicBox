@@ -72,9 +72,11 @@ public class StorageProcessor
 
 	public bool IsLoaded(string _RemotePath)
 	{
-		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
+		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
-		return File.Exists(localPath);
+		string directory = Path.GetDirectoryName(path);
+		
+		return Directory.Exists(directory) && File.Exists(path);
 	}
 
 	public bool IsLoading(string _RemotePath)
