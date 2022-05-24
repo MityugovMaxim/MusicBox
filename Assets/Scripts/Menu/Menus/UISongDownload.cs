@@ -39,10 +39,10 @@ public class UISongDownload : UIGroup
 	{
 		base.OnDisable();
 		
-		m_SongID = null;
-		
 		m_StorageProcessor.Unsubscribe(MusicPath, ProcessMusicProgress);
 		m_StorageProcessor.Unsubscribe(ASFPath, ProcessASFProgress);
+		
+		m_SongID = null;
 	}
 
 	public void Setup(string _SongID)
