@@ -208,8 +208,9 @@ public class UILatencyIndicator : UIEntity
 	async Task FlashAsync(CancellationToken _Token = default)
 	{
 		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
+		float scale = m_Duration / (m_MaxLimit - m_MinLimit);
 		
-		float delay = m_Duration * pivot + m_Latency;
+		float delay = m_Duration * pivot + m_Latency * scale;
 		
 		await UnityTask.Phase(
 			_Phase => m_Flash.alpha = 1 - _Phase,
@@ -223,7 +224,7 @@ public class UILatencyIndicator : UIEntity
 	{
 		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
 		
-		float delay = pivot * m_Duration;
+		float delay = m_Duration * pivot;
 		
 		m_AudioSource.Stop();
 		m_AudioSource.PlayScheduled(AudioSettings.dspTime + delay);
