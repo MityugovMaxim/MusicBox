@@ -124,36 +124,21 @@ public class SongsProcessor
 		if (snapshot == null)
 			return 0;
 		
-		long GetRankPayout(ScoreRank _Rank)
-		{
-			switch (_Rank)
-			{
-				case ScoreRank.Bronze:
-					return snapshot.BronzePayout;
-				case ScoreRank.Silver:
-					return snapshot.SilverPayout;
-				case ScoreRank.Gold:
-					return snapshot.GoldPayout;
-				case ScoreRank.Platinum:
-					return snapshot.PlatinumPayout;
-				default:
-					return 0;
-			}
-		}
+		int targetRank = (int)_TargetRank;
+		int sourceRank = (int)_SourceRank;
 		
-		long payout = 0;
-		foreach (ScoreRank rank in Enum.GetValues(typeof(ScoreRank)))
+		long payout = snapshot.DefaultPayout * targetRank;
+		for (int rank = sourceRank + 1; rank <= targetRank; rank++)
 		{
-			if (rank <= _SourceRank)
-				payout += GetRankPayout(rank);
+			if (rank == 1)
+				payout += snapshot.BronzePayout;
+			else if (rank == 2)
+				payout += snapshot.SilverPayout;
+			else if (rank == 3)
+				payout += snapshot.GoldPayout;
+			else if (rank == 4)
+				payout += snapshot.PlatinumPayout;
 		}
-		
-		for (ScoreRank rank = _SourceRank; rank <= _TargetRank; rank++)
-		{
-			if (rank > _SourceRank)
-				payout += GetRankPayout(rank);
-		}
-		
 		return payout;
 	}
 
