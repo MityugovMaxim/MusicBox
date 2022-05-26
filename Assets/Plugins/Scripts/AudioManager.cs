@@ -45,24 +45,26 @@ public abstract class AudioManager : IInitializable, IDisposable
 
 	public float GetLatency()
 	{
-		string key = $"{LATENCY_KEY}_{GetAudioOutputID()}";
+		string key = GetLatencyKey();
 		
 		return PlayerPrefs.GetFloat(key, 0);
 	}
 
 	public void SetLatency(float _Latency)
 	{
-		string key = LATENCY_KEY + GetAudioOutputID();
+		string key = GetLatencyKey();
 		
 		PlayerPrefs.SetFloat(key, _Latency);
 	}
 
 	public bool HasSettings()
 	{
-		string key = LATENCY_KEY + GetAudioOutputID();
+		string key = GetLatencyKey();
 		
 		return PlayerPrefs.HasKey(key);
 	}
+
+	string GetLatencyKey() => $"{LATENCY_KEY}_{GetAudioOutputID()}";
 
 	void InvokeAudioSourceChanged()
 	{
