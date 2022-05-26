@@ -106,7 +106,7 @@ RectTransform:
   - {fileID: 5601943965543681822}
   - {fileID: 3865437029149882747}
   m_Father: {fileID: 4154771588820189816}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -467,7 +467,7 @@ RectTransform:
   m_Children:
   - {fileID: 7517633527601696100}
   m_Father: {fileID: 4154771588820189816}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -482,7 +482,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2338704235206580072}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -680,8 +680,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 3552648899332791785}
   - {fileID: 2208702440832605995}
+  - {fileID: 3552648899332791785}
   m_Father: {fileID: 6593699628996033175}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -929,6 +929,7 @@ MonoBehaviour:
   m_LatencyLabel: {fileID: 8149971383061817066}
   m_MinLimit: -0.5
   m_MaxLimit: 0.5
+  m_Duration: 2
 --- !u!1 &5859078876021937243
 GameObject:
   m_ObjectHideFlags: 0
