@@ -147,6 +147,13 @@ public class UIRounded : SpriteGraphic
 		base.OnDisable();
 	}
 
+	protected override void OnDidApplyAnimationProperties()
+	{
+		base.OnDidApplyAnimationProperties();
+		
+		Valid = false;
+	}
+
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{

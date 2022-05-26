@@ -1,10 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.LoadingMenu)]
-public class UILoadingMenu : UIMenu
+public class UILoadingMenu : UIAnimationMenu
 {
 	const string TUTORIAL_KEY = "TUTORIAL";
 
@@ -18,10 +19,14 @@ public class UILoadingMenu : UIMenu
 	[SerializeField] UIGroup     m_ProgressGroup;
 	[SerializeField] UIProgress  m_Progress;
 
+	[SerializeField, Sound] string m_TransitionSound;
+	[SerializeField, Sound] string m_DropSound;
+
 	[Inject] TutorialController m_TutorialController;
 	[Inject] SongController     m_SongController;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] AudioManager       m_AudioManager;
+	[Inject] SoundProcessor     m_SoundProcessor;
 
 	string m_SongID;
 
@@ -56,6 +61,18 @@ public class UILoadingMenu : UIMenu
 	public void ResetTutorial()
 	{
 		Tutorial = false;
+	}
+
+	[UsedImplicitly]
+	void PlayTransitionSound()
+	{
+		m_SoundProcessor.Play(m_TransitionSound);
+	}
+
+	[UsedImplicitly]
+	void PlayDropSound()
+	{
+		m_SoundProcessor.Play(m_DropSound);
 	}
 
 	async Task LoadTutorial()
