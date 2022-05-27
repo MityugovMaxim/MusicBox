@@ -41,9 +41,15 @@ public class AdsProviderAdMob : IAdsProvider
 [Preserve]
 public class AdsProviderUnity : IAdsProvider, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
 {
+	#if UNITY_IOS
 	static string GameID         => "4234912";
 	static string InterstitialID => "Interstitial_iOS";
 	static string RewardedID     => "Rewarded_iOS";
+	#elif UNITY_ANDROID
+	static string GameID         => "4234913";
+	static string InterstitialID => "Interstitial_Android";
+	static string RewardedID     => "Rewarded_Android";
+	#endif
 
 	string IAdsProvider.ID => "unity_ads";
 
