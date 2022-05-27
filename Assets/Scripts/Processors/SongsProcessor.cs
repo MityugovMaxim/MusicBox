@@ -124,8 +124,8 @@ public class SongsProcessor
 		if (snapshot == null)
 			return 0;
 		
-		int targetRank = (int)_TargetRank;
 		int sourceRank = (int)_SourceRank;
+		int targetRank = (int)_TargetRank;
 		
 		long payout = snapshot.DefaultPayout * targetRank;
 		for (int rank = sourceRank + 1; rank <= targetRank; rank++)
