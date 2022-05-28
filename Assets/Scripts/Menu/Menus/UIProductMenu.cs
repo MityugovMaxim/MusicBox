@@ -139,6 +139,8 @@ public class UIProductMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_Preview.Stop();
 		
 		foreach (UIProductSongItem item in m_Items)
@@ -149,10 +151,19 @@ public class UIProductMenu : UISlideMenu
 
 	protected override void OnHideFinished()
 	{
+		base.OnHideFinished();
+		
 		m_Preview.Stop();
 		
 		foreach (UIProductSongItem item in m_Items)
 			item.Stop();
+	}
+
+	protected override bool OnEscape()
+	{
+		Hide();
+		
+		return true;
 	}
 
 	void Refresh()

@@ -40,14 +40,14 @@ public class UISongMenu : UISlideMenu
 	{
 		m_StatisticProcessor.LogSongMenuNextClick(m_SongID);
 		
-		Select(GetLevelID(1));
+		Select(GetSongID(1));
 	}
 
 	public void Previous()
 	{
 		m_StatisticProcessor.LogSongMenuPreviousClick(m_SongID);
 		
-		Select(GetLevelID(-1));
+		Select(GetSongID(-1));
 	}
 
 	public async void Unlock()
@@ -159,7 +159,7 @@ public class UISongMenu : UISlideMenu
 		Select(_SongID);
 	}
 
-	string GetLevelID(int _Offset)
+	string GetSongID(int _Offset)
 	{
 		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
 		
@@ -174,19 +174,32 @@ public class UISongMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	protected override void OnShowFinished()
 	{
+		base.OnShowFinished();
+		
 		m_PreviewSource.Play(m_SongID);
 	}
 
 	protected override void OnHideStarted()
 	{
+		base.OnHideStarted();
+		
 		m_PreviewSource.Stop();
 		
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
+	}
+
+	protected override bool OnEscape()
+	{
+		Hide();
+		
+		return true;
 	}
 
 	void Select(string _SongID)

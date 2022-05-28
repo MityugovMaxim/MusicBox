@@ -11,6 +11,8 @@ public class UILatencyMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 		
 		m_AmbientProcessor.Pause();
@@ -20,14 +22,25 @@ public class UILatencyMenu : UISlideMenu
 
 	protected override void OnHideStarted()
 	{
+		base.OnHideStarted();
+		
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 	}
 
 	protected override void OnHideFinished()
 	{
+		base.OnHideFinished();
+		
 		m_LatencyIndicator.Complete();
 		
 		m_AmbientProcessor.Resume();
+	}
+
+	protected override bool OnEscape()
+	{
+		Hide();
+		
+		return true;
 	}
 
 	void RegisterAudioSourceChanged()

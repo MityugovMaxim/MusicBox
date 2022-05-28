@@ -35,12 +35,23 @@ public class UIGameMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Pause);
 	}
 
 	protected override void OnHideStarted()
 	{
+		base.OnHideStarted();
+		
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Pause);
+	}
+
+	protected override bool OnEscape()
+	{
+		Pause();
+		
+		return true;
 	}
 
 	async void OnApplicationFocus(bool _Focus)

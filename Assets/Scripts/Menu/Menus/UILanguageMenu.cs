@@ -26,6 +26,8 @@ public class UILanguageMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_SignalBus.Subscribe<LanguageDataUpdateSignal>(Refresh);
 		
 		Refresh();
@@ -33,7 +35,16 @@ public class UILanguageMenu : UISlideMenu
 
 	protected override void OnHideStarted()
 	{
+		base.OnHideStarted();
+		
 		m_SignalBus.Unsubscribe<LanguageDataUpdateSignal>(Refresh);
+	}
+
+	protected override bool OnEscape()
+	{
+		Hide();
+		
+		return true;
 	}
 
 	void Refresh()

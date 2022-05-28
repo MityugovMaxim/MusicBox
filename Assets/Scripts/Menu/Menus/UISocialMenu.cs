@@ -49,6 +49,8 @@ public class UISocialMenu : UISlideMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		#if UNITY_EDITOR
 		m_AppleSignIn.SetActive(true);
 		m_GoogleSignIn.SetActive(true);
@@ -62,6 +64,13 @@ public class UISocialMenu : UISlideMenu
 		m_GoogleSignIn.SetActive(true);
 		m_FacebookSignIn.SetActive(true);
 		#endif
+	}
+
+	protected override bool OnEscape()
+	{
+		Hide();
+		
+		return true;
 	}
 
 	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)

@@ -24,6 +24,26 @@ public class UIMenu : UIGroup
 
 	[SerializeField] UIBlur m_Blur;
 
+	protected override void OnShowFinished()
+	{
+		base.OnShowFinished();
+		
+		InputHandler.RegisterParameters(OnParameters);
+		InputHandler.RegisterEscape(OnEscape);
+	}
+
+	protected override void OnHideStarted()
+	{
+		base.OnHideStarted();
+		
+		InputHandler.UnregisterParameters(OnParameters);
+		InputHandler.UnregisterEscape(OnEscape);
+	}
+
+	protected virtual bool OnParameters() => false;
+
+	protected virtual bool OnEscape() => false;
+
 	protected string GetLocalization(string _Key)
 	{
 		return m_LocalizationProcessor.Get(_Key);

@@ -86,6 +86,13 @@ public class UIPauseMenu : UIMenu
 		await m_MenuProcessor.Show(MenuType.LatencyMenu);
 	}
 
+	protected override bool OnEscape()
+	{
+		Leave();
+		
+		return true;
+	}
+
 	async Task<bool> ProcessRestartAds()
 	{
 		if (m_ProfileProcessor.HasNoAds())
