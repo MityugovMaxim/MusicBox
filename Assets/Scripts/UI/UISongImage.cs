@@ -15,7 +15,9 @@ public class UISongImage : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		m_Image.Path = $"Thumbnails/Songs/{m_SongID}.jpg";
+		m_Image.Path = !string.IsNullOrEmpty(m_SongID)
+			? $"Thumbnails/Songs/{m_SongID}.jpg"
+			: string.Empty;
 		
 		if (m_Grayscale)
 			m_Album.Grayscale = m_SongsManager.IsSongLockedByLevel(m_SongID) ? 0.8f : 0;
