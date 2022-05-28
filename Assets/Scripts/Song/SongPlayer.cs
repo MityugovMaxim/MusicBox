@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -10,6 +9,8 @@ public class SongPlayer : ASFPlayer
 	[Preserve]
 	public class Factory : PlaceholderFactory<SongPlayer, SongPlayer> { }
 
+	public override double Length => m_Length;
+
 	[SerializeField] UITapTrack      m_TapTrack;
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
 	[SerializeField] UIHoldTrack     m_HoldTrack;
@@ -17,10 +18,8 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] RectTransform   m_InputArea;
 	[SerializeField] UIInputReceiver m_InputReceiver;
 
-	readonly List<IASFSampler> m_Samplers = new List<IASFSampler>();
-
 	Action m_Finished;
-	double m_FinishTime;
+	double m_Length;
 
 	public void Setup(float _Ratio, float _Duration, AudioClip _Music, string _ASF, Action _Finished)
 	{
@@ -31,7 +30,7 @@ public class SongPlayer : ASFPlayer
 		float position = 1.0f - Ratio;
 		
 		m_Finished   = _Finished;
-		m_FinishTime = Music.length + Duration * position;
+		m_Length = Music.length + Duration * position;
 		
 		m_InputArea.anchorMin = new Vector2(0, position);
 		m_InputArea.anchorMax = new Vector2(1, position);
@@ -42,16 +41,6 @@ public class SongPlayer : ASFPlayer
 		AddTrack(new ASFColorTrack(m_ColorTrack, m_ColorTrack));
 		
 		Deserialize(_ASF);
-	}
-
-	public void AddListener(IASFSampler _Sampler)
-	{
-		m_Samplers.Add(_Sampler);
-	}
-
-	public void RemoveListener(IASFSampler _Sampler)
-	{
-		m_Samplers.Remove(_Sampler);
 	}
 
 	public override void Stop()
@@ -75,10 +64,7 @@ public class SongPlayer : ASFPlayer
 		
 		m_InputReceiver.Process();
 		
-		foreach (IASFSampler sampler in m_Samplers)
-			sampler.Sample(Time, m_FinishTime);
-		
-		if (Time >= m_FinishTime && State == ASFPlayerState.Play)
+		if (Time >= m_Length && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();
 	}
 }

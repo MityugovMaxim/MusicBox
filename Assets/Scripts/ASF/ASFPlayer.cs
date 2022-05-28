@@ -32,6 +32,8 @@ namespace AudioBox.ASF
 			}
 		}
 
+		public abstract double Length { get; }
+
 		public float Duration
 		{
 			get => m_Duration;
@@ -63,7 +65,8 @@ namespace AudioBox.ASF
 		[SerializeField] float       m_Duration;
 		[SerializeField] AudioSource m_AudioSource;
 
-		readonly List<ASFTrack> m_Tracks = new List<ASFTrack>();
+		readonly List<ASFTrack>    m_Tracks   = new List<ASFTrack>();
+		readonly List<IASFSampler> m_Samplers = new List<IASFSampler>();
 
 		CancellationTokenSource m_TokenSource;
 
@@ -165,6 +168,21 @@ namespace AudioBox.ASF
 			
 			foreach (ASFTrack track in m_Tracks)
 				track.Sample(Time, minTime, maxTime);
+			
+			foreach (IASFSampler sampler in m_Samplers)
+				sampler.Sample(Time, Length);
+		}
+
+		public void AddSampler(IASFSampler _Sampler)
+		{
+			if (_Sampler != null)
+				m_Samplers.Add(_Sampler);
+		}
+
+		public void RemoveSampler(IASFSampler _Sampler)
+		{
+			if (_Sampler != null)
+				m_Samplers.Remove(_Sampler);
 		}
 
 		protected IDictionary<string, object> Serialize()

@@ -10,6 +10,7 @@ using Zenject;
 
 public class ProductSnapshot
 {
+	public string                Key      { get; }
 	public string                ID       { get; }
 	public bool                  Active   { get; }
 	public ProductType           Type     { get; }
@@ -22,6 +23,7 @@ public class ProductSnapshot
 
 	public ProductSnapshot(DataSnapshot _Data)
 	{
+		Key = _Data.Key;
 		#if UNITY_IOS
 		ID = _Data.GetString("app_store", _Data.Key);
 		#elif UNITY_ANDROID
@@ -86,60 +88,52 @@ public class ProductsProcessor
 			.ToList();
 	}
 
-	public string GetTitle(string _ProductID) => m_ProductsDescriptor.GetTitle(_ProductID);
+	public string GetTitle(string _ProductID)
+	{
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
+		
+		if (snapshot == null)
+			return string.Empty;
+		
+		return m_ProductsDescriptor.GetTitle(snapshot.Key);
+	}
 
-	public string GetDescription(string _ProductID) => m_ProductsDescriptor.GetDescription(_ProductID);
+	public string GetDescription(string _ProductID)
+	{
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
+		
+		if (snapshot == null)
+			return string.Empty;
+		
+		return m_ProductsDescriptor.GetDescription(snapshot.Key);
+	}
 
 	public ProductType GetType(string _ProductID)
 	{
-		ProductSnapshot productSnapshot = GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (productSnapshot == null)
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get type failed. Product snapshot with ID '{0}' is null.", _ProductID);
-			return ProductType.Consumable;
-		}
-		
-		return productSnapshot.Type;
+		return snapshot?.Type ?? ProductType.Consumable;
 	}
 
 	public long GetCoins(string _ProductID)
 	{
-		ProductSnapshot productSnapshot = GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (productSnapshot == null)
-		{
-			Debug.LogErrorFormat("[StoreProcessor] Get coins failed. Product snapshot with ID '{0}' is null.", _ProductID);
-			return 0;
-		}
-		
-		return productSnapshot.Coins;
+		return snapshot?.Coins ?? 0;
 	}
 
 	public float GetDiscount(string _ProductID)
 	{
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[ProductsProcessor] Get discount failed. Snapshot with ID '{0}' is null.", _ProductID);
-			return 0;
-		}
-		
-		return snapshot.Discount;
+		return snapshot?.Discount ?? 0;
 	}
 
 	public List<string> GetSongIDs(string _ProductID)
 	{
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
-		{
-			Debug.LogErrorFormat("[ProductsProcessor] Get level IDs failed. Snapshot with ID '{0}' is null", _ProductID);
-			return new List<string>();
-		}
-		
-		return snapshot.SongIDs != null
+		return snapshot?.SongIDs != null
 			? snapshot.SongIDs.ToList()
 			: new List<string>();
 	}

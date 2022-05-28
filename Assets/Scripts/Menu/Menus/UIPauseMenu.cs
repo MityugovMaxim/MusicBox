@@ -5,9 +5,8 @@ using Zenject;
 [Menu(MenuType.PauseMenu)]
 public class UIPauseMenu : UIMenu
 {
-	[SerializeField] UISongImage   m_Image;
-	[SerializeField] UISongLabel   m_Label;
-	[SerializeField] UIHapticState m_HapticState;
+	[SerializeField] UISongImage m_Image;
+	[SerializeField] UISongLabel m_Label;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
@@ -21,14 +20,12 @@ public class UIPauseMenu : UIMenu
 	int    m_RestartAdsCount;
 	int    m_LeaveAdsCount;
 
-	public void Setup(string _LevelID)
+	public void Setup(string _SongID)
 	{
-		m_SongID = _LevelID;
+		m_SongID = _SongID;
 		
 		m_Image.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
-		
-		m_HapticState.Setup();
 	}
 
 	public async void Restart()
@@ -87,12 +84,6 @@ public class UIPauseMenu : UIMenu
 		m_StatisticProcessor.LogPauseMenuLatencyClick(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.LatencyMenu);
-	}
-
-	protected override void OnHideStarted()
-	{
-		if (m_HapticState != null)
-			m_HapticState.Execute();
 	}
 
 	async Task<bool> ProcessRestartAds()

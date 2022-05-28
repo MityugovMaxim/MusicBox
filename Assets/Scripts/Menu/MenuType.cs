@@ -21,4 +21,5 @@ public enum MenuType
 	SplashMenu     = 18,
 	SetupMenu      = 19,
 	ConfirmMenu    = 20,
+	TutorialMenu   = 21,
 }

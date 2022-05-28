@@ -298,7 +298,10 @@ public class StorageProcessor
 		
 		if (File.Exists(localPath))
 		{
-			UpdateFile(_RemotePath, localPath);
+			if (_Update)
+				await UpdateFileAsync(_RemotePath, localPath, _Token);
+			else
+				UpdateFile(_RemotePath, localPath);
 			
 			try
 			{

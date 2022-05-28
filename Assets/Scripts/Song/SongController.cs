@@ -105,7 +105,7 @@ public class SongController
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
 		
-		m_Player.AddListener(gameMenu.Sampler);
+		m_Player.AddSampler(gameMenu.Sampler);
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Sample();

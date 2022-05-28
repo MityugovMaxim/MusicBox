@@ -48,6 +48,13 @@ public class TutorialController
 		m_ScoreManager.Setup(m_SongID);
 		m_HealthManager.Setup(null);
 		
+		UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>();
+		if (tutorialMenu != null)
+		{
+			tutorialMenu.Show(true);
+			m_Player.AddSampler(tutorialMenu.Sampler);
+		}
+		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Sample();
 		
@@ -60,7 +67,7 @@ public class TutorialController
 	{
 		if (m_Player == null)
 		{
-			Log.Error(this, "Play failed. player is null");
+			Log.Error(this, "Play failed. Player is null");
 			return;
 		}
 		
@@ -71,6 +78,19 @@ public class TutorialController
 		m_Player.Process();
 	}
 
+	public void Skip()
+	{
+		if (m_Player == null)
+		{
+			Log.Error(this, "Skip failed. Player is null");
+			return;
+		}
+		
+		m_Player.Stop();
+		
+		Finish();
+	}
+
 	async void Finish()
 	{
 		if (m_Player == null)
@@ -79,14 +99,25 @@ public class TutorialController
 			return;
 		}
 		
-		if (string.IsNullOrEmpty(m_SongID))
+		async Task DestroyPlayer()
 		{
-			await m_MenuProcessor.Show(MenuType.MainMenu);
+			await m_MenuProcessor.Hide(MenuType.TutorialMenu, true);
 			await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 			
 			GameObject.Destroy(m_Player.gameObject);
+			
+			m_MenuProcessor.RemoveMenu(MenuType.TutorialMenu);
+			
+			m_Player = null;
+		}
+		
+		if (string.IsNullOrEmpty(m_SongID))
+		{
+			await m_MenuProcessor.Show(MenuType.MainMenu);
+			
+			await DestroyPlayer();
 		}
 		else
 		{
@@ -96,9 +127,7 @@ public class TutorialController
 			
 			await m_MenuProcessor.Show(MenuType.LoadingMenu);
 			
-			GameObject.Destroy(m_Player.gameObject);
-			
-			m_Player = null;
+			await DestroyPlayer();
 			
 			loadingMenu.Load();
 		}

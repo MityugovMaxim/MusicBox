@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.ASF;
+using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -10,6 +12,8 @@ public class TutorialPlayer : ASFPlayer
 {
 	[Preserve]
 	public class Factory : PlaceholderFactory<TutorialPlayer, TutorialPlayer> { }
+
+	public override double Length => 28;
 
 	[SerializeField] UITapTrack      m_TapTrack;
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
@@ -39,7 +43,19 @@ public class TutorialPlayer : ASFPlayer
 
 	Action m_Finished;
 
-	readonly Queue<Func<Task>> m_Actions = new Queue<Func<Task>>();
+	CancellationTokenSource m_TokenSource;
+
+	readonly Queue<Func<CancellationToken, Task>> m_Actions = new Queue<Func<CancellationToken, Task>>();
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = null;
+	}
 
 	public void Setup(float _Ratio, float _Duration, Action _Finished)
 	{
@@ -82,6 +98,15 @@ public class TutorialPlayer : ASFPlayer
 
 	public async void Process()
 	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		token.Register(() => m_Actions.Clear());
+		
 		void TapSuccess() => PlaySound(m_TapSuccessSound);
 		void DoubleSuccess() => PlaySound(m_DoubleSuccessSound);
 		void HoldHit() => PlaySound(m_HoldHitSound);
@@ -93,24 +118,48 @@ public class TutorialPlayer : ASFPlayer
 		m_SignalBus.Subscribe<HoldSuccessSignal>(HoldSuccess);
 		
 		while (m_Actions.Count > 0)
-			await m_Actions.Dequeue().Invoke();
+		{
+			if (token.IsCancellationRequested)
+				break;
+			
+			try
+			{
+				await m_Actions.Dequeue().Invoke(token);
+			}
+			catch (TaskCanceledException) { }
+			catch (Exception exception)
+			{
+				Log.Exception(this, exception);
+			}
+		}
 		
 		m_SignalBus.Unsubscribe<TapSuccessSignal>(TapSuccess);
 		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(DoubleSuccess);
 		m_SignalBus.Unsubscribe<HoldHitSignal>(HoldHit);
 		m_SignalBus.Unsubscribe<HoldSuccessSignal>(HoldSuccess);
 		
+		if (token.IsCancellationRequested)
+			return;
+		
 		m_Finished?.Invoke();
+		
+		m_TokenSource?.Dispose();
+		
+		m_TokenSource = new CancellationTokenSource();
 	}
 
-	async Task InputAction()
+	async Task InputAction(CancellationToken _Token = default)
 	{
-		await Task.Delay(1000);
+		await Task.Delay(1000, _Token);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		m_SoundProcessor.Play(m_OverlaySound);
+		
 		await m_InputGroup.ShowAsync();
 		
-		await Task.Delay(2000);
+		await Task.Delay(2000, _Token);
 		
 		TapFailSignal signal = new TapFailSignal(0);
 		
@@ -120,26 +169,36 @@ public class TutorialPlayer : ASFPlayer
 		{
 			m_SignalBus.Fire(signal);
 			
-			await UnityTask.Delay(iframes);
+			await UnityTask.Delay(iframes, _Token);
 			
-			await Task.Delay(150);
+			await Task.Delay(150, _Token);
+			
+			if (_Token.IsCancellationRequested)
+				break;
 		}
 		
-		await Task.Delay(4000);
+		await Task.Delay(4000, _Token);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		m_HealthManager.Restore();
 		
 		m_InputGroup.Hide();
 	}
 
-	async Task ComboAction()
+	async Task ComboAction(CancellationToken _Token = default)
 	{
-		await Task.Delay(1000);
+		await Task.Delay(1000, _Token);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		m_SoundProcessor.Play(m_OverlaySound);
+		
 		await m_ComboGroup.ShowAsync();
 		
-		await Task.Delay(1500);
+		await Task.Delay(1500, _Token);
 		
 		int combo = m_ConfigProcessor.ComboX2;
 		for (int i = 1; i <= combo; i++)
@@ -152,60 +211,81 @@ public class TutorialPlayer : ASFPlayer
 				ScoreGrade.None
 			);
 			
-			await Task.Delay(250);
+			await Task.Delay(250, _Token);
 			
 			m_SignalBus.Fire(signal);
+			
+			if (_Token.IsCancellationRequested)
+				break;
 		}
 		
-		await Task.Delay(4000);
+		await Task.Delay(4000, _Token);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		await m_ComboGroup.HideAsync();
 		
-		await Task.Delay(1000);
+		await Task.Delay(1000, _Token);
 		
 		m_SignalBus.Fire(new TapFailSignal(0));
 		
-		await Task.Delay(1500);
+		await Task.Delay(1500, _Token);
 	}
 
-	Task TapAutoAction() => AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup);
+	Task TapAutoAction(CancellationToken _Token = default) => AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup, _Token);
 
-	Task TapManualAction() => ManualAction(0, 4);
+	Task TapManualAction(CancellationToken _Token = default) => ManualAction(0, 4, _Token);
 
-	Task DoubleAutoAction() => AutoAction<DoubleSuccessSignal>(4, 5, m_DoubleGroup);
+	Task DoubleAutoAction(CancellationToken _Token = default) => AutoAction<DoubleSuccessSignal>(4, 5, m_DoubleGroup, _Token);
 
-	Task DoubleManualAction() => ManualAction(5, 11);
+	Task DoubleManualAction(CancellationToken _Token = default) => ManualAction(5, 11, _Token);
 
-	Task HoldSimpleAutoAction() => AutoAction<HoldHitSignal>(11, 12, m_HoldGroup);
+	Task HoldSimpleAutoAction(CancellationToken _Token = default) => AutoAction<HoldHitSignal>(11, 12, m_HoldGroup, _Token);
 
-	Task HoldSimpleManualAction() => ManualAction(12, 20);
+	Task HoldSimpleManualAction(CancellationToken _Token = default) => ManualAction(12, 20, _Token);
 
-	Task HoldAdvancedAutoAction() => AutoAction<HoldHitSignal>(20, 21, m_BendGroup);
+	Task HoldAdvancedAutoAction(CancellationToken _Token = default) => AutoAction<HoldHitSignal>(20, 21, m_BendGroup, _Token);
 
-	Task HoldAdvancedManualAction() => ManualAction(21, 30);
+	Task HoldAdvancedManualAction(CancellationToken _Token = default) => ManualAction(21, 30, _Token);
 
-	async Task CompleteAction()
+	async Task CompleteAction(CancellationToken _Token = default)
 	{
+		if (_Token.IsCancellationRequested)
+			return;
+		
 		m_SoundProcessor.Play(m_OverlaySound);
+		
+		_Token.Register(() => m_CompleteGroup.Hide(true));
+		
 		await m_CompleteGroup.ShowAsync();
 		
-		await Task.Delay(2500);
+		await Task.Delay(2500, _Token);
 	}
 
-	async Task AutoAction<TSignal>(double _Source, double _Target, UIGroup _Group)
+	async Task AutoAction<TSignal>(double _Source, double _Target, UIGroup _Group, CancellationToken _Token = default)
 	{
+		if (_Token.IsCancellationRequested)
+			return;
+		
 		m_InputReceiver.gameObject.SetActive(false);
 		
 		await UnityTask.Phase(
 			_Phase => Time = MathUtility.Lerp(_Source, _Target, _Phase),
-			(float)(_Target - _Source)
+			(float)(_Target - _Source),
+			_Token
 		);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		m_SoundProcessor.Play(m_OverlaySound);
 		
+		_Token.Register(() => _Group.Hide(true));
+		
 		await _Group.ShowAsync();
 		
-		await Task.Delay(500);
+		await Task.Delay(500, _Token);
 		
 		bool success = false;
 		
@@ -219,7 +299,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_InputReceiver.Process();
 		
-		await UnityTask.Until(() => success);
+		await UnityTask.Until(() => success, _Token);
 		
 		m_SignalBus.Unsubscribe<TSignal>(Success);
 		
@@ -228,8 +308,11 @@ public class TutorialPlayer : ASFPlayer
 		_Group.Hide();
 	}
 
-	async Task ManualAction(double _Source, double _Target)
+	async Task ManualAction(double _Source, double _Target, CancellationToken _Token = default)
 	{
+		if (_Token.IsCancellationRequested)
+			return;
+		
 		m_InputReceiver.gameObject.SetActive(true);
 		
 		await UnityTask.Phase(
@@ -238,7 +321,7 @@ public class TutorialPlayer : ASFPlayer
 				Time = MathUtility.Lerp(_Source, _Target, _Phase);
 				m_InputReceiver.Process();
 			},
-			(float)(_Target - _Source)
+			(float)(_Target - _Source), _Token
 		);
 		
 		m_InputReceiver.gameObject.SetActive(false);

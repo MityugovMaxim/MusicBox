@@ -7,24 +7,16 @@ public class UIHapticState : UIEntity
 	[SerializeField] Button m_EnableButton;
 	[SerializeField] Button m_DisableButton;
 
-	StatisticProcessor m_StatisticProcessor;
-	HapticProcessor    m_HapticProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] HapticProcessor    m_HapticProcessor;
 
 	bool m_Enabled;
 	bool m_State;
 
-	[Inject]
-	public void Construct(
-		StatisticProcessor _StatisticProcessor,
-		HapticProcessor    _HapticProcessor
-	)
+	protected override void OnEnable()
 	{
-		m_StatisticProcessor = _StatisticProcessor;
-		m_HapticProcessor    = _HapticProcessor;
-	}
-
-	public void Setup()
-	{
+		base.OnEnable();
+		
 		gameObject.SetActive(m_HapticProcessor.HapticSupported);
 		
 		m_Enabled = m_HapticProcessor.HapticEnabled;
@@ -36,8 +28,10 @@ public class UIHapticState : UIEntity
 			m_DisableButton.gameObject.SetActive(m_State);
 	}
 
-	public void Execute()
+	protected override void OnDisable()
 	{
+		base.OnDisable();
+		
 		if (m_State == m_Enabled)
 			return;
 		

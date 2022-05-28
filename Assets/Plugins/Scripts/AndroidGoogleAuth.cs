@@ -1,10 +1,13 @@
 #if UNITY_ANDROID
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.Scripting;
 
+[SuppressMessage("ReSharper", "UnusedMember.Local")]
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
 public static class AndroidGoogleAuth
 {
 	class GoogleAuthSuccess : AndroidJavaProxy
