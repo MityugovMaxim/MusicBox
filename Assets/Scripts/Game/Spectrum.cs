@@ -20,9 +20,11 @@ public class Spectrum : MonoBehaviour
 	void Update()
 	{
 		// Left channel
+		// Visualize(0);
 		Process(0);
 		
 		// Right channel
+		// Visualize(1);
 		Process(1);
 		
 		foreach (UISpectrum item in m_Items)
@@ -30,6 +32,19 @@ public class Spectrum : MonoBehaviour
 		
 		Dampen();
 	}
+
+	// void Visualize(int _Channel)
+	// {
+	// 	m_AudioSource.GetOutputData(m_Buffer, _Channel);
+	// 	
+	// 	for (int i = 0; i < 32; i++)
+	// 	{
+	// 		float spectrum = Mathf.Abs(m_Buffer[i]);
+	// 		int   index    = 32 * _Channel + i;
+	// 		
+	// 		m_Spectrum[index] = Mathf.Max(m_Spectrum[index], spectrum);
+	// 	}
+	// }
 
 	void Process(int _Channel)
 	{
