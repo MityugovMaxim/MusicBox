@@ -19,7 +19,8 @@ public class UILoadingMenu : UIAnimationMenu
 	[SerializeField] UIGroup     m_ProgressGroup;
 	[SerializeField] UIProgress  m_Progress;
 
-	[SerializeField, Sound] string m_TransitionSound;
+	[SerializeField, Sound] string m_LoadSound;
+	[SerializeField, Sound] string m_PlaySound;
 	[SerializeField, Sound] string m_DropSound;
 
 	[Inject] TutorialController m_TutorialController;
@@ -27,6 +28,7 @@ public class UILoadingMenu : UIAnimationMenu
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] AudioManager       m_AudioManager;
 	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] HapticProcessor    m_HapticProcessor;
 
 	string m_SongID;
 
@@ -61,18 +63,6 @@ public class UILoadingMenu : UIAnimationMenu
 	public void ResetTutorial()
 	{
 		Tutorial = false;
-	}
-
-	[UsedImplicitly]
-	void PlayTransitionSound()
-	{
-		m_SoundProcessor.Play(m_TransitionSound);
-	}
-
-	[UsedImplicitly]
-	void PlayDropSound()
-	{
-		m_SoundProcessor.Play(m_DropSound);
 	}
 
 	async Task LoadTutorial()
@@ -206,5 +196,33 @@ public class UILoadingMenu : UIAnimationMenu
 		m_TokenSource = null;
 		
 		m_ProgressGroup.Hide();
+	}
+
+	[UsedImplicitly]
+	void ProcessLoad()
+	{
+		if (!m_Image.gameObject.activeSelf)
+			return;
+		
+		m_SoundProcessor.Play(m_LoadSound);
+	}
+
+	[UsedImplicitly]
+	void ProcessPlay()
+	{
+		if (!m_Image.gameObject.activeSelf)
+			return;
+		
+		m_SoundProcessor.Play(m_PlaySound);
+	}
+
+	[UsedImplicitly]
+	void ProcessDrop()
+	{
+		if (!m_Image.gameObject.activeSelf)
+			return;
+		
+		m_SoundProcessor.Play(m_DropSound);
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 	}
 }
