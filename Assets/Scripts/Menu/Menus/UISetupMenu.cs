@@ -7,13 +7,29 @@ public class UISetupMenu : UIMenu
 {
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
-	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] SignalBus        m_SignalBus;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	TaskCompletionSource<bool> m_CompletionSource;
+
+	protected override void OnShowStarted()
+	{
+		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		
+		m_AmbientProcessor.Pause();
+	}
+
+	protected override void OnHideStarted()
+	{
+		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+	}
 
 	protected override void OnHideFinished()
 	{
 		m_MenuProcessor.RemoveMenu(MenuType.SetupMenu);
+		
+		m_AmbientProcessor.Resume();
 	}
 
 	public Task Process()
@@ -34,5 +50,10 @@ public class UISetupMenu : UIMenu
 		m_CompletionSource.TrySetResult(true);
 		
 		m_CompletionSource = null;
+	}
+
+	void RegisterAudioSourceChanged()
+	{
+		m_LatencyIndicator.Process();
 	}
 }
