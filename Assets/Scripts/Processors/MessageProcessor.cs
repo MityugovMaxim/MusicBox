@@ -53,6 +53,11 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		FirebaseMessaging.MessageReceived += OnMessageReceived;
 		
 		ClearBadges();
+		
+		if (string.IsNullOrEmpty(Application.absoluteURL))
+			return;
+		
+		await m_UrlProcessor.ProcessURL(Application.absoluteURL);
 	}
 
 	public async Task LoadTopic()
