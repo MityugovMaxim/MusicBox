@@ -223,6 +223,7 @@ public class ScoreManager : IInitializable, IDisposable
 		float tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
 		float doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
 		float holdCount   = m_HoldPerfect + m_HoldGood + m_HoldBad + m_HoldFail;
+		float totalCount  = tapCount + doubleCount + holdCount;
 		
 		float accuracy = 0;
 		int   count    = 0;
@@ -254,7 +255,8 @@ public class ScoreManager : IInitializable, IDisposable
 			count++;
 		}
 		
-		accuracy = Mathf.Max(0, accuracy - m_Miss * goodMultiplier);
+		if (totalCount > 0)
+			accuracy -= m_Miss / totalCount * goodMultiplier;
 		
 		accuracy = Mathf.Clamp01(accuracy / count);
 		
