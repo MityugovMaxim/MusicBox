@@ -51,6 +51,8 @@ public class UIGroup : UIEntity
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+		
+		Hide(true);
 	}
 
 	public async Task ShowAsync(bool _Instant = false)

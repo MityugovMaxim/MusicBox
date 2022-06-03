@@ -1,12 +1,21 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
+public abstract class RemoteImage : UIEntity
 {
+	[Flags]
+	public enum Options
+	{
+		Blur = 1 << 1,
+		URL  = 1 << 2,
+		Pack = 1 << 3,
+	}
+
 	public string Path
 	{
 		get => m_Path;
@@ -15,107 +24,91 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 			if (m_Path == value)
 				return;
 			
-			if (Loaded)
-				m_Atlas?.Release(m_Path);
+			OnInvisible();
 			
 			m_Path = value;
-			
-			Load();
 		}
 	}
 
-	protected T Graphic => m_Graphic;
+	public abstract Sprite Sprite { get; protected set; }
 
-	protected abstract Sprite Sprite { get; set; }
+	protected abstract MaskableGraphic Graphic { get; }
 
-	bool Loaded { get; set; }
+	bool Visible => Graphic.canvas != null && GetWorldRect().Overlaps(Graphic.canvas.pixelRect);
 
-	[SerializeField, HideInInspector] string m_Path;
-
-	[SerializeField] T       m_Graphic;
-	[SerializeField] int     m_Size;
-	[SerializeField] Sprite  m_Default;
 	[SerializeField] UIGroup m_LoaderGroup;
-	[SerializeField] bool    m_Blur;
-	[SerializeField] bool    m_URL;
-	[SerializeField] int     m_AtlasSize = 2048;
+	[SerializeField] Sprite  m_Default;
+
+	[SerializeField, HideInInspector] string  m_Path;
+	[SerializeField, HideInInspector] Options m_Options;
+	[SerializeField, HideInInspector] string  m_AtlasID;
+	[SerializeField, HideInInspector] int     m_AtlasSize = 2048;
+	[SerializeField, HideInInspector] int     m_Width     = 512;
+	[SerializeField, HideInInspector] int     m_Height    = 512;
 
 	[Inject] StorageProcessor m_StorageProcessor;
 
-	Atlas m_Atlas;
-
+	bool                    m_State;
+	Atlas                   m_Atlas;
 	CancellationTokenSource m_TokenSource;
-
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		Graphic.onCullStateChanged.AddListener(OnCull);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		Graphic.onCullStateChanged.RemoveListener(OnCull);
-	}
-
-	protected override void OnEnable()
-	{
-		base.OnEnable();
-		
-		OnCull(false);
-		
-		m_Graphic.enabled = Loaded;
-		
-		if (m_LoaderGroup != null && !Loaded)
-			m_LoaderGroup.Show(true);
-	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		OnCull(true);
+		m_State = false;
+		
+		OnInvisible();
 	}
 
-	public async Task Load(string _Path)
+	void LateUpdate()
 	{
-		Unload();
+		bool visible = Visible;
 		
-		m_Path = _Path;
+		if (visible == m_State)
+			return;
+		
+		if (visible)
+			OnVisible();
+		else
+			OnInvisible();
+	}
+
+	public Task SetSpriteAsync(string _Path)
+	{
+		Path = _Path;
+		
+		return LoadAsync();
+	}
+
+	async void OnVisible()
+	{
+		m_State = true;
 		
 		await LoadAsync();
 	}
 
-	public async void Reload()
+	async void OnInvisible()
 	{
-		Unload();
-		await LoadAsync();
+		m_State = false;
+		
+		await UnloadAsync();
 	}
 
-	void OnCull(bool _Value)
+	bool CheckOptions(Options _Options)
 	{
-		if (_Value)
-			Unload();
-		else if (!Loaded)
-			Load();
+		return (m_Options & _Options) == _Options;
 	}
 
-	void Unload()
+	async Task UnloadAsync()
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		Loaded = false;
+		Graphic.enabled = false;
 		
 		m_Atlas?.Release(Path);
-	}
-
-	async void Load()
-	{
-		await LoadAsync();
 	}
 
 	async Task LoadAsync()
@@ -124,27 +117,24 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		if (m_Atlas == null && !m_URL)
-			m_Atlas = Atlas.Create(m_AtlasSize, new Vector2Int(m_Size, m_Size));
+		CreateAtlas();
 		
-		if (m_Atlas != null && m_Atlas.TryAlloc(Path, out Sprite sprite))
+		bool visible = Graphic.enabled;
+		
+		if (TryGetSprite(out Sprite sprite))
 		{
-			Sprite            = sprite;
-			m_Graphic.enabled = true;
-			Loaded            = true;
+			Sprite          = sprite;
+			Graphic.enabled = true;
 			
-			if (m_LoaderGroup != null)
-				m_LoaderGroup.Hide();
+			await HideLoaderAsync(visible);
 			
 			return;
 		}
 		
-		if (m_LoaderGroup != null)
-			await m_LoaderGroup.ShowAsync(m_Graphic.enabled);
+		await ShowLoaderAsync(!visible);
 		
-		Sprite            = null;
-		m_Graphic.enabled = false;
-		Loaded            = false;
+		Sprite          = null;
+		Graphic.enabled = false;
 		
 		m_TokenSource = new CancellationTokenSource();
 		
@@ -152,48 +142,90 @@ public abstract class RemoteImage<T> : UIEntity where T : MaskableGraphic
 		
 		Texture2D texture = null;
 		
-		try
-		{
-			if (!string.IsNullOrEmpty(Path))
-			{
-				texture = m_URL
-					? await m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None)
-					: await m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
-			}
-		}
+		int frame = Time.frameCount;
+		
+		try { texture = await LoadTextureAsync(); }
 		catch (TaskCanceledException) { }
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-		}
+		catch (Exception exception) { Log.Exception(this, exception); }
 		
 		if (token.IsCancellationRequested)
 			return;
 		
+		bool instant = frame == Time.frameCount;
+		
 		if (texture != null)
 		{
-			texture = m_Blur ? texture.CreateBlur(0.75f) : texture;
+			Sprite = CreateSprite(texture);
 			
-			Sprite = m_Atlas != null ? m_Atlas.Bake(Path, texture) : texture.CreateSprite();
+			Graphic.enabled = true;
 			
-			m_Graphic.enabled = true;
-			Loaded            = true;
-			
-			if (m_LoaderGroup != null)
-				m_LoaderGroup.Hide();
+			await HideLoaderAsync(instant);
 		}
 		else if (m_Default != null)
 		{
 			Sprite = m_Default;
 			
-			m_Graphic.enabled = true;
-			Loaded            = true;
+			Graphic.enabled = true;
 			
-			if (m_LoaderGroup != null)
-				m_LoaderGroup.Hide();
+			await HideLoaderAsync(instant);
 		}
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	Task ShowLoaderAsync(bool _Instant = false)
+	{
+		return m_LoaderGroup != null
+			? m_LoaderGroup.ShowAsync(_Instant)
+			: Task.FromResult(false);
+	}
+
+	Task HideLoaderAsync(bool _Instant = false)
+	{
+		return m_LoaderGroup != null
+			? m_LoaderGroup.HideAsync(_Instant)
+			: Task.FromResult(false);
+	}
+
+	Task<Texture2D> LoadTextureAsync()
+	{
+		if (string.IsNullOrEmpty(Path))
+			return Task.FromResult<Texture2D>(null);
+		
+		return CheckOptions(Options.URL)
+			? m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None)
+			: m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
+	}
+
+	void CreateAtlas()
+	{
+		if (m_Atlas == null && CheckOptions(Options.Pack))
+			m_Atlas = Atlas.Create(m_AtlasID, m_AtlasSize, m_Width, m_Height);
+	}
+
+	Sprite CreateSprite(Texture2D _Texture)
+	{
+		if (CheckOptions(Options.Blur))
+			_Texture = _Texture.CreateBlur(0.75f);
+		
+		return CheckOptions(Options.Pack)
+			? m_Atlas.Bake(Path, _Texture)
+			: _Texture.CreateSprite();
+	}
+
+	bool TryGetSprite(out Sprite _Sprite)
+	{
+		_Sprite = null;
+		
+		if (m_Atlas == null)
+			return false;
+		
+		if (!m_Atlas.TryAlloc(Path, out Sprite sprite))
+			return false;
+		
+		_Sprite = sprite;
+		
+		return true;
 	}
 }

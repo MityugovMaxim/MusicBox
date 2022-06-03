@@ -1,11 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class WebImage : RemoteImage<Image>
+public class WebImage : RemoteImage
 {
-	protected override Sprite Sprite
+	public override Sprite Sprite
 	{
-		get => Graphic.sprite;
-		set => Graphic.sprite = value;
+		get => m_Graphic.sprite;
+		protected set => m_Graphic.sprite = value;
 	}
+
+	protected override MaskableGraphic Graphic => m_Graphic;
+
+	[SerializeField] Image m_Graphic;
 }

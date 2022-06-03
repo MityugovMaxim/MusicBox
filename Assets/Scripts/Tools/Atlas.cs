@@ -30,14 +30,14 @@ public class Atlas
 		}
 	}
 
-	public static Atlas Create(int _AtlasSize, Vector2Int _SpriteSize)
+	public static Atlas Create(string _AtlasID, int _AtlasSize, int _Width, int _Height)
 	{
-		string atlasID = $"{_AtlasSize}_[{_SpriteSize.x}x{_SpriteSize.y}]";
+		string atlasID = $"{_AtlasID}_{_AtlasSize}_[{_Width}x{_Height}]";
 		
 		if (m_Atlases.ContainsKey(atlasID) && m_Atlases[atlasID] != null)
 			return m_Atlases[atlasID];
 		
-		m_Atlases[atlasID] = new Atlas(_AtlasSize, _SpriteSize);
+		m_Atlases[atlasID] = new Atlas(_AtlasSize, new Vector2Int(_Width, _Height));
 		
 		return m_Atlases[atlasID];
 	}
@@ -109,6 +109,8 @@ public class Atlas
 		
 		Anchor anchor = m_Anchors.Pop();
 		
+		_Texture = _Texture.SetSize(m_SpriteSize.x, m_SpriteSize.y);
+		
 		Graphics.CopyTexture(
 			_Texture,
 			0,
@@ -179,6 +181,9 @@ public class Atlas
 
 	bool TryFreeAnchors()
 	{
+		if (m_Entries.Count == 0)
+			return false;
+		
 		string[] ids = m_Entries.Keys.ToArray();
 		
 		foreach (string id in ids)

@@ -54,24 +54,30 @@ public class UIMainMenu : UIMenu
 		}
 		m_Control.Select(m_PageType, true);
 		
+		Application.deepLinkActivated += ProcessDeepLink;
+		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
-		
-		Application.deepLinkActivated += ProcessDeepLink;
 	}
 
 	protected override void OnHideStarted()
 	{
+		Application.deepLinkActivated -= ProcessDeepLink;
+		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProgressDataUpdateSignal>(Refresh);
-		
-		Application.deepLinkActivated -= ProcessDeepLink;
 	}
 
 	protected override void OnHideFinished()

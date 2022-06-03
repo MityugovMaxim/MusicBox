@@ -20,7 +20,7 @@ public class UIBackgroundItem : UIGroup
 
 	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		await m_Image.Load(m_Path);
+		await m_Image.SetSpriteAsync(m_Path);
 		
 		await base.ShowAnimation(_Duration, _Instant, _Token);
 	}

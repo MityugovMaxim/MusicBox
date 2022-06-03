@@ -40,6 +40,7 @@ public class PreviewProcessor : MonoBehaviour
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
 		m_TokenSource = new CancellationTokenSource();
 		
@@ -81,6 +82,7 @@ public class PreviewProcessor : MonoBehaviour
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
 		m_TokenSource = new CancellationTokenSource();
 		
