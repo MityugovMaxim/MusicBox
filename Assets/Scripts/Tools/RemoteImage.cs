@@ -34,7 +34,19 @@ public abstract class RemoteImage : UIEntity
 
 	protected abstract MaskableGraphic Graphic { get; }
 
-	bool Visible => Graphic.canvas != null && GetWorldRect().Overlaps(Graphic.canvas.pixelRect);
+	bool Visible
+	{
+		get
+		{
+			if (Graphic == null || Graphic.canvas == null)
+				return false;
+			
+			Rect sourceRect = Graphic.canvas.pixelRect;
+			Rect targetRect = GetWorldRect();
+			
+			return sourceRect.Contains(targetRect.center) || sourceRect.Overlaps(targetRect);
+		}
+	}
 
 	[SerializeField] UIGroup m_LoaderGroup;
 	[SerializeField] Sprite  m_Default;
