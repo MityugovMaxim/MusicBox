@@ -56,7 +56,7 @@ public class
 	Task DamageAsync(CancellationToken _Token = default)
 	{
 		if (m_Damaged)
-			return Task.FromResult(true);
+			return Task.CompletedTask;
 		
 		m_Damaged = true;
 		

@@ -256,7 +256,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		if (Math.Abs(value) <= 1)
 		{
 			_Label.Value = value;
-			return Task.FromResult(true);
+			return Task.CompletedTask;
 		}
 		
 		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);

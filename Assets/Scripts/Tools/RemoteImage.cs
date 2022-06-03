@@ -100,7 +100,7 @@ public abstract class RemoteImage : UIEntity
 		return (m_Options & _Options) == _Options;
 	}
 
-	async Task UnloadAsync()
+	Task UnloadAsync()
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
@@ -109,6 +109,8 @@ public abstract class RemoteImage : UIEntity
 		Graphic.enabled = false;
 		
 		m_Atlas?.Release(Path);
+		
+		return Task.CompletedTask;
 	}
 
 	async Task LoadAsync()
@@ -178,14 +180,14 @@ public abstract class RemoteImage : UIEntity
 	{
 		return m_LoaderGroup != null
 			? m_LoaderGroup.ShowAsync(_Instant)
-			: Task.FromResult(false);
+			: Task.CompletedTask;
 	}
 
 	Task HideLoaderAsync(bool _Instant = false)
 	{
 		return m_LoaderGroup != null
 			? m_LoaderGroup.HideAsync(_Instant)
-			: Task.FromResult(false);
+			: Task.CompletedTask;
 	}
 
 	Task<Texture2D> LoadTextureAsync()

@@ -75,7 +75,7 @@ public class UIAnimationMenu : UIMenu
 	Task Show(bool _Instant = false, CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
-			return Task.FromResult(false);
+			return Task.CompletedTask;
 		
 		InvokeShowFinished();
 		InvokeHideFinished();
@@ -102,7 +102,7 @@ public class UIAnimationMenu : UIMenu
 	Task Hide(bool _Instant = false, CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
-			return Task.FromResult(false);
+			return Task.CompletedTask;
 		
 		InvokeShowFinished();
 		InvokeHideFinished();

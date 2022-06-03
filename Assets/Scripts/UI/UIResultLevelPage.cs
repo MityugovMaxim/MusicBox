@@ -125,7 +125,7 @@ public class UIResultLevelPage : UIResultMenuPage
 		
 		CreateSongs(targetLevel);
 		
-		return Task.FromResult(true);
+		return Task.CompletedTask;
 	}
 
 	void CreateCoins(int _Level)

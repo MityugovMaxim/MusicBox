@@ -83,7 +83,7 @@ public class UITutorialOverlay : UIGroup
 		{
 			m_Phase = _Target;
 			ProcessPhase();
-			return Task.FromResult(true);
+			return Task.CompletedTask;
 		}
 		
 		float source = m_Phase;

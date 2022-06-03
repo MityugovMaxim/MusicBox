@@ -41,7 +41,7 @@ public class UIFXHighlight : UIEntity
 	Task AlphaAsync(CancellationToken _Token)
 	{
 		if (m_CanvasGroup == null)
-			return Task.FromResult(true);
+			return Task.CompletedTask;
 		
 		return UnityTask.Lerp(
 			_Value => m_CanvasGroup.alpha = _Value,
@@ -56,7 +56,7 @@ public class UIFXHighlight : UIEntity
 	Task WidthAsync(CancellationToken _Token)
 	{
 		if (m_Background == null)
-			return Task.FromResult(true);
+			return Task.CompletedTask;
 		
 		const float sourceMin = 0;
 		const float sourceMax = 1;
