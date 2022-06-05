@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class UIResultControlPage : UIResultMenuPage
+public class UIResultMenuControlPage : UIResultMenuPage
 {
 	public override ResultMenuPageType Type => ResultMenuPageType.Control;
 
