@@ -105,7 +105,7 @@ public class SongsProcessor
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
-			.FirstOrDefault(_SongID => GetSongHash(_SongID) == _SongHash);
+			.FirstOrDefault(_SongID => GetSongHash(_SongID).Equals(_SongHash, StringComparison.InvariantCultureIgnoreCase));
 	}
 
 	public string GetSongHash(string _SongID)
