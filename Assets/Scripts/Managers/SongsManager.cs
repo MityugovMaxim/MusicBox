@@ -22,14 +22,6 @@ public class SongsManager
 			.ToList();
 	}
 
-	public List<string> GetProductSongIDs()
-	{
-		return m_SongsProcessor.GetSongIDs()
-			.Where(IsSongLockedByProduct)
-			.OrderByDescending(m_SongsProcessor.GetBadge)
-			.ToList();
-	}
-
 	public List<string> GetCoinsSongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()
@@ -45,27 +37,6 @@ public class SongsManager
 			.GroupBy(m_ProgressProcessor.GetSongLevel)
 			.OrderBy(_LevelIDs => _LevelIDs.Key)
 			.ToDictionary(_LevelIDs => _LevelIDs.Key, _LevelIDs => _LevelIDs.ToArray());
-	}
-
-	public List<string> GetLockedSongIDs(int _Level)
-	{
-		return m_SongsProcessor.GetSongIDs()
-			.Where(IsSongLockedByLevel)
-			.Where(_SongID => _Level == m_ProgressProcessor.GetSongLevel(_SongID))
-			.ToList();
-	}
-
-	public bool IsSongLockedByProduct(string _SongID)
-	{
-		if (m_ProfileProcessor.HasSong(_SongID))
-			return false;
-		
-		SongMode songMode = m_SongsProcessor.GetMode(_SongID);
-		
-		if (songMode != SongMode.Product)
-			return false;
-		
-		return true;
 	}
 
 	public bool IsSongLockedByLevel(string _SongID)
