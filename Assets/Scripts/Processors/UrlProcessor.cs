@@ -94,7 +94,7 @@ public class UrlProcessor
 		
 		await m_MenuProcessor.Show(MenuType.ProductMenu, _Instant);
 		
-		await SelectMainPage(MainMenuPageType.Store, _Parameters, true);
+		mainMenu.Select(MainMenuPageType.Songs, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
@@ -120,14 +120,14 @@ public class UrlProcessor
 		
 		await m_MenuProcessor.Hide(MenuType.SongMenu, _Instant);
 		
+		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
+		
 		if (songMenu != null)
 			songMenu.Setup(songID);
 		
-		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
-		
 		await m_MenuProcessor.Show(MenuType.SongMenu, _Instant);
 		
-		await SelectMainPage(MainMenuPageType.Songs, _Parameters, true);
+		mainMenu.Select(MainMenuPageType.Songs, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
