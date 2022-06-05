@@ -53,10 +53,15 @@ public class PreviewProcessor : MonoBehaviour
 			if (token.IsCancellationRequested)
 				return;
 			
-			await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+			if (m_AudioSource.isPlaying)
+			{
+				await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+				
+				m_AudioSource.Stop();
+			}
 			
-			m_AudioSource.Stop();
-			m_AudioSource.clip = audioClip;
+			m_AudioSource.clip   = audioClip;
+			m_AudioSource.volume = 0;
 			
 			if (audioClip != null)
 			{
@@ -90,10 +95,15 @@ public class PreviewProcessor : MonoBehaviour
 		
 		try
 		{
-			await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+			if (m_AudioSource.isPlaying)
+			{
+				await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
+				
+				m_AudioSource.Stop();
+			}
 			
-			m_AudioSource.Stop();
-			m_AudioSource.clip = null;
+			m_AudioSource.clip   = null;
+			m_AudioSource.volume = 0;
 		}
 		catch (TaskCanceledException) { }
 		catch (Exception exception)
