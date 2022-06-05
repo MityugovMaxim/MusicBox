@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -25,7 +27,6 @@ public class UIProductMenu : UISlideMenu
 	[Inject] StoreProcessor         m_StoreProcessor;
 	[Inject] ProfileProcessor       m_ProfileProcessor;
 	[Inject] ProductsManager        m_ProductsManager;
-	[Inject] SongsProcessor         m_SongsProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
 	[Inject] HapticProcessor        m_HapticProcessor;
 	[Inject] SoundProcessor         m_SoundProcessor;
@@ -64,7 +65,20 @@ public class UIProductMenu : UISlideMenu
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		bool success = await m_StoreProcessor.Purchase(m_ProductID);
+		bool success  = false;
+		bool canceled = false;
+		try
+		{
+			success = await m_StoreProcessor.Purchase(m_ProductID);
+		}
+		catch (TaskCanceledException)
+		{
+			canceled = true;
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		#if UNITY_EDITOR
 		await Task.Delay(1500);
@@ -92,13 +106,16 @@ public class UIProductMenu : UISlideMenu
 		{
 			m_StatisticProcessor.LogProductMenuPurchaseFailed(m_ProductID);
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"product_purchase",
-				"PRODUCT_PURCHASE_ERROR_TITLE",
-				"PRODUCT_PURCHASE_ERROR_MESSAGE",
-				Purchase,
-				() => { }
-			);
+			if (!canceled)
+			{
+				await m_MenuProcessor.RetryLocalizedAsync(
+					"product_purchase",
+					"PRODUCT_PURCHASE_ERROR_TITLE",
+					"PRODUCT_PURCHASE_ERROR_MESSAGE",
+					Purchase,
+					() => { }
+				);
+			}
 			
 			await Task.WhenAll(
 				m_PurchaseGroup.ShowAsync(),
@@ -175,21 +192,22 @@ public class UIProductMenu : UISlideMenu
 		}
 		m_Items.Clear();
 		
-		List<string> songIDs = m_ProductsProcessor.GetSongIDs(m_ProductID)
-			.Where(_SongID => m_SongsProcessor.GetMode(_SongID) == SongMode.Product)
-			.ToList();
+		List<string> songIDs = m_ProductsProcessor.GetSongIDs(m_ProductID);
 		
-		m_ItemsGroup.SetActive(songIDs.Count > 0);
+		m_ItemsGroup.SetActive(songIDs != null && songIDs.Count > 0);
 		
-		foreach (string levelID in songIDs)
+		if (songIDs != null && songIDs.Count > 0)
 		{
-			UIProductSongItem item = m_ItemPool.Spawn();
-			
-			item.Setup(levelID, PlayPreview, StopPreview);
-			
-			item.RectTransform.SetParent(m_Container, false);
-			
-			m_Items.Add(item);
+			foreach (string songID in songIDs)
+			{
+				Debug.LogError(songID);
+				
+				UIProductSongItem item = m_ItemPool.Spawn(m_Container);
+				
+				item.Setup(songID, PlayPreview, StopPreview);
+				
+				m_Items.Add(item);
+			}
 		}
 		
 		long coins = m_ProductsProcessor.GetCoins(m_ProductID);

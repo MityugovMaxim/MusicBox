@@ -21,6 +21,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 	IExtensionProvider m_Extensions;
 	Action<bool>       m_LoadStoreFinished;
 	Action<bool>       m_PurchaseFinished;
+	Action             m_PurchaseCanceled;
 
 	public Task Load()
 	{
@@ -122,6 +123,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		Debug.Log("[StoreProcessor] Purchasing...");
 		
 		m_PurchaseFinished = _Success => completionSource.TrySetResult(_Success);
+		m_PurchaseCanceled = () => completionSource.TrySetCanceled();
 		
 		m_Controller.InitiatePurchase(product);
 		
@@ -234,6 +236,13 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		action?.Invoke(_Success);
 	}
 
+	void InvokePurchaseCanceled()
+	{
+		Action action = m_PurchaseCanceled;
+		m_PurchaseCanceled = null;
+		action?.Invoke();
+	}
+
 	void IInitializable.Initialize()
 	{
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
@@ -277,6 +286,9 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		
 		Debug.LogErrorFormat("[StoreProcessor] Purchase failed. Product ID: '{0}'. Reason: {1}.", productID, _Reason);
 		
-		InvokePurchaseFinished(false);
+		if (_Reason== PurchaseFailureReason.UserCancelled)
+			InvokePurchaseCanceled();
+		else
+			InvokePurchaseFinished(false);
 	}
 }

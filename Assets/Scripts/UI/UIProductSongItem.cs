@@ -2,12 +2,11 @@ using System;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
-using Zenject;
 
 public class UIProductSongItem : UIEntity
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<UIProductSongItem> { }
+	public class Pool : UIEntityPool<UIProductSongItem> { }
 
 	public string SongID { get; private set; }
 
@@ -29,6 +28,12 @@ public class UIProductSongItem : UIEntity
 		
 		m_PlayButton.gameObject.SetActive(true);
 		m_PauseButton.gameObject.SetActive(false);
+		
+		m_PlayButton.onClick.RemoveAllListeners();
+		m_PlayButton.onClick.AddListener(Play);
+		
+		m_PauseButton.onClick.RemoveAllListeners();
+		m_PauseButton.onClick.AddListener(Stop);
 		
 		m_Image.Setup(_SongID);
 	}
