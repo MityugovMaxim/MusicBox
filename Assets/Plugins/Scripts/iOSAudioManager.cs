@@ -9,9 +9,6 @@ public class iOSAudioManager : AudioManager
 	[DllImport("__Internal")]
 	static extern void AudioController_Register(RemoteCommandHandler _AudioSourceChangedHandler);
 
-	[DllImport("_Internal")]
-	static extern void AudioController_Unregister();
-
 	[DllImport("__Internal")]
 	static extern void AudioController_EnableAudio();
 
@@ -36,10 +33,7 @@ public class iOSAudioManager : AudioManager
 		AudioController_Register(AudioSourceChangedHandler);
 	}
 
-	protected override void Unload()
-	{
-		AudioController_Unregister();
-	}
+	protected override void Unload() { }
 
 	public override void SetAudioActive(bool _Value)
 	{
