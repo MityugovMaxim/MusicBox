@@ -35,11 +35,11 @@ public class UrlProcessor
 			case "news":
 				await ProcessNews(parameters, _Instant);
 				break;
-			case "level":
-				await ProcessLevel(parameters, _Instant);
+			case "songs":
+				await ProcessSongs(parameters, _Instant);
 				break;
 			case "store":
-				await ProcessProduct(parameters, _Instant);
+				await ProcessStore(parameters, _Instant);
 				break;
 			case "offers":
 				await ProcessOffers(parameters, _Instant);
@@ -68,7 +68,7 @@ public class UrlProcessor
 		return parameters;
 	}
 
-	async Task ProcessProduct(Dictionary<string, string> _Parameters, bool _Instant)
+	async Task ProcessStore(Dictionary<string, string> _Parameters, bool _Instant)
 	{
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		
@@ -94,12 +94,14 @@ public class UrlProcessor
 		
 		await m_MenuProcessor.Show(MenuType.ProductMenu, _Instant);
 		
+		await SelectMainPage(MainMenuPageType.Store, _Parameters, true);
+		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	async Task ProcessLevel(Dictionary<string, string> _Parameters, bool _Instant)
+	async Task ProcessSongs(Dictionary<string, string> _Parameters, bool _Instant)
 	{
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		
@@ -108,7 +110,7 @@ public class UrlProcessor
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		
-		if (_Parameters == null || !_Parameters.TryGetValue("level_id", out string levelID))
+		if (_Parameters == null || !_Parameters.TryGetValue("song_id", out string songID))
 		{
 			await SelectMainPage(MainMenuPageType.Songs, _Parameters, _Instant);
 			return;
@@ -119,13 +121,13 @@ public class UrlProcessor
 		await m_MenuProcessor.Hide(MenuType.SongMenu, _Instant);
 		
 		if (songMenu != null)
-			songMenu.Setup(levelID);
+			songMenu.Setup(songID);
 		
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, _Instant);
 		
 		await m_MenuProcessor.Show(MenuType.SongMenu, _Instant);
 		
-		mainMenu.Select(MainMenuPageType.Songs, _Instant);
+		await SelectMainPage(MainMenuPageType.Songs, _Parameters, true);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
