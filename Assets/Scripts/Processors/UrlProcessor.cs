@@ -7,13 +7,8 @@ using Zenject;
 
 public class UrlProcessor
 {
-	readonly MenuProcessor m_MenuProcessor;
-
-	[Inject]
-	public UrlProcessor(MenuProcessor _MenuProcessor)
-	{
-		m_MenuProcessor = _MenuProcessor;
-	}
+	[Inject] MenuProcessor  m_MenuProcessor;
+	[Inject] SongsProcessor m_SongsProcessor;
 
 	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
@@ -46,6 +41,9 @@ public class UrlProcessor
 				break;
 			case "profile":
 				await ProcessProfile(parameters, _Instant);
+				break;
+			default:
+				await ProcessHash(uri.Host, _Instant);
 				break;
 		}
 	}
@@ -132,6 +130,21 @@ public class UrlProcessor
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	Task ProcessHash(string _Hash, bool _Instant)
+	{
+		string songID = m_SongsProcessor.GetSongID(_Hash);
+		
+		if (string.IsNullOrEmpty(songID))
+			return Task.CompletedTask;
+		
+		Dictionary<string, string> parameters = new Dictionary<string, string>()
+		{
+			{ "song_id", songID },
+		};
+		
+		return ProcessSongs(parameters, _Instant);
 	}
 
 	Task ProcessNews(Dictionary<string, string> _Parameters, bool _Instant)

@@ -96,6 +96,32 @@ public class SongsProcessor
 			.ToList();
 	}
 
+	public string GetSongID(string _SongHash)
+	{
+		if (string.IsNullOrEmpty(_SongHash))
+			return null;
+		
+		return m_Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.Where(_Snapshot => _Snapshot.Active)
+			.Select(_Snapshot => _Snapshot.ID)
+			.FirstOrDefault(_SongID => GetSongHash(_SongID) == _SongHash);
+	}
+
+	public string GetSongHash(string _SongID)
+	{
+		if (string.IsNullOrEmpty(_SongID))
+			return null;
+		
+		uint value = 3074457345;
+		foreach (char symbol in _SongID)
+		{
+			value += symbol;
+			value *= 3074457345;
+		}
+		return value.ToString("X8");
+	}
+
 	public string GetSkin(string _LevelID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_LevelID);
