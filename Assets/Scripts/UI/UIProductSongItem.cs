@@ -38,7 +38,6 @@ public class UIProductSongItem : UIEntity
 		m_Image.Setup(_SongID);
 	}
 
-	[Preserve]
 	public void Play()
 	{
 		if (m_Playing)
@@ -52,7 +51,6 @@ public class UIProductSongItem : UIEntity
 		m_Play?.Invoke(SongID);
 	}
 
-	[Preserve]
 	public void Stop()
 	{
 		if (!m_Playing)
