@@ -218,14 +218,14 @@ public static class QRCodeGenerator
 		//Place interleaved data on module matrix
 		QRCodeData    qr             = new QRCodeData(_Version);
 		List<RectInt> blockedModules = new List<RectInt>();
-		ModulePlacer.PlaceFinderPatterns(ref qr, ref blockedModules);
-		ModulePlacer.ReserveSeparatorAreas(qr.Matrix.Count, ref blockedModules);
-		ModulePlacer.PlaceAlignmentPatterns(ref qr, m_AlignmentPatternTable.Where(_Item => _Item.Version == _Version).Select(_Item => _Item.PatternPositions).First(), ref blockedModules);
-		ModulePlacer.PlaceTimingPatterns(ref qr, ref blockedModules);
-		ModulePlacer.PlaceDarkModule(ref qr, _Version, ref blockedModules);
-		ModulePlacer.ReserveVersionAreas(qr.Matrix.Count, _Version, ref blockedModules);
-		ModulePlacer.PlaceDataWords(ref qr, interleavedData, ref blockedModules);
-		int    maskVersion = ModulePlacer.MaskCode(ref qr, _Version, ref blockedModules, _ErrorCorrection);
+		ModulePlacer.AddAnchors(ref qr, ref blockedModules);
+		ModulePlacer.AddSeparators(qr.Matrix.Count, ref blockedModules);
+		ModulePlacer.AddAlignment(ref qr, m_AlignmentPatternTable.Where(_Item => _Item.Version == _Version).Select(_Item => _Item.PatternPositions).First(), ref blockedModules);
+		ModulePlacer.AddTimings(ref qr, ref blockedModules);
+		ModulePlacer.AddDarkModule(ref qr, _Version, ref blockedModules);
+		ModulePlacer.AddVersion(qr.Matrix.Count, _Version, ref blockedModules);
+		ModulePlacer.AddData(ref qr, interleavedData, ref blockedModules);
+		int    maskVersion = ModulePlacer.AddMask(ref qr, _Version, ref blockedModules, _ErrorCorrection);
 		string format      = GetFormatString(_ErrorCorrection, maskVersion);
 		
 		ModulePlacer.PlaceFormat(ref qr, format);
@@ -238,7 +238,7 @@ public static class QRCodeGenerator
 		return qr;
 	}
 
-	private static string GetFormatString(ErrorCorrection _Level, int _MaskVersion)
+	static string GetFormatString(ErrorCorrection _Level, int _MaskVersion)
 	{
 		string generator = "10100110111";
 		string fStrMask  = "101010000010010";
@@ -356,8 +356,7 @@ public static class QRCodeGenerator
 			}
 		}
 
-
-		public static int MaskCode(ref QRCodeData _Data, int _Version, ref List<RectInt> _Modules, ErrorCorrection _ErrorCorrection)
+		public static int AddMask(ref QRCodeData _Data, int _Version, ref List<RectInt> _Modules, ErrorCorrection _ErrorCorrection)
 		{
 			int? selectedPattern = null;
 			int  patternScore    = 0;
@@ -441,7 +440,7 @@ public static class QRCodeGenerator
 			return selectedPattern.Value - 1;
 		}
 
-		public static void PlaceDataWords(ref QRCodeData _Data, string _BitString, ref List<RectInt> _Modules)
+		public static void AddData(ref QRCodeData _Data, string _BitString, ref List<RectInt> _Modules)
 		{
 			int         size  = _Data.Matrix.Count;
 			bool        up    = true;
@@ -476,7 +475,7 @@ public static class QRCodeGenerator
 			}
 		}
 
-		public static void ReserveSeparatorAreas(int _Size, ref List<RectInt> _Modules)
+		public static void AddSeparators(int _Size, ref List<RectInt> _Modules)
 		{
 			_Modules.AddRange(
 				new[]
@@ -491,7 +490,7 @@ public static class QRCodeGenerator
 			);
 		}
 
-		public static void ReserveVersionAreas(int _Size, int _Version, ref List<RectInt> _Modules)
+		public static void AddVersion(int _Size, int _Version, ref List<RectInt> _Modules)
 		{
 			_Modules.AddRange(
 				new[]
@@ -517,13 +516,13 @@ public static class QRCodeGenerator
 			}
 		}
 
-		public static void PlaceDarkModule(ref QRCodeData _Data, int _Version, ref List<RectInt> _Modules)
+		public static void AddDarkModule(ref QRCodeData _Data, int _Version, ref List<RectInt> _Modules)
 		{
 			_Data.Matrix[4 * _Version + 9][8] = true;
 			_Modules.Add(new RectInt(8, 4 * _Version + 9, 1, 1));
 		}
 
-		public static void PlaceFinderPatterns(ref QRCodeData _Data, ref List<RectInt> _Modules)
+		public static void AddAnchors(ref QRCodeData _Data, ref List<RectInt> _Modules)
 		{
 			int   size      = _Data.Matrix.Count;
 			int[] locations = { 0, 0, size - 7, 0, 0, size - 7 };
@@ -541,7 +540,7 @@ public static class QRCodeGenerator
 			}
 		}
 
-		public static void PlaceAlignmentPatterns(ref QRCodeData _Data, List<Vector2Int> _Points, ref List<RectInt> _Modules)
+		public static void AddAlignment(ref QRCodeData _Data, List<Vector2Int> _Points, ref List<RectInt> _Modules)
 		{
 			foreach (Vector2Int point in _Points)
 			{
@@ -570,7 +569,7 @@ public static class QRCodeGenerator
 			}
 		}
 
-		public static void PlaceTimingPatterns(ref QRCodeData _Data, ref List<RectInt> _Modules)
+		public static void AddTimings(ref QRCodeData _Data, ref List<RectInt> _Modules)
 		{
 			int size = _Data.Matrix.Count;
 			for (int i = 8; i < size - 8; i++)
@@ -606,7 +605,7 @@ public static class QRCodeGenerator
 			return false;
 		}
 
-		private static class MaskPattern
+		static class MaskPattern
 		{
 			public static bool Pattern1(int _X, int _Y) => (_X + _Y) % 2 == 0;
 
@@ -1058,7 +1057,6 @@ public static class QRCodeGenerator
 		return codeBytes.Aggregate(codeText, (_A, _B) => _A + GetBinary(_B, 8));
 	}
 
-
 	static Polynom XORPolynoms(Polynom _MessagePolynom, Polynom _ResultPolynom)
 	{
 		Polynom resultPolynom = new Polynom();
@@ -1317,7 +1315,7 @@ public static class QRCodeGenerator
 		return capacityTable;
 	}
 
-	private static List<Antilog> CreateAntilogTable()
+	static List<Antilog> CreateAntilogTable()
 	{
 		var localGaloisField = new List<Antilog>(256);
 
@@ -1386,7 +1384,7 @@ public static class QRCodeGenerator
 		}
 	}
 
-	private struct VersionInfo
+	struct VersionInfo
 	{
 		public int                      Version { get; }
 		public List<VersionInfoDetails> Details { get; }
@@ -1398,7 +1396,7 @@ public static class QRCodeGenerator
 		}
 	}
 
-	private struct VersionInfoDetails
+	struct VersionInfoDetails
 	{
 		public ErrorCorrection               ErrorCorrection { get; }
 		public Dictionary<EncodingMode, int> Capacity        { get; }
@@ -1410,7 +1408,7 @@ public static class QRCodeGenerator
 		}
 	}
 
-	private struct Antilog
+	struct Antilog
 	{
 		public int ExponentAlpha { get; }
 		public int IntegerValue  { get; }
@@ -1422,7 +1420,7 @@ public static class QRCodeGenerator
 		}
 	}
 
-	private struct PolynomItem
+	struct PolynomItem
 	{
 		public int Coefficient { get; }
 		public int Exponent    { get; }
@@ -1434,7 +1432,7 @@ public static class QRCodeGenerator
 		}
 	}
 
-	private class Polynom
+	class Polynom
 	{
 		public List<PolynomItem> Items { get; }
 
