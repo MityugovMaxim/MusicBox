@@ -110,16 +110,7 @@ public class SongsProcessor
 
 	public string GetSongHash(string _SongID)
 	{
-		if (string.IsNullOrEmpty(_SongID))
-			return null;
-		
-		uint value = 3074457345;
-		foreach (char symbol in _SongID)
-		{
-			value += symbol;
-			value *= 3074457345;
-		}
-		return value.ToString("X8");
+		return !string.IsNullOrEmpty(_SongID) ? CRC32.Get(_SongID) : string.Empty;
 	}
 
 	public string GetSkin(string _LevelID)
