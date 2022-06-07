@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Text;
 
@@ -44,7 +43,7 @@ public static class CRC32
 	{
 		byte[] bytes = Encoding.ASCII.GetBytes(_Input);
 		
-		uint hash = ~bytes.Aggregate(0xFFFFFFFF, (_Register, _Byte) => m_ChecksumTable[(_Register & 0xFF) ^ Convert.ToByte((byte)_Byte)] ^ (_Register >> 8));
+		uint hash = ~bytes.Aggregate(0xFFFFFFFF, (_Register, _Byte) => m_ChecksumTable[(_Register & 0xFF) ^ _Byte] ^ (_Register >> 8));
 		
 		return hash.ToString("x8");
 	}
