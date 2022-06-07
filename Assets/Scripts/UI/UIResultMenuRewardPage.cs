@@ -7,7 +7,7 @@ using Firebase.Extensions;
 using UnityEngine;
 using Zenject;
 
-public class UIResultRewardPage : UIResultMenuPage
+public class UIResultMenuRewardPage : UIResultMenuPage
 {
 	public override ResultMenuPageType Type => ResultMenuPageType.Reward;
 
@@ -16,6 +16,7 @@ public class UIResultRewardPage : UIResultMenuPage
 	[SerializeField] UICascadeTMPLabel  m_Title;
 	[SerializeField] UIDiscProgress[]   m_DiscsProgress;
 	[SerializeField] UIDiscs            m_Discs;
+	[SerializeField] UIGroup            m_StatsGroup;
 	[SerializeField] UIGroup            m_ContinueGroup;
 	[SerializeField] UIGroup            m_LoaderGroup;
 	[SerializeField] UICascadeUnitLabel m_ScoreLabel;
@@ -58,6 +59,7 @@ public class UIResultRewardPage : UIResultMenuPage
 		m_CoinsLabel.Value = 0;
 		m_ContinueGroup.Hide(true);
 		m_LoaderGroup.Hide(true);
+		m_StatsGroup.Show(true);
 		
 		ProcessActions();
 		
@@ -78,6 +80,7 @@ public class UIResultRewardPage : UIResultMenuPage
 	{
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
+		m_StatsGroup.Hide();
 		m_ContinueGroup.Hide();
 		m_LoaderGroup.Show();
 		
@@ -161,6 +164,7 @@ public class UIResultRewardPage : UIResultMenuPage
 			m_Actions.Enqueue(DiscsResult);
 		
 		m_Actions.Enqueue(PlayCoins);
+		m_Actions.Enqueue(HideStats);
 		m_Actions.Enqueue(ShowControl);
 	}
 
@@ -242,6 +246,11 @@ public class UIResultRewardPage : UIResultMenuPage
 	Task PlayCoins()
 	{
 		return UnitAsync(m_CoinsLabel, m_Coins);
+	}
+
+	Task HideStats()
+	{
+		return m_StatsGroup.HideAsync();
 	}
 
 	Task ShowControl()
