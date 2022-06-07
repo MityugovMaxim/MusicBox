@@ -33,6 +33,11 @@ public enum ScoreGrade
 [Preserve]
 public class ScoreManager : IInitializable, IDisposable
 {
+	public int MissCount    => m_Miss;
+	public int BadCount     => m_TapBad + m_DoubleBad + m_HoldBad;
+	public int GoodCount    => m_TapGood + m_DoubleGood + m_HoldGood;
+	public int PerfectCount => m_TapPerfect + m_DoublePerfect + m_HoldPerfect;
+
 	long Score { get; set; }
 	int  Combo { get; set; }
 
@@ -219,6 +224,7 @@ public class ScoreManager : IInitializable, IDisposable
 		float perfectMultiplier = m_ConfigProcessor.AccuracyPerfectMultiplier;
 		float goodMultiplier    = m_ConfigProcessor.AccuracyGoodMultiplier;
 		float badMultiplier     = m_ConfigProcessor.AccuracyBadMultiplier;
+		float missMultiplier    = m_ConfigProcessor.AccuracyMissMultiplier;
 		
 		float tapCount    = m_TapPerfect + m_TapGood + m_TapBad + m_TapFail;
 		float doubleCount = m_DoublePerfect + m_DoubleGood + m_DoubleBad + m_DoubleFail;
@@ -255,8 +261,9 @@ public class ScoreManager : IInitializable, IDisposable
 			count++;
 		}
 		
+		// Miss accuracy
 		if (totalCount > 0)
-			accuracy -= m_Miss / totalCount * goodMultiplier;
+			accuracy -= m_Miss / totalCount * missMultiplier;
 		
 		accuracy = Mathf.Clamp01(accuracy / count);
 		
