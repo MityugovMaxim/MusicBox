@@ -114,6 +114,6 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 				break;
 		}
 		
-		RectTransform.localScale = new Vector3(scale, scale, scale);
+		RectTransform.localScale = new Vector3(scale, scale, 1);
 	}
 }
