@@ -39,9 +39,9 @@ public class ConfigProcessor
 	const string SONG_NEXT_ADS_COUNT    = "song_next_ads_count";
 	const string SONG_PLAY_ADS_COUNT    = "song_play_ads_count";
 
-	const string ACCURACY_PERFECT_MULTIPLIER = "accuracy_perfect_multipler";
-	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multipler";
-	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multipler";
+	const string ACCURACY_PERFECT_MULTIPLIER = "accuracy_perfect_multiplier";
+	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multiplier";
+	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multiplier";
 	const string ACCURACY_MISS_MULTIPLIER    = "accuracy_miss_multiplier";
 
 	const string INPUT_EXTEND = "input_extend";
