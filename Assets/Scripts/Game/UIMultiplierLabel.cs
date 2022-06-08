@@ -7,6 +7,8 @@ using Random = UnityEngine.Random;
 [RequireComponent(typeof(Animator))]
 public class UIMultiplierLabel : UIEntity
 {
+	const string PLAY_STATE = "play";
+
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 
@@ -40,14 +42,14 @@ public class UIMultiplierLabel : UIEntity
 		
 		m_Animator = GetComponent<Animator>();
 		
-		m_Animator.RegisterComplete("play", InvokePlayFinished);
+		m_Animator.RegisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_Animator.UnregisterComplete("play", InvokePlayFinished);
+		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	protected override void OnEnable()

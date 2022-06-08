@@ -1,13 +1,12 @@
-using TMPro;
 using UnityEngine;
 using Zenject;
 
 public class UISongStats : UIEntity
 {
-	[SerializeField] TMP_Text m_MissCountLabel;
-	[SerializeField] TMP_Text m_BadCountLabel;
-	[SerializeField] TMP_Text m_GoodCountLabel;
-	[SerializeField] TMP_Text m_PerfectCountLabel;
+	[SerializeField] UIUnitLabel m_MissCountLabel;
+	[SerializeField] UIUnitLabel m_BadCountLabel;
+	[SerializeField] UIUnitLabel m_GoodCountLabel;
+	[SerializeField] UIUnitLabel m_PerfectCountLabel;
 
 	[Inject] ScoreManager m_ScoreManager;
 
@@ -20,9 +19,9 @@ public class UISongStats : UIEntity
 
 	void ProcessStats()
 	{
-		m_MissCountLabel.text    = m_ScoreManager.MissCount.ToString();
-		m_BadCountLabel.text     = m_ScoreManager.BadCount.ToString();
-		m_GoodCountLabel.text    = m_ScoreManager.GoodCount.ToString();
-		m_PerfectCountLabel.text = m_ScoreManager.PerfectCount.ToString();
+		m_MissCountLabel.Value    = m_ScoreManager.MissCount;
+		m_BadCountLabel.Value     = m_ScoreManager.BadCount;
+		m_GoodCountLabel.Value    = m_ScoreManager.GoodCount;
+		m_PerfectCountLabel.Value = m_ScoreManager.PerfectCount;
 	}
 }
