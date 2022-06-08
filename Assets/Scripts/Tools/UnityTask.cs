@@ -133,6 +133,11 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, CancellationToken _Token = default)
 	{
+		return Phase(_Action, _Delay, _Duration, AnimationCurve.Linear(0, 0, 1, 1), _Token);
+	}
+
+	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, AnimationCurve _Curve, CancellationToken _Token = default)
+	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		if (_Token.IsCancellationRequested)
@@ -141,7 +146,13 @@ public class UnityTask : MonoBehaviour
 			return completionSource.Task;
 		}
 		
-		IEnumerator routine = PhaseRoutine(_Action, _Delay, _Duration, () => completionSource.SetResult(true));
+		IEnumerator routine = PhaseRoutine(
+			_Action,
+			_Delay,
+			_Duration,
+			_Curve,
+			() => completionSource.SetResult(true)
+		);
 		
 		_Token.Register(
 			() =>
@@ -334,7 +345,7 @@ public class UnityTask : MonoBehaviour
 		_Finished?.Invoke();
 	}
 
-	static IEnumerator PhaseRoutine(Action<float> _Action, float _Delay, float _Duration, Action _Finished)
+	static IEnumerator PhaseRoutine(Action<float> _Action, float _Delay, float _Duration, AnimationCurve _Curve, Action _Finished)
 	{
 		if (_Action == null)
 		{
@@ -356,7 +367,9 @@ public class UnityTask : MonoBehaviour
 				
 				time += Time.deltaTime;
 				
-				_Action(time / _Duration);
+				float phase = _Curve.Evaluate(time / _Duration);
+				
+				_Action(phase);
 			}
 		}
 		
