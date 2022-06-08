@@ -128,11 +128,9 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	string GetNextSongID()
 	{
-		return m_SongsManager.GetLibrarySongIDs()
-			.Where(_SongID => _SongID != m_SongID)
-			.OrderBy(m_ScoresProcessor.GetRank)
-			.ThenByDescending(m_ProgressProcessor.GetSongLevel)
-			.FirstOrDefault();
+		return m_SongsManager
+			.GetLibrarySongIDs()
+			.FirstOrDefault(_SongID => _SongID != m_SongID);
 	}
 
 	protected override void OnShowFinished()

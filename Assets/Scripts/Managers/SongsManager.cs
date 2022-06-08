@@ -16,9 +16,9 @@ public class SongsManager
 		return m_SongsProcessor.GetSongIDs()
 			.Where(IsSongAvailable)
 			.OrderBy(m_ScoresProcessor.GetRank)
-			.ThenByDescending(m_SongsProcessor.GetBadge)
 			.ThenByDescending(m_SongsProcessor.GetPrice)
-			.ThenByDescending(m_ProgressProcessor.GetSongLevel)
+			.ThenBy(m_ProgressProcessor.GetSongLevel)
+			.ThenBy(m_SongsProcessor.GetSpeed)
 			.ToList();
 	}
 
