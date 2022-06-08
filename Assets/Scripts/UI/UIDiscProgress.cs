@@ -33,7 +33,6 @@ public class UIDiscProgress : UIGroup
 	[SerializeField] AnimationCurve   m_ProgressCurve;
 	[SerializeField] float            m_MinProgress;
 	[SerializeField] float            m_MaxProgress;
-	[SerializeField] UIFlare          m_Flare;
 
 	[SerializeField, Range(0, 1)] float m_Progress;
 
@@ -90,13 +89,9 @@ public class UIDiscProgress : UIGroup
 	{
 		m_SoundProcessor.Start(m_ProgressSound);
 		
-		m_Flare.Show();
-		
 		void Complete(Task _Task)
 		{
 			m_SoundProcessor.Stop(m_ProgressSound);
-			
-			m_Flare.Hide();
 		}
 		
 		return UnityTask.Lerp(

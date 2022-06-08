@@ -27,8 +27,14 @@ public class UIFlare : UIGroup
 		
 		CancellationToken token = m_TokenSource.Token;
 		
+		float delay = 0;
+		
 		foreach (Graphic flare in m_Flares)
-			Play(flare, token);
+		{
+			Play(flare, delay, token);
+			
+			delay += Random.Range(m_MinDelay, m_MaxDelay);
+		}
 	}
 
 	protected override void OnHideFinished()
@@ -36,7 +42,7 @@ public class UIFlare : UIGroup
 		Stop();
 	}
 
-	async void Play(Graphic _Flare, CancellationToken _Token = default)
+	async void Play(Graphic _Flare, float _Delay, CancellationToken _Token = default)
 	{
 		CancellationToken token = m_TokenSource.Token;
 		
@@ -51,7 +57,6 @@ public class UIFlare : UIGroup
 			if (token.IsCancellationRequested)
 				return;
 			
-			float delay      = Random.Range(m_MinDelay, m_MaxDelay);
 			float duration   = Random.Range(m_MinDuration, m_MaxDuration);
 			float size       = Random.Range(m_MinSize, m_MaxSize);
 			
@@ -69,7 +74,7 @@ public class UIFlare : UIGroup
 						_Flare.color        = Color.Lerp(sourceColor, targetColor, _Phase);
 						transform.sizeDelta = Vector2.Lerp(sourceSize, targetSize, _Phase);
 					},
-					delay,
+					_Delay,
 					duration,
 					m_Curve,
 					token
