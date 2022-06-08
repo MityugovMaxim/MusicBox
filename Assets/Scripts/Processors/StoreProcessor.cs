@@ -14,6 +14,8 @@ public class StoreDataUpdateSignal { }
 [Preserve]
 public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 {
+	bool Loaded { get; set; }
+
 	[Inject] SignalBus         m_SignalBus;
 	[Inject] ProductsProcessor m_ProductsProcessor;
 
@@ -23,16 +25,21 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 	Action<bool>       m_PurchaseFinished;
 	Action             m_PurchaseCanceled;
 
+	TaskCompletionSource<bool> m_CompletionSource;
+
 	public Task Load()
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		if (Loaded || m_CompletionSource != null)
+			return m_CompletionSource?.Task ?? Task.CompletedTask;
+		
+		m_CompletionSource = new TaskCompletionSource<bool>();
 		
 		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
 		
 		if (productIDs.Count == 0)
 		{
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
+			m_CompletionSource.TrySetResult(false);
+			return m_CompletionSource.Task;
 		}
 		
 		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
@@ -43,11 +50,18 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			config.AddProduct(productID, m_ProductsProcessor.GetType(productID));
 		}
 		
-		m_LoadStoreFinished = _Success => completionSource.TrySetResult(_Success);
+		m_LoadStoreFinished = _Success =>
+		{
+			Loaded = true;
+			
+			m_CompletionSource.TrySetResult(_Success);
+			
+			m_CompletionSource = null;
+		};
 		
 		UnityPurchasing.Initialize(this, config);
 		
-		return completionSource.Task;
+		return m_CompletionSource.Task;
 	}
 
 	public Task<bool> Restore()
@@ -217,6 +231,10 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	async void RegisterProductDataUpdate()
 	{
+		Loaded = false;
+		
+		m_CompletionSource?.TrySetResult(false);
+		
 		await Load();
 		
 		m_SignalBus.Fire<StoreDataUpdateSignal>();

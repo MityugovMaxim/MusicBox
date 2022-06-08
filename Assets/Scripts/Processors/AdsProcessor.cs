@@ -259,6 +259,13 @@ public class AdsProcessor
 		
 		await Fetch();
 		
+		InitializeAdsProviders();
+		
+		Loaded = true;
+	}
+
+	async void InitializeAdsProviders()
+	{
 		List<Task<bool>> tasks = new List<Task<bool>>();
 		
 		List<string> adsProviderIDs = GetAdsProviderIDs();
@@ -273,9 +280,9 @@ public class AdsProcessor
 			tasks.Add(adsProvider.Initialize());
 		}
 		
-		await Task.WhenAny(tasks);
+		await Task.WhenAll(tasks);
 		
-		Loaded = true;
+		Log.Info(this, "Ads providers initialized.");
 	}
 
 	List<string> GetAdsProviderIDs()
