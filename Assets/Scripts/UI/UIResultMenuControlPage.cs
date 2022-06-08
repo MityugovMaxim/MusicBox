@@ -21,7 +21,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] ScoresProcessor    m_ScoresProcessor;
-	[Inject] ProgressProcessor  m_ProgressProcessor;
 	[Inject] SongsManager       m_SongsManager;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;

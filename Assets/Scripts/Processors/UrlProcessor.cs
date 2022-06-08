@@ -7,6 +7,8 @@ using Zenject;
 
 public class UrlProcessor
 {
+	const string SCHEME = "audiobox";
+
 	[Inject] MenuProcessor  m_MenuProcessor;
 	[Inject] SongsProcessor m_SongsProcessor;
 
@@ -17,7 +19,7 @@ public class UrlProcessor
 		
 		Uri uri = new Uri(_URL);
 		
-		if (uri.Scheme != "audiobox")
+		if (uri.Scheme != SCHEME)
 		{
 			Application.OpenURL(_URL);
 			return;
@@ -46,6 +48,22 @@ public class UrlProcessor
 				await ProcessHash(uri.Host, _Instant);
 				break;
 		}
+	}
+
+	public string GetSongURL(string _SongID)
+	{
+		if (string.IsNullOrEmpty(_SongID))
+			return $"{SCHEME}://";
+		
+		return $"{SCHEME}://songs?song_id={_SongID}";
+	}
+
+	public string GetSongHash(string _SongID)
+	{
+		if (string.IsNullOrEmpty(_SongID))
+			return $"{SCHEME}://";
+		
+		return $"{SCHEME}://{CRC32.Get(_SongID)}";
 	}
 
 	static Dictionary<string, string> GetParameters(string _URL)

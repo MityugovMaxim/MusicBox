@@ -35,7 +35,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		await LoadTopic();
 	}
 
-	public async Task LoadMessages()
+	public async Task LoadMessages(string _URL)
 	{
 		try
 		{
@@ -54,10 +54,10 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		
 		ClearBadges();
 		
-		if (string.IsNullOrEmpty(Application.absoluteURL))
+		if (string.IsNullOrEmpty(_URL))
 			return;
 		
-		await m_UrlProcessor.ProcessURL(Application.absoluteURL);
+		await m_UrlProcessor.ProcessURL(_URL);
 	}
 
 	public async Task LoadTopic()

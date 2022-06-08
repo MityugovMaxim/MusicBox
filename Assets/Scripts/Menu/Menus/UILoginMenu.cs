@@ -1,9 +1,19 @@
+using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.LoginMenu)]
 public class UILoginMenu : UIMenu
 {
+	const string LAUNCH_COUNT_KEY = "LAUNCH_COUNT";
+
+	int LaunchCount
+	{
+		get => PlayerPrefs.GetInt(LAUNCH_COUNT_KEY, 0);
+		set => PlayerPrefs.SetInt(LAUNCH_COUNT_KEY, value);
+	}
+
 	[Inject] SocialProcessor      m_SocialProcessor;
 	[Inject] ConfigProcessor      m_ConfigProcessor;
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
@@ -22,21 +32,31 @@ public class UILoginMenu : UIMenu
 	[Inject] LanguageProcessor    m_LanguageProcessor;
 	[Inject] AmbientProcessor     m_AmbientProcessor;
 	[Inject] BannersProcessor     m_BannersProcessor;
+	[Inject] UrlProcessor         m_UrlProcessor;
+	[Inject] SongsManager         m_SongsManager;
 
 	public async Task Login()
 	{
-		while (!await m_SocialProcessor.Login())
-			await Task.Delay(1500);
+		while (true)
+		{
+			bool login = await m_SocialProcessor.Login();
+			
+			if (login)
+				break;
+			
+			await Task.Delay(250);
+		}
 		
-		await m_ConfigProcessor.Load();
-		
-		await m_ApplicationProcessor.Load();
+		await Task.WhenAll(
+			m_ConfigProcessor.Load(),
+			m_ApplicationProcessor.Load()
+		);
 		
 		await m_LanguageProcessor.Load();
 		
 		await Task.WhenAny(
 			m_AmbientProcessor.Load(),
-			Task.Delay(250)
+			Task.Delay(150)
 		);
 		
 		SongLibraryRequest request = new SongLibraryRequest();
@@ -60,6 +80,8 @@ public class UILoginMenu : UIMenu
 			m_AdsProcessor.Load()
 		);
 		
+		LaunchCount++;
+		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.BannerMenu, true);
@@ -72,8 +94,20 @@ public class UILoginMenu : UIMenu
 		
 		m_MenuProcessor.RemoveMenu(MenuType.BannerMenu);
 		
-		await m_MessageProcessor.LoadMessages();
+		await m_MessageProcessor.LoadMessages(GetURLScheme());
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
+	}
+
+	string GetURLScheme()
+	{
+		if (!string.IsNullOrEmpty(Application.absoluteURL) || LaunchCount > 1)
+			return Application.absoluteURL;
+		
+		string songID = m_SongsManager
+			.GetLibrarySongIDs()
+			.FirstOrDefault();
+		
+		return m_UrlProcessor.GetSongURL(songID);
 	}
 }
