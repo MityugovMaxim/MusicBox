@@ -128,8 +128,17 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	string GetNextSongID()
 	{
-		return m_SongsManager
+		string songID = m_SongsManager
 			.GetLibrarySongIDs()
+			.FirstOrDefault(_SongID => _SongID != m_SongID);
+		
+		ScoreRank rank = m_ScoresProcessor.GetRank(songID);
+		
+		if (rank < ScoreRank.Gold)
+			return songID;
+		
+		return m_SongsManager
+			.GetCoinsSongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 	}
 
