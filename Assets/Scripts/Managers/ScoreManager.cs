@@ -33,7 +33,7 @@ public enum ScoreGrade
 [Preserve]
 public class ScoreManager : IInitializable, IDisposable
 {
-	public int MissCount    => m_Miss;
+	public int MissCount    => m_Miss + m_TapFail + m_DoubleFail + m_HoldFail;
 	public int BadCount     => m_TapBad + m_DoubleBad + m_HoldBad;
 	public int GoodCount    => m_TapGood + m_DoubleGood + m_HoldGood;
 	public int PerfectCount => m_TapPerfect + m_DoublePerfect + m_HoldPerfect;
