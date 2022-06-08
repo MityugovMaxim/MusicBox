@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -47,23 +48,73 @@ public class UILoginMenu : UIMenu
 			await Task.Delay(250);
 		}
 		
-		await Task.WhenAll(
+		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
+		
+		await LoadApplication();
+		
+		Log.Info(
+			this,
+			"Load application complete. Client Version: {0}. Server Version: {1}",
+			m_ApplicationProcessor.ClientVersion,
+			m_ApplicationProcessor.ServerVersion
+		);
+		
+		await LoadLocalization();
+		
+		Log.Info(this, "Load localization complete. Language: {0}", m_LanguageProcessor.Language);
+		
+		await LoadAmbient();
+		
+		Log.Info(this, "Load ambient complete.");
+		
+		await LoadLibrary();
+		
+		Log.Info(this, "Load library complete.");
+		
+		await LoadData();
+		
+		Log.Info(this, "Load data complete.");
+		
+		await LoadMonetization();
+		
+		Log.Info(this, "Load monetization complete.");
+		
+		LaunchCount++;
+		
+		await LoadViews();
+	}
+
+	Task LoadApplication()
+	{
+		return Task.WhenAll(
 			m_ConfigProcessor.Load(),
 			m_ApplicationProcessor.Load()
 		);
-		
-		await m_LanguageProcessor.Load();
-		
-		await Task.WhenAny(
+	}
+
+	Task LoadLocalization()
+	{
+		return m_LanguageProcessor.Load();
+	}
+
+	Task LoadAmbient()
+	{
+		return Task.WhenAny(
 			m_AmbientProcessor.Load(),
 			Task.Delay(150)
 		);
-		
+	}
+
+	Task LoadLibrary()
+	{
 		SongLibraryRequest request = new SongLibraryRequest();
 		
-		await request.SendAsync();
-		
-		await Task.WhenAll(
+		return request.SendAsync();
+	}
+
+	Task LoadData()
+	{
+		return Task.WhenAll(
 			m_ProductsProcessor.Load(),
 			m_OffersProcessor.Load(),
 			m_NewsProcessor.Load(),
@@ -74,14 +125,18 @@ public class UILoginMenu : UIMenu
 			m_ProfileProcessor.Load(),
 			m_BannersProcessor.Load()
 		);
-		
-		await Task.WhenAll(
+	}
+
+	Task LoadMonetization()
+	{
+		return Task.WhenAll(
 			m_StoreProcessor.Load(),
 			m_AdsProcessor.Load()
 		);
-		
-		LaunchCount++;
-		
+	}
+
+	async Task LoadViews()
+	{
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.BannerMenu, true);
