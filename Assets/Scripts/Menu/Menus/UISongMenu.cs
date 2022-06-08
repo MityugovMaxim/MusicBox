@@ -161,7 +161,9 @@ public class UISongMenu : UISlideMenu
 
 	string GetSongID(int _Offset)
 	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
+		List<string> songIDs = m_SongsManager.GetLibrarySongIDs()
+			.Concat(m_SongsManager.GetCoinsSongIDs())
+			.ToList();
 		
 		int index = songIDs.IndexOf(m_SongID);
 		if (index >= 0 && index < songIDs.Count)
