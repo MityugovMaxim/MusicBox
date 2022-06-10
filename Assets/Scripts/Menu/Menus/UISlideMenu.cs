@@ -3,18 +3,20 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandler, IDeselectHandler
+public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerExitHandler
 {
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	[SerializeField] RectTransform  m_Content;
 
+	bool    m_Drag;
+	bool    m_Pressed;
+	Vector2 m_Delta;
+
 	CancellationTokenSource m_TokenSource;
-	Vector2                 m_Delta;
 
 	async void Expand(bool _Instant = false)
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		CancelSlide();
 		
 		m_TokenSource = new CancellationTokenSource();
 		
@@ -40,8 +42,7 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 
 	async void Shrink(bool _Instant = false)
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		CancelSlide();
 		
 		m_TokenSource = new CancellationTokenSource();
 		
@@ -117,8 +118,22 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		return ShrinkAsync(_Duration, _Instant, _Token);
 	}
 
+	public void OnInitializePotentialDrag(PointerEventData _EventData)
+	{
+		m_Pressed = true;
+		
+		CancelSlide();
+	}
+
+	void IBeginDragHandler.OnBeginDrag(PointerEventData _EventData)
+	{
+		CancelSlide();
+	}
+
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
+		m_Drag = true;
+		
 		float delta = _EventData.delta.y / Screen.height;
 		
 		Vector2 min = m_Content.anchorMin;
@@ -133,17 +148,10 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 		m_Content.anchorMax = max;
 	}
 
-	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
+	void IEndDragHandler.OnEndDrag(PointerEventData _EventData)
 	{
-		m_Delta = Vector2.zero;
+		m_Pressed = false;
 		
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
-	}
-
-	void IDropHandler.OnDrop(PointerEventData _EventData)
-	{
 		const float anchorThreshold = 0.7f;
 		const float speedThreshold  = 0.4f;
 		
@@ -161,8 +169,11 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 			Shrink();
 	}
 
-	void IDeselectHandler.OnDeselect(BaseEventData _EventData)
+	void IPointerExitHandler.OnPointerExit(PointerEventData _EventData)
 	{
+		if (m_Drag || !m_Pressed)
+			return;
+		
 		const float anchorThreshold = 0.7f;
 		
 		Vector2 anchor = m_Content.anchorMax;
@@ -171,5 +182,15 @@ public class UISlideMenu : UIMenu, IPointerDownHandler, IDragHandler, IDropHandl
 			Expand();
 		else
 			Shrink();
+	}
+
+	void CancelSlide()
+	{
+		m_Drag  = false;
+		m_Delta = Vector2.zero;
+		
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 }

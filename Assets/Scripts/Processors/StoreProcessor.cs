@@ -32,14 +32,15 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		if (Loaded || m_CompletionSource != null)
 			return m_CompletionSource?.Task ?? Task.CompletedTask;
 		
-		m_CompletionSource = new TaskCompletionSource<bool>();
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
 		
 		if (productIDs.Count == 0)
 		{
-			m_CompletionSource.TrySetResult(false);
-			return m_CompletionSource.Task;
+			completionSource.TrySetResult(false);
+			
+			return completionSource.Task;
 		}
 		
 		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
@@ -49,6 +50,8 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			Debug.LogFormat("[StoreProcessor] Initialize product '{0}'", productID);
 			config.AddProduct(productID, m_ProductsProcessor.GetType(productID));
 		}
+		
+		m_CompletionSource = completionSource;
 		
 		m_LoadStoreFinished = _Success =>
 		{
@@ -61,7 +64,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		
 		UnityPurchasing.Initialize(this, config);
 		
-		return m_CompletionSource.Task;
+		return completionSource.Task;
 	}
 
 	public Task<bool> Restore()

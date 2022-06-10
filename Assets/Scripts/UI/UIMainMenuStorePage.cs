@@ -4,21 +4,18 @@ using Zenject;
 
 public class UIMainMenuStorePage : UIMainMenuPage
 {
+	const float GRID_SPACING = 30;
+	const float LIST_SPACING = 30;
+
 	public override MainMenuPageType Type => MainMenuPageType.Store;
 
-	[SerializeField] RectTransform m_Container;
+	[SerializeField] UILayout m_Content;
 
 	[Inject] SignalBus             m_SignalBus;
 	[Inject] ProductsManager       m_ProductsManager;
 	[Inject] UIProductSpecial.Pool m_SpecialPool;
 	[Inject] UIProductPromo.Pool   m_PromoPool;
-	[Inject] UIProductGroup.Pool   m_GroupPool;
-
-	readonly List<UIProductSpecial> m_Specials = new List<UIProductSpecial>();
-	readonly List<UIProductPromo>   m_Promos   = new List<UIProductPromo>();
-	// TODO: Implement
-	// readonly List<UIProductDaily>   m_Dailies  = new List<UIProductDaily>();
-	readonly List<UIProductGroup>   m_Groups   = new List<UIProductGroup>();
+	[Inject] UIProductItem.Pool    m_ItemPool;
 
 	protected override void OnShowStarted()
 	{
@@ -36,17 +33,17 @@ public class UIMainMenuStorePage : UIMainMenuPage
 
 	void Refresh()
 	{
-		Clear();
+		m_Content.Clear();
 		
 		CreateSpecial();
 		
 		CreatePromo();
 		
-		CreateDaily();
-		
 		CreateDiscount();
 		
 		CreateProducts();
+		
+		m_Content.Reposition();
 	}
 
 	void CreateSpecial()
@@ -56,20 +53,12 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (productIDs == null || productIDs.Count == 0)
 			return;
 		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
 		foreach (string productID in productIDs)
-		{
-			if (string.IsNullOrEmpty(productID))
-				continue;
-			
-			UIProductSpecial item = m_SpecialPool.Spawn(m_Container);
-			
-			if (item == null)
-				continue;
-			
-			item.Setup(productID);
-			
-			m_Specials.Add(item);
-		}
+			m_Content.Add(new ProductSpecialEntity(productID, m_SpecialPool));
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreatePromo()
@@ -79,25 +68,12 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (productIDs == null || productIDs.Count == 0)
 			return;
 		
-		foreach (string productID in productIDs)
-		{
-			if (string.IsNullOrEmpty(productID))
-				continue;
-			
-			UIProductPromo item = m_PromoPool.Spawn(m_Container);
-			
-			if (item == null)
-				continue;
-			
-			item.Setup(productID);
-			
-			m_Promos.Add(item);
-		}
-	}
-
-	void CreateDaily()
-	{
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
+		foreach (string productID in productIDs)
+			m_Content.Add(new ProductPromoEntity(productID, m_PromoPool));
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateDiscount()
@@ -107,11 +83,12 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (productIDs == null || productIDs.Count == 0)
 			return;
 		
-		UIProductGroup item = m_GroupPool.Spawn(m_Container);
+		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
 		
-		item.Setup(productIDs);
+		foreach (string productID in productIDs)
+			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));
 		
-		m_Groups.Add(item);
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateProducts()
@@ -121,25 +98,11 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (productIDs == null || productIDs.Count == 0)
 			return;
 		
-		UIProductGroup item = m_GroupPool.Spawn(m_Container);
+		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
 		
-		item.Setup(productIDs);
+		foreach (string productID in productIDs)
+			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));
 		
-		m_Groups.Add(item);
-	}
-
-	void Clear()
-	{
-		foreach (UIProductSpecial item in m_Specials)
-			m_SpecialPool.Despawn(item);
-		m_Specials.Clear();
-		
-		foreach (UIProductPromo item in m_Promos)
-			m_PromoPool.Despawn(item);
-		m_Promos.Clear();
-		
-		foreach (UIProductGroup item in m_Groups)
-			m_GroupPool.Despawn(item);
-		m_Groups.Clear();
+		m_Content.Space(LIST_SPACING);
 	}
 }

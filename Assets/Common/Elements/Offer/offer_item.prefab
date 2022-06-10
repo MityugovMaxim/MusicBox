@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 154, y: 154}
+  m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5223353957695719010
 CanvasRenderer:
@@ -110,7 +110,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
@@ -144,8 +144,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5223353957850926082}
   - component: {fileID: 5223353957850926087}
-  - component: {fileID: 5223353957850926084}
-  - component: {fileID: 5223353957850926085}
   m_Layer: 5
   m_Name: offer_item
   m_TagString: Untagged
@@ -185,74 +183,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc87f7e892e148d3a713ee365361f6b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Interactable: 1
-  m_ShowDuration: 0.2
-  m_HideDuration: 0.2
-  m_ShowResizeDuration: 0.2
-  m_HideResizeDuration: 0.2
-  m_ResizeCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 1
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 1
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  m_ResizeMode: 2
-  m_Size: {x: 600, y: 190}
   m_Image: {fileID: 5180870309251837342}
   m_Title: {fileID: 5223353958264341525}
   m_Description: {fileID: 5223353959717783737}
   m_Label: {fileID: 5223353957695719011}
   m_Button: {fileID: 7229604243818360752}
---- !u!114 &5223353957850926084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5223353957850926083}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: -1
-  m_PreferredWidth: -1
-  m_PreferredHeight: 190
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
---- !u!225 &5223353957850926085
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5223353957850926083}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &5223353957912132374
 GameObject:
   m_ObjectHideFlags: 0
@@ -659,8 +594,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 60, y: 0}
-  m_SizeDelta: {x: -200, y: 0}
+  m_AnchoredPosition: {x: 85, y: 0}
+  m_SizeDelta: {x: -170, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5223353959631250796
 MonoBehaviour:
@@ -956,7 +891,7 @@ PrefabInstance:
     - target: {fileID: 9167426364685519744, guid: 47d45ec8d50de45d9b60f4593bd7afe1,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.5859375
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 47d45ec8d50de45d9b60f4593bd7afe1, type: 3}

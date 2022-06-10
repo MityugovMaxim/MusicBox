@@ -208,7 +208,7 @@ public class UISongMenu : UISlideMenu
 	{
 		m_SongID = _SongID;
 		
-		m_Background.Setup(m_SongID, !Shown);
+		m_Background.Setup(m_SongID);
 		m_Image.Setup(m_SongID);
 		m_Discs.Setup(m_SongID);
 		m_Label.Setup(m_SongID);

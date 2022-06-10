@@ -7,20 +7,19 @@ using ColorMode = UIStroke.ColorMode;
 
 public class UIMainMenuSongsPage : UIMainMenuPage
 {
+	const float GRID_SPACING = 30;
+	const float LIST_SPACING = 15;
+
 	public override MainMenuPageType Type => MainMenuPageType.Songs;
 
-	[SerializeField] RectTransform m_Container;
+	[SerializeField] UILayout m_Content;
 
-	[Inject] SignalBus         m_SignalBus;
-	[Inject] SongsManager      m_SongsManager;
-	[Inject] ConfigProcessor   m_ConfigProcessor;
-	[Inject] UISongHeader.Pool m_HeaderPool;
-	[Inject] UISongGroup.Pool  m_GroupPool;
-	[Inject] UISongList.Pool   m_ListPool;
-
-	readonly List<UISongHeader> m_Headers = new List<UISongHeader>();
-	readonly List<UISongGroup>  m_Groups  = new List<UISongGroup>();
-	readonly List<UISongList>   m_Lists   = new List<UISongList>();
+	[Inject] SignalBus          m_SignalBus;
+	[Inject] SongsManager       m_SongsManager;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
+	[Inject] UISongHeader.Pool  m_HeaderPool;
+	[Inject] UISongItem.Pool    m_ItemPool;
+	[Inject] UISongElement.Pool m_ElementPool;
 
 	protected override void OnShowStarted()
 	{
@@ -34,6 +33,9 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	protected override void OnHideStarted()
 	{
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
@@ -42,24 +44,39 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	void Refresh()
 	{
-		Clear();
+		m_Content.Clear();
 		
 		CreateLibrary();
 		
 		CreateCoinsLocked();
 		
 		CreateLevelLocked();
+		
+		m_Content.Reposition();
 	}
 
 	void CreateLibrary()
 	{
 		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
 		
+		if (songIDs == null || songIDs.Count == 0)
+			return;
+		
 		int size = m_ConfigProcessor.SongLibraryGroupSize;
 		
-		CreateGroup(songIDs.Take(size).ToArray());
+		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
 		
-		CreateList(songIDs.Skip(size).ToArray());
+		foreach (string songID in songIDs.Take(size))
+			m_Content.Add(new SongItemEntity(songID, m_ItemPool));
+		
+		m_Content.Space(LIST_SPACING);
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		foreach (string songID in songIDs.Skip(size))
+			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateCoinsLocked()
@@ -69,12 +86,16 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
-		CreateHeader(
-			ColorMode.Blue,
-			GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>")
-		);
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		CreateList(songIDs);
+		string title = GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>");
+		
+		m_Content.Add(new SongHeaderEntity(title, ColorMode.Blue, m_HeaderPool));
+		
+		foreach (string songID in songIDs)
+			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateLevelLocked()
@@ -89,68 +110,16 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 			if (group.Value == null || group.Value.Length == 0)
 				continue;
 			
-			CreateHeader(
-				ColorMode.Red,
-				GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>")
-			);
+			string title = GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>");
 			
-			CreateList(group.Value);
+			VerticalStackLayout.Start(m_Content, LIST_SPACING);
+			
+			m_Content.Add(new SongHeaderEntity(title, ColorMode.Red, m_HeaderPool));
+			
+			foreach (string songID in group.Value)
+				m_Content.Add(new SongElementEntity(songID, m_ElementPool));
+			
+			m_Content.Space(LIST_SPACING);
 		}
-	}
-
-	void CreateHeader(ColorMode _ColorMode, string _Title)
-	{
-		if (string.IsNullOrEmpty(_Title))
-			return;
-		
-		UISongHeader item = m_HeaderPool.Spawn(m_Container);
-		
-		if (item == null)
-			return;
-		
-		item.Mode = _ColorMode;
-		
-		item.Setup(_Title);
-		
-		m_Headers.Add(item);
-	}
-
-	void CreateGroup(ICollection<string> _SongIDs)
-	{
-		if (_SongIDs == null || _SongIDs.Count == 0)
-			return;
-		
-		UISongGroup item = m_GroupPool.Spawn(m_Container);
-		
-		item.Setup(_SongIDs);
-		
-		m_Groups.Add(item);
-	}
-
-	void CreateList(ICollection<string> _SongIDs)
-	{
-		if (_SongIDs == null || _SongIDs.Count == 0)
-			return;
-		
-		UISongList item = m_ListPool.Spawn(m_Container);
-		
-		item.Setup(_SongIDs);
-		
-		m_Lists.Add(item);
-	}
-
-	void Clear()
-	{
-		foreach (UISongHeader item in m_Headers)
-			m_HeaderPool.Despawn(item);
-		m_Headers.Clear();
-		
-		foreach (UISongGroup item in m_Groups)
-			m_GroupPool.Despawn(item);
-		m_Groups.Clear();
-		
-		foreach (UISongList item in m_Lists)
-			m_ListPool.Despawn(item);
-		m_Lists.Clear();
 	}
 }

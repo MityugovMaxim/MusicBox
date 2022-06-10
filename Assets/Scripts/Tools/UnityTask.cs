@@ -169,6 +169,34 @@ public class UnityTask : MonoBehaviour
 		return completionSource.Task;
 	}
 
+	public static Task Condition(Func<bool> _Condition, Action _Action, CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		IEnumerator routine = ConditionRoutine(
+			_Action,
+			_Condition,
+			() => completionSource.SetResult(true)
+		);
+		
+		_Token.Register(
+			() =>
+			{
+				if (routine != null && !ReferenceEquals(m_Instance, null))
+					m_Instance.StopCoroutine(routine);
+				
+				completionSource.TrySetCanceled();
+			}
+		);
+		
+		m_Instance.StartCoroutine(routine);
+		
+		return completionSource.Task;
+	}
+
 	public static Task While(Func<bool> _Condition, CancellationToken _Token = default)
 	{
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
@@ -309,6 +337,24 @@ public class UnityTask : MonoBehaviour
 			while (m_YieldTasks.Count > 0)
 				m_YieldTasks.Dequeue().SetResult(true);
 		}
+	}
+
+	static IEnumerator ConditionRoutine(Action _Action, Func<bool> _Condition, Action _Finished)
+	{
+		if (_Action == null || _Condition == null)
+		{
+			_Finished?.Invoke();
+			yield break;
+		}
+		
+		while (_Condition.Invoke())
+		{
+			yield return null;
+			
+			_Action();
+		}
+		
+		_Finished?.Invoke();
 	}
 
 	static IEnumerator TickRoutine(Action _Action, int _Frequency, float _Delay, float _Duration, Action _Finished)

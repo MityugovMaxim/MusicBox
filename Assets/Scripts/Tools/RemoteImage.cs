@@ -24,29 +24,17 @@ public abstract class RemoteImage : UIEntity
 			if (m_Path == value)
 				return;
 			
-			OnInvisible();
+			Unload();
 			
 			m_Path = value;
+			
+			Load();
 		}
 	}
 
 	public abstract Sprite Sprite { get; protected set; }
 
 	protected abstract MaskableGraphic Graphic { get; }
-
-	bool Visible
-	{
-		get
-		{
-			if (Graphic == null || Graphic.canvas == null)
-				return false;
-			
-			Rect sourceRect = Graphic.canvas.pixelRect;
-			Rect targetRect = GetWorldRect();
-			
-			return sourceRect.Contains(targetRect.center) || sourceRect.Overlaps(targetRect);
-		}
-	}
 
 	[SerializeField] UIGroup m_LoaderGroup;
 	[SerializeField] Sprite  m_Default;
@@ -60,51 +48,28 @@ public abstract class RemoteImage : UIEntity
 
 	[Inject] StorageProcessor m_StorageProcessor;
 
-	bool                    m_State;
 	Atlas                   m_Atlas;
 	CancellationTokenSource m_TokenSource;
+
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		Load();
+	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_State = false;
-		
-		OnInvisible();
-	}
-
-	void LateUpdate()
-	{
-		bool visible = Visible;
-		
-		if (visible == m_State)
-			return;
-		
-		if (visible)
-			OnVisible();
-		else
-			OnInvisible();
+		Unload();
 	}
 
 	public Task SetSpriteAsync(string _Path)
 	{
-		Path = _Path;
+		m_Path = _Path;
 		
 		return LoadAsync();
-	}
-
-	async void OnVisible()
-	{
-		m_State = true;
-		
-		await LoadAsync();
-	}
-
-	async void OnInvisible()
-	{
-		m_State = false;
-		
-		await UnloadAsync();
 	}
 
 	bool CheckOptions(Options _Options)
@@ -112,40 +77,65 @@ public abstract class RemoteImage : UIEntity
 		return (m_Options & _Options) == _Options;
 	}
 
-	Task UnloadAsync()
+	void CancelLoad()
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	void Unload()
+	{
+		CancelLoad();
 		
-		Graphic.enabled = false;
+		if (!Graphic.enabled)
+			return;
 		
 		m_Atlas?.Release(Path);
 		
-		return Task.CompletedTask;
+		Graphic.enabled = false;
+		Sprite          = null;
+		m_Path          = null;
+		
+		if (m_LoaderGroup != null)
+			m_LoaderGroup.Show(true);
+	}
+
+	async void Load()
+	{
+		await LoadAsync();
 	}
 
 	async Task LoadAsync()
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		CancelLoad();
 		
+		if (string.IsNullOrEmpty(Path))
+		{
+			Sprite = m_Default;
+			
+			bool valid = Sprite != null;
+			
+			Graphic.enabled = valid;
+			
+			if (valid)
+				await HideLoaderAsync(true);
+			return;
+		}
+
 		CreateAtlas();
-		
-		bool visible = Graphic.enabled;
 		
 		if (TryGetSprite(out Sprite sprite))
 		{
 			Sprite          = sprite;
 			Graphic.enabled = true;
 			
-			await HideLoaderAsync(visible);
+			await HideLoaderAsync(true);
 			
 			return;
 		}
 		
-		await ShowLoaderAsync(!visible);
+		await ShowLoaderAsync(!Graphic.enabled);
 		
 		Sprite          = null;
 		Graphic.enabled = false;
@@ -156,7 +146,7 @@ public abstract class RemoteImage : UIEntity
 		
 		Texture2D texture = null;
 		
-		int frame = Time.frameCount;
+		int frame = Time.renderedFrameCount;
 		
 		try { texture = await LoadTextureAsync(); }
 		catch (TaskCanceledException) { }
@@ -165,7 +155,7 @@ public abstract class RemoteImage : UIEntity
 		if (token.IsCancellationRequested)
 			return;
 		
-		bool instant = frame == Time.frameCount;
+		bool instant = frame == Time.renderedFrameCount;
 		
 		if (texture != null)
 		{

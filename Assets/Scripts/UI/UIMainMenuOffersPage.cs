@@ -5,9 +5,11 @@ using Zenject;
 
 public class UIMainMenuOffersPage : UIMainMenuPage
 {
+	const float LIST_SPACING = 30;
+
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 
-	[SerializeField] RectTransform m_Container;
+	[SerializeField] UILayout m_Content;
 
 	[SerializeField, Sound] string m_CollectSound;
 
@@ -20,11 +22,9 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 
 	bool m_Processing;
 
-	readonly List<UIOfferItem> m_Items = new List<UIOfferItem>();
-
 	protected override void OnShowStarted()
 	{
-		Refresh(false);
+		Refresh();
 		
 		m_SignalBus.Subscribe<OffersDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
@@ -38,56 +38,43 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 
 	void Refresh()
 	{
-		Refresh(true);
+		m_Content.Clear();
+		
+		CreateAvailable();
+		
+		CreateCollected();
+		
+		m_Content.Reposition();
 	}
 
-	async void Refresh(bool _Instant)
+	void CreateAvailable()
 	{
-		foreach (UIOfferItem item in m_Items)
-			m_ItemPool.Despawn(item);
-		m_Items.Clear();
+		List<string> offerIDs = m_OffersManager.GetAvailableOfferIDs();
 		
-		List<string> availableOfferIDs = m_OffersManager.GetAvailableOfferIDs();
+		if (offerIDs == null || offerIDs.Count == 0)
+			return;
 		
-		if (availableOfferIDs != null)
-		{
-			foreach (string offerID in availableOfferIDs)
-			{
-				if (string.IsNullOrEmpty(offerID))
-					continue;
-				
-				UIOfferItem item = m_ItemPool.Spawn(m_Container);
-				
-				item.Setup(offerID, ProcessOffer);
-				
-				m_Items.Add(item);
-			}
-		}
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		List<string> collectedOfferIDs = m_OffersManager.GetCollectedOfferIDs();
+		foreach (string offerID in offerIDs)
+			m_Content.Add(new OfferItemEntity(offerID, ProcessOffer, m_ItemPool));
 		
-		if (collectedOfferIDs != null)
-		{
-			foreach (string offerID in collectedOfferIDs)
-			{
-				if (string.IsNullOrEmpty(offerID))
-					continue;
-				
-				UIOfferItem item = m_ItemPool.Spawn(m_Container);
-				
-				item.Setup(offerID);
-				
-				m_Items.Add(item);
-			}
-		}
+		m_Content.Space(LIST_SPACING);
+	}
+
+	void CreateCollected()
+	{
+		List<string> offerIDs = m_OffersManager.GetCollectedOfferIDs();
 		
-		for (int i = m_Items.Count - 1; i >= 0; i--)
-		{
-			m_Items[i].Show(_Instant);
-			
-			if (!_Instant)
-				await Task.Delay(150);
-		}
+		if (offerIDs == null || offerIDs.Count == 0)
+			return;
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		foreach (string offerID in offerIDs)
+			m_Content.Add(new OfferItemEntity(offerID, null, m_ItemPool));
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	async void ProcessOffer(string _OfferID)
@@ -108,7 +95,7 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 		int target   = m_OffersManager.GetTarget(_OfferID);
 		
 		bool collect = progress >= target;
-
+		
 		bool success = collect
 			? await m_OffersManager.CollectOffer(_OfferID)
 			: await m_OffersManager.ProgressOffer(_OfferID);

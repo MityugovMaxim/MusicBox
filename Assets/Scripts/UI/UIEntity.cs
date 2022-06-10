@@ -39,6 +39,22 @@ public class UIEntity : UIBehaviour
 		RectTransform.SetAsFirstSibling();
 	}
 
+	public void SetRect(Rect _Rect)
+	{
+		Vector2 anchor = new Vector2(0, 1);
+		Vector2 pivot  = RectTransform.pivot;
+		
+		RectTransform.anchorMin = anchor;
+		RectTransform.anchorMax = anchor;
+		
+		RectTransform.anchoredPosition = new Vector2(
+			_Rect.x + _Rect.width * pivot.x,
+			_Rect.y - _Rect.height * pivot.y
+		);
+		
+		RectTransform.sizeDelta = _Rect.size;
+	}
+
 	public Vector2 GetLocalPoint(Vector2 _Point)
 	{
 		return RectTransform.InverseTransformPoint(_Point);

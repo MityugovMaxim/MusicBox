@@ -11,17 +11,22 @@ public class UIBackground : UIEntity
 
 	readonly Queue<UIBackgroundItem> m_Items = new Queue<UIBackgroundItem>();
 
-	string m_Path;
-
 	CancellationTokenSource m_TokenSource;
 
-	protected async void Show(string _Path, bool _Instant = false)
+	protected override void OnDisable()
 	{
-		if (m_Path == _Path)
-			return;
+		base.OnDisable();
 		
-		m_Path = _Path;
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
+		while (m_Items.Count > 0)
+			DestroyImmediate(m_Items.Dequeue().gameObject);
+	}
+
+	protected async void Show(string _Path)
+	{
 		UIBackgroundItem item = m_Factory.Create(m_Prefab);
 		
 		if (item == null)
@@ -36,11 +41,13 @@ public class UIBackground : UIEntity
 		
 		CancellationToken token = m_TokenSource.Token;
 		
+		bool instant = m_Items.Count == 0;
+		
 		m_Items.Enqueue(item);
 		
 		item.Setup(_Path);
 		
-		await item.ShowAsync(_Instant);
+		await item.ShowAsync(instant);
 		
 		if (token.IsCancellationRequested)
 			return;

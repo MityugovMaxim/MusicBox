@@ -3,18 +3,10 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UINewsItem : UIGroupLayout
+public class UINewsItem : UIEntity
 {
 	[Preserve]
-	public class Pool : UIEntityPool<UINewsItem>
-	{
-		protected override void OnDespawned(UINewsItem _Item)
-		{
-			base.OnDespawned(_Item);
-			
-			_Item.Hide(true);
-		}
-	}
+	public class Pool : UIEntityPool<UINewsItem> { }
 
 	[SerializeField] UINewsImage m_Image;
 	[SerializeField] TMP_Text    m_Title;

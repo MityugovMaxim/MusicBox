@@ -5,18 +5,10 @@ using UnityEngine.Scripting;
 using UnityEngine.UI;
 using Zenject;
 
-public class UIOfferItem : UIGroupLayout
+public class UIOfferItem : UIEntity
 {
 	[Preserve]
-	public class Pool : UIEntityPool<UIOfferItem>
-	{
-		protected override void OnDespawned(UIOfferItem _Item)
-		{
-			base.OnDespawned(_Item);
-			
-			_Item.Hide(true);
-		}
-	}
+	public class Pool : UIEntityPool<UIOfferItem> { }
 
 	[SerializeField] UIOfferImage m_Image;
 	[SerializeField] TMP_Text     m_Title;

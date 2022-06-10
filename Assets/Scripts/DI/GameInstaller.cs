@@ -12,14 +12,11 @@ public class GameInstaller : MonoInstaller
 
 	[SerializeField] UISongHeader  m_SongHeader;
 	[SerializeField] UISongItem    m_SongItem;
-	[SerializeField] UISongGroup   m_SongGroup;
 	[SerializeField] UISongElement m_SongElement;
-	[SerializeField] UISongList    m_SongList;
 
 	[SerializeField] UIProductPromo   m_ProductPromo;
 	[SerializeField] UIProductSpecial m_ProductSpecial;
 	[SerializeField] UIProductItem    m_ProductItem;
-	[SerializeField] UIProductGroup   m_ProductGroup;
 
 	[SerializeField] UIOfferItem       m_OfferItem;
 	[SerializeField] UINewsItem        m_NewsItem;
@@ -57,14 +54,11 @@ public class GameInstaller : MonoInstaller
 		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
 		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
 		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
-		InstallPool<UIProductGroup, UIProductGroup.Pool>(m_ProductGroup, 1);
 		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
 		
 		InstallPool<UISongHeader, UISongHeader.Pool>(m_SongHeader);
 		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
-		InstallPool<UISongGroup, UISongGroup.Pool>(m_SongGroup);
 		InstallPool<UISongElement, UISongElement.Pool>(m_SongElement);
-		InstallPool<UISongList, UISongList.Pool>(m_SongList);
 		
 		InstallPool<UIUnlockItem, UIUnlockItem.Pool>(m_UnlockItem);
 		
