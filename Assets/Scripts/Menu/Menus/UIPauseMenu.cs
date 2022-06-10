@@ -23,9 +23,6 @@ public class UIPauseMenu : UIMenu
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
-		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
 	}
 
 	public async void Restart()
@@ -84,6 +81,12 @@ public class UIPauseMenu : UIMenu
 		m_StatisticProcessor.LogPauseMenuLatencyClick(m_SongID);
 		
 		await m_MenuProcessor.Show(MenuType.LatencyMenu);
+	}
+
+	protected override void OnShowStarted()
+	{
+		m_Image.Setup(m_SongID);
+		m_Label.Setup(m_SongID);
 	}
 
 	protected override bool OnEscape()

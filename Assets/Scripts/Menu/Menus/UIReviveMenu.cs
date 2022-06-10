@@ -31,9 +31,6 @@ public class UIReviveMenu : UIMenu
 		m_SongID = _SongID;
 		m_Count  = 0;
 		
-		m_Image.Setup(m_SongID);
-		m_Restart.Setup(m_SongID);
-		
 		ProcessCoins();
 	}
 
@@ -121,6 +118,8 @@ public class UIReviveMenu : UIMenu
 		m_StatisticProcessor.LogReviveMenuShow(m_SongID);
 		
 		m_SoundProcessor.Play(m_Sound);
+		m_Image.Setup(m_SongID);
+		m_Restart.Setup(m_SongID);
 		
 		ProcessCoins();
 	}
