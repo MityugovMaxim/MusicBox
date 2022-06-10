@@ -7,14 +7,6 @@ using Zenject;
 [Menu(MenuType.LoginMenu)]
 public class UILoginMenu : UIMenu
 {
-	const string LAUNCH_COUNT_KEY = "LAUNCH_COUNT";
-
-	int LaunchCount
-	{
-		get => PlayerPrefs.GetInt(LAUNCH_COUNT_KEY, 0);
-		set => PlayerPrefs.SetInt(LAUNCH_COUNT_KEY, value);
-	}
-
 	[Inject] SocialProcessor      m_SocialProcessor;
 	[Inject] ConfigProcessor      m_ConfigProcessor;
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
@@ -78,8 +70,6 @@ public class UILoginMenu : UIMenu
 		await LoadMonetization();
 		
 		Log.Info(this, "Load monetization complete.");
-		
-		LaunchCount++;
 		
 		await LoadViews();
 	}
@@ -156,7 +146,7 @@ public class UILoginMenu : UIMenu
 
 	string GetURLScheme()
 	{
-		if (!string.IsNullOrEmpty(Application.absoluteURL) || LaunchCount > 1)
+		if (!string.IsNullOrEmpty(Application.absoluteURL) || m_ProfileProcessor.Discs > 0)
 			return Application.absoluteURL;
 		
 		string songID = m_SongsManager
