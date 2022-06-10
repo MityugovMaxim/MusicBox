@@ -17,6 +17,7 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] UIColorTrack    m_ColorTrack;
 	[SerializeField] RectTransform   m_InputArea;
 	[SerializeField] UIInputReceiver m_InputReceiver;
+	[SerializeField] UICountdown     m_Countdown;
 
 	Action m_Finished;
 	double m_Length;
@@ -41,6 +42,13 @@ public class SongPlayer : ASFPlayer
 		AddTrack(new ASFColorTrack(m_ColorTrack, m_ColorTrack));
 		
 		Deserialize(_ASF);
+	}
+
+	public override void Play(float _Latency)
+	{
+		base.Play(_Latency);
+		
+		m_Countdown.Play();
 	}
 
 	public override void Stop()

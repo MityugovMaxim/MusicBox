@@ -85,7 +85,7 @@ namespace AudioBox.ASF
 		}
 		#endif
 
-		public async void Play(float _Latency)
+		public virtual async void Play(float _Latency)
 		{
 			if (State == ASFPlayerState.Play || State == ASFPlayerState.Loading)
 				return;
