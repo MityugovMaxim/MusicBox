@@ -24,7 +24,8 @@ public class UIGameMenu : UIMenu
 
 	public async void Pause()
 	{
-		m_SongController.Pause();
+		if (!m_SongController.Pause())
+			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -59,7 +60,8 @@ public class UIGameMenu : UIMenu
 		if (_Focus || !Shown)
 			return;
 		
-		m_SongController.Pause();
+		if (!m_SongController.Pause())
+			return;
 		
 		await m_MenuProcessor.Show(MenuType.PauseMenu, true);
 	}

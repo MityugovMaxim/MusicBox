@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.ASF;
 using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -115,13 +116,16 @@ public class SongController
 		return true;
 	}
 
-	public void Start()
+	public bool Start()
 	{
 		if (m_Player == null)
 		{
 			Log.Error(this, "Play failed. Player is null.");
-			return;
+			return false;
 		}
+		
+		if (m_Player.State == ASFPlayerState.Play)
+			return false;
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
@@ -138,15 +142,20 @@ public class SongController
 		m_Player.Play(m_AudioManager.GetLatency());
 		
 		DisableAudio();
+		
+		return true;
 	}
 
-	public void Pause()
+	public bool Pause()
 	{
 		if (m_Player == null)
 		{
 			Log.Error(this, "Pause failed. Player is null.");
-			return;
+			return false;
 		}
+		
+		if (m_Player.State != ASFPlayerState.Play)
+			return false;
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
@@ -155,6 +164,8 @@ public class SongController
 		m_Player.Stop();
 		
 		DisableAudio();
+		
+		return true;
 	}
 
 	public async void Resume()
