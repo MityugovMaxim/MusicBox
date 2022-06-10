@@ -20,6 +20,13 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	CancellationTokenSource m_TokenSource;
 
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		Clamp();
+	}
+
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
 	{
 		m_Pressed = true;
@@ -138,6 +145,26 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	void Clamp()
+	{
+		CancelScroll();
+		
+		Vector2 position = m_Content.anchoredPosition;
+		float   min      = MinPosition;
+		float   max      = MaxPosition;
+		
+		if (position.y >= min && position.y <= max)
+			return;
+		
+		if (position.y < min)
+			position = new Vector2(position.x, min);
+		
+		if (position.y > max)
+			position = new Vector2(position.x, max);
+		
+		m_Content.anchoredPosition = position;
 	}
 
 	Task Spring(float _Min, float _Max, CancellationToken _Token = default)
