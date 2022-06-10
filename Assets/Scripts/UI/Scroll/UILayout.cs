@@ -19,13 +19,6 @@ public class UILayout : UIEntity
 		Reposition();
 	}
 
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		Clear();
-	}
-
 	public void StartLayout(Layout _Layout)
 	{
 		m_Layout = _Layout;

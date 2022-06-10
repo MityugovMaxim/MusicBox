@@ -6,6 +6,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 {
 	const float GRID_SPACING = 30;
 	const float LIST_SPACING = 30;
+	const float ITEM_ASPECT  = 0.675f;
 
 	public override MainMenuPageType Type => MainMenuPageType.Store;
 
@@ -39,9 +40,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		CreatePromo();
 		
-		CreateDiscount();
-		
-		CreateProducts();
+		CreateItems();
 		
 		m_Content.Reposition();
 	}
@@ -76,29 +75,14 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		m_Content.Space(LIST_SPACING);
 	}
 
-	void CreateDiscount()
-	{
-		List<string> productIDs = m_ProductsManager.GetDiscountProductIDs();
-		
-		if (productIDs == null || productIDs.Count == 0)
-			return;
-		
-		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
-		
-		foreach (string productID in productIDs)
-			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));
-		
-		m_Content.Space(LIST_SPACING);
-	}
-
-	void CreateProducts()
+	void CreateItems()
 	{
 		List<string> productIDs = m_ProductsManager.GetAvailableProductIDs();
 		
 		if (productIDs == null || productIDs.Count == 0)
 			return;
 		
-		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
+		VerticalGridLayout.Start(m_Content, 3, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
 		
 		foreach (string productID in productIDs)
 			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));

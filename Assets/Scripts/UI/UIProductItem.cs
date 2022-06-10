@@ -11,9 +11,11 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 	[SerializeField] UIProductImage    m_Image;
 	[SerializeField] UIProductDiscount m_Discount;
 	[SerializeField] UIProductPrice    m_Price;
+	[SerializeField] UIUnitLabel       m_Coins;
 
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] ProductsProcessor  m_ProductsProcessor;
 
 	string m_ProductID;
 
@@ -24,6 +26,8 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 		m_Image.Setup(m_ProductID);
 		m_Discount.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
+		
+		m_Coins.Value = m_ProductsProcessor.GetCoins(m_ProductID);
 	}
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)

@@ -22,7 +22,7 @@ public class UIBackground : UIEntity
 		m_TokenSource = null;
 		
 		while (m_Items.Count > 0)
-			DestroyImmediate(m_Items.Dequeue().gameObject);
+			Destroy(m_Items.Dequeue().gameObject);
 	}
 
 	protected async void Show(string _Path)
@@ -61,6 +61,6 @@ public class UIBackground : UIEntity
 	void Clear()
 	{
 		while (m_Items.Count > 1)
-			DestroyImmediate(m_Items.Dequeue().gameObject);
+			Destroy(m_Items.Dequeue().gameObject);
 	}
 }

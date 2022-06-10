@@ -27,6 +27,20 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		Clamp();
 	}
 
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		CancelScroll();
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_Reposition = null;
+	}
+
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
 	{
 		m_Pressed = true;
@@ -165,6 +179,8 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 			position = new Vector2(position.x, max);
 		
 		m_Content.anchoredPosition = position;
+		
+		m_Reposition?.Invoke();
 	}
 
 	Task Spring(float _Min, float _Max, CancellationToken _Token = default)

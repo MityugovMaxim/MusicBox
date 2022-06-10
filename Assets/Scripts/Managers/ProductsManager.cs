@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -33,23 +32,13 @@ public class ProductsManager
 			.ToList();
 	}
 
-	public List<string> GetDiscountProductIDs()
-	{
-		return m_ProductsProcessor.GetProductIDs()
-			.Where(_ProductID => !m_ProductsProcessor.IsPromo(_ProductID))
-			.Where(_ProductID => !m_ProductsProcessor.IsSpecial(_ProductID))
-			.Where(_ProductID => !Mathf.Approximately(0, m_ProductsProcessor.GetDiscount(_ProductID)))
-			.Where(IsAvailable)
-			.ToList();
-	}
-
 	public List<string> GetAvailableProductIDs()
 	{
 		return m_ProductsProcessor.GetProductIDs()
 			.Where(_ProductID => !m_ProductsProcessor.IsPromo(_ProductID))
 			.Where(_ProductID => !m_ProductsProcessor.IsSpecial(_ProductID))
-			.Where(_ProductID => Mathf.Approximately(0, m_ProductsProcessor.GetDiscount(_ProductID)))
 			.Where(IsAvailable)
+			.OrderBy(m_ProductsProcessor.GetCoins)
 			.ToList();
 	}
 

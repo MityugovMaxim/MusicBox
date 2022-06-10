@@ -6,7 +6,6 @@ public class VerticalStackLayout : Layout
 	float   Width    { get; }
 	float   Spacing  { get; }
 
-	int   m_Count;
 	float m_Height;
 
 	public VerticalStackLayout(
@@ -55,7 +54,6 @@ public class VerticalStackLayout : Layout
 			_Size.y
 		);
 		
-		m_Count++;
 		m_Height += _Size.y + Spacing;
 		
 		return rect;

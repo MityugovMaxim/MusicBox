@@ -86,11 +86,15 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		m_Content.Space(LIST_SPACING);
+		
+		VerticalStackLayout.Start(m_Content, 0);
 		
 		string title = GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>");
 		
 		m_Content.Add(new SongHeaderEntity(title, ColorMode.Blue, m_HeaderPool));
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string songID in songIDs)
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
@@ -110,11 +114,15 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 			if (group.Value == null || group.Value.Length == 0)
 				continue;
 			
+			m_Content.Space(LIST_SPACING);
+			
+			VerticalStackLayout.Start(m_Content, 0);
+			
 			string title = GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>");
 			
-			VerticalStackLayout.Start(m_Content, LIST_SPACING);
-			
 			m_Content.Add(new SongHeaderEntity(title, ColorMode.Red, m_HeaderPool));
+			
+			VerticalStackLayout.Start(m_Content, LIST_SPACING);
 			
 			foreach (string songID in group.Value)
 				m_Content.Add(new SongElementEntity(songID, m_ElementPool));

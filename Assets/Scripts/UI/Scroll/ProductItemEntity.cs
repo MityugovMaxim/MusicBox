@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class ProductItemEntity : LayoutEntity
 {
-	public override string  ID   { get; }
-	public override Vector2 Size { get; }
+	public override string  ID   => m_ProductID;
+	public override Vector2 Size => m_Pool.Size;
 
 	readonly string             m_ProductID;
 	readonly UIProductItem.Pool m_Pool;

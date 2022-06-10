@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class ProductPromoEntity : LayoutEntity
 {
-	public override string  ID   { get; }
-	public override Vector2 Size { get; }
+	public override string  ID   => m_ProductID;
+	public override Vector2 Size => m_Pool.Size;
 
 	readonly string              m_ProductID;
 	readonly UIProductPromo.Pool m_Pool;
@@ -15,7 +15,7 @@ public class ProductPromoEntity : LayoutEntity
 		m_ProductID = _ProductID;
 		m_Pool      = _Pool;
 	}
-	
+
 	public override void Create(RectTransform _Container)
 	{
 		if (m_Item == null)
