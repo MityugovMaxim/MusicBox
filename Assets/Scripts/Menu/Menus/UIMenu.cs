@@ -28,16 +28,16 @@ public class UIMenu : UIGroup
 	{
 		base.OnShowFinished();
 		
-		InputHandler.RegisterParameters(OnParameters);
-		InputHandler.RegisterEscape(OnEscape);
+		NativeHandler.RegisterParameters(OnParameters);
+		NativeHandler.RegisterEscape(OnEscape);
 	}
 
 	protected override void OnHideStarted()
 	{
 		base.OnHideStarted();
 		
-		InputHandler.UnregisterParameters(OnParameters);
-		InputHandler.UnregisterEscape(OnEscape);
+		NativeHandler.UnregisterParameters(OnParameters);
+		NativeHandler.UnregisterEscape(OnEscape);
 	}
 
 	protected virtual bool OnParameters() => false;

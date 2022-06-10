@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
-public class InputHandler : MonoBehaviour
+public class NativeHandler : MonoBehaviour
 {
 	static readonly List<Func<bool>> m_Parameters = new List<Func<bool>>();
 	static readonly List<Func<bool>> m_Escape     = new List<Func<bool>>();
+
+	[Inject] AudioManager m_AudioManager;
 
 	public static void RegisterParameters(Func<bool> _Action)
 	{
@@ -34,6 +37,12 @@ public class InputHandler : MonoBehaviour
 		
 		if (Input.GetKeyDown(KeyCode.Escape))
 			InvokeAction(m_Escape);
+	}
+
+	void OnApplicationFocus(bool _Focus)
+	{
+		if (_Focus)
+			m_AudioManager.SetAudioActive(true);
 	}
 
 	static void InvokeAction(IReadOnlyList<Func<bool>> _Actions)
