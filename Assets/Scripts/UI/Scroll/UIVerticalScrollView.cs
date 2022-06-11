@@ -87,7 +87,11 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void IEndDragHandler.OnEndDrag(PointerEventData _EventData)
 	{
-		float delta = _EventData.delta.y;
+		RectTransformUtility.ScreenPointToLocalPointInRectangle(m_Viewport, _EventData.position, _EventData.pressEventCamera, out Vector2 pointer);
+		
+		float delta = pointer.y - m_Position.y;
+		
+		m_Position = pointer;
 		
 		if (Mathf.Abs(m_Delta) < Mathf.Abs(delta))
 			m_Delta = delta;
