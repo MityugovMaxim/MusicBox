@@ -87,6 +87,11 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void IEndDragHandler.OnEndDrag(PointerEventData _EventData)
 	{
+		float delta = _EventData.delta.y;
+		
+		if (Mathf.Abs(m_Delta) < Mathf.Abs(delta))
+			m_Delta = delta;
+		
 		m_Pressed = false;
 		
 		Swipe(m_Delta);
