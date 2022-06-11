@@ -1,7 +1,7 @@
 using UnityEngine;
 using Zenject;
 
-public class UISongQRCode : UIEntity
+public class UISongQRCode : UIGroup
 {
 	[SerializeField] UISongImage m_Image;
 	[SerializeField] UIQRCode    m_QRCode;
@@ -18,6 +18,10 @@ public class UISongQRCode : UIEntity
 		
 		string songHash = m_SongsProcessor.GetSongHash(m_SongID);
 		
-		m_QRCode.Message = $"audiobox://{songHash}";
+		string url = $"audiobox://{songHash}";
+		
+		GUIUtility.systemCopyBuffer = url;
+		
+		m_QRCode.Message = url;
 	}
 }

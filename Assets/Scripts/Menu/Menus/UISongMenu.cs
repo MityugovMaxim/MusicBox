@@ -18,6 +18,7 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UIGroup          m_UnlockGroup;
 	[SerializeField] UIGroup          m_LoaderGroup;
 	[SerializeField] UIGroup          m_CompleteGroup;
+	[SerializeField] UISongQRCode     m_QR;
 	[SerializeField] UISongDownload   m_Download;
 
 	[SerializeField, Sound] string m_UnlockSound;
@@ -149,6 +150,19 @@ public class UISongMenu : UISlideMenu
 		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
 	}
 
+	public void ToggleQR()
+	{
+		if (m_QR.Shown)
+		{
+			m_QR.Hide();
+		}
+		else
+		{
+			m_QR.Setup(m_SongID);
+			m_QR.Show();
+		}
+	}
+
 	void RegisterScoreDataUpdate()
 	{
 		Select(m_SongID);
@@ -215,6 +229,8 @@ public class UISongMenu : UISlideMenu
 		m_Play.Setup(m_SongID);
 		m_Price.Setup(m_SongID);
 		m_Download.Setup(m_SongID);
+		
+		m_QR.Hide(true);
 		
 		if (m_SongsManager.IsSongLockedByCoins(m_SongID))
 		{

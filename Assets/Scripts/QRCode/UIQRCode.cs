@@ -381,7 +381,7 @@ public partial class UIQRCode : MaskableGraphic
 		
 		int contentSize = Mathf.Min(m_ContentSize, maxContentSize) / 2 * 2 + 1;
 		
-		if (contentSize <= 0)
+		if (contentSize <= 0 || Mathf.Approximately(step, 0) || float.IsNaN(step) || float.IsInfinity(step))
 			return;
 		
 		m_Content.sizeDelta        = size * contentSize;

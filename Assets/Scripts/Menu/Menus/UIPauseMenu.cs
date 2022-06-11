@@ -5,8 +5,9 @@ using Zenject;
 [Menu(MenuType.PauseMenu)]
 public class UIPauseMenu : UIMenu
 {
-	[SerializeField] UISongImage m_Image;
-	[SerializeField] UISongLabel m_Label;
+	[SerializeField] UISongImage  m_Image;
+	[SerializeField] UISongLabel  m_Label;
+	[SerializeField] UISongQRCode m_QR;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
@@ -83,10 +84,25 @@ public class UIPauseMenu : UIMenu
 		await m_MenuProcessor.Show(MenuType.LatencyMenu);
 	}
 
+	public void ToggleQR()
+	{
+		if (m_QR.Shown)
+		{
+			m_QR.Hide();
+		}
+		else
+		{
+			m_QR.Setup(m_SongID);
+			m_QR.Show();
+		}
+	}
+
 	protected override void OnShowStarted()
 	{
 		m_Image.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
+		
+		m_QR.Hide(true);
 	}
 
 	protected override bool OnEscape()
