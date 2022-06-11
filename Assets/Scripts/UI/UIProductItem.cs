@@ -83,8 +83,7 @@ public class UIProductItem : UIOverlayButton
 		}
 		
 		#if UNITY_EDITOR
-		success = true;
-		//await Task.Delay(1500);
+		await Task.Delay(1500);
 		#endif
 		
 		if (success)
