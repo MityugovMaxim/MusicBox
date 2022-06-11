@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using UnityEngine;
@@ -12,6 +13,8 @@ public class SoundProcessor
 	readonly Dictionary<string, AudioClip>   m_SoundCache;
 	readonly Dictionary<string, SoundSource> m_SoundSources;
 	readonly Dictionary<string, SoundSource> m_PersistentSources;
+
+	readonly Dictionary<string, CancellationTokenSource> m_TokenSources = new Dictionary<string, CancellationTokenSource>();
 
 	[Inject]
 	public SoundProcessor(SoundSource.Pool _SourcePool, SoundInfo[] _SoundInfos)
@@ -84,6 +87,13 @@ public class SoundProcessor
 		
 		if (persistent)
 		{
+			if (m_TokenSources.TryGetValue(_SoundID, out CancellationTokenSource tokenSource))
+			{
+				tokenSource?.Cancel();
+				tokenSource?.Dispose();
+				m_TokenSources.Remove(_SoundID);
+			}
+			
 			if (!m_PersistentSources.TryGetValue(_SoundID, out SoundSource source) || source == null)
 			{
 				source = m_SourcePool.Spawn();
@@ -91,7 +101,24 @@ public class SoundProcessor
 				m_PersistentSources[_SoundID] = source;
 			}
 			
+			tokenSource = new CancellationTokenSource();
+			
+			CancellationToken token = tokenSource.Token;
+			
+			m_TokenSources[_SoundID] = tokenSource;
+			
 			await source.Play(sound, pitch, volume);
+			
+			if (token.IsCancellationRequested)
+				return;
+			
+			m_PersistentSources.Remove(_SoundID);
+			
+			m_SourcePool.Despawn(source);
+			
+			m_TokenSources.Remove(_SoundID);
+			
+			tokenSource.Dispose();
 		}
 		else
 		{

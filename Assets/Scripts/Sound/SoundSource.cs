@@ -7,7 +7,15 @@ using Zenject;
 public class SoundSource : UIEntity
 {
 	[Preserve]
-	public class Pool : MonoMemoryPool<SoundSource> { }
+	public class Pool : MonoMemoryPool<SoundSource>
+	{
+		protected override void OnDespawned(SoundSource _Item)
+		{
+			base.OnDespawned(_Item);
+			
+			_Item.Restore();
+		}
+	}
 
 	[SerializeField] AudioSource m_AudioSource;
 
@@ -32,9 +40,9 @@ public class SoundSource : UIEntity
 		
 		CancellationToken token = m_TokenSource.Token;
 		
+		m_AudioSource.PlayOneShot(_Sound);
 		m_AudioSource.pitch  = _Pitch;
 		m_AudioSource.volume = _Volume;
-		m_AudioSource.PlayOneShot(_Sound);
 		
 		try
 		{
@@ -74,5 +82,13 @@ public class SoundSource : UIEntity
 		m_AudioSource.Stop();
 		m_AudioSource.loop = false;
 		m_AudioSource.clip = null;
+	}
+
+	void Restore()
+	{
+		m_AudioSource.clip   = null;
+		m_AudioSource.loop   = false;
+		m_AudioSource.volume = 1;
+		m_AudioSource.pitch  = 1;
 	}
 }
