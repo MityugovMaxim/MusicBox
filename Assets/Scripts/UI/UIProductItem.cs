@@ -10,7 +10,7 @@ public class UIProductItem : UIOverlayButton
 	[Preserve]
 	public class Pool : UIEntityPool<UIProductItem> { }
 
-	static bool Processing { get; set; }
+	public static bool Processing { get; private set; }
 
 	[SerializeField] UIProductImage    m_Image;
 	[SerializeField] UIProductDiscount m_Discount;
@@ -83,7 +83,8 @@ public class UIProductItem : UIOverlayButton
 		}
 		
 		#if UNITY_EDITOR
-		await Task.Delay(1500);
+		success = true;
+		//await Task.Delay(1500);
 		#endif
 		
 		if (success)

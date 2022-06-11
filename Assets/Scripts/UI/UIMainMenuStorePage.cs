@@ -32,8 +32,10 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
-	void Refresh()
+	async void Refresh()
 	{
+		await UnityTask.While(() => UIProductItem.Processing);
+		
 		m_Content.Clear();
 		
 		CreateSpecial();

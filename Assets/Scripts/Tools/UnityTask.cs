@@ -199,6 +199,9 @@ public class UnityTask : MonoBehaviour
 
 	public static Task While(Func<bool> _Condition, CancellationToken _Token = default)
 	{
+		if (_Condition == null || !_Condition.Invoke())
+			return Task.CompletedTask;
+		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		if (_Token.IsCancellationRequested)
