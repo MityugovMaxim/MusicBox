@@ -250,7 +250,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 
 	Task HideStats()
 	{
-		return m_StatsGroup.HideAsync();
+		return Task.Delay(1500).ContinueWith(_Task => m_StatsGroup.HideAsync());
 	}
 
 	Task ShowControl()
