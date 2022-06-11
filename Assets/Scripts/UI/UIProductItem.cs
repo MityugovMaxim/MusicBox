@@ -95,7 +95,10 @@ public class UIProductItem : UIOverlayButton
 			
 			await m_CompleteGroup.ShowAsync();
 			
-			await m_ProfileProcessor.Load();
+			await Task.WhenAll(
+				m_ProfileProcessor.Load(),
+				Task.Delay(1500)
+			);
 			
 			await Task.WhenAll(
 				m_OverlayGroup.HideAsync(),
