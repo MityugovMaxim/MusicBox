@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -283,16 +284,33 @@ public class SongsProcessor
 		return snapshot?.Badge ?? SongBadge.None;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[SongsProcessor] Updating songs data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating songs data...");
 		
 		await Fetch();
 		
-		Debug.Log("[SongsProcessor] Update songs data complete.");
+		Log.Info(this, "Update songs data complete.");
 		
 		m_SignalBus.Fire<SongsDataUpdateSignal>();
 	}
@@ -305,7 +323,7 @@ public class SongsProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[SongsProcessor] Fetch songs failed.");
+			Log.Error(this, "Fetch songs failed.");
 			return;
 		}
 		
@@ -319,14 +337,14 @@ public class SongsProcessor
 		
 		if (string.IsNullOrEmpty(_SongID))
 		{
-			Debug.LogError("[SongsProcessor] Get snapshot failed. Song ID is null or empty.");
+			Log.Error(this, "Get snapshot failed. Song ID is null or empty.");
 			return null;
 		}
 		
 		SongSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _SongID);
 		
 		if (snapshot == null)
-			Debug.LogErrorFormat("[SongsProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _SongID);
+			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _SongID);
 		
 		return snapshot;
 	}

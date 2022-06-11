@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using Zenject;
@@ -31,12 +32,12 @@ public class AmbientProcessor : MonoBehaviour
 
 	bool Loaded { get; set; }
 
-	readonly List<AmbientSnapshot> m_AmbientSnapshots = new List<AmbientSnapshot>();
+	readonly List<AmbientSnapshot> m_Snapshots = new List<AmbientSnapshot>();
 
 	SignalBus        m_SignalBus;
 	StorageProcessor m_StorageProcessor;
 
-	DatabaseReference m_AmbientData;
+	DatabaseReference m_Data;
 
 	string                  m_AmbientID;
 	bool                    m_Processing;
@@ -58,10 +59,10 @@ public class AmbientProcessor : MonoBehaviour
 
 	public async Task Load()
 	{
-		if (m_AmbientData == null)
+		if (m_Data == null)
 		{
-			m_AmbientData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ambient");
-			m_AmbientData.ValueChanged += OnAmbientUpdate;
+			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ambient");
+			m_Data.ValueChanged += OnUpdate;
 		}
 		
 		await FetchAmbient();
@@ -73,7 +74,7 @@ public class AmbientProcessor : MonoBehaviour
 
 	public List<string> GetAmbientIDs()
 	{
-		return m_AmbientSnapshots
+		return m_Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
@@ -81,15 +82,9 @@ public class AmbientProcessor : MonoBehaviour
 
 	public float GetVolume(string _AmbientID)
 	{
-		AmbientSnapshot ambientSnapshot = GetAmbientSnapshot(_AmbientID);
+		AmbientSnapshot snapshot = GetSnapshot(_AmbientID);
 		
-		if (ambientSnapshot == null)
-		{
-			Debug.LogErrorFormat("[AmbientProcessor] Get volume failed. Ambient with ID '{0}' is null.", _AmbientID);
-			return 0;
-		}
-		
-		return ambientSnapshot.Volume;
+		return snapshot?.Volume ?? 0;
 	}
 
 	public async void Pause()
@@ -226,68 +221,85 @@ public class AmbientProcessor : MonoBehaviour
 		if (m_AudioSource == null || m_AudioSource.isPlaying || m_Paused)
 			return;
 		
-		while (m_AmbientSnapshots != null && m_AmbientSnapshots.Count > 0)
+		while (m_Snapshots != null && m_Snapshots.Count > 0)
 		{
 			string ambientID = GetAmbientID(m_AmbientID, 1);
 			
-			AmbientSnapshot ambientSnapshot = GetAmbientSnapshot(ambientID);
+			AmbientSnapshot snapshot = GetSnapshot(ambientID);
 			
-			if (ambientSnapshot == null)
+			if (snapshot == null)
 			{
 				await Task.Delay(250);
 				continue;
 			}
 			
-			await PlayAsync(ambientSnapshot.ID);
+			await PlayAsync(snapshot.ID);
 			
 			await UnityTask.While(() => m_AudioSource.isPlaying || m_Paused);
 		}
 	}
 
-	async void OnAmbientUpdate(object _Sender, EventArgs _Args)
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
+	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[MusicProcessor] Updating ambient data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating ambient data...");
 		
 		await FetchAmbient();
 		
-		Debug.Log("[MusicProcessor] Update ambient data complete.");
+		Log.Info(this, "Update ambient data complete.");
 		
 		ProcessAmbient();
 	}
 
 	async Task FetchAmbient()
 	{
-		m_AmbientSnapshots.Clear();
+		m_Snapshots.Clear();
 		
-		DataSnapshot dataSnapshot = await m_AmbientData.GetValueAsync();
+		DataSnapshot dataSnapshot = await m_Data.GetValueAsync();
 		
 		foreach (DataSnapshot ambientSnapshot in dataSnapshot.Children)
 		{
 			AmbientSnapshot ambient = new AmbientSnapshot(ambientSnapshot);
 			if (ambient.Active)
-				m_AmbientSnapshots.Add(ambient);
+				m_Snapshots.Add(ambient);
 		}
 		
-		for (int i = 0; i < m_AmbientSnapshots.Count; i++)
+		for (int i = 0; i < m_Snapshots.Count; i++)
 		{
-			int j = Random.Range(i, m_AmbientSnapshots.Count);
+			int j = Random.Range(i, m_Snapshots.Count);
 			
-			(m_AmbientSnapshots[i], m_AmbientSnapshots[j]) = (m_AmbientSnapshots[j], m_AmbientSnapshots[i]);
+			(m_Snapshots[i], m_Snapshots[j]) = (m_Snapshots[j], m_Snapshots[i]);
 		}
 	}
 
-	AmbientSnapshot GetAmbientSnapshot(string _AmbientID)
+	AmbientSnapshot GetSnapshot(string _AmbientID)
 	{
 		if (string.IsNullOrEmpty(_AmbientID))
 		{
-			Debug.LogError("[AmbientProcessor] Get ambient snapshot failed. Ambient ID is null or empty.");
+			Log.Error(this, "Get ambient snapshot failed. Ambient ID is null or empty.");
 			return null;
 		}
 		
-		return m_AmbientSnapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AmbientID);
+		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AmbientID);
 	}
 
 	string GetAmbientID(string _AmbientID, int _Offset)

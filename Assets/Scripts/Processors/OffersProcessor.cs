@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -100,11 +101,22 @@ public class OffersProcessor
 		
 		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[OfferProcessor] Get rewarded count failed. Snapshot with ID '{0}' is null.", _OfferID);
+			Log.Error(this, "Get rewarded count failed. Snapshot with ID '{0}' is null.", _OfferID);
 			return 0;
 		}
 		
 		return snapshot.AdsCount;
+	}
+
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
 	}
 
 	async void OnUpdate(object _Sender, EventArgs _Args)
@@ -112,11 +124,17 @@ public class OffersProcessor
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[OfferProcessor] Updating offers data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating offers data...");
 		
 		await Fetch();
 		
-		Debug.Log("[OfferProcessor] Update offers data complete.");
+		Log.Info(this, "Update offers data complete.");
 		
 		m_SignalBus.Fire<OffersDataUpdateSignal>();
 	}
@@ -129,7 +147,7 @@ public class OffersProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[OffersProcessor] Fetch offers failed.");
+			Log.Error(this, "Fetch offers failed.");
 			return;
 		}
 		
@@ -143,14 +161,14 @@ public class OffersProcessor
 		
 		if (string.IsNullOrEmpty(_OfferID))
 		{
-			Debug.LogError("[OfferProcessor] Get snapshot failed. Offer ID is null or empty.");
+			Log.Error(this, "Get snapshot failed. Offer ID is null or empty.");
 			return null;
 		}
 		
 		OfferSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _OfferID);
 		
 		if (snapshot == null)
-			Debug.LogErrorFormat("[OffersProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _OfferID);
+			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _OfferID);
 		
 		return snapshot;
 	}

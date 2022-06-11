@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -69,16 +71,33 @@ public class RevivesProcessor
 		return snapshot?.Coins ?? 0;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, ValueChangedEventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[RevivesProcessor] Updating revives data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating revives data...");
 		
 		await Fetch();
 		
-		Debug.Log("[RevivesProcessor] Update revives data complete.");
+		Log.Info(this, "Update revives data complete.");
 		
 		m_SignalBus.Fire<RevivesDataUpdateSignal>();
 	}
@@ -91,7 +110,7 @@ public class RevivesProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[RevivesProcessor] Fetch revives failed.");
+			Log.Error(this, "Fetch revives failed.");
 			return;
 		}
 		

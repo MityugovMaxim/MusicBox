@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -155,34 +156,50 @@ public class ProgressProcessor
 			.Max();
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[ProgressProcessor] Updating progress data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating progress data...");
 		
 		await Fetch();
 		
-		Debug.Log("[ProgressProcessor] Update progress data complete.");
+		Log.Info(this, "Update progress data complete.");
+		
+		m_SignalBus.Fire<ProgressDataUpdateSignal>();
 	}
 
 	async Task Fetch()
 	{
 		m_Snapshots.Clear();
 		
-		DataSnapshot progressSnapshots = await m_Data.GetValueAsync(15000, 2);
+		DataSnapshot dataSnapshot = await m_Data.GetValueAsync(15000, 2);
 		
-		if (progressSnapshots == null)
+		if (dataSnapshot == null)
 		{
-			Debug.LogError("[ProgressProcessor] Fetch progress failed.");
+			Log.Error(this, "Fetch progress failed.");
 			return;
 		}
 		
-		foreach (DataSnapshot progressSnapshot in progressSnapshots.Children)
-			m_Snapshots.Add(new ProgressSnapshot(progressSnapshot));
-		
-		m_SignalBus.Fire<ProgressDataUpdateSignal>();
+		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new ProgressSnapshot(_Data)));
 	}
 
 	ProgressSnapshot GetSnapshot(int _Level)

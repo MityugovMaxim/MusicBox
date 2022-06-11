@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -79,7 +80,7 @@ public class BannersProcessor : IInitializable, IDisposable
 		
 		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[BannersProcessor] Get URL failed. Snapshot with ID '{0}' is null.", _BannerID);
+			Log.Error(this, "Get URL failed. Snapshot with ID '{0}' is null.", _BannerID);
 			return string.Empty;
 		}
 		
@@ -92,7 +93,7 @@ public class BannersProcessor : IInitializable, IDisposable
 		
 		if (snapshot == null)
 		{
-			Debug.LogErrorFormat("[BannersProcessor] Check permanent failed. Snapshot with ID '{0}' is null.", _BannerID);
+			Log.Error(this, "Check permanent failed. Snapshot with ID '{0}' is null.", _BannerID);
 			return false;
 		}
 		
@@ -113,16 +114,33 @@ public class BannersProcessor : IInitializable, IDisposable
 		m_SignalBus.Fire<BannersDataUpdateSignal>();
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[BannersProcessor] Updating banners data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating banners data...");
 		
 		await Fetch();
 		
-		Debug.Log("[BannersProcessor] Update banners data complete.");
+		Log.Info(this, "Update banners data complete.");
 		
 		m_SignalBus.Fire<BannersDataUpdateSignal>();
 	}
@@ -135,7 +153,7 @@ public class BannersProcessor : IInitializable, IDisposable
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[BannersProcessor] Fetch banners failed.");
+			Log.Error(this, "Fetch banners failed.");
 			return;
 		}
 		
@@ -146,7 +164,7 @@ public class BannersProcessor : IInitializable, IDisposable
 	{
 		if (string.IsNullOrEmpty(_BannerID))
 		{
-			Debug.LogError("[BannersProcessor] Get banner snapshot failed. Banner ID is null or empty.");
+			Log.Error(this, "Get banner snapshot failed. Banner ID is null or empty.");
 			return null;
 		}
 		

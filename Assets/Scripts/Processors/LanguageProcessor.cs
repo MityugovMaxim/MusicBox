@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -99,12 +101,29 @@ public class LanguageProcessor
 		return true;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[LanguageProcessor] Updating languages data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating languages data...");
 		
 		await Fetch();
 		
@@ -112,7 +131,7 @@ public class LanguageProcessor
 		
 		await Select(language);
 		
-		Debug.Log("[LanguageProcessor] Update languages data complete.");
+		Log.Info(this, "Update languages data complete.");
 		
 		m_SignalBus.Fire<LanguageDataUpdateSignal>();
 		
@@ -127,7 +146,7 @@ public class LanguageProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[LanguageProcessor] Fetch languages failed.");
+			Log.Info(this, "Fetch languages failed.");
 			return;
 		}
 		
@@ -152,7 +171,7 @@ public class LanguageProcessor
 		if (supported != null)
 			return supported.ID;
 		
-		Debug.LogError("[LanguageProcessor] Determine language failed.");
+		Log.Error(this, "Determine language failed.");
 		
 		return null;
 	}
@@ -164,14 +183,14 @@ public class LanguageProcessor
 		
 		if (string.IsNullOrEmpty(_Language))
 		{
-			Debug.LogError("[LanguagesProcessor] Get snapshot failed. Language is null or empty.");
+			Log.Error(this, "Get snapshot failed. Language is null or empty.");
 			return null;
 		}
 		
 		LanguageSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _Language);
 		
 		if (snapshot == null)
-			Debug.LogErrorFormat("[LanguagesProcessor] Get snapshot failed. Snapshot with language '{0}' is null.", _Language);
+			Log.Error(this, "Get snapshot failed. Snapshot with language '{0}' is null.", _Language);
 		
 		return snapshot;
 	}

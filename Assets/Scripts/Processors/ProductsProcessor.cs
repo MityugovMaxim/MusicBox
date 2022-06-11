@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
 using Zenject;
@@ -171,16 +172,33 @@ public class ProductsProcessor
 		return snapshot?.ID;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[ProductsProcessor] Updating products data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating products data...");
 		
 		await Fetch();
 		
-		Debug.Log("[ProductsProcessor] Update products data complete.");
+		Log.Info(this, "Update products data complete.");
 		
 		m_SignalBus.Fire<ProductsDataUpdateSignal>();
 	}
@@ -193,7 +211,7 @@ public class ProductsProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[ProductsProcessor] Fetch products failed.");
+			Log.Error(this, "Fetch products failed.");
 			return;
 		}
 		
@@ -207,7 +225,7 @@ public class ProductsProcessor
 		
 		if (string.IsNullOrEmpty(_ProductID))
 		{
-			Debug.LogError("[ProductsProcessor] Get product snapshot failed. Product ID is null or empty.");
+			Log.Error(this, "Get product snapshot failed. Product ID is null or empty.");
 			return null;
 		}
 		

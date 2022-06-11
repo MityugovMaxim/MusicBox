@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -97,16 +98,33 @@ public class ScoresProcessor
 		return snapshot?.Rating ?? 0;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded || m_Data.Key != m_SocialProcessor.UserID)
 			return;
 		
-		Debug.Log("[ScoreProcessor] Updating scores data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating scores data...");
 		
 		await Fetch();
 		
-		Debug.Log("[ScoreProcessor] Update scores data complete.");
+		Log.Info(this, "Update scores data complete.");
 		
 		m_SignalBus.Fire<ScoresDataUpdateSignal>();
 	}
@@ -119,7 +137,7 @@ public class ScoresProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[ScoreProcessor] Fetch scores failed.");
+			Log.Error(this, "Fetch scores failed.");
 			return;
 		}
 		
@@ -133,7 +151,7 @@ public class ScoresProcessor
 		
 		if (string.IsNullOrEmpty(_SongID))
 		{
-			Debug.LogError("[ScoreProcessor] Get score snapshot failed. Song ID is null or empty.");
+			Log.Error(this, "Get score snapshot failed. Song ID is null or empty.");
 			return null;
 		}
 		

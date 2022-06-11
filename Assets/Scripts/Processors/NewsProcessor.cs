@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -94,16 +95,33 @@ public class NewsProcessor
 		return snapshot?.URL ?? string.Empty;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
 		
-		Debug.Log("[NewsProcessor] Updating news data...");
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
+		
+		Log.Info(this, "Updating news data...");
 		
 		await Fetch();
 		
-		Debug.Log("[NewsProcessor] Update news data complete.");
+		Log.Info(this, "Update news data complete.");
 		
 		m_SignalBus.Fire<NewsDataUpdateSignal>();
 	}
@@ -116,7 +134,7 @@ public class NewsProcessor
 		
 		if (dataSnapshot == null)
 		{
-			Debug.LogError("[NewsProcessor] Fetch news failed.");
+			Log.Error(this, "Fetch news failed.");
 			return;
 		}
 		
@@ -130,14 +148,14 @@ public class NewsProcessor
 		
 		if (string.IsNullOrEmpty(_NewsID))
 		{
-			Debug.LogError("[NewsProcessor] Get snapshot failed. News ID is null or empty.");
+			Log.Error(this, "Get snapshot failed. News ID is null or empty.");
 			return null;
 		}
 		
 		NewsSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _NewsID);
 		
 		if (snapshot == null)
-			Debug.LogErrorFormat("[NewsProcessor] Get snapshot failed. Snapshot with ID '{0}' is null.", _NewsID);
+			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _NewsID);
 		
 		return snapshot;
 	}

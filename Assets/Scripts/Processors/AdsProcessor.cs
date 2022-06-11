@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Advertisements;
@@ -335,10 +336,27 @@ public class AdsProcessor
 		return false;
 	}
 
+	void Unload()
+	{
+		if (m_Data != null)
+		{
+			m_Data.ValueChanged -= OnUpdate;
+			m_Data              =  null;
+		}
+		
+		Loaded = false;
+	}
+
 	async void OnUpdate(object _Sender, EventArgs _Args)
 	{
 		if (!Loaded)
 			return;
+		
+		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+		{
+			Unload();
+			return;
+		}
 		
 		Log.Info(this, "Updating ads data...");
 		
