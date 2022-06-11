@@ -87,6 +87,10 @@ public partial class UIQRCode : MaskableGraphic
 			GenerateMatrix();
 			
 			SetVerticesDirty();
+			
+			RepositionAnchors();
+			
+			RepositionContent();
 		}
 	}
 
@@ -240,7 +244,7 @@ public partial class UIQRCode : MaskableGraphic
 		
 		List<BitArray> matrix = QRCodeGenerator.Generate(
 			Message,
-			m_Content != null && m_Content.gameObject.activeSelf
+			m_Content != null
 				? QRCodeGenerator.ErrorCorrection.H
 				: quality
 		);
@@ -254,15 +258,15 @@ public partial class UIQRCode : MaskableGraphic
 		int size = m_Matrix.Count;
 		
 		RectInt anchorBL = new RectInt(0, 0, 7, 7);
-		if (m_AnchorBL != null && m_AnchorBL.gameObject.activeSelf && anchorBL.Contains(_Point))
+		if (m_AnchorBL != null && anchorBL.Contains(_Point))
 			return true;
 		
 		RectInt anchorTL = new RectInt(0, size - 7, 7, 7);
-		if (m_AnchorTL != null && m_AnchorTL.gameObject.activeSelf && anchorTL.Contains(_Point))
+		if (m_AnchorTL != null && anchorTL.Contains(_Point))
 			return true;
 		
 		RectInt anchorTR = new RectInt(size - 7, size - 7, 7, 7);
-		if (m_AnchorTR != null && m_AnchorTR.gameObject.activeSelf && anchorTR.Contains(_Point))
+		if (m_AnchorTR != null && anchorTR.Contains(_Point))
 			return true;
 		
 		return false;
@@ -270,7 +274,7 @@ public partial class UIQRCode : MaskableGraphic
 
 	bool FilterContent(Vector2Int _Point)
 	{
-		if (!m_RemovePointsBehindContent || m_Content == null || !m_Content.gameObject.activeSelf)
+		if (!m_RemovePointsBehindContent || m_Content == null)
 			return false;
 		
 		int maxContentSize = (int)(m_Matrix.Count * 0.3f);
@@ -289,13 +293,7 @@ public partial class UIQRCode : MaskableGraphic
 
 	void RepositionAnchors()
 	{
-		bool active = m_Matrix != null && m_Matrix.Count > 0;
-		
-		m_AnchorBL.enabled = active;
-		m_AnchorTL.enabled = active;
-		m_AnchorTR.enabled = active;
-		
-		if (!active)
+		if (m_Matrix == null || m_Matrix.Count == 0)
 			return;
 		
 		const float aspect = 1;
@@ -356,7 +354,10 @@ public partial class UIQRCode : MaskableGraphic
 
 	void RepositionContent()
 	{
-		if (m_Content == null || !m_Content.gameObject.activeSelf)
+		if (m_Matrix == null || m_Matrix.Count == 0)
+			return;
+		
+		if (m_Content == null)
 			return;
 		
 		const float aspect = 1;
