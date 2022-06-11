@@ -16,6 +16,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	[SerializeField] UISongMode      m_Mode;
 	[SerializeField] SongPreview     m_Preview;
 	[SerializeField] UISongPlatforms m_Platforms;
+	[SerializeField] UISongQRCode    m_QR;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
@@ -125,6 +126,19 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 	}
 
+	public void ToggleQR()
+	{
+		if (m_QR.Shown)
+		{
+			m_QR.Hide();
+		}
+		else
+		{
+			m_QR.Setup(m_SongID);
+			m_QR.Show();
+		}
+	}
+
 	string GetNextSongID()
 	{
 		string songID = m_SongsManager
@@ -139,6 +153,11 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		return m_SongsManager
 			.GetCoinsSongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
+	}
+
+	protected override void OnShowStarted()
+	{
+		m_QR.Hide(true);
 	}
 
 	protected override void OnShowFinished()
