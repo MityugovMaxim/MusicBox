@@ -208,5 +208,5 @@ public class Atlas
 		return false;
 	}
 
-	bool Contains(string _ID) => m_Entries.ContainsKey(_ID);
+	bool Contains(string _ID) => _ID != null && m_Entries.ContainsKey(_ID);
 }
