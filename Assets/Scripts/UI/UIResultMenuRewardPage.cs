@@ -284,7 +284,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 			},
 			_Token
 		).ContinueWithOnMainThread(
-			_Task => UnityTask.Delay(250, _Token),
+			_Task => UnityTask.Delay(500, _Token),
 			_Token
 		);
 	}
