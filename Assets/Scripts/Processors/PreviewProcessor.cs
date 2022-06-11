@@ -13,6 +13,7 @@ public class PreviewProcessor : MonoBehaviour
 	[Inject] StorageProcessor m_StorageProcessor;
 
 	AudioSource m_AudioSource;
+	string      m_SongID;
 
 	CancellationTokenSource m_TokenSource;
 
@@ -26,21 +27,36 @@ public class PreviewProcessor : MonoBehaviour
 
 	public async void Play(string _SongID)
 	{
-		await PlayAsync(_SongID);
+		if (m_SongID == _SongID)
+			return;
+		
+		m_SongID = _SongID;
+		
+		await PlayAsync();
 	}
 
 	public async void Stop()
 	{
+		m_SongID = null;
+		
 		await StopAsync();
 	}
 
-	async Task PlayAsync(string _SongID)
+	void CancelAudio()
 	{
-		string path = !string.IsNullOrEmpty(_SongID) ? $"Previews/{_SongID}.ogg" : string.Empty;
-		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	async Task PlayAsync()
+	{
+		CancelAudio();
+		
+		if (string.IsNullOrEmpty(m_SongID))
+			return;
+		
+		string path = $"Previews/{m_SongID}.ogg";
 		
 		m_TokenSource = new CancellationTokenSource();
 		
@@ -85,9 +101,7 @@ public class PreviewProcessor : MonoBehaviour
 
 	async Task StopAsync()
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		CancelAudio();
 		
 		m_TokenSource = new CancellationTokenSource();
 		
