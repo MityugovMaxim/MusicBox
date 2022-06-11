@@ -2,11 +2,10 @@ using System;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIProductItem : UIEntity, IPointerClickHandler
+public class UIProductItem : UIOverlayButton
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UIProductItem> { }
@@ -45,6 +44,13 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 		m_OverlayGroup.Hide(true);
 		m_LoaderGroup.Hide(true);
 		m_CompleteGroup.Hide(true);
+	}
+
+	protected override void OnClick()
+	{
+		base.OnClick();
+		
+		Purchase();
 	}
 
 	async void Purchase()
@@ -119,10 +125,5 @@ public class UIProductItem : UIEntity, IPointerClickHandler
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		
 		Processing = false;
-	}
-
-	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
-	{
-		Purchase();
 	}
 }

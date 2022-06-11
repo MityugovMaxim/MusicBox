@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 using UnityEngine.UI;
 using Zenject;
 
-public class UISongElement : UIEntity, IPointerClickHandler
+public class UISongElement : UIOverlayButton
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UISongElement> { }
@@ -59,9 +59,11 @@ public class UISongElement : UIEntity, IPointerClickHandler
 		songMenu.Play();
 	}
 
-	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
+	protected override void OnClick()
 	{
-		m_StatisticProcessor.LogMainMenuSongsPageItemClick(m_SongID);
+		base.OnClick();
+		
+		m_StatisticProcessor.LogSongItemClick(m_SongID);
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		

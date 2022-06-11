@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UISongItem : UIEntity, IPointerClickHandler
+public class UISongItem : UIOverlayButton
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UISongItem> { }
@@ -28,9 +28,11 @@ public class UISongItem : UIEntity, IPointerClickHandler
 		m_Badge.Setup(m_SongID);
 	}
 
-	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
+	protected override void OnClick()
 	{
-		m_StatisticProcessor.LogMainMenuSongsPageItemClick(m_SongID);
+		base.OnClick();
+		
+		m_StatisticProcessor.LogSongItemClick(m_SongID);
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		

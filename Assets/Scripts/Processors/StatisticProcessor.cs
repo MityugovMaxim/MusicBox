@@ -191,7 +191,7 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogMainMenuSongsPageItemClick(string _SongID)
+	public void LogSongItemClick(string _SongID)
 	{
 		LogEvent(
 			"main_menu_songs_page_item_click",

@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIProductSpecial : UIEntity, IPointerClickHandler
+public class UIProductSpecial : UIOverlayButton
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UIProductSpecial> { }
@@ -25,8 +25,10 @@ public class UIProductSpecial : UIEntity, IPointerClickHandler
 		m_Price.Setup(m_ProductID);
 	}
 
-	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
+	protected override void OnClick()
 	{
+		base.OnClick();
+		
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		
 		if (productMenu == null)

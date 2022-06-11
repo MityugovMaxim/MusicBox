@@ -509,8 +509,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Interactable: 0
-  m_ShowDuration: 0.2
-  m_HideDuration: 0.2
+  m_ShowDuration: 0.1
+  m_HideDuration: 0.1
 --- !u!225 &7254797829814224674
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -803,7 +803,7 @@ GameObject:
   - component: {fileID: 4991113025846639828}
   - component: {fileID: 3052679586931520682}
   m_Layer: 5
-  m_Name: overlay
+  m_Name: shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -950,6 +950,7 @@ GameObject:
   - component: {fileID: 4833331141009717441}
   - component: {fileID: 2045333908356413831}
   - component: {fileID: 6492541004488775300}
+  - component: {fileID: 8817277324243493283}
   m_Layer: 5
   m_Name: product_item
   m_TagString: Untagged
@@ -989,6 +990,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d2b6d33a164f29842a1b104c404410, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Overlay: {fileID: 5308460068161159455}
   m_Image: {fileID: 922505746519309081}
   m_Discount: {fileID: 5490773792087029612}
   m_Price: {fileID: 8836412263666855704}
@@ -1016,6 +1018,25 @@ MonoBehaviour:
   m_TouchUpSound: 
   m_TouchClickSound: Up
   m_Button: {fileID: 0}
+--- !u!95 &8817277324243493283
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6541884988283507602}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 3ba4863b4c288419e918689ae11a236e, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &6686201726405218729
 GameObject:
   m_ObjectHideFlags: 0

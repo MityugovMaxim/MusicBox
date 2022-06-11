@@ -55,6 +55,18 @@ public class UIEntity : UIBehaviour
 		RectTransform.sizeDelta = _Rect.size;
 	}
 
+	public Vector2 GetLocalPoint(Vector2 _Position, Camera _Camera)
+	{
+		RectTransformUtility.ScreenPointToLocalPointInRectangle(
+			RectTransform,
+			_Position,
+			_Camera,
+			out Vector2 position
+		);
+		
+		return position;
+	}
+
 	public Vector2 GetLocalPoint(Vector2 _Point)
 	{
 		return RectTransform.InverseTransformPoint(_Point);
