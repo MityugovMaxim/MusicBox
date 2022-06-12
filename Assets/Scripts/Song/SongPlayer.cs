@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -30,8 +31,7 @@ public class SongPlayer : ASFPlayer
 		
 		float position = 1.0f - Ratio;
 		
-		m_Finished   = _Finished;
-		m_Length = Music.length + Duration * position;
+		m_Finished = _Finished;
 		
 		m_InputArea.anchorMin = new Vector2(0, position);
 		m_InputArea.anchorMax = new Vector2(1, position);
@@ -42,6 +42,42 @@ public class SongPlayer : ASFPlayer
 		AddTrack(new ASFColorTrack(m_ColorTrack, m_ColorTrack));
 		
 		Deserialize(_ASF);
+		
+		m_Length = GetLength() + Duration * position;
+	}
+
+	double GetLength()
+	{
+		double time = 0;
+		
+		double tapTime = GetTrack<ASFTapTrack>().Clips
+			.Select(_Clip => _Clip.MaxTime)
+			.DefaultIfEmpty(0)
+			.Max();
+		
+		double doubleTime = GetTrack<ASFTapTrack>().Clips
+			.Select(_Clip => _Clip.MaxTime)
+			.DefaultIfEmpty(0)
+			.Max();
+		
+		double holdTime = GetTrack<ASFHoldTrack>().Clips
+			.Select(_Clip => _Clip.MaxTime)
+			.DefaultIfEmpty(0)
+			.Max();
+		
+		if (tapTime > time)
+			time = tapTime;
+		
+		if (doubleTime > time)
+			time = doubleTime;
+		
+		if (holdTime > time)
+			time = holdTime;
+		
+		if (time > Music.length)
+			time = Music.length;
+		
+		return time > double.Epsilon ? time : Music.length;
 	}
 
 	public override void Play(float _Latency)
