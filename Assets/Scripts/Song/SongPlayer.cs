@@ -43,7 +43,7 @@ public class SongPlayer : ASFPlayer
 		
 		Deserialize(_ASF);
 		
-		m_Length = GetLength() + Duration * position;
+		m_Length = GetLength() + Duration * Ratio;
 	}
 
 	double GetLength()
