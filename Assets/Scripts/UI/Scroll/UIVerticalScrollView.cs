@@ -172,14 +172,14 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void Clamp()
 	{
-		CancelScroll();
-		
 		Vector2 position = m_Content.anchoredPosition;
 		float   min      = MinPosition;
 		float   max      = MaxPosition;
 		
 		if (position.y >= min && position.y <= max)
 			return;
+		
+		CancelScroll();
 		
 		if (position.y < min)
 			position = new Vector2(position.x, min);
