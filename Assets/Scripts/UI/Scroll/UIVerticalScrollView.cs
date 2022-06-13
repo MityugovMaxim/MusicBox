@@ -112,15 +112,6 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		if (m_Pointer != _EventData.pointerId)
 			return;
 		
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(m_Viewport, _EventData.position, _EventData.pressEventCamera, out Vector2 pointer);
-		
-		float delta = pointer.y - m_Position.y;
-		
-		m_Position = pointer;
-		
-		if (Mathf.Abs(m_Delta) < Mathf.Abs(delta))
-			m_Delta = delta;
-		
 		m_Pressed = false;
 		
 		Swipe(m_Delta);
@@ -169,7 +160,7 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		try
 		{
 			await UnityTask.Condition(
-				() => speed >= 0.5f,
+				() => speed >= 1.0f,
 				() =>
 				{
 					speed *= GetOverflow(position);
