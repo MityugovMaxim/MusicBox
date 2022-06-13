@@ -145,8 +145,9 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		float minOverflow = Mathf.Max(0, MinPosition - _Position.y);
 		float maxOverflow = Mathf.Max(0, _Position.y - MaxPosition);
 		
-		float phase  = Mathf.InverseLerp(0, m_Limit, minOverflow + maxOverflow);
-		return Mathf.Lerp(1, 0.1f, phase);
+		float phase = Mathf.InverseLerp(0, m_Limit, minOverflow + maxOverflow);
+		
+		return EaseFunction.EaseOutQuad.Get(1, 0.1f, phase);
 	}
 
 	async void Swipe(float _Speed)
