@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -13,6 +14,7 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 	[SerializeField] float         m_Limit  = 350;
 	[SerializeField] UnityEvent    m_Reposition;
 
+	int     m_Pointer;
 	bool    m_Drag;
 	bool    m_Pressed;
 	float   m_Delta;
@@ -41,8 +43,23 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		m_Reposition = null;
 	}
 
+	void LateUpdate()
+	{
+		if (m_Pressed && Input.touchCount == 0)
+		{
+			m_Pressed = false;
+			
+			Swipe(0);
+		}
+	}
+
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
 	{
+		if (m_Pressed)
+			return;
+		
+		m_Pointer = _EventData.pointerId;
+		
 		m_Pressed = true;
 		
 		CancelScroll();
@@ -50,7 +67,7 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void IPointerExitHandler.OnPointerExit(PointerEventData _EventData)
 	{
-		if (m_Drag || !m_Pressed)
+		if (m_Drag || !m_Pressed || m_Pointer != _EventData.pointerId)
 			return;
 		
 		Swipe(0);
@@ -58,11 +75,17 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void IBeginDragHandler.OnBeginDrag(PointerEventData _EventData)
 	{
+		if (m_Pointer != _EventData.pointerId)
+			return;
+		
 		CancelScroll();
 	}
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
+		if (m_Pointer != _EventData.pointerId)
+			return;
+		
 		RectTransformUtility.ScreenPointToLocalPointInRectangle(m_Viewport, _EventData.position, _EventData.pressEventCamera, out Vector2 pointer);
 		
 		if (!m_Drag)
@@ -87,6 +110,9 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	void IEndDragHandler.OnEndDrag(PointerEventData _EventData)
 	{
+		if (m_Pointer != _EventData.pointerId)
+			return;
+		
 		RectTransformUtility.ScreenPointToLocalPointInRectangle(m_Viewport, _EventData.position, _EventData.pressEventCamera, out Vector2 pointer);
 		
 		float delta = pointer.y - m_Position.y;
@@ -210,7 +236,7 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		if (position.y > _Max)
 			target = new Vector2(position.x, _Max);
 		
-		EaseFunction function = EaseFunction.EaseOut;
+		EaseFunction function = EaseFunction.EaseOutCubic;
 		
 		return UnityTask.Phase(
 			_Phase =>
