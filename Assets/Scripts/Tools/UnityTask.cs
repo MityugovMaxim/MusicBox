@@ -27,13 +27,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Yield(CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		_Token.Register(() => completionSource.TrySetCanceled());
 		
@@ -49,13 +46,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Tick(Action _Action, int _Frequency, float _Delay, float _Duration, CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = TickRoutine(_Action, _Frequency, _Delay, _Duration, () => completionSource.SetResult(true));
 		
@@ -138,13 +132,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, AnimationCurve _Curve, CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = PhaseRoutine(
 			_Action,
@@ -202,13 +193,10 @@ public class UnityTask : MonoBehaviour
 		if (_Condition == null || !_Condition.Invoke())
 			return Task.CompletedTask;
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = WhileRoutine(_Condition, () => completionSource.SetResult(true));
 		
@@ -229,13 +217,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Until(Func<bool> _Condition, CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = UntilRoutine(_Condition, () => completionSource.SetResult(true));
 		
@@ -256,13 +241,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Delay(float _Delay, CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = DelayRoutine(_Delay, () => completionSource.SetResult(true));
 		
@@ -283,13 +265,10 @@ public class UnityTask : MonoBehaviour
 
 	public static Task Instruction(YieldInstruction _Instruction, CancellationToken _Token = default)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = InstructionRoutine(_Instruction, () => completionSource.SetResult(true));
 		

@@ -64,7 +64,7 @@ public class PreviewProcessor : MonoBehaviour
 		
 		try
 		{
-			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(path, null, token);
+			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(path, null, CancellationToken.None);
 			
 			if (token.IsCancellationRequested)
 				return;
@@ -75,6 +75,9 @@ public class PreviewProcessor : MonoBehaviour
 				
 				m_AudioSource.Stop();
 			}
+			
+			if (token.IsCancellationRequested)
+				return;
 			
 			m_AudioSource.clip   = audioClip;
 			m_AudioSource.volume = 0;
@@ -109,12 +112,10 @@ public class PreviewProcessor : MonoBehaviour
 		
 		try
 		{
-			if (m_AudioSource.isPlaying)
-			{
+			if (m_AudioSource.isPlaying && m_AudioSource.volume > float.Epsilon)
 				await m_AudioSource.SetVolumeAsync(0, STOP_FADE_DURATION, token);
-				
-				m_AudioSource.Stop();
-			}
+			
+			m_AudioSource.Stop();
 			
 			m_AudioSource.clip   = null;
 			m_AudioSource.volume = 0;
