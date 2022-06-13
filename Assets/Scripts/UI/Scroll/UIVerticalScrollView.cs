@@ -236,7 +236,7 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		if (position.y > _Max)
 			target = new Vector2(position.x, _Max);
 		
-		EaseFunction function = EaseFunction.EaseOutCubic;
+		EaseFunction function = EaseFunction.EaseOut;
 		
 		return UnityTask.Phase(
 			_Phase =>
