@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
@@ -47,7 +48,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		
 		foreach (string productID in productIDs)
 		{
-			Debug.LogFormat("[StoreProcessor] Initialize product '{0}'", productID);
+			Log.Info(this, "Initialize product with ID '{0}'.", productID);
 			config.AddProduct(productID, m_ProductsProcessor.GetType(productID));
 		}
 		
@@ -147,6 +148,49 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		return completionSource.Task;
 	}
 
+	public bool Subscribed(string _ProductID)
+	{
+		if (m_Extensions == null)
+		{
+			Log.Error(this, "Check subscription failed. Store is not initialized.");
+			return false;
+		}
+		
+		if (string.IsNullOrEmpty(_ProductID))
+		{
+			Log.Error(this, "Check subscription failed. Product ID null or empty.");
+			return false;
+		}
+		
+		Product product = GetProduct(_ProductID);
+		
+		if (product == null || product.definition.type != ProductType.Subscription)
+		{
+			Log.Error(this, "Check subscription failed. Product with ID '{0}' not found.", _ProductID);
+			return false;
+		}
+		
+		#if UNITY_IOS
+		Dictionary<string, string> prices = m_Extensions
+			.GetExtension<IAppleExtensions>()
+			.GetIntroductoryPriceDictionary();
+		
+		if (!prices.TryGetValue(product.definition.storeSpecificId, out string data))
+			return false;
+		#elif UNITY_ANDROID
+		string data = null;
+		#endif
+		
+		SubscriptionManager manager = new SubscriptionManager(product, data);
+		
+		SubscriptionInfo subscription = manager.getSubscriptionInfo();
+		
+		if (subscription == null)
+			return false;
+		
+		return subscription.isSubscribed() == Result.True;
+	}
+
 	public string GetPrice(string _ProductID)
 	{
 		Product product = GetProduct(_ProductID);
@@ -213,9 +257,16 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	async void Validate(Product _Product)
 	{
+		#if UNITY_IOS
+		const string store = "AppStore";
+		#elif UNITY_ANDROID
+		const string store = "GooglePlayStore";
+		#endif
+		
 		ProductPurchaseRequest request = new ProductPurchaseRequest(
 			_Product.definition.id,
-			_Product.receipt
+			_Product.receipt,
+			store
 		);
 		
 		bool success = await request.SendAsync();
