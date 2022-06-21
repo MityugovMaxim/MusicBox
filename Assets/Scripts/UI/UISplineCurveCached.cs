@@ -8,7 +8,7 @@ public class UISplineCurveCached : MaskableGraphic
 	public override Texture mainTexture => m_Sprite != null ? m_Sprite.texture : base.mainTexture;
 
 	[SerializeField, HideInInspector] List<Vector2> m_Positions;
-	[SerializeField, HideInInspector] List<Vector2> m_UVs;
+	[SerializeField, HideInInspector] List<Vector4> m_UVs;
 
 	[SerializeField] Sprite m_Sprite;
 
@@ -28,7 +28,7 @@ public class UISplineCurveCached : MaskableGraphic
 			m_Positions = new List<Vector2>();
 		
 		if (m_UVs == null)
-			m_UVs = new List<Vector2>();
+			m_UVs = new List<Vector4>();
 		
 		m_Positions.AddRange(_Vertices.Select(_Vertex => (Vector2)_Vertex.position));
 		m_UVs.AddRange(_Vertices.Select(_Vertex => _Vertex.uv0));
