@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -69,17 +70,16 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 	Task ExpandAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
 		return Task.WhenAll(
-			MoveAsync(m_Content, 0, 1, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token),
-			MoveAsync(m_Parallax, 0, 1, 0.15f, _Duration * 2, _Instant, EaseFunction.EaseOutBack, _Token)
+			MoveAsync(m_Content, 0, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token),
+			MoveAsync(m_Parallax, 0, 0.1f, _Duration * 1.5f, _Instant, EaseFunction.EaseOutBack, _Token)
 		);
 	}
 
-	Task ShrinkAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	async Task ShrinkAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		return Task.WhenAll(
-			MoveAsync(m_Content, -1, 0, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token),
-			MoveAsync(m_Parallax, -0.5f, 0.5f, 0.15f, _Duration, _Instant, EaseFunction.EaseOut, _Token)
-		);
+		await MoveAsync(m_Content, -1, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token);
+		
+		await MoveAsync(m_Parallax, -0.5f, 0, 0, true, EaseFunction.EaseOut, _Token);
 	}
 
 	protected override Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
@@ -92,15 +92,15 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 		return ShrinkAsync(_Duration, _Instant, _Token);
 	}
 
-	static Task MoveAsync(RectTransform _Transform, float _Min, float _Max, float _Delay, float _Duration, bool _Instant, EaseFunction _Function, CancellationToken _Token = default)
+	static Task MoveAsync(RectTransform _Transform, float _Position, float _Delay, float _Duration, bool _Instant, EaseFunction _Function, CancellationToken _Token = default)
 	{
 		if (_Transform == null)
 			return Task.CompletedTask;
 		
 		Vector2 sourceMin = _Transform.anchorMin;
 		Vector2 sourceMax = _Transform.anchorMax;
-		Vector2 targetMin = new Vector2(0, _Min);
-		Vector2 targetMax = new Vector2(1, _Max);
+		Vector2 targetMin = new Vector2(0, 0 + _Position);
+		Vector2 targetMax = new Vector2(1, 1 + _Position);
 		
 		void Process(float _Phase)
 		{

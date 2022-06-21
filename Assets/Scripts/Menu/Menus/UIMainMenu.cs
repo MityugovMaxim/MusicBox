@@ -6,7 +6,7 @@ public enum MainMenuPageType
 {
 	News    = 0,
 	Store   = 1,
-	Songs  = 2,
+	Songs   = 2,
 	Profile = 3,
 	Offers  = 4,
 }
@@ -28,15 +28,15 @@ public class UIMainMenu : UIMenu
 		if (m_PageType == _PageType)
 			return;
 		
-		m_PageType = _PageType;
-		
 		foreach (UIMainMenuPage page in m_Pages)
 		{
-			if (page.Type == m_PageType)
-				page.Show(_Instant);
+			if (page.Type == _PageType)
+				page.Show(m_PageType, _Instant);
 			else
-				page.Hide(_Instant);
+				page.Hide(_PageType, _Instant);
 		}
+		
+		m_PageType = _PageType;
 		
 		m_Control.Select(m_PageType, _Instant);
 	}
@@ -48,9 +48,9 @@ public class UIMainMenu : UIMenu
 		foreach (UIMainMenuPage page in m_Pages)
 		{
 			if (page.Type == m_PageType)
-				page.Show(true);
+				page.Show(m_PageType, true);
 			else
-				page.Hide(true);
+				page.Hide(m_PageType, true);
 		}
 		m_Control.Select(m_PageType, true);
 		
@@ -83,7 +83,7 @@ public class UIMainMenu : UIMenu
 	protected override void OnHideFinished()
 	{
 		foreach (UIMainMenuPage page in m_Pages)
-			page.Hide(true);
+			page.Hide(m_PageType, true);
 	}
 
 	void Refresh()
