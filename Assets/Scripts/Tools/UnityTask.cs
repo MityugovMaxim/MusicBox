@@ -125,15 +125,36 @@ public class UnityTask : MonoBehaviour
 		return Phase(_Action, 0, _Duration, _Token);
 	}
 
+	public static Task Phase(Action<float> _Action, float _Duration, EaseFunction _Function, CancellationToken _Token = default)
+	{
+		return Phase(_Action, 0, _Duration, _Function.Get, _Token);
+	}
+
 	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, CancellationToken _Token = default)
 	{
-		return Phase(_Action, _Delay, _Duration, AnimationCurve.Linear(0, 0, 1, 1), _Token);
+		return Phase(_Action, _Delay, _Duration, _Phase => _Phase, _Token);
+	}
+
+	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, EaseFunction _Function, CancellationToken _Token = default)
+	{
+		return Phase(_Action, _Delay, _Duration, _Function.Get, _Token);
 	}
 
 	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, AnimationCurve _Curve, CancellationToken _Token = default)
 	{
+		return Phase(_Action, _Delay, _Duration, _Curve.Evaluate, _Token);
+	}
+
+	public static Task Phase(Action<float> _Action, float _Delay, float _Duration, Func<float, float> _Evaluate, CancellationToken _Token = default)
+	{
 		if (_Token.IsCancellationRequested)
 			return Task.FromCanceled(_Token);
+		
+		if (Mathf.Approximately(_Delay, 0) && Mathf.Approximately(_Duration, 0))
+		{
+			_Action?.Invoke(_Evaluate?.Invoke(1) ?? 1);
+			return Task.CompletedTask;
+		}
 		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
@@ -141,7 +162,7 @@ public class UnityTask : MonoBehaviour
 			_Action,
 			_Delay,
 			_Duration,
-			_Curve,
+			_Evaluate,
 			() => completionSource.SetResult(true)
 		);
 		
@@ -373,7 +394,7 @@ public class UnityTask : MonoBehaviour
 		_Finished?.Invoke();
 	}
 
-	static IEnumerator PhaseRoutine(Action<float> _Action, float _Delay, float _Duration, AnimationCurve _Curve, Action _Finished)
+	static IEnumerator PhaseRoutine(Action<float> _Action, float _Delay, float _Duration, Func<float, float> _Evaluate, Action _Finished)
 	{
 		if (_Action == null)
 		{
@@ -395,7 +416,7 @@ public class UnityTask : MonoBehaviour
 				
 				time += Time.deltaTime;
 				
-				float phase = _Curve.Evaluate(time / _Duration);
+				float phase = _Evaluate(time / _Duration);
 				
 				_Action(phase);
 			}

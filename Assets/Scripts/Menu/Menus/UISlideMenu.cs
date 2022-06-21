@@ -5,8 +5,8 @@ using UnityEngine.EventSystems;
 
 public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerExitHandler
 {
-	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-	[SerializeField] RectTransform  m_Content;
+	[SerializeField] RectTransform m_Content;
+	[SerializeField] RectTransform m_Parallax;
 
 	bool    m_Drag;
 	bool    m_Pressed;
@@ -66,46 +66,20 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 		Hide(true);
 	}
 
-	async Task ExpandAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	Task ExpandAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		Vector2 sourceMin = m_Content.anchorMin;
-		Vector2 sourceMax = m_Content.anchorMax;
-		Vector2 targetMin = Vector2.zero;
-		Vector2 targetMax = Vector2.one;
-		
-		void Animation(float _Phase)
-		{
-			float phase = m_Curve.Evaluate(_Phase);
-			
-			m_Content.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
-			m_Content.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
-		}
-		
-		if (_Instant)
-			Animation(1);
-		else
-			await UnityTask.Phase(Animation, _Duration, _Token);
+		return Task.WhenAll(
+			MoveAsync(m_Content, 0, 1, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token),
+			MoveAsync(m_Parallax, 0, 1, 0.15f, _Duration * 2, _Instant, EaseFunction.EaseOutBack, _Token)
+		);
 	}
 
-	async Task ShrinkAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	Task ShrinkAsync(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
-		Vector2 sourceMin = m_Content.anchorMin;
-		Vector2 sourceMax = m_Content.anchorMax;
-		Vector2 targetMin = new Vector2(0, -1);
-		Vector2 targetMax = new Vector2(1, 0);
-		
-		void Animation(float _Phase)
-		{
-			float phase = m_Curve.Evaluate(_Phase);
-			
-			m_Content.anchorMin = Vector2.Lerp(sourceMin, targetMin, phase);
-			m_Content.anchorMax = Vector2.Lerp(sourceMax, targetMax, phase);
-		}
-		
-		if (_Instant)
-			Animation(1);
-		else
-			await UnityTask.Phase(Animation, _Duration, _Token);
+		return Task.WhenAll(
+			MoveAsync(m_Content, -1, 0, 0, _Duration, _Instant, EaseFunction.EaseOut, _Token),
+			MoveAsync(m_Parallax, -0.5f, 0.5f, 0.15f, _Duration, _Instant, EaseFunction.EaseOut, _Token)
+		);
 	}
 
 	protected override Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
@@ -116,6 +90,37 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 	protected override Task HideAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
 		return ShrinkAsync(_Duration, _Instant, _Token);
+	}
+
+	static Task MoveAsync(RectTransform _Transform, float _Min, float _Max, float _Delay, float _Duration, bool _Instant, EaseFunction _Function, CancellationToken _Token = default)
+	{
+		if (_Transform == null)
+			return Task.CompletedTask;
+		
+		Vector2 sourceMin = _Transform.anchorMin;
+		Vector2 sourceMax = _Transform.anchorMax;
+		Vector2 targetMin = new Vector2(0, _Min);
+		Vector2 targetMax = new Vector2(1, _Max);
+		
+		void Process(float _Phase)
+		{
+			_Transform.anchorMin = Vector2.LerpUnclamped(sourceMin, targetMin, _Phase);
+			_Transform.anchorMax = Vector2.LerpUnclamped(sourceMax, targetMax, _Phase);
+		}
+		
+		if (_Instant)
+		{
+			Process(1);
+			return Task.CompletedTask;
+		}
+		
+		return UnityTask.Phase(
+			Process,
+			_Delay,
+			_Duration,
+			_Function,
+			_Token
+		);
 	}
 
 	public void OnInitializePotentialDrag(PointerEventData _EventData)
