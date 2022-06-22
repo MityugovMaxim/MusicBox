@@ -17,12 +17,12 @@ public class UIRectsSpectrum : UISpectrum
 		}
 	}
 
-	public override void Sample(float[] _Buffer)
+	public override void Sample(float[] _Amplitude)
 	{
 		for (int i = 0; i < m_Rects.Length; i++)
 		{
 			Vector2 size = m_Rects[i].size;
-			size.y          = Mathf.Lerp(m_MinSize, m_MaxSize, _Buffer[i]);
+			size.y          = Mathf.Lerp(m_MinSize, m_MaxSize, _Amplitude[i]);
 			m_Rects[i].size = size;
 		}
 	}

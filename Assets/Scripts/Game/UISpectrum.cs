@@ -19,5 +19,5 @@ public abstract class UISpectrum : UIEntity
 
 	public abstract void Reposition();
 
-	public abstract void Sample(float[] _Buffer);
+	public abstract void Sample(float[] _Amplitude);
 }

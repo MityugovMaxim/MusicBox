@@ -16,9 +16,9 @@ public class UIBoidsSpectrum : UISpectrum
 		}
 	}
 
-	public override void Sample(float[] _Buffer)
+	public override void Sample(float[] _Amplitude)
 	{
 		for (int i = 0; i < m_Boids.Length; i++)
-			m_Boids[i].localPosition = m_Boids[i].up * Mathf.Lerp(m_MinDistance, m_MaxDistance, _Buffer[i]);
+			m_Boids[i].localPosition = m_Boids[i].up * Mathf.Lerp(m_MinDistance, m_MaxDistance, _Amplitude[i]);
 	}
 }
