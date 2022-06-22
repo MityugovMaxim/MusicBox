@@ -50,15 +50,25 @@ public class UIPulseSpectrum : UISpectrum
 		
 		CancellationToken token = m_TokenSource.Token;
 		
+		Vector3 source = RectTransform.localScale;
+		Vector3 target = new Vector3(m_MaxScale, m_MaxScale, 1);
+		
 		try
 		{
+			await UnityTask.Phase(
+				_Phase => RectTransform.localScale = Vector3.LerpUnclamped(source, target, _Phase),
+				m_Duration * 0.2f,
+				EaseFunction.EaseInQuad,
+				token
+			);
+			
 			await UnityTask.Phase(
 				_Phase =>
 				{
 					float scale = Mathf.Lerp(m_MaxScale, m_MinScale, _Phase);
 					RectTransform.localScale = new Vector3(scale, scale, 1);
 				},
-				m_Duration,
+				m_Duration * 0.8f,
 				EaseFunction.EaseInQuad,
 				token
 			);
