@@ -88,7 +88,7 @@ Shader "UI/Fluid"
 				
 				const fixed4 color = BACKGROUND_BY_RANGE(value, 0.3, 0.95) * value * 0.6;
 				
-				return IN.color * _BackgroundSecondaryColor + color + color * color + smoothstep(0.9, 1, _ForegroundPrimaryColor * value) * 0.6;
+				return IN.color * _BackgroundSecondaryColor + color;
 			}
 		ENDCG
 		}
