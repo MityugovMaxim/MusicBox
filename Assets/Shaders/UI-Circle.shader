@@ -66,7 +66,7 @@ Shader "UI/Circle"
 			struct vertData
 			{
 				float4 vertex : POSITION;
-				float4 color  : COLOR;
+				fixed4 color  : COLOR;
 				half2  uv     : TEXCOORD0;
 				half2  rect   : TEXCOORD1;
 				half2  data   : TEXCOORD2;

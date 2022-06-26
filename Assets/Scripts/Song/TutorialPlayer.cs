@@ -297,7 +297,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_InputReceiver.gameObject.SetActive(true);
 		
-		m_InputReceiver.Process();
+		m_InputReceiver.Sample();
 		
 		await UnityTask.Until(() => success, _Token);
 		
@@ -319,7 +319,7 @@ public class TutorialPlayer : ASFPlayer
 			_Phase =>
 			{
 				Time = MathUtility.Lerp(_Source, _Target, _Phase);
-				m_InputReceiver.Process();
+				m_InputReceiver.Sample();
 			},
 			(float)(_Target - _Source), _Token
 		);

@@ -19,19 +19,22 @@ public class ConfigProcessor
 	const string SONG_IFRAMES = "song_iframes";
 
 	const string TAP_PERFECT_MULTIPLIER = "tap_perfect_multiplier";
+	const string TAP_GREAT_MULTIPLIER   = "tap_great_multiplier";
 	const string TAP_GOOD_MULTIPLIER    = "tap_good_multiplier";
 	const string TAP_BAD_MULTIPLIER     = "tap_bad_multiplier";
 
 	const string DOUBLE_PERFECT_MULTIPLIER = "double_perfect_multiplier";
+	const string DOUBLE_GREAT_MULTIPLIER   = "double_great_multiplier";
 	const string DOUBLE_GOOD_MULTIPLIER    = "double_good_multiplier";
 	const string DOUBLE_BAD_MULTIPLIER     = "double_bad_multiplier";
 
 	const string HOLD_PERFECT_MULTIPLIER = "hold_perfect_multiplier";
+	const string HOLD_GREAT_MULTIPLIER   = "hold_great_multiplier";
 	const string HOLD_GOOD_MULTIPLIER    = "hold_good_multiplier";
 	const string HOLD_BAD_MULTIPLIER     = "hold_bad_multiplier";
-	const string HOLD_HIT_MULTIPLIER     = "hold_hit_multiplier";
 
 	const string SCORE_PERFECT_THRESHOLD = "score_perfect_threshold";
+	const string SCORE_GREAT_THRESHOLD   = "score_great_threshold";
 	const string SCORE_GOOD_THRESHOLD    = "score_good_threshold";
 
 	const string SONG_RESTART_ADS_COUNT = "song_restart_ads_count";
@@ -39,89 +42,82 @@ public class ConfigProcessor
 	const string SONG_NEXT_ADS_COUNT    = "song_next_ads_count";
 	const string SONG_PLAY_ADS_COUNT    = "song_play_ads_count";
 
-	const string ACCURACY_PERFECT_MULTIPLIER = "accuracy_perfect_multiplier";
-	const string ACCURACY_GOOD_MULTIPLIER    = "accuracy_good_multiplier";
-	const string ACCURACY_BAD_MULTIPLIER     = "accuracy_bad_multiplier";
-	const string ACCURACY_MISS_MULTIPLIER    = "accuracy_miss_multiplier";
-
 	const string INPUT_EXTEND = "input_extend";
 	const string INPUT_OFFSET = "input_offset";
 
 	const string REVIEW_REQUEST_COUNT    = "review_request_count";
 	const string SONG_LIBRARY_GROUP_SIZE = "song_library_group_size";
 
-	public int   ComboX2                   => GetInt(COMBO_X2);
-	public int   ComboX4                   => GetInt(COMBO_X4);
-	public int   ComboX6                   => GetInt(COMBO_X6);
-	public int   ComboX8                   => GetInt(COMBO_X8);
-	public float SongRatio                 => GetFloat(SONG_RATIO);
-	public float SongIFrames               => GetFloat(SONG_IFRAMES);
-	public float TapPerfectMultiplier      => GetFloat(TAP_PERFECT_MULTIPLIER);
-	public float TapGoodMultiplier         => GetFloat(TAP_GOOD_MULTIPLIER);
-	public float TapBadMultiplier          => GetFloat(TAP_BAD_MULTIPLIER);
-	public float DoublePerfectMultiplier   => GetFloat(DOUBLE_PERFECT_MULTIPLIER);
-	public float DoubleGoodMultiplier      => GetFloat(DOUBLE_GOOD_MULTIPLIER);
-	public float DoubleBadMultiplier       => GetFloat(DOUBLE_BAD_MULTIPLIER);
-	public float HoldPerfectMultiplier     => GetFloat(HOLD_PERFECT_MULTIPLIER);
-	public float HoldGoodMultiplier        => GetFloat(HOLD_GOOD_MULTIPLIER);
-	public float HoldBadMultiplier         => GetFloat(HOLD_BAD_MULTIPLIER);
-	public float HoldHitMultiplier         => GetFloat(HOLD_HIT_MULTIPLIER);
-	public float ScorePerfectThreshold     => GetFloat(SCORE_PERFECT_THRESHOLD);
-	public float ScoreGoodThreshold        => GetFloat(SCORE_GOOD_THRESHOLD);
-	public int   SongRestartAdsCount       => GetInt(SONG_RESTART_ADS_COUNT);
-	public int   SongLeaveAdsCount         => GetInt(SONG_LEAVE_ADS_COUNT);
-	public int   SongNextAdsCount          => GetInt(SONG_NEXT_ADS_COUNT);
-	public int   SongPlayAdsCount          => GetInt(SONG_PLAY_ADS_COUNT);
-	public float AccuracyPerfectMultiplier => GetFloat(ACCURACY_PERFECT_MULTIPLIER);
-	public float AccuracyGoodMultiplier    => GetFloat(ACCURACY_GOOD_MULTIPLIER);
-	public float AccuracyBadMultiplier     => GetFloat(ACCURACY_BAD_MULTIPLIER);
-	public float AccuracyMissMultiplier    => GetFloat(ACCURACY_MISS_MULTIPLIER);
-	public float InputExtend               => GetFloat(INPUT_EXTEND);
-	public float InputOffset               => GetFloat(INPUT_OFFSET);
-	public int   ReviewRequestCount        => GetInt(REVIEW_REQUEST_COUNT);
-	public int   SongLibraryGroupSize      => GetInt(SONG_LIBRARY_GROUP_SIZE);
+	public int   ComboX2                 => GetInt(COMBO_X2);
+	public int   ComboX4                 => GetInt(COMBO_X4);
+	public int   ComboX6                 => GetInt(COMBO_X6);
+	public int   ComboX8                 => GetInt(COMBO_X8);
+	public float SongRatio               => GetFloat(SONG_RATIO);
+	public float SongIFrames             => GetFloat(SONG_IFRAMES);
+	public float TapPerfectMultiplier    => GetFloat(TAP_PERFECT_MULTIPLIER);
+	public float TapGreatMultiplier      => GetFloat(TAP_GREAT_MULTIPLIER);
+	public float TapGoodMultiplier       => GetFloat(TAP_GOOD_MULTIPLIER);
+	public float TapBadMultiplier        => GetFloat(TAP_BAD_MULTIPLIER);
+	public float DoublePerfectMultiplier => GetFloat(DOUBLE_PERFECT_MULTIPLIER);
+	public float DoubleGreatMultiplier   => GetFloat(DOUBLE_GREAT_MULTIPLIER);
+	public float DoubleGoodMultiplier    => GetFloat(DOUBLE_GOOD_MULTIPLIER);
+	public float DoubleBadMultiplier     => GetFloat(DOUBLE_BAD_MULTIPLIER);
+	public float HoldPerfectMultiplier   => GetFloat(HOLD_PERFECT_MULTIPLIER);
+	public float HoldGreatMultiplier     => GetFloat(HOLD_GREAT_MULTIPLIER);
+	public float HoldGoodMultiplier      => GetFloat(HOLD_GOOD_MULTIPLIER);
+	public float HoldBadMultiplier       => GetFloat(HOLD_BAD_MULTIPLIER);
+	public float ScorePerfectThreshold   => GetFloat(SCORE_PERFECT_THRESHOLD);
+	public float ScoreGreatThreshold     => GetFloat(SCORE_GREAT_THRESHOLD);
+	public float ScoreGoodThreshold      => GetFloat(SCORE_GOOD_THRESHOLD);
+	public int   SongRestartAdsCount     => GetInt(SONG_RESTART_ADS_COUNT);
+	public int   SongLeaveAdsCount       => GetInt(SONG_LEAVE_ADS_COUNT);
+	public int   SongNextAdsCount        => GetInt(SONG_NEXT_ADS_COUNT);
+	public int   SongPlayAdsCount        => GetInt(SONG_PLAY_ADS_COUNT);
+	public float InputExtend             => GetFloat(INPUT_EXTEND);
+	public float InputOffset             => GetFloat(INPUT_OFFSET);
+	public int   ReviewRequestCount      => GetInt(REVIEW_REQUEST_COUNT);
+	public int   SongLibraryGroupSize    => GetInt(SONG_LIBRARY_GROUP_SIZE);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
-		// Game
+		// Combo
 		{ COMBO_X2, 10 },
 		{ COMBO_X4, 30 },
 		{ COMBO_X6, 60 },
 		{ COMBO_X8, 120 },
+		
+		// Game
 		{ SONG_RATIO, 0.75f },
 		{ SONG_IFRAMES, 0.75f },
 		
 		// Tap
-		{ TAP_PERFECT_MULTIPLIER, 400 },
-		{ TAP_GOOD_MULTIPLIER, 200 },
 		{ TAP_BAD_MULTIPLIER, 100 },
+		{ TAP_GOOD_MULTIPLIER, 200 },
+		{ TAP_GREAT_MULTIPLIER, 300 },
+		{ TAP_PERFECT_MULTIPLIER, 400 },
 		
 		// Double
-		{ DOUBLE_PERFECT_MULTIPLIER, 1000 },
-		{ DOUBLE_GOOD_MULTIPLIER, 500 },
 		{ DOUBLE_BAD_MULTIPLIER, 100 },
+		{ DOUBLE_GOOD_MULTIPLIER, 500 },
+		{ DOUBLE_GREAT_MULTIPLIER, 750 },
+		{ DOUBLE_PERFECT_MULTIPLIER, 1000 },
 		
 		// Hold
-		{ HOLD_PERFECT_MULTIPLIER, 1600 },
-		{ HOLD_GOOD_MULTIPLIER, 800 },
 		{ HOLD_BAD_MULTIPLIER, 100 },
-		{ HOLD_HIT_MULTIPLIER, 10 },
+		{ HOLD_GOOD_MULTIPLIER, 800 },
+		{ HOLD_GREAT_MULTIPLIER, 1200 },
+		{ HOLD_PERFECT_MULTIPLIER, 1600 },
 		
 		// Score
 		{ SCORE_GOOD_THRESHOLD, 0.5 },
-		{ SCORE_PERFECT_THRESHOLD, 0.8 },
+		{ SCORE_GREAT_THRESHOLD, 0.7f },
+		{ SCORE_PERFECT_THRESHOLD, 0.85f },
 		
 		// Ads
 		{ SONG_RESTART_ADS_COUNT, 2 },
 		{ SONG_LEAVE_ADS_COUNT, 3 },
 		{ SONG_NEXT_ADS_COUNT, 2 },
 		{ SONG_PLAY_ADS_COUNT, 4 },
-		
-		// Accuracy
-		{ ACCURACY_PERFECT_MULTIPLIER, 1.0f },
-		{ ACCURACY_GOOD_MULTIPLIER, 0.9f },
-		{ ACCURACY_BAD_MULTIPLIER, 0.7f },
-		{ ACCURACY_MISS_MULTIPLIER, 0.9f },
 		
 		// Input
 		{ INPUT_EXTEND, 30 },

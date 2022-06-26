@@ -7,7 +7,6 @@ public class UIAccuracyIndicator : UIEntity
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	[SerializeField] Animator m_AccuracyPerfect;
-	[SerializeField] Animator m_AccuracyGood;
 	[SerializeField] Animator m_AccuracyBad;
 
 	[Inject] SignalBus m_SignalBus;
@@ -25,19 +24,12 @@ public class UIAccuracyIndicator : UIEntity
 		{
 			case ScoreGrade.Perfect:
 				m_AccuracyPerfect.SetTrigger(m_PlayParameterID);
-				m_AccuracyGood.SetTrigger(m_RestoreParameterID);
 				m_AccuracyBad.SetTrigger(m_RestoreParameterID);
 				break;
 			
-			case ScoreGrade.Good:
-				m_AccuracyGood.SetTrigger(m_PlayParameterID);
-				m_AccuracyPerfect.SetTrigger(m_RestoreParameterID);
-				m_AccuracyBad.SetTrigger(m_RestoreParameterID);
-				break;
 			case ScoreGrade.Bad:
 				m_AccuracyBad.SetTrigger(m_PlayParameterID);
 				m_AccuracyPerfect.SetTrigger(m_RestoreParameterID);
-				m_AccuracyGood.SetTrigger(m_RestoreParameterID);
 				break;
 		}
 	}

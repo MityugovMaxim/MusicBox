@@ -106,7 +106,7 @@ public class SongPlayer : ASFPlayer
 	{
 		base.Sample();
 		
-		m_InputReceiver.Process();
+		m_InputReceiver.Sample();
 		
 		if (Time >= m_Length && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();

@@ -133,7 +133,9 @@ public class UIHoldIndicator : UIIndicator
 		Animator.SetTrigger(m_SuccessParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		
-		FXProcessor.HoldFX(Handle.GetWorldRect());
+		float progress = Mathf.Max(0, _MaxProgress - _MinProgress);
+		
+		FXProcessor.HoldFX(Handle.GetWorldRect(), progress);
 		
 		InvokeCallback();
 		

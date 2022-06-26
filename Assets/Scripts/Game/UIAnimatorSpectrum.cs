@@ -1,17 +1,36 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Animator))]
 public class UIAnimatorSpectrum : UISpectrum
 {
-	static readonly int m_PlayParameterID = Animator.StringToHash("Play");
+	[Serializable]
+	public class Trigger
+	{
+		public float Duration => m_Duration;
 
-	[SerializeField, Range(0, 1)] float m_Threshold = 0.5f;
-	[SerializeField]              int   m_Channel;
-	[SerializeField]              float m_Duration = 0.1f;
+		[SerializeField] string m_Parameter;
+		[SerializeField] float  m_Duration;
+
+		int m_Hash;
+
+		public void Initialize()
+		{
+			m_Hash = Animator.StringToHash(m_Parameter);
+		}
+
+		public void Process(Animator _Animator)
+		{
+			_Animator.SetTrigger(m_Hash);
+		}
+	}
+
+	[SerializeField, Range(0, 1)]    float     m_Threshold;
+	[SerializeField]                 int       m_Channel;
+	[SerializeField, NonReorderable] Trigger[] m_Triggers;
 
 	Animator m_Animator;
-	int      m_TriggerID;
-	bool     m_Active;
 	float    m_Time;
 
 	protected override void Awake()
@@ -19,6 +38,9 @@ public class UIAnimatorSpectrum : UISpectrum
 		base.Awake();
 		
 		m_Animator = GetComponent<Animator>();
+		
+		foreach (Trigger trigger in m_Triggers)
+			trigger.Initialize();
 	}
 
 	public override void Reposition() { }
@@ -33,16 +55,14 @@ public class UIAnimatorSpectrum : UISpectrum
 		float amplitude = _Amplitude[channel];
 		
 		if (amplitude < m_Threshold)
-		{
-			m_Active = false;
-			return;
-		}
-		
-		if (m_Active)
 			return;
 		
-		m_Time = Time.time + m_Duration;
+		int index = Random.Range(0, m_Triggers.Length);
 		
-		m_Animator.SetTrigger(m_PlayParameterID);
+		Trigger trigger = m_Triggers[index];
+		
+		m_Time = Time.time + trigger.Duration;
+		
+		trigger.Process(m_Animator);
 	}
 }

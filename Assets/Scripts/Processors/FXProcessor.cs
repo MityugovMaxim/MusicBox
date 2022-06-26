@@ -10,10 +10,11 @@ public class FXProcessor : UIEntity
 	[SerializeField] UIFXHighlight   m_Dim;
 	[SerializeField] RectTransform   m_InputArea;
 
-	[Inject] SignalBus       m_SignalBus;
-	[Inject] UITapFX.Pool    m_TapFXPool;
-	[Inject] UIDoubleFX.Pool m_DoubleFXPool;
-	[Inject] UIHoldFX.Pool   m_HoldFXPool;
+	[Inject] SignalBus m_SignalBus;
+
+	[Inject(Id = ScoreType.Tap)]    UIIndicatorFX.Pool m_TapFXPool;
+	[Inject(Id = ScoreType.Double)] UIIndicatorFX.Pool m_DoubleFXPool;
+	[Inject(Id = ScoreType.Hold)]   UIIndicatorFX.Pool m_HoldFXPool;
 
 	protected override void OnEnable()
 	{
@@ -29,41 +30,41 @@ public class FXProcessor : UIEntity
 		m_SignalBus.Unsubscribe<InputMissSignal>(Dim);
 	}
 
-	public async void TapFX(Rect _Rect)
+	public async void TapFX(Rect _Rect, float _Progress)
 	{
 		Highlight(_Rect.center);
 		
-		UITapFX item = m_TapFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_TapFXPool.Spawn(RectTransform);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
-		await item.PlayAsync();
+		await item.PlayAsync(_Progress);
 		
 		m_TapFXPool.Despawn(item);
 	}
 
-	public async void DoubleFX(Rect _Rect)
+	public async void DoubleFX(Rect _Rect, float _Progress)
 	{
 		Flash();
 		
-		UIDoubleFX item = m_DoubleFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_DoubleFXPool.Spawn(RectTransform);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
-		await item.PlayAsync();
+		await item.PlayAsync(_Progress);
 		
 		m_DoubleFXPool.Despawn(item);
 	}
 
-	public async void HoldFX(Rect _Rect)
+	public async void HoldFX(Rect _Rect, float _Progress)
 	{
 		Highlight(_Rect.center);
 		
-		UIHoldFX item = m_HoldFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_HoldFXPool.Spawn(RectTransform);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
-		await item.PlayAsync();
+		await item.PlayAsync(_Progress);
 		
 		m_HoldFXPool.Despawn(item);
 	}

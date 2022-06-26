@@ -43,7 +43,7 @@ public class UITapIndicator : UIIndicator
 	{
 		Animator.SetTrigger(m_SuccessParameterID);
 		
-		FXProcessor.TapFX(Handle.GetWorldRect());
+		FXProcessor.TapFX(Handle.GetWorldRect(), _Progress);
 		
 		InvokeCallback();
 		

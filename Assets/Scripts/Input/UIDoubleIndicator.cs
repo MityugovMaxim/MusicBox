@@ -28,7 +28,7 @@ public class UIDoubleIndicator : UIIndicator
 	{
 		Animator.SetTrigger(m_SuccessParameterID);
 		
-		FXProcessor.DoubleFX(Handle.GetWorldRect());
+		FXProcessor.DoubleFX(Handle.GetWorldRect(), _Progress);
 		
 		InvokeCallback();
 		

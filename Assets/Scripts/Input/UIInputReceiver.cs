@@ -28,7 +28,7 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		InputOffset = m_ConfigProcessor.InputOffset;
 	}
 
-	public void Process()
+	public void Sample()
 	{
 		if (m_Processing)
 			return;
@@ -109,7 +109,8 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			}
 		}
 		
-		m_SignalBus.Fire<InputMissSignal>();
+		if (m_ActiveHandles.Count > 0 || m_InactiveHandles.Count > 0)
+			m_SignalBus.Fire<InputMissSignal>();
 	}
 
 	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
@@ -135,6 +136,21 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	{
 		int  pointerID = _EventData.pointerId;
 		Rect area      = GetZoneArea(_EventData);
+		
+		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
+		{
+			UIHandle handle = m_ActiveHandles[i];
+			
+			if (handle == null)
+				continue;
+			
+			List<int> pointerIDs = GetPointerIDs(handle);
+			
+			if (pointerIDs == null || !pointerIDs.Contains(pointerID))
+				continue;
+			
+			handle.TouchMove(pointerID, area);
+		}
 		
 		m_Pointers[pointerID] = area;
 		
