@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

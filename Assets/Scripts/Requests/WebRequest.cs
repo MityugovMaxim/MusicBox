@@ -34,19 +34,25 @@ public static class WebRequest
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isNetworkError)
+			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				Log.Error(typeof(WebRequest), "Load audio clip failed. Network error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(typeof(WebRequest), "Load audio clip failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isHttpError)
+			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				Log.Error(typeof(WebRequest), "Load audio clip failed. Http error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(typeof(WebRequest), "Load audio clip failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isDone)
+			else if (request.result == UnityWebRequest.Result.DataProcessingError)
+			{
+				Log.Error(typeof(WebRequest), "Load audio clip failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.result == UnityWebRequest.Result.Success)
 			{
 				DownloadHandlerAudioClip handler = request.downloadHandler as DownloadHandlerAudioClip;
 				
@@ -69,6 +75,11 @@ public static class WebRequest
 				}
 				
 				completionSource.TrySetResult(audioClip);
+				request.Dispose();
+			}
+			else
+			{
+				completionSource.TrySetResult(null);
 				request.Dispose();
 			}
 		};
@@ -110,19 +121,25 @@ public static class WebRequest
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isNetworkError)
+			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				Log.Error(typeof(WebRequest), "Load texture failed. Network error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(typeof(WebRequest), "Load texture failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isHttpError)
+			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				Log.Error(typeof(WebRequest), "Load texture failed. Http error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(typeof(WebRequest), "Load texture failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isDone)
+			else if (request.result == UnityWebRequest.Result.DataProcessingError)
+			{
+				Log.Error(typeof(WebRequest), "Load texture failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.result == UnityWebRequest.Result.Success)
 			{
 				DownloadHandlerTexture handler = request.downloadHandler as DownloadHandlerTexture;
 				
@@ -145,6 +162,11 @@ public static class WebRequest
 				}
 				
 				completionSource.TrySetResult(texture);
+				request.Dispose();
+			}
+			else
+			{
+				completionSource.TrySetResult(null);
 				request.Dispose();
 			}
 		};
@@ -184,17 +206,25 @@ public static class WebRequest
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isNetworkError)
+			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				completionSource.TrySetException(new UnityException("Network Error"));
+				Log.Error(typeof(WebRequest), "Load data failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isHttpError)
+			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				completionSource.TrySetException(new UnityException("Http Error"));
+				Log.Error(typeof(WebRequest), "Load data failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
-			else if (request.isDone)
+			else if (request.result == UnityWebRequest.Result.DataProcessingError)
+			{
+				Log.Error(typeof(WebRequest), "Load data failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				completionSource.TrySetCanceled();
+				request.Dispose();
+			}
+			else if (request.result == UnityWebRequest.Result.Success)
 			{
 				if (request.downloadHandler == null)
 					completionSource.TrySetException(new UnityException("Corrupted data"));
