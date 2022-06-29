@@ -3,9 +3,11 @@ using UnityEngine;
 
 public class UIPulseSpectrum : UISpectrum
 {
-	[SerializeField, Range(0, 1)] float m_Threshold = 0.25f;
+	[SerializeField, Range(0, 1)] float m_Threshold = 0.4f;
 	[SerializeField]              float m_MinScale  = 1;
 	[SerializeField]              float m_MaxScale  = 1.5f;
+	[SerializeField]              float m_AttackDamp = 0.6f;
+	[SerializeField]              float m_DecayDamp = 0.1f;
 
 	public override void Reposition() { }
 
@@ -15,7 +17,12 @@ public class UIPulseSpectrum : UISpectrum
 		
 		float phase = Mathf.InverseLerp(m_Threshold, 0.9f, amplitude);
 		
-		float scale = EaseFunction.EaseOutQuad.Get(m_MinScale, m_MaxScale, phase);
+		float source = RectTransform.localScale.x;
+		float target = EaseFunction.EaseOutQuad.Get(m_MinScale, m_MaxScale, phase);
+		
+		float scale = source < target
+			? Mathf.Lerp(source, target, m_AttackDamp)
+			: Mathf.Lerp(source, target, m_DecayDamp);
 		
 		RectTransform.localScale = new Vector3(scale, scale, 1);
 	}

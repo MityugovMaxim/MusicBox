@@ -108,13 +108,13 @@ public class UIComboIndicator : UIGroup
 
 	Task PositionAsync(float _Source, float _Target, CancellationToken _Token = default)
 	{
-		Vector2 source = new Vector2(_Source, 0);
-		Vector2 target = new Vector2(_Target, 0);
+		Vector2 source = new Vector2(0, _Source);
+		Vector2 target = new Vector2(0, _Target);
 		
 		return UnityTask.Phase(
 			_Phase =>
 			{
-				m_Graphic.rectTransform.localPosition = EaseFunction.EaseInQuad.Get(source, target, _Phase);
+				m_Graphic.rectTransform.localPosition = EaseFunction.EaseOutBack.Get(source, target, _Phase);
 			},
 			m_Duration,
 			_Token

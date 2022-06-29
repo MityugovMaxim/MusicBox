@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class SongSnapshot
+[Preserve]
+public class SongSnapshot : Snapshot
 {
-	public string                              ID                { get; }
 	public bool                                Active            { get; }
 	public string                              Title             { get; }
 	public string                              Artist            { get; }
@@ -31,11 +28,9 @@ public class SongSnapshot
 	public int                                 GoldThreshold     { get; }
 	public int                                 PlatinumThreshold { get; }
 	public IReadOnlyDictionary<string, string> Platforms         { get; }
-	public int                                 Order             { get; }
 
-	public SongSnapshot(DataSnapshot _Data)
+	public SongSnapshot(DataSnapshot _Data) : base(_Data)
 	{
-		ID                = _Data.Key;
 		Active            = _Data.GetBool("active");
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
@@ -56,7 +51,6 @@ public class SongSnapshot
 		SilverThreshold   = _Data.GetInt("silver_threshold");
 		GoldThreshold     = _Data.GetInt("gold_threshold");
 		PlatinumThreshold = _Data.GetInt("platinum_threshold");
-		Order             = _Data.GetInt("order");
 	}
 }
 
@@ -64,33 +58,15 @@ public class SongSnapshot
 public class SongsDataUpdateSignal { }
 
 [Preserve]
-public class SongsProcessor
+public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 {
-	bool Loaded { get; set; }
+	protected override string Path => "songs"; 
 
-	[Inject] SignalBus        m_SignalBus;
 	[Inject] ProfileProcessor m_ProfileProcessor;
-
-	readonly List<SongSnapshot> m_Snapshots = new List<SongSnapshot>();
-
-	DatabaseReference m_Data;
-
-	public async Task Load()
-	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("songs");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
-		Loaded = true;
-	}
 
 	public List<string> GetSongIDs()
 	{
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
@@ -102,7 +78,7 @@ public class SongsProcessor
 		if (string.IsNullOrEmpty(_SongHash))
 			return null;
 		
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
@@ -282,70 +258,5 @@ public class SongsProcessor
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
-	}
-
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating songs data...");
-		
-		await Fetch();
-		
-		Log.Info(this, "Update songs data complete.");
-		
-		m_SignalBus.Fire<SongsDataUpdateSignal>();
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Error(this, "Fetch songs failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new SongSnapshot(_Data)));
-	}
-
-	SongSnapshot GetSnapshot(string _SongID)
-	{
-		if (m_Snapshots.Count == 0)
-			return null;
-		
-		if (string.IsNullOrEmpty(_SongID))
-		{
-			Log.Error(this, "Get snapshot failed. Song ID is null or empty.");
-			return null;
-		}
-		
-		SongSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _SongID);
-		
-		if (snapshot == null)
-			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _SongID);
-		
-		return snapshot;
 	}
 }

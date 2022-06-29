@@ -1,15 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
-public class ProgressSnapshot
+[Preserve]
+public class ProgressSnapshot : Snapshot
 {
 	public bool         Active  { get; }
 	public int          Level   { get; }
@@ -17,7 +14,7 @@ public class ProgressSnapshot
 	public long         Coins   { get; }
 	public List<string> SongIDs { get; }
 
-	public ProgressSnapshot(DataSnapshot _Data)
+	public ProgressSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active  = _Data.GetBool("active");
 		Level   = _Data.GetInt("level");
@@ -31,41 +28,16 @@ public class ProgressSnapshot
 public class ProgressDataUpdateSignal { }
 
 [Preserve]
-public class ProgressProcessor
+public class ProgressProcessor : DataProcessor<ProgressSnapshot, ProgressDataUpdateSignal>
 {
-	bool Loaded { get; set; }
-
-	readonly SignalBus m_SignalBus;
-
-	readonly List<ProgressSnapshot> m_Snapshots = new List<ProgressSnapshot>();
-
-	DatabaseReference m_Data;
-
-	[Inject]
-	public ProgressProcessor(SignalBus _SignalBus)
-	{
-		m_SignalBus = _SignalBus;
-	}
-
-	public async Task Load()
-	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("progress");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
-		Loaded = true;
-	}
+	protected override string Path => "progress";
 
 	public int GetSongLevel(string _SongID)
 	{
-		if (m_Snapshots.Count == 0)
+		if (Snapshots.Count == 0)
 			return 1;
 		
-		ProgressSnapshot[] snapshots = m_Snapshots
+		ProgressSnapshot[] snapshots = Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.SongIDs != null && _Snapshot.SongIDs.Count > 0)
 			.Where(_Snapshot => _Snapshot.SongIDs.Contains(_SongID))
@@ -105,10 +77,10 @@ public class ProgressProcessor
 		int minLevel = GetMinLevel();
 		int maxLevel = GetMaxLevel();
 		
-		if (m_Snapshots.Count == 0)
+		if (Snapshots.Count == 0)
 			return minLevel;
 		
-		ProgressSnapshot snapshot = m_Snapshots
+		ProgressSnapshot snapshot = Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Discs <= _Discs)
 			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
@@ -134,10 +106,10 @@ public class ProgressProcessor
 
 	public int GetMinLevel()
 	{
-		if (m_Snapshots.Count == 0)
+		if (Snapshots.Count == 0)
 			return 1;
 		
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.Level)
 			.DefaultIfEmpty(1)
@@ -146,72 +118,26 @@ public class ProgressProcessor
 
 	public int GetMaxLevel()
 	{
-		if (m_Snapshots.Count == 0)
+		if (Snapshots.Count == 0)
 			return 1;
 		
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.Level)
 			.DefaultIfEmpty(1)
 			.Max();
 	}
 
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating progress data...");
-		
-		await Fetch();
-		
-		Log.Info(this, "Update progress data complete.");
-		
-		m_SignalBus.Fire<ProgressDataUpdateSignal>();
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.GetValueAsync(15000, 2);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Error(this, "Fetch progress failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new ProgressSnapshot(_Data)));
-	}
-
 	ProgressSnapshot GetSnapshot(int _Level)
 	{
-		if (m_Snapshots.Count == 0)
+		if (Snapshots.Count == 0)
 			return null;
 		
 		int minLevel = GetMinLevel();
 		int maxLevel = GetMaxLevel();
 		int level    = Mathf.Clamp(_Level, minLevel, maxLevel);
 		
-		ProgressSnapshot snapshot = m_Snapshots
+		ProgressSnapshot snapshot = Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Where(_Snapshot => _Snapshot.Level >= level)
 			.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B);
