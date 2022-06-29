@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
+using Unity.Notifications.Android;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -83,6 +84,13 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 
 	protected abstract void ClearBadges();
 
+	public abstract void Schedule(
+		string _Title,
+		string _Message,
+		string _URL,
+		long   _Timestamp
+	);
+
 	static void OnTokenReceived(object _Sender, TokenReceivedEventArgs _Args)
 	{
 		Debug.LogFormat("[MessageProcessor] Received token: '{0}'.", _Args.Token);
@@ -101,6 +109,24 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 [Preserve]
 public class AndroidMessageProcessor : MessageProcessor
 {
+	public override void Schedule(
+		string _Title,
+		string _Message,
+		string _URL,
+		long   _Timestamp
+	)
+	{
+		AndroidNotification notification = new AndroidNotification()
+		{
+			Title      = _Title,
+			Text       = _Message,
+			IntentData = _URL,
+			FireTime   = DateTime.FromFileTimeUtc(_Timestamp),
+		};
+		
+		AndroidNotificationCenter.SendNotification(notification, string.Empty);
+	}
+
 	protected override void ClearBadges() { }
 }
 #endif
@@ -109,6 +135,36 @@ public class AndroidMessageProcessor : MessageProcessor
 [Preserve]
 public class iOSMessageProcessor : MessageProcessor
 {
+	public override void Schedule(
+		string _Title,
+		string _Message,
+		string _URL,
+		long   _Timestamp
+	)
+	{
+		DateTime date = DateTime.FromFileTimeUtc(_Timestamp);
+		
+		iOSNotification notification = new iOSNotification()
+		{
+			Title = _Title,
+			Body  = _Message,
+			Data  = _URL,
+			Trigger = new iOSNotificationCalendarTrigger()
+			{
+				Year    = date.Year,
+				Month   = date.Month,
+				Day     = date.Day,
+				Hour    = date.Hour,
+				Minute  = date.Minute,
+				Second  = date.Second,
+				Repeats = false,
+				UtcTime = true
+			}
+		};
+		
+		iOSNotificationCenter.ScheduleNotification(notification);
+	}
+
 	protected override void ClearBadges()
 	{
 		Unity.Notifications.iOS.iOSNotificationCenter.RemoveAllScheduledNotifications();
