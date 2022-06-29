@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Auth;
 using Firebase.Database;
+using MAXHelper;
 using UnityEngine;
 using UnityEngine.Advertisements;
 using UnityEngine.Scripting;
@@ -16,6 +17,55 @@ public interface IAdsProvider
 	Task<bool> Initialize();
 	Task<bool> Interstitial();
 	Task<bool> Rewarded();
+}
+
+[Preserve]
+public class AdsProviderMadPixel : IAdsProvider
+{
+	public string ID => "mad_pixel";
+
+	#if UNITY_IOS
+	static string InterstitialID => "Interstitial_iOS";
+	static string RewardedID     => "Rewarded_iOS";
+	#elif UNITY_ANDROID
+	static string InterstitialID => "";
+	static string RewardedID     => "testUnitID_R";
+	#endif
+
+	public Task<bool> Initialize()
+	{
+		AdsManager.Instance.InitApplovin();
+		
+		return Task.FromResult(true);
+	}
+
+	public Task<bool> Interstitial()
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		AdsManager.Instance.ShowAd(
+			_Success => completionSource.TrySetResult(_Success),
+			() => completionSource.TrySetResult(false),
+			InterstitialID,
+			false
+		);
+		
+		return completionSource.Task;
+	}
+
+	public Task<bool> Rewarded()
+	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		AdsManager.Instance.ShowAd(
+			_Success => completionSource.TrySetResult(_Success),
+			() => completionSource.TrySetResult(false),
+			RewardedID,
+			true
+		);
+		
+		return completionSource.Task;
+	}
 }
 
 [Preserve]
@@ -306,8 +356,12 @@ public class AdsProcessor
 	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
+			AudioListener.volume = 0;
+			
 			if (!await provider.Interstitial())
 				continue;
+			
+			AudioListener.volume = 1;
 			
 			m_AudioManager.SetAudioActive(true);
 			
@@ -323,8 +377,12 @@ public class AdsProcessor
 	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
+			AudioListener.volume = 0;
+			
 			if (!await provider.Rewarded())
 				continue;
+			
+			AudioListener.volume = 1;
 			
 			m_AudioManager.SetAudioActive(true);
 			

@@ -44,6 +44,7 @@ public class GameInstaller : MonoInstaller
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas).AsSingle();
 		Container.BindInterfacesAndSelfTo<UISongContainer>().FromInstance(m_SongContainer).AsSingle();
 		
+		Container.Bind<IAdsProvider>().To<AdsProviderMadPixel>().FromNew().AsSingle();
 		Container.Bind<IAdsProvider>().To<AdsProviderUnity>().FromNew().AsSingle();
 		Container.Bind<IAdsProvider>().To<AdsProviderAdMob>().FromNew().AsSingle();
 		
