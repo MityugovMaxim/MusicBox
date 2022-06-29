@@ -86,7 +86,11 @@ Shader "UI/Fluid"
 			{
 				const fixed value = tex2D(_MainTex, IN.texcoord).r;
 				
-				const fixed4 color = BACKGROUND_BY_RANGE(value, 0.3, 0.95) * value * 0.6;
+				const fixed highlight = smoothstep(0.9, 1, value) * 0.15;
+				
+				fixed4 color = BACKGROUND_BY_RANGE(value, 0.3, 0.95) * value * 0.7;
+				
+				color.rgb += highlight;
 				
 				return IN.color * _BackgroundSecondaryColor + color;
 			}
