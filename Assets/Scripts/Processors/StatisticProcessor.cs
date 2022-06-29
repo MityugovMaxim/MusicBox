@@ -12,6 +12,7 @@ public abstract class StatisticData
 	public abstract Parameter GetParameter();
 	public abstract void Fill(Dictionary<string, object> _Data);
 	public abstract void Fill(Dictionary<string, string> _Data);
+	protected abstract string GetString();
 
 	public static StatisticData Create(string _Key, int _Value)
 	{
@@ -32,7 +33,12 @@ public abstract class StatisticData
 	{
 		return new StatisticDouble(_Key, _Value);
 	}
-	
+
+	public static StatisticData Create(string _Key, decimal _Value)
+	{
+		return new StatisticDecimal(_Key, _Value);
+	}
+
 	public static StatisticData Create(string _Key, bool _Value)
 	{
 		return new StatisticBool(_Key, _Value);
@@ -57,7 +63,7 @@ public abstract class StatisticData<T> : StatisticData
 
 	public override void Fill(Dictionary<string, string> _Data)
 	{
-		_Data[Key] = Value.ToString();
+		_Data[Key] = GetString();
 	}
 }
 
@@ -69,6 +75,8 @@ public class StatisticString : StatisticData<string>
 	{
 		return new Parameter(Key, Value ?? "null");
 	}
+
+	protected override string GetString() => Value ?? "null";
 }
 
 public class StatisticInteger : StatisticData<int>
@@ -79,6 +87,8 @@ public class StatisticInteger : StatisticData<int>
 	{
 		return new Parameter(Key, Value);
 	}
+
+	protected override string GetString() => Value.ToString();
 }
 
 public class StatisticLong : StatisticData<long>
@@ -89,6 +99,8 @@ public class StatisticLong : StatisticData<long>
 	{
 		return new Parameter(Key, Value);
 	}
+
+	protected override string GetString() => Value.ToString();
 }
 
 public class StatisticDouble : StatisticData<double>
@@ -99,6 +111,20 @@ public class StatisticDouble : StatisticData<double>
 	{
 		return new Parameter(Key, Value);
 	}
+
+	protected override string GetString() => Value.ToString(CultureInfo.InvariantCulture);
+}
+
+public class StatisticDecimal : StatisticData<decimal>
+{
+	public StatisticDecimal(string _Key, decimal _Value) : base(_Key, _Value) { }
+
+	public override Parameter GetParameter()
+	{
+		return new Parameter(Key, (double)Value);
+	}
+
+	protected override string GetString() => Value.ToString(CultureInfo.InvariantCulture);
 }
 
 public class StatisticBool : StatisticData<bool>
@@ -109,6 +135,8 @@ public class StatisticBool : StatisticData<bool>
 	{
 		return new Parameter(Key, Value ? 1 : 0);
 	}
+
+	protected override string GetString() => Value.ToString();
 }
 
 public interface IStatisticProvider
@@ -179,11 +207,11 @@ public class StatisticFirebase : IStatisticProvider
 {
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
-		FirebaseAnalytics.LogEvent(
+		Log(
 			FirebaseAnalytics.EventPurchase,
-			new Parameter("product_id", _ProductID),
-			new Parameter("price", (double)_Price),
-			new Parameter("currency", _Currency)
+			StatisticData.Create("product_id", _ProductID),
+			StatisticData.Create("price", (double)_Price),
+			StatisticData.Create("currency", _Currency)
 		);
 	}
 
@@ -206,11 +234,12 @@ public class StatisticAppsFlyer : IStatisticProvider
 {
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
-		Dictionary<string, string> data = new Dictionary<string, string>();
-		data.Add(AFInAppEvents.CURRENCY, _Currency);
-		data.Add(AFInAppEvents.REVENUE, _Price.ToString(CultureInfo.InvariantCulture));
-		data.Add("af_quantity", "1");
-		AppsFlyer.sendEvent(AFInAppEvents.PURCHASE, data);
+		Log(
+			AFInAppEvents.PURCHASE,
+			StatisticData.Create(AFInAppEvents.CURRENCY, _Currency),
+			StatisticData.Create(AFInAppEvents.REVENUE, (double)_Price),
+			StatisticData.Create(AFInAppEvents.QUANTITY, 1)
+		);
 	}
 
 	public void Log(string _Name, params StatisticData[] _Parameters)
@@ -223,7 +252,7 @@ public class StatisticAppsFlyer : IStatisticProvider
 				parameter.Fill(data);
 		}
 		
-		AppsFlyer.sendEvent(AFInAppEvents.PURCHASE, data);
+		AppsFlyer.sendEvent(_Name, data);
 	}
 }
 
