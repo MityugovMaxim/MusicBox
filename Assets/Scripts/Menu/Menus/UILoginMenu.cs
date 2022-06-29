@@ -25,6 +25,7 @@ public class UILoginMenu : UIMenu
 	[Inject] LanguageProcessor    m_LanguageProcessor;
 	[Inject] AmbientProcessor     m_AmbientProcessor;
 	[Inject] BannersProcessor     m_BannersProcessor;
+	[Inject] StatisticProcessor   m_StatisticProcessor;
 	[Inject] UrlProcessor         m_UrlProcessor;
 	[Inject] SongsManager         m_SongsManager;
 
@@ -39,6 +40,8 @@ public class UILoginMenu : UIMenu
 			
 			await Task.Delay(250);
 		}
+		
+		m_StatisticProcessor.LogLogin(m_SocialProcessor.UserID, m_SocialProcessor.Name);
 		
 		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
 		

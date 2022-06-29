@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using AppsFlyerSDK;
 using Facebook.Unity;
 using Firebase.Analytics;
+using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.Scripting;
 using Zenject;
@@ -176,6 +178,11 @@ public class StatisticUnity : IStatisticProvider
 [Preserve]
 public class StatisticFacebook : IStatisticProvider
 {
+	public StatisticFacebook()
+	{
+		FB.Init();
+	}
+
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
 		FB.LogPurchase(
@@ -296,6 +303,15 @@ public class StatisticProcessor
 		
 		foreach (IStatisticProvider provider in m_Providers)
 			provider.Purchase(_ProductID, _Currency, _Price);
+	}
+
+	public void LogLogin(string _UserID, string _Name)
+	{
+		LogEvent(
+			"login",
+			StatisticData.Create("user_id", _UserID),
+			StatisticData.Create("name", _Name)
+		);
 	}
 
 	public void LogEvent(string _Name, params StatisticData[] _Parameters)
