@@ -13,10 +13,9 @@ public class UINewsItem : UIEntity
 	[SerializeField] TMP_Text    m_Description;
 	[SerializeField] TMP_Text    m_Date;
 
-	[Inject] NewsProcessor      m_NewsProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] UrlProcessor       m_UrlProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] NewsProcessor m_NewsProcessor;
+	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] UrlProcessor  m_UrlProcessor;
 
 	string m_NewsID;
 	string m_URL;
@@ -35,8 +34,6 @@ public class UINewsItem : UIEntity
 
 	public async void Open()
 	{
-		m_StatisticProcessor.LogMainMenuNewsPageItemClick(m_NewsID);
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu);
 		
 		await m_UrlProcessor.ProcessURL(m_URL);

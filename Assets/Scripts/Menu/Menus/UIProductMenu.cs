@@ -30,7 +30,6 @@ public class UIProductMenu : UISlideMenu
 	[Inject] MenuProcessor          m_MenuProcessor;
 	[Inject] HapticProcessor        m_HapticProcessor;
 	[Inject] SoundProcessor         m_SoundProcessor;
-	[Inject] StatisticProcessor     m_StatisticProcessor;
 	[Inject] UIProductSongItem.Pool m_ItemPool;
 
 	string m_ProductID;
@@ -51,8 +50,6 @@ public class UIProductMenu : UISlideMenu
 
 	public async void Purchase()
 	{
-		m_StatisticProcessor.LogProductMenuPurchaseClick(m_ProductID);
-		
 		m_Preview.Stop();
 		
 		foreach (UIProductSongItem item in m_Items)
@@ -86,8 +83,6 @@ public class UIProductMenu : UISlideMenu
 		
 		if (success)
 		{
-			m_StatisticProcessor.LogProductMenuPurchaseSuccess(m_ProductID);
-			
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
@@ -104,8 +99,6 @@ public class UIProductMenu : UISlideMenu
 		}
 		else
 		{
-			m_StatisticProcessor.LogProductMenuPurchaseFailed(m_ProductID);
-			
 			if (!canceled)
 			{
 				await m_MenuProcessor.RetryLocalizedAsync(
@@ -130,15 +123,11 @@ public class UIProductMenu : UISlideMenu
 
 	public void Next()
 	{
-		m_StatisticProcessor.LogProductMenuNextClick(m_ProductID);
-		
 		Setup(GetProductID(1));
 	}
 
 	public void Previous()
 	{
-		m_StatisticProcessor.LogProductMenuPreviousClick(m_ProductID);
-		
 		Setup(GetProductID(-1));
 	}
 

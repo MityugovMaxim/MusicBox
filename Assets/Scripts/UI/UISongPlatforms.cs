@@ -7,9 +7,8 @@ public class UISongPlatforms : UIEntity
 	[SerializeField] GameObject m_Deezer;
 	[SerializeField] GameObject m_AppleMusic;
 
-	[Inject] SongsProcessor     m_SongsProcessor;
-	[Inject] UrlProcessor       m_UrlProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] UrlProcessor   m_UrlProcessor;
 
 	string m_SongID;
 	string m_SpotifyURL;
@@ -31,22 +30,16 @@ public class UISongPlatforms : UIEntity
 
 	public async void OpenSpotify()
 	{
-		m_StatisticProcessor.LogResultMenuControlPagePlatformClick(m_SongID, m_AppleMusicURL);
-		
 		await m_UrlProcessor.ProcessURL(m_SpotifyURL);
 	}
 
 	public async void OpenDeezer()
 	{
-		m_StatisticProcessor.LogResultMenuControlPagePlatformClick(m_SongID, m_DeezerURL);
-		
 		await m_UrlProcessor.ProcessURL(m_DeezerURL);
 	}
 
 	public async void OpenAppleMusic()
 	{
-		m_StatisticProcessor.LogResultMenuControlPagePlatformClick(m_SongID, m_AppleMusicURL);
-		
 		await m_UrlProcessor.ProcessURL(m_AppleMusicURL);
 	}
 }

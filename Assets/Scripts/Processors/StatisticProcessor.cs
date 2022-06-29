@@ -73,7 +73,7 @@ public class StatisticString : StatisticData<string>
 
 	public override Parameter GetParameter()
 	{
-		return new Parameter(Key, Value ?? "null");
+		return new Parameter(Key, GetString());
 	}
 
 	protected override string GetString() => Value ?? "null";
@@ -230,12 +230,40 @@ public class StatisticFirebase : IStatisticProvider
 }
 
 [Preserve]
+public class StatisticAppMetrica : IStatisticProvider
+{
+	public void Purchase(string _ProductID, string _Currency, decimal _Price)
+	{
+		Log(
+			"am_purchase",
+			StatisticData.Create("product_id", _ProductID),
+			StatisticData.Create("price", (double)_Price),
+			StatisticData.Create("currency", _Currency)
+		);
+	}
+
+	public void Log(string _Name, params StatisticData[] _Parameters)
+	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		if (_Parameters != null && _Parameters.Length > 0)
+		{
+			foreach (StatisticData parameter in _Parameters)
+				parameter.Fill(data);
+		}
+		
+		AppMetrica.Instance.ReportEvent(_Name, data);
+	}
+}
+
+[Preserve]
 public class StatisticAppsFlyer : IStatisticProvider
 {
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
 		Log(
 			AFInAppEvents.PURCHASE,
+			StatisticData.Create("product_id", _ProductID),
 			StatisticData.Create(AFInAppEvents.CURRENCY, _Currency),
 			StatisticData.Create(AFInAppEvents.REVENUE, (double)_Price),
 			StatisticData.Create(AFInAppEvents.QUANTITY, 1)
@@ -256,165 +284,10 @@ public class StatisticAppsFlyer : IStatisticProvider
 	}
 }
 
+[Preserve]
 public class StatisticProcessor
 {
-	readonly IStatisticProvider[] m_Providers;
-
-	[Inject]
-	public StatisticProcessor(IStatisticProvider[] _Providers)
-	{
-		m_Providers = _Providers;
-	}
-
-	#region Main Menu
-
-	public void LogMainMenuPageSelect(MainMenuPageType _PageType)
-	{
-		LogEvent(
-			"main_menu_control_bar_click",
-			StatisticData.Create("page_type", _PageType.ToString())
-		);
-	}
-
-	public void LogMainMenuProfileClick()
-	{
-		LogEvent("main_menu_profile_click");
-	}
-
-	public void LogMainMenuPromoClick(string _ProductID)
-	{
-		LogEvent(
-			"main_menu_promo_click",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogSongItemClick(string _SongID)
-	{
-		LogEvent(
-			"main_menu_songs_page_item_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogMainMenuStorePageItemClick(string _ProductID)
-	{
-		LogEvent(
-			"main_menu_store_page_item_click",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogMainMenuNewsPageItemClick(string _NewsID)
-	{
-		LogEvent(
-			"main_menu_news_page_item_click",
-			StatisticData.Create("news_id", _NewsID)
-		);
-	}
-
-	public void LogMainMenuOffersPageItemClick(string _OfferID)
-	{
-		LogEvent(
-			"main_menu_offers_page_item_click",
-			StatisticData.Create("offer_id", _OfferID)
-		);
-	}
-
-	public void LogMainMenuProfilePageCoinsClick()
-	{
-		LogEvent("main_menu_profile_page_coins_click");
-	}
-
-	public void LogMainMenuProfilePageUsernameClick()
-	{
-		LogEvent("main_menu_profile_page_username_click");
-	}
-
-	public void LogMainMenuProfilePageLanguageClick(string _Language)
-	{
-		LogEvent(
-			"main_menu_profile_page_language_click",
-			StatisticData.Create("language", _Language)
-		);
-	}
-
-	public void LogMainMenuProfilePageRestorePurchasesClick()
-	{
-		LogEvent("main_menu_profile_page_restore_purchases_click");
-	}
-
-	public void LogMainMenuProfilePageSignInClick(string _ProviderID)
-	{
-		LogEvent(
-			"main_menu_profile_page_sign_in_click",
-			StatisticData.Create("provider_id", _ProviderID)
-		);
-	}
-
-	public void LogMainMenuProfilePageSignOutClick(string _ProviderID)
-	{
-		LogEvent(
-			"main_menu_profile_page_sign_out_click",
-			StatisticData.Create("provider_id", _ProviderID)
-		);
-	}
-
-	#endregion
-
-	#region Level Menu
-
-	public void LogSongMenuUnlockClick(string _SongID)
-	{
-		LogEvent(
-			"song_menu_unlock_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogSongMenuUnlockSuccess(string _LevelID)
-	{
-		LogEvent(
-			"song_menu_unlock_success",
-			StatisticData.Create("song_id", _LevelID)
-		);
-	}
-
-	public void LogSongMenuUnlockFailed(string _LevelID)
-	{
-		LogEvent(
-			"level_menu_unlock_failed",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	public void LogSongMenuPlayClick(string _LevelID)
-	{
-		LogEvent(
-			"level_menu_play_click",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	public void LogSongMenuNextClick(string _LevelID)
-	{
-		LogEvent(
-			"level_menu_next_click",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	public void LogSongMenuPreviousClick(string _LevelID)
-	{
-		LogEvent(
-			"level_menu_previous_click",
-			StatisticData.Create("level_id", _LevelID)
-		);
-	}
-
-	#endregion
-
-	#region Product Menu
+	[Inject] IStatisticProvider[] m_Providers;
 
 	public void LogPurchase(string _ProductID, string _Currency, decimal _Price)
 	{
@@ -425,257 +298,7 @@ public class StatisticProcessor
 			provider.Purchase(_ProductID, _Currency, _Price);
 	}
 
-	public void LogProductMenuPurchaseClick(string _ProductID)
-	{
-		LogEvent(
-			"product_menu_purchase_click",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogProductMenuPurchaseSuccess(string _ProductID)
-	{
-		LogEvent(
-			"product_menu_purchase_success",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogProductMenuPurchaseFailed(string _ProductID)
-	{
-		LogEvent(
-			"product_menu_purchase_failed",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogProductMenuNextClick(string _ProductID)
-	{
-		LogEvent(
-			"product_menu_next_click",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	public void LogProductMenuPreviousClick(string _ProductID)
-	{
-		LogEvent(
-			"product_menu_previous_click",
-			StatisticData.Create("product_id", _ProductID)
-		);
-	}
-
-	#endregion
-
-	#region Pause Menu
-
-	public void LogPauseMenuLeaveClick(string _SongID)
-	{
-		LogEvent(
-			"pause_menu_leave_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogPauseMenuRestartClick(string _SongID)
-	{
-		LogEvent(
-			"pause_menu_restart_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogPauseMenuLatencyClick(string _SongID)
-	{
-		LogEvent(
-			"pause_menu_latency_click",
-			StatisticData.Create("level_id", _SongID)
-		);
-	}
-
-	public void LogPauseMenuHaptic(bool _State)
-	{
-		LogEvent(
-			"pause_menu_haptic_state",
-			StatisticData.Create("state", _State)
-		);
-	}
-
-	#endregion
-
-	#region Result Menu
-
-	public void LogResultMenuRewardPageContinueClick(string _SongID)
-	{
-		LogEvent(
-			"result_menu_reward_page_continue_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogResultMenuLevelPageContinueClick(string _SongID)
-	{
-		LogEvent(
-			"result_menu_level_page_continue_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogResultMenuControlPageLeaveClick(string _SongID)
-	{
-		LogEvent(
-			"result_menu_control_page_leave_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogResultMenuControlPageNextClick(string _SongID)
-	{
-		LogEvent(
-			"result_menu_control_page_next_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogResultMenuControlPageRestartClick(string _SongID)
-	{
-		LogEvent(
-			"result_menu_control_page_restart_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogResultMenuControlPagePlatformClick(string _SongID, string _PlatformURL)
-	{
-		LogEvent(
-			"result_menu_control_page_platform_click",
-			StatisticData.Create("song_id", _SongID),
-			StatisticData.Create("platform_url", _PlatformURL)
-		);
-	}
-
-	#endregion
-
-	#region Revive Menu
-
-	public void LogReviveMenuShow(string _SongID)
-	{
-		LogEvent(
-			"revive_menu_show",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogReviveMenuReviveAdsClick(string _SongID)
-	{
-		LogEvent(
-			"revive_menu_revive_ads_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogReviveMenuReviveCoinsClick(string _SongID)
-	{
-		LogEvent(
-			"revive_menu_revive_coins_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogReviveMenuLeaveClick(string _SongID)
-	{
-		LogEvent(
-			"revive_menu_leave_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	public void LogReviveMenuRestartClick(string _SongID)
-	{
-		LogEvent(
-			"revive_menu_restart_click",
-			StatisticData.Create("song_id", _SongID)
-		);
-	}
-
-	#endregion
-
-	#region Latency Menu
-
-	public void LogAudioLatencyState(string _DeviceName, string _DeviceUID, AudioOutputType _DeviceType, float _Latency)
-	{
-		LogEvent(
-			"latency_menu_state",
-			StatisticData.Create("device_name", _DeviceName),
-			StatisticData.Create("device_uid", _DeviceUID),
-			StatisticData.Create("device_type", _DeviceType.ToString()),
-			StatisticData.Create("latency", _Latency)
-		);
-	}
-
-	#endregion
-
-	#region Error Menu
-
-	public void LogErrorMenuShow(string _Reason)
-	{
-		LogEvent(
-			"error_menu_show",
-			StatisticData.Create("reason", _Reason)
-		);
-	}
-
-	#endregion
-
-	#region Retry Menu
-
-	public void LogRetryMenuShow(string _Reason)
-	{
-		LogEvent(
-			"retry_menu_show",
-			StatisticData.Create("reason", _Reason)
-		);
-	}
-
-	public void LogRetryMenuRetryClick(string _Reason)
-	{
-		LogEvent(
-			"retry_menu_retry_click",
-			StatisticData.Create("reason", _Reason)
-		);
-	}
-
-	public void LogRetryMenuCancelClick(string _Reason)
-	{
-		LogEvent(
-			"retry_menu_cancel_click",
-			StatisticData.Create("reason", _Reason)
-		);
-	}
-
-	#endregion
-
-	#region Banner Menu
-
-	public void LogBannerMenuCloseClick(string _BannerID)
-	{
-		LogEvent(
-			"banner_menu_close_click",
-			StatisticData.Create("banner_id", _BannerID)
-		);
-	}
-
-	public void LogBannerMenuOpenClick(string _BannerID)
-	{
-		LogEvent(
-			"banner_menu_open_click",
-			StatisticData.Create("banner_id", _BannerID)
-		);
-	}
-
-	#endregion
-
-	void LogEvent(string _Name, params StatisticData[] _Parameters)
+	public void LogEvent(string _Name, params StatisticData[] _Parameters)
 	{
 		if (m_Providers == null || m_Providers.Length == 0)
 			return;

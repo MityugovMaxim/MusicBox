@@ -12,8 +12,7 @@ public class UISongItem : UIOverlayButton
 	[SerializeField] UISongLock  m_Lock;
 	[SerializeField] UISongBadge m_Badge;
 
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor m_MenuProcessor;
 
 	string m_SongID;
 
@@ -30,8 +29,6 @@ public class UISongItem : UIOverlayButton
 	protected override void OnClick()
 	{
 		base.OnClick();
-		
-		m_StatisticProcessor.LogSongItemClick(m_SongID);
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		

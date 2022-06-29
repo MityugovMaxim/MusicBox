@@ -18,16 +18,15 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	[SerializeField] UISongPlatforms m_Platforms;
 	[SerializeField] UISongQRCode    m_QR;
 
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] ScoreManager       m_ScoreManager;
-	[Inject] ScoresProcessor    m_ScoresProcessor;
-	[Inject] SongsManager       m_SongsManager;
-	[Inject] SongsProcessor     m_SongsProcessor;
-	[Inject] SongController     m_SongController;
-	[Inject] AdsProcessor       m_AdsProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] ConfigProcessor  m_ConfigProcessor;
+	[Inject] ScoreManager     m_ScoreManager;
+	[Inject] ScoresProcessor  m_ScoresProcessor;
+	[Inject] SongsManager     m_SongsManager;
+	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] SongController   m_SongController;
+	[Inject] AdsProcessor     m_AdsProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
@@ -58,8 +57,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public async void Leave()
 	{
-		m_StatisticProcessor.LogResultMenuControlPageLeaveClick(m_SongID);
-		
 		await ProcessLeaveAds();
 		
 		m_Preview.Stop();
@@ -78,8 +75,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public async void Next()
 	{
-		m_StatisticProcessor.LogResultMenuControlPageNextClick(m_SongID);
-		
 		await ProcessNextAds();
 		
 		m_Preview.Stop();
@@ -114,8 +109,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public async void Restart()
 	{
-		m_StatisticProcessor.LogResultMenuControlPageRestartClick(m_SongID);
-		
 		if (!await ProcessRestartAds())
 			return;
 		

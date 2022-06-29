@@ -39,15 +39,11 @@ public class UISongMenu : UISlideMenu
 
 	public void Next()
 	{
-		m_StatisticProcessor.LogSongMenuNextClick(m_SongID);
-		
 		Select(GetSongID(1));
 	}
 
 	public void Previous()
 	{
-		m_StatisticProcessor.LogSongMenuPreviousClick(m_SongID);
-		
 		Select(GetSongID(-1));
 	}
 
@@ -55,8 +51,6 @@ public class UISongMenu : UISlideMenu
 	{
 		if (!m_SongsManager.IsSongLockedByCoins(m_SongID))
 			return;
-		
-		m_StatisticProcessor.LogSongMenuUnlockClick(m_SongID);
 		
 		long coins = m_SongsProcessor.GetPrice(m_SongID);
 		
@@ -76,8 +70,6 @@ public class UISongMenu : UISlideMenu
 		
 		if (success)
 		{
-			m_StatisticProcessor.LogSongMenuUnlockSuccess(m_SongID);
-			
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);
@@ -97,8 +89,6 @@ public class UISongMenu : UISlideMenu
 		}
 		else
 		{
-			m_StatisticProcessor.LogSongMenuUnlockFailed(m_SongID);
-			
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"unlock_song",
 				"SONG_UNLOCK_ERROR_TITLE",
@@ -122,8 +112,6 @@ public class UISongMenu : UISlideMenu
 	{
 		if (!m_SongsManager.IsSongAvailable(m_SongID))
 			return;
-		
-		m_StatisticProcessor.LogSongMenuPlayClick(m_SongID);
 		
 		m_PreviewSource.Stop();
 		

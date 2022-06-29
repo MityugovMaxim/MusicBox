@@ -11,10 +11,9 @@ public class UIErrorMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] SoundProcessor     m_SoundProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
 
 	Action m_Action;
 
@@ -23,8 +22,6 @@ public class UIErrorMenu : UIMenu
 		m_Title.text   = _Title;
 		m_Message.text = _Message;
 		m_Action       = _Action;
-		
-		m_StatisticProcessor.LogErrorMenuShow(_Reason);
 	}
 
 	public async void Close()

@@ -12,9 +12,8 @@ public class UIRetryMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] SoundProcessor     m_SoundProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	string m_Reason;
 	Action m_Retry;
@@ -30,14 +29,10 @@ public class UIRetryMenu : UIMenu
 		m_Message.text = _Message;
 		
 		m_CancelButton.SetActive(m_Cancel != null);
-		
-		m_StatisticProcessor.LogRetryMenuShow(m_Reason);
 	}
 
 	public void Retry()
 	{
-		m_StatisticProcessor.LogRetryMenuRetryClick(m_Reason);
-		
 		Hide();
 		
 		Action action = m_Retry;
@@ -48,8 +43,6 @@ public class UIRetryMenu : UIMenu
 
 	public void Cancel()
 	{
-		m_StatisticProcessor.LogRetryMenuCancelClick(m_Reason);
-		
 		Hide();
 		
 		Action action = m_Cancel;

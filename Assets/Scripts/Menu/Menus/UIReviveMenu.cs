@@ -11,15 +11,14 @@ public class UIReviveMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] AdsProcessor       m_AdsProcessor;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] SongsProcessor     m_SongsProcessor;
-	[Inject] SongController     m_SongController;
-	[Inject] RevivesProcessor   m_RevivesProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] SoundProcessor     m_SoundProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] AdsProcessor     m_AdsProcessor;
+	[Inject] ConfigProcessor  m_ConfigProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] SongController   m_SongController;
+	[Inject] RevivesProcessor m_RevivesProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] SoundProcessor   m_SoundProcessor;
 
 	string m_SongID;
 	int    m_Count;
@@ -36,8 +35,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveCoins()
 	{
-		m_StatisticProcessor.LogReviveMenuReviveCoinsClick(m_SongID);
-		
 		long coins = m_RevivesProcessor.GetCoins(m_Count);
 		
 		if (!await m_ProfileProcessor.CheckCoins(coins))
@@ -79,8 +76,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveAds()
 	{
-		m_StatisticProcessor.LogReviveMenuReviveAdsClick(m_SongID);
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
@@ -115,8 +110,6 @@ public class UIReviveMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
-		m_StatisticProcessor.LogReviveMenuShow(m_SongID);
-		
 		m_SoundProcessor.Play(m_Sound);
 		m_Image.Setup(m_SongID);
 		m_Restart.Setup(m_SongID);
@@ -126,8 +119,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void Restart()
 	{
-		m_StatisticProcessor.LogReviveMenuRestartClick(m_SongID);
-		
 		if (!await ProcessRestartAds())
 			return;
 		
@@ -140,8 +131,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void Leave()
 	{
-		m_StatisticProcessor.LogReviveMenuLeaveClick(m_SongID);
-		
 		await ProcessLeaveAds();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();

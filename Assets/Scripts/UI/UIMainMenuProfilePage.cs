@@ -21,7 +21,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	[Inject] ProductsProcessor  m_ProductsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	protected override void Awake()
 	{
@@ -41,8 +40,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	{
 		async void Process()
 		{
-			m_StatisticProcessor.LogMainMenuProfilePageSignOutClick(m_SocialProcessor.Provider);
-			
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			
 			await m_MenuProcessor.Show(MenuType.LoginMenu);
@@ -78,8 +75,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 
 	public async void OpenCoins()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageCoinsClick();
-		
 		string productID = m_ProductsProcessor.GetCoinsProductID(m_ProfileProcessor.Coins);
 		
 		if (string.IsNullOrEmpty(productID))

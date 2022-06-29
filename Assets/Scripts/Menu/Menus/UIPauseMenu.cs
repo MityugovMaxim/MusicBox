@@ -9,13 +9,12 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UISongLabel  m_Label;
 	[SerializeField] UISongQRCode m_QR;
 
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] SongsProcessor     m_SongsProcessor;
-	[Inject] SongController     m_SongController;
-	[Inject] AdsProcessor       m_AdsProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] ConfigProcessor  m_ConfigProcessor;
+	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] SongController   m_SongController;
+	[Inject] AdsProcessor     m_AdsProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
 
 	string m_SongID;
 	int    m_RestartAdsCount;
@@ -28,8 +27,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Restart()
 	{
-		m_StatisticProcessor.LogPauseMenuRestartClick(m_SongID);
-		
 		if (!await ProcessRestartAds())
 			return;
 		
@@ -44,8 +41,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Leave()
 	{
-		m_StatisticProcessor.LogPauseMenuLeaveClick(m_SongID);
-		
 		await ProcessLeaveAds();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
@@ -79,8 +74,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Latency()
 	{
-		m_StatisticProcessor.LogPauseMenuLatencyClick(m_SongID);
-		
 		await m_MenuProcessor.Show(MenuType.LatencyMenu);
 	}
 

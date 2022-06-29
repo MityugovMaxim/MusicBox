@@ -52,6 +52,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticFirebase>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticAppsFlyer>().FromNew().AsSingle();
+		Container.BindInterfacesTo<StatisticAppMetrica>().FromNew().AsSingle();
 		
 		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
 		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);

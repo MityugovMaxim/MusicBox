@@ -10,14 +10,11 @@ public class UISocialMenu : UISlideMenu
 	[SerializeField] GameObject m_GoogleSignIn;
 	[SerializeField] GameObject m_FacebookSignIn;
 
-	[Inject] SocialProcessor    m_SocialProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SocialProcessor m_SocialProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
 
 	public void SignInApple()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("apple");
-		
 		SignIn(
 			m_SocialProcessor.AttachAppleID,
 			GetLocalization("APPLE_SIGN_IN_ERROR_TITLE"),
@@ -27,8 +24,6 @@ public class UISocialMenu : UISlideMenu
 
 	public void SignInGoogle()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("google");
-		
 		SignIn(
 			m_SocialProcessor.AttachGoogleID,
 			GetLocalization("GOOGLE_SIGN_IN_ERROR_TITLE"),
@@ -38,8 +33,6 @@ public class UISocialMenu : UISlideMenu
 
 	public void SignInFacebook()
 	{
-		m_StatisticProcessor.LogMainMenuProfilePageSignInClick("facebook");
-		
 		SignIn(
 			m_SocialProcessor.AttachFacebookID,
 			GetLocalization("FACEBOOK_SIGN_IN_ERROR_TITLE"),

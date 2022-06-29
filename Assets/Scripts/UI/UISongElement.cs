@@ -16,10 +16,9 @@ public class UISongElement : UIOverlayButton
 	[SerializeField] UISongPrice m_Price;
 	[SerializeField] Button      m_PlayButton;
 
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] ScoresProcessor    m_ScoresProcessor;
-	[Inject] SongsManager       m_SongsManager;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] ScoresProcessor m_ScoresProcessor;
+	[Inject] SongsManager    m_SongsManager;
 
 	string m_SongID;
 
@@ -61,8 +60,6 @@ public class UISongElement : UIOverlayButton
 	protected override void OnClick()
 	{
 		base.OnClick();
-		
-		m_StatisticProcessor.LogSongItemClick(m_SongID);
 		
 		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
 		

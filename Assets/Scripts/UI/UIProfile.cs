@@ -37,11 +37,10 @@ public class UIProfile : UIEntity
 	[SerializeField] TMP_Text       m_DiscsLabel;
 	[SerializeField] int            m_Discs;
 
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ProgressProcessor  m_ProgressProcessor;
-	[Inject] SocialProcessor    m_SocialProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileProcessor  m_ProfileProcessor;
+	[Inject] ProgressProcessor m_ProgressProcessor;
+	[Inject] SocialProcessor   m_SocialProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
 
 	protected override void OnEnable()
 	{
@@ -72,8 +71,6 @@ public class UIProfile : UIEntity
 
 	public void Open()
 	{
-		m_StatisticProcessor.LogMainMenuProfileClick();
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null && mainMenu.Shown)
 			mainMenu.Select(MainMenuPageType.Profile);

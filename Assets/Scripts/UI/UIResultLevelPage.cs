@@ -14,11 +14,10 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	[Inject] ScoreManager       m_ScoreManager;
-	[Inject] ProgressProcessor  m_ProgressProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
-	[Inject] UIUnlockItem.Pool  m_ItemPool;
+	[Inject] ScoreManager      m_ScoreManager;
+	[Inject] ProgressProcessor m_ProgressProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] UIUnlockItem.Pool m_ItemPool;
 
 	readonly List<UIUnlockItem> m_Items   = new List<UIUnlockItem>();
 	readonly Queue<Func<Task>>  m_Actions = new Queue<Func<Task>>();
@@ -59,8 +58,6 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	public void Continue()
 	{
-		m_StatisticProcessor.LogResultMenuLevelPageContinueClick(m_SongID);
-		
 		m_ContinueGroup.Hide();
 		
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();

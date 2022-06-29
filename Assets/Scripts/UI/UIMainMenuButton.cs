@@ -27,8 +27,7 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 
 	[SerializeField] MainMenuPageType m_PageType;
 
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor m_MenuProcessor;
 
 	Animator m_Animator;
 
@@ -68,8 +67,6 @@ public class UIMainMenuButton : UIEntity, IPointerDownHandler, IPointerUpHandler
 
 	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
-		m_StatisticProcessor.LogMainMenuPageSelect(m_PageType);
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
 			mainMenu.Select(m_PageType);
