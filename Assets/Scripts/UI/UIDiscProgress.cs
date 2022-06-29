@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Firebase.Extensions;
 using UnityEngine;
 using Zenject;
 
@@ -85,23 +84,20 @@ public class UIDiscProgress : UIGroup
 		ProcessProgress();
 	}
 
-	public Task ProgressAsync()
+	public async Task ProgressAsync()
 	{
 		m_SoundProcessor.Start(m_ProgressSound);
 		
-		void Complete(Task _Task)
-		{
-			m_SoundProcessor.Stop(m_ProgressSound);
-		}
-		
-		return UnityTask.Lerp(
+		await UnityTask.Lerp(
 			_Value => Progress = _Value,
 			m_SourceProgress,
 			m_TargetProgress,
 			m_ProgressDelay,
 			m_ProgressDuration,
 			m_ProgressCurve
-		).ContinueWithOnMainThread(Complete);
+		);
+		
+		m_SoundProcessor.Stop(m_ProgressSound);
 	}
 
 	public Task CollectAsync()
@@ -110,7 +106,12 @@ public class UIDiscProgress : UIGroup
 		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		m_CollectFinished = () => completionSource.TrySetResult(true);
+		m_CollectFinished = () =>
+		{
+			completionSource.TrySetResult(true);
+			
+			Hide(true);
+		};
 		
 		m_SoundProcessor.Play(m_CollectSound);
 		

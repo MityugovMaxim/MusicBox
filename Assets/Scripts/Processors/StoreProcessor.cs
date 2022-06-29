@@ -17,8 +17,9 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 {
 	bool Loaded { get; set; }
 
-	[Inject] SignalBus         m_SignalBus;
-	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] SignalBus          m_SignalBus;
+	[Inject] ProductsProcessor  m_ProductsProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	IStoreController   m_Controller;
 	IExtensionProvider m_Extensions;
@@ -274,6 +275,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		if (success)
 		{
 			m_Controller.ConfirmPendingPurchase(_Product);
+			
+			m_StatisticProcessor.LogPurchase(
+				_Product.definition.storeSpecificId,
+				_Product.metadata.isoCurrencyCode,
+				_Product.metadata.localizedPrice
+			);
 			
 			InvokePurchaseFinished(true);
 		}

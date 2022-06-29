@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -107,7 +106,9 @@ public class UILevelProgress : UIGroup
 			m_ProgressDelay,
 			m_ProgressDuration,
 			m_ProgressCurve
-		).ContinueWithOnMainThread(_Task => m_SoundProcessor.Stop(m_ProgressSound));
+		);
+		
+		m_SoundProcessor.Stop(m_ProgressSound);
 	}
 
 	public Task CollectAsync()

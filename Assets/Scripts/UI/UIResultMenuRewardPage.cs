@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Firebase.Extensions;
 using UnityEngine;
 using Zenject;
 
@@ -217,7 +216,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	Task CollectDisc(UIDiscProgress _DiscProgress)
 	{
 		return Task.WhenAny(
-			_DiscProgress.CollectAsync().ContinueWithOnMainThread(_Task => _DiscProgress.Hide(true)),
+			_DiscProgress.CollectAsync(),
 			Task.Delay(250)
 		);
 	}
@@ -258,34 +257,30 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		return m_ContinueGroup.ShowAsync();
 	}
 
-	Task UnitAsync(UICascadeUnitLabel _Label, double _Value, CancellationToken _Token = default)
+	async Task UnitAsync(UICascadeUnitLabel _Label, double _Value, CancellationToken _Token = default)
 	{
 		long value = (long)_Value;
 		
 		if (Math.Abs(value) <= 1)
 		{
 			_Label.Value = value;
-			return Task.CompletedTask;
+			return;
 		}
 		
 		m_HapticProcessor.Play(Haptic.Type.Selection, 30, m_Duration);
+		
 		m_SoundProcessor.Start(m_UnitSound);
 		
-		return UnityTask.Phase(
+		await UnityTask.Phase(
 			_Phase => _Label.Value = MathUtility.Lerp(0, value, _Phase),
 			m_Duration,
 			_Token
-		).ContinueWithOnMainThread(
-			_Task =>
-			{
-				m_SoundProcessor.Stop(m_UnitSound);
-				
-				_Label.Play();
-			},
-			_Token
-		).ContinueWithOnMainThread(
-			_Task => UnityTask.Delay(500, _Token),
-			_Token
 		);
+		
+		m_SoundProcessor.Stop(m_UnitSound);
+		
+		_Label.Play();
+		
+		await UnityTask.Delay(0.5f, _Token);
 	}
 }
