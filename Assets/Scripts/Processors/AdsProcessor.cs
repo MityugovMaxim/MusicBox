@@ -400,6 +400,10 @@ public class AdsProcessor
 			return true;
 		}
 		
+		AudioListener.volume = 1;
+		
+		m_AudioManager.SetAudioActive(true);
+		
 		return false;
 	}
 
