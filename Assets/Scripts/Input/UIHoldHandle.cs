@@ -19,6 +19,7 @@ public class UIHoldHandle : UIHandle
 
 	bool m_Processed;
 	bool m_Hold;
+	bool m_Move;
 	bool m_Miss;
 	Rect m_Area;
 
@@ -31,6 +32,7 @@ public class UIHoldHandle : UIHandle
 		MaxProgress = 0;
 		
 		m_Hold = false;
+		m_Move = false;
 		m_Miss = false;
 	}
 
@@ -43,6 +45,7 @@ public class UIHoldHandle : UIHandle
 		
 		m_Processed = true;
 		m_Hold      = false;
+		m_Move      = false;
 		m_Miss      = false;
 	}
 
@@ -55,6 +58,7 @@ public class UIHoldHandle : UIHandle
 		MaxProgress = 0;
 		
 		m_Hold = false;
+		m_Move = false;
 		m_Miss = false;
 	}
 
@@ -112,6 +116,7 @@ public class UIHoldHandle : UIHandle
 			return;
 		
 		m_Hold = true;
+		m_Move = false;
 		m_Area = GetLocalRect(_Area);
 		
 		Rect rect      = RectTransform.rect;
@@ -134,6 +139,7 @@ public class UIHoldHandle : UIHandle
 			m_Marker.anchoredPosition = Vector2.zero;
 		
 		m_Hold      = false;
+		m_Move      = false;
 		m_Processed = true;
 		
 		ProcessSuccess();
@@ -143,6 +149,12 @@ public class UIHoldHandle : UIHandle
 	{
 		if (m_Processed || !m_Hold)
 			return;
+		
+		if (!m_Move)
+		{
+			m_Move = true;
+			m_Area = GetLocalRect(_Area);
+		}
 		
 		Rect rect = GetLocalRect(m_Margin);
 		Rect area = GetLocalRect(_Area);
@@ -154,6 +166,7 @@ public class UIHoldHandle : UIHandle
 			return;
 		
 		m_Hold      = false;
+		m_Move      = false;
 		m_Processed = true;
 		
 		ProcessSuccess();

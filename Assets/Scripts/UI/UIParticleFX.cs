@@ -15,13 +15,6 @@ public class UIParticleFX : UIEntity
 	[SerializeField] ScaleMode        m_ScaleMode;
 	[SerializeField] Vector2          m_Size;
 
-	protected override void OnEnable()
-	{
-		base.OnEnable();
-		
-		ProcessScale();
-	}
-
 	protected override void OnRectTransformDimensionsChange()
 	{
 		base.OnRectTransformDimensionsChange();
@@ -66,14 +59,7 @@ public class UIParticleFX : UIEntity
 	{
 		Rect rect = GetLocalRect();
 		
-		Vector3 origin = RectTransform.lossyScale;
-		
-		origin.z = 1;
-		
-		Vector3 scale = Vector3.Scale(GetScale(rect.size), origin);
-		
-		foreach (ParticleSystem particleSystem in m_ParticleSystems)
-			particleSystem.transform.localScale = scale;
+		RectTransform.localScale = GetScale(rect.size);
 	}
 
 	Vector3 GetScale(Vector2 _Size)

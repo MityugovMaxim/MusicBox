@@ -14,7 +14,7 @@ using Zenject;
 public interface IAdsProvider
 {
 	string ID { get; }
-	Task<bool> Initialize();
+	Task<bool> Initialize(string _InterstitialID, string _RewardedID);
 	Task<bool> Interstitial();
 	Task<bool> Rewarded();
 }
@@ -24,29 +24,30 @@ public class AdsProviderMadPixel : IAdsProvider
 {
 	public string ID => "mad_pixel";
 
-	#if UNITY_IOS
-	static string InterstitialID => "Interstitial_iOS";
-	static string RewardedID     => "Rewarded_iOS";
-	#elif UNITY_ANDROID
-	static string InterstitialID => "";
-	static string RewardedID     => "testUnitID_R";
-	#endif
+	string m_InterstitialID;
+	string m_RewardedID;
 
-	public Task<bool> Initialize()
+	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
 		AdsManager.Instance.InitApplovin();
+		
+		m_InterstitialID = _InterstitialID;
+		m_RewardedID     = _RewardedID;
 		
 		return Task.FromResult(true);
 	}
 
 	public Task<bool> Interstitial()
 	{
+		if (string.IsNullOrEmpty(m_InterstitialID))
+			return Task.FromResult(false);
+		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		AdsManager.Instance.ShowAd(
 			_Success => completionSource.TrySetResult(_Success),
 			() => completionSource.TrySetResult(false),
-			InterstitialID,
+			m_InterstitialID,
 			false
 		);
 		
@@ -55,12 +56,15 @@ public class AdsProviderMadPixel : IAdsProvider
 
 	public Task<bool> Rewarded()
 	{
+		if (string.IsNullOrEmpty(m_RewardedID))
+			return Task.FromResult(false);
+		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		AdsManager.Instance.ShowAd(
 			_Success => completionSource.TrySetResult(_Success),
 			() => completionSource.TrySetResult(false),
-			RewardedID,
+			m_RewardedID,
 			true
 		);
 		
@@ -73,7 +77,7 @@ public class AdsProviderAdMob : IAdsProvider
 {
 	string IAdsProvider.ID => "ad_mob";
 
-	public Task<bool> Initialize()
+	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
 		return Task.FromResult(false);
 	}
@@ -278,13 +282,22 @@ public class AdsProviderAdMob : IAdsProvider
 
 public class AdsProviderSnapshot
 {
-	public string ID     { get; }
-	public bool   Active { get; }
+	public string ID             { get; }
+	public bool   Active         { get; }
+	public string InterstitialID { get; }
+	public string RewardedID     { get; }
 
 	public AdsProviderSnapshot(DataSnapshot _Data)
 	{
 		ID     = _Data.Key;
 		Active = _Data.GetBool("active");
+		#if UNITY_IOS
+		InterstitialID = _Data.GetString("ios_interstitial");
+		RewardedID     = _Data.GetString("ios_rewarded");
+		#elif UNITY_ANDROID
+		InterstitialID = _Data.GetString("android_interstitial");
+		RewardedID     = _Data.GetString("android_rewarded");
+		#endif
 	}
 }
 
@@ -328,7 +341,10 @@ public class AdsProcessor
 			if (adsProvider == null)
 				continue;
 			
-			tasks.Add(adsProvider.Initialize());
+			string interstitialID = GetInterstitialID(adsProviderID);
+			string rewardedID     = GetRewardedID(adsProviderID);
+			
+			tasks.Add(adsProvider.Initialize(interstitialID, rewardedID));
 		}
 		
 		await Task.WhenAll(tasks);
@@ -342,6 +358,20 @@ public class AdsProcessor
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
+	}
+
+	string GetInterstitialID(string _AdsProviderID)
+	{
+		AdsProviderSnapshot snapshot = GetSnapshot(_AdsProviderID);
+		
+		return snapshot?.InterstitialID;
+	}
+
+	string GetRewardedID(string _AdsProviderID)
+	{
+		AdsProviderSnapshot snapshot = GetSnapshot(_AdsProviderID);
+		
+		return snapshot?.RewardedID;
 	}
 
 	IAdsProvider GetAdsProvider(string _AdsProviderID)
@@ -436,5 +466,10 @@ public class AdsProcessor
 		}
 		
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new AdsProviderSnapshot(_Data)));
+	}
+
+	AdsProviderSnapshot GetSnapshot(string _AdsProviderID)
+	{
+		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AdsProviderID);
 	}
 }

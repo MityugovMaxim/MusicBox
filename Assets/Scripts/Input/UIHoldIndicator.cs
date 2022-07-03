@@ -39,8 +39,8 @@ public class UIHoldIndicator : UIIndicator
 
 	[SerializeField] UIHoldHandle     m_Handle;
 	[SerializeField] UISpline         m_Spline;
+	[SerializeField] UILine           m_Line;
 	[SerializeField] UISplineProgress m_Highlight;
-	[SerializeField] UISplineProgress m_Progress;
 	[SerializeField] float            m_SamplesPerUnit = 0.5f;
 	[SerializeField] float            m_Weight         = 0.25f;
 
@@ -85,22 +85,22 @@ public class UIHoldIndicator : UIIndicator
 		m_Spline.Samples = Mathf.CeilToInt(m_Spline.GetLength(1) * m_SamplesPerUnit);
 		m_Spline.Rebuild();
 		
+		m_Line.Min = 0;
+		m_Line.Max = 1;
+		
 		m_Highlight.Min = 0;
 		m_Highlight.Max = 0;
-		
-		m_Progress.Min = 0;
-		m_Progress.Max = 0;
 		
 		m_Handle.RectTransform.anchoredPosition = m_Spline.Evaluate(0);
 	}
 
 	public override void Restore()
 	{
+		m_Line.Min = 0;
+		m_Line.Max = 1;
+		
 		m_Highlight.Min = 0;
 		m_Highlight.Max = 0;
-		
-		m_Progress.Min = 0;
-		m_Progress.Max = 0;
 		
 		m_Handle.Restore();
 		m_Handle.RectTransform.anchoredPosition = m_Spline.Evaluate(0);
@@ -119,13 +119,11 @@ public class UIHoldIndicator : UIIndicator
 		float   phase    = m_Spline.EvaluateVertical(_Phase);
 		Vector2 position = m_Spline.Evaluate(phase);
 		
+		m_Line.Min      = phase;
 		m_Highlight.Min = phase;
 		
 		m_Handle.Process(phase);
 		m_Handle.RectTransform.anchoredPosition = position;
-		
-		m_Progress.Min = m_Handle.MinProgress;
-		m_Progress.Max = m_Handle.MaxProgress;
 	}
 
 	public void Success(float _MinProgress, float _MaxProgress)

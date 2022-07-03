@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
@@ -11,6 +12,7 @@ public class UrlProcessor
 
 	[Inject] MenuProcessor  m_MenuProcessor;
 	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] SongsManager   m_SongsManager;
 
 	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
@@ -43,6 +45,9 @@ public class UrlProcessor
 				break;
 			case "profile":
 				await ProcessProfile(parameters, _Instant);
+				break;
+			case "play":
+				await ProcessPlay(parameters, _Instant);
 				break;
 			default:
 				await ProcessHash(uri.Host, _Instant);
@@ -115,6 +120,20 @@ public class UrlProcessor
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	Task ProcessPlay(Dictionary<string, string> _Parameters, bool _Instant)
+	{
+		string songID = m_SongsManager
+			.GetLibrarySongIDs()
+			.FirstOrDefault();
+		
+		if (string.IsNullOrEmpty(songID))
+			return Task.CompletedTask;
+		
+		_Parameters["song_id"] = songID;
+		
+		return ProcessSongs(_Parameters, _Instant);
 	}
 
 	async Task ProcessSongs(Dictionary<string, string> _Parameters, bool _Instant)

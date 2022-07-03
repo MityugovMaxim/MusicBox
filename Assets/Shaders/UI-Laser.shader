@@ -3,7 +3,6 @@ Shader "UI/Laser"
 	Properties
 	{
 		_BeamTex ("Beam", 2D) = "white" {}
-		_NoiseTex ("Noise", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
 		_Speed ("Speed", Float) = 1
 		_Size ("Size", Float) = 1
@@ -66,7 +65,6 @@ Shader "UI/Laser"
 			};
 
 			sampler2D _BeamTex;
-			sampler2D _NoiseTex;
 			float _Speed;
 			float _Size;
 			fixed4 _Color;
@@ -85,9 +83,7 @@ Shader "UI/Laser"
 			{
 				fixed color = saturate(tex2D(_BeamTex, IN.uv));
 				
-				const fixed fog = saturate(tex2D(_NoiseTex, IN.fog));
-				
-				color = remap(color, 0, 1, 1, 0.8) * remap(fog, 0, 1, 0.5, 1);
+				color = remap(color, 0, 1, 1, 0.8);
 				
 				return fixed4(1, 1, 1, color) * IN.color * _BackgroundPrimaryColor;
 			}

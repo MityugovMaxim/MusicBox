@@ -9,6 +9,7 @@ public class FXProcessor : UIEntity
 	[SerializeField] UIFXHighlight   m_Flash;
 	[SerializeField] UIFXHighlight   m_Dim;
 	[SerializeField] RectTransform   m_InputArea;
+	[SerializeField] RectTransform   m_FXContainer;
 
 	[Inject] SignalBus m_SignalBus;
 
@@ -34,7 +35,7 @@ public class FXProcessor : UIEntity
 	{
 		Highlight(_Rect.center);
 		
-		UIIndicatorFX item = m_TapFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_TapFXPool.Spawn(m_FXContainer);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
@@ -47,7 +48,7 @@ public class FXProcessor : UIEntity
 	{
 		Flash();
 		
-		UIIndicatorFX item = m_DoubleFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_DoubleFXPool.Spawn(m_FXContainer);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
@@ -60,13 +61,13 @@ public class FXProcessor : UIEntity
 	{
 		Highlight(_Rect.center);
 		
-		UIIndicatorFX item = m_HoldFXPool.Spawn(RectTransform);
+		UIIndicatorFX item = m_TapFXPool.Spawn(m_FXContainer);
 		
 		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
 		
 		await item.PlayAsync(_Progress);
 		
-		m_HoldFXPool.Despawn(item);
+		m_TapFXPool.Despawn(item);
 	}
 
 	public void Fail()

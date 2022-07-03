@@ -1,4 +1,275 @@
+using System.Collections.Generic;
 using UnityEngine;
+
+public enum ScaleMode
+{
+	Stretch = 0,
+	Fit     = 1,
+	Fill    = 2,
+	Crop    = 3,
+}
+
+public enum BorderMode
+{
+	Stretch,
+	Fit,
+	Fill,
+}
+
+public static class MeshUtility
+{
+	public static void GenerateMesh(
+		Rect          _Rect,
+		Sprite        _Sprite,
+		ScaleMode     _ScaleMode,
+		BorderMode    _BorderMode,
+		float         _BorderScale,
+		TextAnchor    _Alignment,
+		Vector4       _Border,
+		List<float>   _HorizontalVertex,
+		List<float>   _VerticalVertex,
+		List<float>   _HorizontalUV,
+		List<float>   _VerticalUV,
+		List<Vector3> _Vertices,
+		List<Vector2> _UV,
+		List<int>     _Triangles,
+		bool          _FillCenter = true 
+	)
+	{
+		Rect sprite = _Sprite != null ? _Sprite.textureRect : _Rect;
+		
+		int width  = _Sprite != null ? _Sprite.texture.width : (int)_Rect.width;
+		int height = _Sprite != null ? _Sprite.texture.height : (int)_Rect.height;
+		
+		Vector2 pivot = _Alignment.GetPivot();
+		
+		float aspect = !Mathf.Approximately(sprite.height, 0) ? sprite.width / sprite.height : 1;
+		
+		Rect uv = new Rect(0, 0, 1, 1);
+		
+		switch (_ScaleMode)
+		{
+			case ScaleMode.Fit:
+				_Rect = MathUtility.Fit(_Rect, aspect, pivot);
+				break;
+			case ScaleMode.Fill:
+				_Rect = MathUtility.Fill(_Rect, aspect, pivot);
+				break;
+			case ScaleMode.Crop:
+				uv = MathUtility.Fit(uv, _Rect.width / _Rect.height, pivot);
+				break;
+		}
+		
+		_Vertices.Clear();
+		_UV.Clear();
+		_Triangles.Clear();
+		
+		Vector4 vertexBorder = GetVertexBorder(_Border, _BorderMode, _BorderScale, _Rect);
+		Vector4 uvBorder     = GetUVBorder(_Border, width, height);
+		
+		_HorizontalVertex.Clear();
+		_VerticalVertex.Clear();
+		
+		_HorizontalUV.Clear();
+		_VerticalUV.Clear();
+		
+		_HorizontalVertex.Add(_Rect.xMin);
+		_VerticalVertex.Add(_Rect.yMax);
+		
+		_HorizontalUV.Add(uv.xMin);
+		_VerticalUV.Add(uv.yMax);
+		
+		if (_ScaleMode == ScaleMode.Stretch)
+		{
+			if (_Border.x > float.Epsilon)
+			{
+				_HorizontalVertex.Add(_Rect.xMin + vertexBorder.x);
+				_HorizontalUV.Add(uv.xMin + uvBorder.x);
+			}
+			
+			if (_Border.y > float.Epsilon)
+			{
+				_HorizontalVertex.Add(_Rect.xMax - vertexBorder.y);
+				_HorizontalUV.Add(uv.xMax - uvBorder.y);
+			}
+			
+			if (_Border.z > float.Epsilon)
+			{
+				_VerticalVertex.Add(_Rect.yMax - vertexBorder.z);
+				_VerticalUV.Add(uv.yMax - uvBorder.z);
+			}
+			
+			if (_Border.w > float.Epsilon)
+			{
+				_VerticalVertex.Add(_Rect.yMin + vertexBorder.w);
+				_VerticalUV.Add(uv.yMin + uvBorder.w);
+			}
+		}
+		
+		_HorizontalVertex.Add(_Rect.xMax);
+		_VerticalVertex.Add(_Rect.yMin);
+		
+		_HorizontalUV.Add(uv.xMax);
+		_VerticalUV.Add(uv.yMin);
+		
+		int hCenter = (_HorizontalVertex.Count - 1) / 2;
+		int vCenter = (_VerticalVertex.Count - 1) / 2;
+		
+		int position = _Vertices.Count;
+		
+		for (int y = 0; y < _VerticalVertex.Count - 1; y++)
+		for (int x = 0; x < _HorizontalVertex.Count - 1; x++)
+		{
+			int index = position + y * _HorizontalVertex.Count + x;
+			
+			if (!_FillCenter && x == hCenter && y == vCenter)
+				continue;
+			
+			_Triangles.Add(index);
+			_Triangles.Add(index + 1);
+			_Triangles.Add(index + _HorizontalVertex.Count);
+			
+			_Triangles.Add(index + _HorizontalVertex.Count);
+			_Triangles.Add(index + 1);
+			_Triangles.Add(index + _HorizontalVertex.Count + 1);
+		}
+		
+		FillUV(
+			_Sprite,
+			_HorizontalVertex,
+			_VerticalVertex,
+			_HorizontalUV,
+			_VerticalUV,
+			_UV
+		);
+		
+		foreach (float y in _VerticalVertex)
+		foreach (float x in _HorizontalVertex)
+			_Vertices.Add(new Vector3(x, y));
+	}
+
+	public static Rect GetUV(Sprite _Sprite)
+	{
+		Rect uv = new Rect(0, 0, 1, 1);
+		if (_Sprite != null && _Sprite.texture != null)
+		{
+			uv.x      = _Sprite.textureRect.x / _Sprite.texture.width;
+			uv.y      = _Sprite.textureRect.y / _Sprite.texture.height;
+			uv.width  = _Sprite.textureRect.width / _Sprite.texture.width;
+			uv.height = _Sprite.textureRect.height / _Sprite.texture.height;
+		}
+		return uv;
+	}
+
+	public static void FillUV(
+		Sprite        _Sprite,
+		List<float>   _HorizontalVertex,
+		List<float>   _VerticalVertex,
+		List<float>   _HorizontalUV,
+		List<float>   _VerticalUV,
+		List<Vector2> _UV
+	)
+	{
+		FillUV(
+			GetUV(_Sprite),
+			_HorizontalVertex,
+			_VerticalVertex,
+			_HorizontalUV,
+			_VerticalUV,
+			_UV
+		);
+	}
+
+	public static void FillUV(
+		Rect          _Rect,
+		List<float>   _HorizontalVertex,
+		List<float>   _VerticalVertex,
+		List<float>   _HorizontalUV,
+		List<float>   _VerticalUV,
+		List<Vector2> _UV
+	)
+	{
+		_UV.Clear();
+		
+		for (int y = 0; y < _VerticalVertex.Count; y++)
+		for (int x = 0; x < _HorizontalVertex.Count; x++)
+			_UV.Add(new Vector2(_Rect.x + _HorizontalUV[x] * _Rect.width, _Rect.y + _VerticalUV[y] * _Rect.height));
+	}
+
+	static Vector4 GetVertexBorder(Vector4 _Border, BorderMode _BorderMode, float _BorderScale, Rect _Rect)
+	{
+		float width  = Mathf.Abs(_Rect.width);
+		float height = Mathf.Abs(_Rect.height);
+		
+		Vector4 border;
+		switch (_BorderMode)
+		{
+			case BorderMode.Fit:
+				float hFit = _Border.x + _Border.y;
+				float vFit = _Border.z + _Border.w;
+				
+				if (hFit + vFit < float.Epsilon)
+				{
+					border = _Border;
+					break;
+				}
+				
+				float fit = Mathf.Min(
+					width / (hFit > float.Epsilon ? hFit : vFit),
+					height / (vFit > float.Epsilon ? vFit : hFit)
+				);
+				
+				border = _Border * fit;
+				break;
+			
+			case BorderMode.Fill:
+				float hFill = _Border.x + _Border.x;
+				float vFill = _Border.z + _Border.w;
+				
+				if (hFill + vFill < float.Epsilon)
+				{
+					border = _Border;
+					break;
+				}
+				
+				float fill = Mathf.Max(
+					width / (hFill > float.Epsilon ? hFill : vFill),
+					height / (vFill > float.Epsilon ? vFill : hFill)
+				);
+				border = _Border * fill;
+				break;
+			
+			default:
+				border = _Border;
+				break;
+		}
+		
+		border *= _BorderScale;
+		
+		float horizontal = border.x + border.y;
+		float vertical   = border.z + border.w;
+		
+		float xDirection = Mathf.Sign(_Rect.width);
+		float yDirection = Mathf.Sign(_Rect.height);
+		
+		return new Vector4(
+			Mathf.Min(width, horizontal) * (border.x / horizontal) * xDirection,
+			Mathf.Min(width, horizontal) * (border.y / horizontal) * xDirection,
+			Mathf.Min(height, vertical) * (border.z / vertical) * yDirection,
+			Mathf.Min(height, vertical) * (border.w / vertical) * yDirection
+		);
+	}
+
+	static Vector4 GetUVBorder(Vector4 _Border, float _Width, float _Height)
+	{
+		return new Vector4(
+			_Border.x / _Width,
+			_Border.y / _Width,
+			_Border.z / _Height,
+			_Border.w / _Height
+		);
+	}
+}
 
 public static class MathUtility
 {
@@ -89,7 +360,7 @@ public static class MathUtility
 		Vector2 h = new Vector2(_Rect.width, _Rect.width / _Aspect);
 		Vector2 v = new Vector2(_Rect.height * _Aspect, _Rect.height);
 		
-		Vector2 size     = h.x * h.y <= v.x * v.y ? h : v;
+		Vector2 size     = Mathf.Abs(h.x * h.y) <= Mathf.Abs(v.x * v.y) ? h : v;
 		Vector2 position = _Rect.position + Vector2.Scale(_Rect.size - size, _Pivot);
 		
 		return new Rect(position, size);
@@ -105,7 +376,7 @@ public static class MathUtility
 		Vector2 h = new Vector2(_Rect.width, _Rect.width / _Aspect);
 		Vector2 v = new Vector2(_Rect.height * _Aspect, _Rect.height);
 		
-		Vector2 size     = h.x * h.y >= v.x * v.y ? h : v;
+		Vector2 size     = Mathf.Abs(h.x * h.y) >= Mathf.Abs(v.x * v.y) ? h : v;
 		Vector2 position = _Rect.position + Vector2.Scale(_Rect.size - size, _Pivot);
 		
 		return new Rect(position, size);
@@ -116,7 +387,7 @@ public static class MathUtility
 		Vector2 h = new Vector2(_Vector.x, _Vector.x / _Aspect);
 		Vector2 v = new Vector2(_Vector.y * _Aspect, _Vector.y);
 		
-		return h.x * h.y >= v.x * v.y ? h : v;
+		return Mathf.Abs(h.x * h.y) >= Mathf.Abs(v.x * v.y) ? h : v;
 	}
 
 	public static Rect Uniform(Rect _Source, Rect _Target)

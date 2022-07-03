@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
@@ -145,6 +146,13 @@ public class UILoginMenu : UIMenu
 		await m_MessageProcessor.LoadMessages(GetURLScheme());
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
+		
+		m_MessageProcessor.Schedule(
+			"Audio Box",
+			"Which song you will play for today?",
+			"audiobox://play",
+			TimeSpan.FromHours(24)
+		);
 	}
 
 	string GetURLScheme()

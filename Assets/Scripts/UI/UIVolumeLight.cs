@@ -20,7 +20,20 @@ public class UIVolumeLight : MaskableGraphic
 	{
 		base.OnValidate();
 		
-		UnityEditor.EditorApplication.delayCall += ProcessBeams;
+		UnityEditor.EditorApplication.delayCall += () =>
+		{
+			if (m_MinBeam != null)
+			{
+				m_MinBeam.localRotation = Quaternion.Euler(0, 0, -Min);
+				m_MinBeam.sizeDelta     = new Vector2(m_MinBeam.sizeDelta.x, m_Radius);
+			}
+			
+			if (m_MaxBeam != null)
+			{
+				m_MaxBeam.localRotation = Quaternion.Euler(0, 0, Max);
+				m_MaxBeam.sizeDelta     = new Vector2(m_MaxBeam.sizeDelta.x, m_Radius);
+			}
+		};
 	}
 	#endif
 

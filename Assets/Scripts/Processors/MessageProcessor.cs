@@ -2,7 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
+using AppLovinMax.ThirdParty.MiniJson;
+#if UNITY_ANDROID
 using Unity.Notifications.Android;
+#elif UNITY_IOS
+using Unity.Notifications.iOS;
+#endif
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -84,6 +89,18 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 
 	protected abstract void ClearBadges();
 
+	public void Schedule(string _Title, string _Message, string _URL, TimeSpan _Span)
+	{
+		long timestamp = DateTimeOffset.Now.Add(_Span).ToUnixTimeMilliseconds();
+		
+		Schedule(
+			_Title,
+			_Message,
+			_URL,
+			timestamp
+		);
+	}
+
 	public abstract void Schedule(
 		string _Title,
 		string _Message,
@@ -100,7 +117,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 	{
 		Debug.LogFormat("[MessageProcessor] Received message: '{0}'.", _Args.Message.MessageType);
 		
-		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url))
+		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url) && !string.IsNullOrEmpty(url))
 			await m_UrlProcessor.ProcessURL(url);
 	}
 }
@@ -116,18 +133,25 @@ public class AndroidMessageProcessor : MessageProcessor
 		long   _Timestamp
 	)
 	{
+		DateTimeOffset date = DateTimeOffset
+			.FromUnixTimeMilliseconds(_Timestamp)
+			.ToLocalTime();
+		
 		AndroidNotification notification = new AndroidNotification()
 		{
 			Title      = _Title,
 			Text       = _Message,
 			IntentData = _URL,
-			FireTime   = DateTime.FromFileTimeUtc(_Timestamp),
+			FireTime   = date.DateTime,
 		};
 		
 		AndroidNotificationCenter.SendNotification(notification, string.Empty);
 	}
 
-	protected override void ClearBadges() { }
+	protected override void ClearBadges()
+	{
+		AndroidNotificationCenter.CancelAllScheduledNotifications();
+	}
 }
 #endif
 
@@ -142,13 +166,16 @@ public class iOSMessageProcessor : MessageProcessor
 		long   _Timestamp
 	)
 	{
-		DateTime date = DateTime.FromFileTimeUtc(_Timestamp);
+		DateTimeOffset date = DateTimeOffset
+			.FromUnixTimeMilliseconds(_Timestamp)
+			.ToLocalTime();
 		
 		iOSNotification notification = new iOSNotification()
 		{
 			Title = _Title,
 			Body  = _Message,
-			Data  = _URL,
+			Badge = 1,
+			ShowInForeground = false,
 			Trigger = new iOSNotificationCalendarTrigger()
 			{
 				Year    = date.Year,
@@ -158,18 +185,25 @@ public class iOSMessageProcessor : MessageProcessor
 				Minute  = date.Minute,
 				Second  = date.Second,
 				Repeats = false,
-				UtcTime = true
-			}
+				UtcTime = false,
+			},
 		};
+		
+		Dictionary<string, object> data = new Dictionary<string, object>()
+		{
+			{ "url", _URL },
+		};
+		
+		notification.Data = Json.Serialize(data);
 		
 		iOSNotificationCenter.ScheduleNotification(notification);
 	}
 
 	protected override void ClearBadges()
 	{
-		Unity.Notifications.iOS.iOSNotificationCenter.RemoveAllScheduledNotifications();
+		iOSNotificationCenter.RemoveAllScheduledNotifications();
 		
-		Unity.Notifications.iOS.iOSNotificationCenter.ApplicationBadge = 0;
+		iOSNotificationCenter.ApplicationBadge = 0;
 	}
 }
 #endif

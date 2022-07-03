@@ -28,12 +28,12 @@ public abstract class Tween<T> : UIEntity
 	protected T Source => m_Source;
 	protected T Target => m_Target;
 
-	[SerializeField] float        m_Delay;
-	[SerializeField] TweenCycle[] m_Cycles;
-	[SerializeField] TweenType    m_Type;
-	[SerializeField] T            m_Source;
-	[SerializeField] T            m_Target;
-	[SerializeField] bool         m_AutoPlay;
+	[SerializeField, NonReorderable] TweenCycle[] m_Cycles;
+	[SerializeField]                 TweenType    m_Type;
+	[SerializeField]                 float        m_Delay;
+	[SerializeField]                 T            m_Source;
+	[SerializeField]                 T            m_Target;
+	[SerializeField]                 bool         m_AutoPlay;
 
 	IEnumerator m_PlayRoutine;
 
