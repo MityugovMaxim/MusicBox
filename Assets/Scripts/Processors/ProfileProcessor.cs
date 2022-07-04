@@ -168,21 +168,10 @@ public class ProfileProcessor : IInitializable, IDisposable
 		if (m_Snapshot == null || m_Snapshot.Transactions == null)
 			return false;
 		
-		List<string> productIDs = m_Snapshot.Transactions
+		return m_Snapshot.Transactions
 			.Select(_Transaction => _Transaction.ProductID)
-			.ToList();
-		
-		bool subscription = productIDs
 			.Where(m_ProductsProcessor.IsNoAds)
-			.Where(_ProductID => m_ProductsProcessor.GetType(_ProductID) == ProductType.Subscription)
-			.Any(m_StoreProcessor.Subscribed);
-		
-		if (subscription)
-			return true;
-		
-		return productIDs
-			.Where(_ProductID => m_ProductsProcessor.GetType(_ProductID) != ProductType.Subscription)
-			.Any(m_ProductsProcessor.IsNoAds);
+			.Any(HasProduct);
 	}
 
 	public ProfileTimer GetTimer(string _TimerID)
