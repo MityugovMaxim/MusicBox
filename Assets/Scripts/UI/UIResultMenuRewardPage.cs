@@ -105,6 +105,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 			
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"song_finish",
+				"result_menu",
 				"SONG_FINISH_ERROR_TITLE",
 				"SONG_FINISH_ERROR_MESSAGE",
 				Continue,

@@ -12,16 +12,17 @@ public class UIRetryMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] SoundProcessor  m_SoundProcessor;
-	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] HapticProcessor    m_HapticProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	string m_Reason;
 	Action m_Retry;
 	Action m_Cancel;
 
-	public void Setup(string _Reason, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
+	public void Setup(string _ID, string _Place, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
 	{
-		m_Reason = _Reason;
+		m_StatisticProcessor.LogError(_ID, _Place);
+		
 		m_Retry  = _Retry;
 		m_Cancel = _Cancel;
 		

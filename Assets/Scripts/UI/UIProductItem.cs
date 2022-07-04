@@ -111,6 +111,7 @@ public class UIProductItem : UIOverlayButton
 			{
 				await m_MenuProcessor.RetryLocalizedAsync(
 					"product_purchase",
+					"main_menu",
 					"PRODUCT_PURCHASE_ERROR_TITLE",
 					"PRODUCT_PURCHASE_ERROR_MESSAGE",
 					Purchase,

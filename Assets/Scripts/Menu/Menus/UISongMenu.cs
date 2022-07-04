@@ -93,6 +93,7 @@ public class UISongMenu : UISlideMenu
 		{
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"unlock_song",
+				"song_menu",
 				"SONG_UNLOCK_ERROR_TITLE",
 				"SONG_UNLOCK_ERROR_MESSAGE",
 				Unlock,

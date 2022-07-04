@@ -103,6 +103,7 @@ public class UIProductMenu : UISlideMenu
 			{
 				await m_MenuProcessor.RetryLocalizedAsync(
 					"product_purchase",
+					"product_menu",
 					"PRODUCT_PURCHASE_ERROR_TITLE",
 					"PRODUCT_PURCHASE_ERROR_MESSAGE",
 					Purchase,
