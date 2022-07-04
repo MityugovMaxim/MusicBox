@@ -150,14 +150,15 @@ public class UIHoldHandle : UIHandle
 		if (m_Processed || !m_Hold)
 			return;
 		
-		if (!m_Move)
+		Rect area = GetLocalRect(_Area);
+		
+		if (!m_Move && m_Area != area)
 		{
 			m_Move = true;
-			m_Area = GetLocalRect(_Area);
+			m_Area = area;
 		}
 		
 		Rect rect = GetLocalRect(m_Margin);
-		Rect area = GetLocalRect(_Area);
 		
 		if (m_Marker != null)
 			m_Marker.anchoredPosition = new Vector2(area.center.x - m_Area.center.x, 0);
