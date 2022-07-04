@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -51,6 +50,8 @@ public class UIRenderer : UIEntity
 	MeshRenderer          m_MeshRenderer;
 	Mesh                  m_Mesh;
 	MaterialPropertyBlock m_PropertyBlock;
+
+	Rect m_RectCache;
 
 	bool m_DirtyMesh;
 	bool m_DirtyProperties;
@@ -158,9 +159,6 @@ public class UIRenderer : UIEntity
 		
 		Rect sprite = m_Sprite != null ? m_Sprite.textureRect : rect;
 		
-		int width  = m_Sprite != null ? m_Sprite.texture.width : (int)rect.width;
-		int height = m_Sprite != null ? m_Sprite.texture.height : (int)rect.height;
-		
 		Vector2 pivot = m_Alignment.GetPivot();
 		
 		float aspect = !Mathf.Approximately(sprite.height, 0) ? sprite.width / sprite.height : 1;
@@ -201,25 +199,25 @@ public class UIRenderer : UIEntity
 		
 		if (m_ScaleMode == ScaleMode.Stretch)
 		{
-			if (m_Border.x > float.Epsilon)
+			if (vertexBorder.x > float.Epsilon)
 			{
 				m_HorizontalVertex.Add(rect.xMin + vertexBorder.x);
 				m_HorizontalUV.Add(uv.xMin + uvBorder.x);
 			}
 			
-			if (m_Border.y > float.Epsilon)
+			if (vertexBorder.y > float.Epsilon)
 			{
 				m_HorizontalVertex.Add(rect.xMax - vertexBorder.y);
 				m_HorizontalUV.Add(uv.xMax - uvBorder.y);
 			}
 			
-			if (m_Border.z > float.Epsilon)
+			if (vertexBorder.z > float.Epsilon)
 			{
 				m_VerticalVertex.Add(rect.yMax - vertexBorder.z);
 				m_VerticalUV.Add(uv.yMax - uvBorder.z);
 			}
 			
-			if (m_Border.w > float.Epsilon)
+			if (vertexBorder.w > float.Epsilon)
 			{
 				m_VerticalVertex.Add(rect.yMin + vertexBorder.w);
 				m_VerticalUV.Add(uv.yMin + uvBorder.w);
