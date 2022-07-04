@@ -17,6 +17,10 @@ public static class FacebookAuth
 		await completionSource.Task;
 		
 		FB.ActivateApp();
+		
+		#if UNITY_IOS
+		FB.Mobile.SetAdvertiserTrackingEnabled(UnityEngine.iOS.Device.advertisingTrackingEnabled);
+		#endif
 	}
 
 	public static UserProfile GetProfile()

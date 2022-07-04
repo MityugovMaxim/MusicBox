@@ -1,6 +1,9 @@
 using System;
 using System.Globalization;
 using System.Linq;
+#if UNITY_IOS
+using Unity.Advertisement.IosSupport;
+#endif
 using UnityEngine;
 using Zenject;
 using Object = UnityEngine.Object;
@@ -27,6 +30,12 @@ public class GameInstaller : MonoInstaller
 
 	public override void InstallBindings()
 	{
+		#if UNITY_IOS
+		SkAdNetworkBinding.SkAdNetworkUpdateConversionValue(0);
+		SkAdNetworkBinding.SkAdNetworkRegisterAppForNetworkAttribution();
+		ATTrackingStatusBinding.RequestAuthorizationTracking();
+		#endif
+		
 		Application.targetFrameRate = 60;
 		
 		InstallCulture();
