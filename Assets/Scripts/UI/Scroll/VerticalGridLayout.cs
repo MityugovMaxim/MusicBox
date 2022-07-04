@@ -128,7 +128,7 @@ public class VerticalGridLayout : Layout
 	public override Vector2 GetSize()
 	{
 		int colCount = Mathf.Min(m_Count, ColumnCount);
-		int rowCount = m_Count / ColumnCount;
+		int rowCount = Mathf.CeilToInt((float)m_Count / ColumnCount);
 		
 		return new Vector2(
 			colCount * Width + Mathf.Max(0, colCount - 1) * HorizontalSpacing,
