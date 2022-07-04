@@ -131,6 +131,7 @@ public class UISongDownload : UIGroup
 			
 			await m_MenuProcessor.ErrorLocalizedAsync(
 				"song_download",
+				"song_menu",
 				"SONG_LOAD_ERROR_TITLE",
 				"SONG_LOAD_ERROR_MESSAGE"
 			);

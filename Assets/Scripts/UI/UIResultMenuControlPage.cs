@@ -20,15 +20,16 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	[SerializeField] UISongPlatforms m_Platforms;
 	[SerializeField] UISongQRCode    m_QR;
 
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] ConfigProcessor  m_ConfigProcessor;
-	[Inject] ScoreManager     m_ScoreManager;
-	[Inject] ScoresProcessor  m_ScoresProcessor;
-	[Inject] SongsManager     m_SongsManager;
-	[Inject] SongsProcessor   m_SongsProcessor;
-	[Inject] SongController   m_SongController;
-	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] ProfileProcessor   m_ProfileProcessor;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
+	[Inject] ScoreManager       m_ScoreManager;
+	[Inject] ScoresProcessor    m_ScoresProcessor;
+	[Inject] SongsManager       m_SongsManager;
+	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] SongController     m_SongController;
+	[Inject] AdsProcessor       m_AdsProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	int m_LeaveAdsCount;
 	int m_NextAdsCount;
@@ -82,6 +83,8 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		m_Preview.Stop();
 		
 		m_SongController.Leave();
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongNext);
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		

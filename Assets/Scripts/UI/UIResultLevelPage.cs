@@ -14,10 +14,11 @@ public class UIResultLevelPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ItemsGroup;
 	[SerializeField] UIGroup         m_ContinueGroup;
 
-	[Inject] ScoreManager      m_ScoreManager;
-	[Inject] ProgressProcessor m_ProgressProcessor;
-	[Inject] MenuProcessor     m_MenuProcessor;
-	[Inject] UIUnlockItem.Pool m_ItemPool;
+	[Inject] ScoreManager       m_ScoreManager;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] UIUnlockItem.Pool  m_ItemPool;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	readonly List<UIUnlockItem> m_Items   = new List<UIUnlockItem>();
 	readonly Queue<Func<Task>>  m_Actions = new Queue<Func<Task>>();
@@ -80,6 +81,8 @@ public class UIResultLevelPage : UIResultMenuPage
 			
 			if (level >= m_TargetLevel)
 				break;
+			
+			m_StatisticProcessor.LogLevelUp(level);
 			
 			m_Actions.Enqueue(m_LevelProgress.CollectAsync);
 			m_Actions.Enqueue(() => Task.Delay(1000));

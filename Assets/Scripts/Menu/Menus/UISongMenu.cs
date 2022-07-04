@@ -70,6 +70,8 @@ public class UISongMenu : UISlideMenu
 		
 		if (success)
 		{
+			m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongUnlock);
+			
 			await m_LoaderGroup.HideAsync();
 			
 			m_HapticProcessor.Process(Haptic.Type.Success);

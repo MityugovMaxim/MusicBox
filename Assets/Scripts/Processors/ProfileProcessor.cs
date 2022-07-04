@@ -94,6 +94,7 @@ public class ProfileProcessor : IInitializable, IDisposable
 	[Inject] SignalBus         m_SignalBus;
 	[Inject] SocialProcessor   m_SocialProcessor;
 	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] StoreProcessor    m_StoreProcessor;
 	[Inject] MenuProcessor     m_MenuProcessor;
 
 	ProfileSnapshot m_Snapshot;
@@ -164,7 +165,17 @@ public class ProfileProcessor : IInitializable, IDisposable
 			.Select(_Transaction => _Transaction.ProductID)
 			.ToList();
 		
-		return productIDs.Any(m_ProductsProcessor.IsNoAds);
+		bool subscription = productIDs
+			.Where(m_ProductsProcessor.IsNoAds)
+			.Where(_ProductID => m_ProductsProcessor.GetType(_ProductID) == ProductType.Subscription)
+			.Any(m_StoreProcessor.Subscribed);
+		
+		if (subscription)
+			return true;
+		
+		return productIDs
+			.Where(_ProductID => m_ProductsProcessor.GetType(_ProductID) != ProductType.Subscription)
+			.Any(m_ProductsProcessor.IsNoAds);
 	}
 
 	public ProfileTimer GetTimer(string _TimerID)

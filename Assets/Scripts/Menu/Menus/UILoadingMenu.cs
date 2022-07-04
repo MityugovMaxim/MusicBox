@@ -7,7 +7,8 @@ using Zenject;
 [Menu(MenuType.LoadingMenu)]
 public class UILoadingMenu : UIAnimationMenu
 {
-	const string TUTORIAL_KEY = "TUTORIAL";
+	const string TUTORIAL_KEY        = "TUTORIAL";
+	
 
 	static bool Tutorial
 	{
@@ -97,6 +98,7 @@ public class UILoadingMenu : UIAnimationMenu
 			
 			await m_MenuProcessor.ErrorLocalizedAsync(
 				"tutorial_load",
+				"loading_menu",
 				"TUTORIAL_LOAD_ERROR_TITLE",
 				"TUTORIAL_LOAD_ERROR_MESSAGE"
 			);
@@ -139,6 +141,7 @@ public class UILoadingMenu : UIAnimationMenu
 			
 			await m_MenuProcessor.ErrorLocalizedAsync(
 				"song_load",
+				"loading_menu",
 				"SONG_LOAD_ERROR_TITLE",
 				"SONG_LOAD_ERROR_MESSAGE"
 			);

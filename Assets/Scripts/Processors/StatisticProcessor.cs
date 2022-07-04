@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using AppsFlyerSDK;
 using Facebook.Unity;
 using Firebase.Analytics;
@@ -8,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.Scripting;
 using Zenject;
+using Application = UnityEngine.Application;
 
 public abstract class StatisticData
 {
@@ -146,6 +146,8 @@ public interface IStatisticProvider
 	void Purchase(string _ProductID, string _Currency, decimal _Price);
 
 	void Log(string _Name, params StatisticData[] _Parameters);
+
+	void LogImmediate(string _Name, params StatisticData[] _Parameters);
 }
 
 [Preserve]
@@ -173,6 +175,13 @@ public class StatisticUnity : IStatisticProvider
 		
 		Analytics.CustomEvent(_Name, data);
 	}
+
+	public void LogImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		Log(_Name, _Parameters);
+		
+		Analytics.FlushEvents();
+	}
 }
 
 [Preserve]
@@ -185,13 +194,11 @@ public class StatisticFacebook : IStatisticProvider
 
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
-		FB.LogPurchase(
-			_Price,
-			_Currency,
-			new Dictionary<string, object>()
-			{
-				{ "product_id", _ProductID },
-			}
+		Log(
+			"payment_succeed_fb",
+			StatisticData.Create("product_id", _ProductID),
+			StatisticData.Create("price", (double)_Price),
+			StatisticData.Create("currency", _Currency)
 		);
 	}
 
@@ -206,6 +213,11 @@ public class StatisticFacebook : IStatisticProvider
 		}
 		
 		FB.LogAppEvent(_Name, null, data);
+	}
+
+	public void LogImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		Log(_Name, _Parameters);
 	}
 }
 
@@ -234,6 +246,11 @@ public class StatisticFirebase : IStatisticProvider
 		
 		FirebaseAnalytics.LogEvent(_Name, data.ToArray());
 	}
+
+	public void LogImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		Log(_Name, _Parameters);
+	}
 }
 
 [Preserve]
@@ -242,7 +259,7 @@ public class StatisticAppMetrica : IStatisticProvider
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
 		Log(
-			"am_purchase",
+			"payment_succeed_appm",
 			StatisticData.Create("product_id", _ProductID),
 			StatisticData.Create("price", (double)_Price),
 			StatisticData.Create("currency", _Currency)
@@ -261,6 +278,13 @@ public class StatisticAppMetrica : IStatisticProvider
 		
 		AppMetrica.Instance.ReportEvent(_Name, data);
 	}
+
+	public void LogImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		Log(_Name, _Parameters);
+		
+		AppMetrica.Instance.SendEventsBuffer();
+	}
 }
 
 [Preserve]
@@ -269,7 +293,7 @@ public class StatisticAppsFlyer : IStatisticProvider
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
 		Log(
-			AFInAppEvents.PURCHASE,
+			"payment_succeed_af",
 			StatisticData.Create("product_id", _ProductID),
 			StatisticData.Create(AFInAppEvents.CURRENCY, _Currency),
 			StatisticData.Create(AFInAppEvents.REVENUE, (double)_Price),
@@ -289,12 +313,164 @@ public class StatisticAppsFlyer : IStatisticProvider
 		
 		AppsFlyer.sendEvent(_Name, data);
 	}
+
+	public void LogImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		Log(_Name, _Parameters);
+	}
+}
+
+public enum TechnicalStepType
+{
+	Launch,
+	Login,
+	TutorialStart,
+	TutorialFinish,
+	TutorialSkip,
+	SongStart,
+	SongFinish,
+	SongRestart,
+	SongLose,
+	SongLeave,
+	SongNext,
+	SongUnlock,
 }
 
 [Preserve]
 public class StatisticProcessor
 {
+	const string SONG_START_COUNT_KEY = "SONG_START_COUNT";
+
+	static int SongStartCount
+	{
+		get => PlayerPrefs.GetInt(SONG_START_COUNT_KEY, 0);
+		set => PlayerPrefs.SetInt(SONG_START_COUNT_KEY, value);
+	}
+
+	static int TechnicalStep { get; set; }
+
 	[Inject] IStatisticProvider[] m_Providers;
+
+	public void LogAdsAvailable(string _Type, string _PlacementID, bool _Available)
+	{
+		LogEvent(
+			"video_ads_available",
+			StatisticData.Create("ad_type", _Type),
+			StatisticData.Create("placement", _PlacementID),
+			StatisticData.Create("result", _Available ? "success" : "not_available"),
+			StatisticData.Create("connection", Application.internetReachability != NetworkReachability.NotReachable)
+		);
+	}
+
+	public void LogAdsStarted(string _Type, string _PlacementID)
+	{
+		LogEvent(
+			"video_ads_started",
+			StatisticData.Create("ad_type", _Type),
+			StatisticData.Create("placement", _PlacementID),
+			StatisticData.Create("result", "start"),
+			StatisticData.Create("connection", Application.internetReachability != NetworkReachability.NotReachable)
+		);
+	}
+
+	public void LogAdsFinished(string _Type, string _PlacementID, string _Result)
+	{
+		LogEvent(
+			"video_ads_watch",
+			StatisticData.Create("ad_type", _Type),
+			StatisticData.Create("placement", _PlacementID),
+			StatisticData.Create("result", _Result),
+			StatisticData.Create("connection", Application.internetReachability != NetworkReachability.NotReachable)
+		);
+	}
+
+	public void LogSongStart(
+		string _SongID,
+		int    _SongNumber,
+		int    _SongLevel,
+		string _SongType
+	)
+	{
+		SongStartCount++;
+		
+		LogEventImmediate(
+			"level_start",
+			StatisticData.Create("level_number", _SongNumber),
+			StatisticData.Create("level_name", _SongID),
+			StatisticData.Create("level_count", SongStartCount),
+			StatisticData.Create("level_diff", _SongLevel),
+			StatisticData.Create("level_type", _SongType),
+			StatisticData.Create("level_random", false)
+		);
+	}
+
+	public void LogSongFinish(
+		string _SongID,
+		int    _SongNumber,
+		int    _SongLevel,
+		long   _Price,
+		int    _Progress,
+		int    _Revives,
+		int    _Time,
+		string _Result
+	)
+	{
+		LogEventImmediate(
+			"level_finish",
+			StatisticData.Create("level_name", _SongID),
+			StatisticData.Create("level_number", _SongNumber),
+			StatisticData.Create("level_count", SongStartCount),
+			StatisticData.Create("level_type", _Price > 0 ? "paid" : "free"),
+			StatisticData.Create("level_diff", _SongLevel),
+			StatisticData.Create("level_random", false),
+			StatisticData.Create("progress", _Progress),
+			StatisticData.Create("continue", _Revives),
+			StatisticData.Create("time", _Time),
+			StatisticData.Create("result", _Result)
+		);
+	}
+
+	public void LogTutorial(int _Step, string _Name)
+	{
+		LogEventImmediate(
+			"tutorial",
+			StatisticData.Create("step_name", $"{_Step:00}_{_Name}")
+		);
+	}
+
+	public void LogLevelUp(int _Level)
+	{
+		LogEvent(
+			"level_up",
+			StatisticData.Create("level", _Level)
+		);
+	}
+
+	public void LogError(string _Type, string _Place)
+	{
+		LogEventImmediate(
+			"errors",
+			StatisticData.Create("type", _Type),
+			StatisticData.Create("place", _Place)
+		);
+	}
+
+	public void LogTechnicalStep(TechnicalStepType _Type)
+	{
+		string key = $"TECHNICAL_STEP_{_Type}";
+		
+		bool first = !PlayerPrefs.HasKey(key);
+		
+		PlayerPrefs.SetInt(key, 1);
+		
+		TechnicalStep++;
+		
+		LogEventImmediate(
+			"technical",
+			StatisticData.Create("step_name", $"{TechnicalStep:00}_{_Type}"),
+			StatisticData.Create("first", first)
+		);
+	}
 
 	public void LogPurchase(string _ProductID, string _Currency, decimal _Price)
 	{
@@ -321,5 +497,14 @@ public class StatisticProcessor
 		
 		foreach (IStatisticProvider provider in m_Providers)
 			provider.Log(_Name, _Parameters);
+	}
+
+	public void LogEventImmediate(string _Name, params StatisticData[] _Parameters)
+	{
+		if (m_Providers == null || m_Providers.Length == 0)
+			return;
+		
+		foreach (IStatisticProvider provider in m_Providers)
+			provider.LogImmediate(_Name, _Parameters);
 	}
 }

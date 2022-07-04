@@ -93,7 +93,7 @@ public class UISocialMenu : UISlideMenu
 		{
 			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
 			if (errorMenu != null)
-				errorMenu.Setup("sign_in_error", _Title, _Message);
+				errorMenu.Setup("sign_in_error", "social_menu", _Title, _Message);
 			
 			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
 			

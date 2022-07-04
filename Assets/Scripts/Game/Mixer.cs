@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -31,6 +32,13 @@ public class Mixer : MonoBehaviour
 
 	void OnDestroy()
 	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHit);
 		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHit);
 		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterHit);
@@ -55,6 +63,7 @@ public class Mixer : MonoBehaviour
 	{
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 		
 		m_TokenSource = new CancellationTokenSource();
 		

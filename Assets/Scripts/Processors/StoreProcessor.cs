@@ -261,7 +261,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		#if UNITY_IOS
 		const string store = "AppStore";
 		#elif UNITY_ANDROID
-		const string store = "GooglePlayStore";
+		const string store = "GooglePlay";
 		#endif
 		
 		ProductPurchaseRequest request = new ProductPurchaseRequest(

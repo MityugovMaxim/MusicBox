@@ -16,6 +16,7 @@ public class TutorialController
 	[Inject] ScoreManager           m_ScoreManager;
 	[Inject] HealthManager          m_HealthManager;
 	[Inject] TutorialPlayer.Factory m_TutorialFactory;
+	[Inject] StatisticProcessor     m_StatisticProcessor;
 
 	string         m_SongID;
 	TutorialPlayer m_Player;
@@ -58,6 +59,8 @@ public class TutorialController
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Sample();
 		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.TutorialStart);
+		
 		await UnityTask.Yield();
 		
 		return true;
@@ -86,6 +89,8 @@ public class TutorialController
 			return;
 		}
 		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.TutorialSkip);
+		
 		m_Player.Stop();
 		
 		Finish();
@@ -98,6 +103,8 @@ public class TutorialController
 			Log.Error(this, "Finish failed. Player is null.");
 			return;
 		}
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.TutorialFinish);
 		
 		async Task DestroyPlayer()
 		{

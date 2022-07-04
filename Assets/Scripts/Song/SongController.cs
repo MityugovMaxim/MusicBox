@@ -20,6 +20,8 @@ public class SongController
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] AmbientProcessor   m_AmbientProcessor;
 	[Inject] PreviewProcessor   m_PreviewProcessor;
+	[Inject] ProgressProcessor  m_ProgressProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	[Inject] HealthManager m_HealthManager;
 	[Inject] ScoreManager  m_ScoreManager;
@@ -27,6 +29,9 @@ public class SongController
 	string        m_SongID;
 	Action<float> m_Progress;
 	SongPlayer    m_Player;
+
+	float m_LoadTime;
+	int   m_AdsReviveCount;
 
 	CancellationTokenSource m_RewindToken;
 
@@ -113,6 +118,18 @@ public class SongController
 		
 		await UnityTask.Yield();
 		
+		m_LoadTime       = Time.time;
+		m_AdsReviveCount = 0;
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongStart);
+		
+		m_StatisticProcessor.LogSongStart(
+			m_SongID,
+			m_SongsProcessor.GetNumber(m_SongID),
+			m_ProgressProcessor.GetSongLevel(m_SongID),
+			m_SongsProcessor.GetPrice(m_SongID) > 0 ? "paid" : "free"
+		);
+		
 		return true;
 	}
 
@@ -196,13 +213,16 @@ public class SongController
 		m_RewindToken = null;
 	}
 
-	public async void Revive()
+	public async void Revive(bool _Ads)
 	{
 		if (m_Player == null)
 		{
 			Log.Error(this, "Revive failed. Player is null.");
 			return;
 		}
+		
+		if (_Ads)
+			m_AdsReviveCount++;
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
@@ -234,6 +254,19 @@ public class SongController
 			return;
 		}
 		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongRestart);
+		
+		m_StatisticProcessor.LogSongFinish(
+			m_SongID,
+			m_SongsProcessor.GetNumber(m_SongID),
+			m_ProgressProcessor.GetSongLevel(m_SongID),
+			m_SongsProcessor.GetPrice(m_SongID),
+			(int)(m_Player.Time / m_Player.Length * 100),
+			m_AdsReviveCount,
+			(int)(Time.time - m_LoadTime),
+			"restart"
+		);
+		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
@@ -260,6 +293,19 @@ public class SongController
 			return;
 		}
 		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongLeave);
+		
+		m_StatisticProcessor.LogSongFinish(
+			m_SongID,
+			m_SongsProcessor.GetNumber(m_SongID),
+			m_ProgressProcessor.GetSongLevel(m_SongID),
+			m_SongsProcessor.GetPrice(m_SongID),
+			(int)(m_Player.Time / m_Player.Length * 100),
+			m_AdsReviveCount,
+			(int)(Time.time - m_LoadTime),
+			"leave"
+		);
+		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
@@ -280,6 +326,8 @@ public class SongController
 			Log.Error(this, "Death failed. Player is null.");
 			return;
 		}
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongLose);
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
@@ -303,6 +351,19 @@ public class SongController
 			Log.Error(this, "Finish failed. Player is null.");
 			return;
 		}
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongFinish);
+		
+		m_StatisticProcessor.LogSongFinish(
+			m_SongID,
+			m_SongsProcessor.GetNumber(m_SongID),
+			m_ProgressProcessor.GetSongLevel(m_SongID),
+			m_SongsProcessor.GetPrice(m_SongID),
+			(int)(m_Player.Time / m_Player.Length * 100),
+			m_AdsReviveCount,
+			(int)(Time.time - m_LoadTime),
+			"leave"
+		);
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();

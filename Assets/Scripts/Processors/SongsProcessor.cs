@@ -90,6 +90,18 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return !string.IsNullOrEmpty(_SongID) ? CRC32.Get(_SongID) : string.Empty;
 	}
 
+	public int GetNumber(string _SongID)
+	{
+		int number = Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.Where(_Snapshot => _Snapshot.Active)
+			.OrderBy(_Snapshot => _Snapshot.Speed)
+			.Select((_Snapshot, _Index) => _Index)
+			.FirstOrDefault();
+		
+		return number;
+	}
+
 	public string GetSkin(string _LevelID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_LevelID);

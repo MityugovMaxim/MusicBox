@@ -11,14 +11,17 @@ public class UIErrorMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] MenuProcessor   m_MenuProcessor;
-	[Inject] HapticProcessor m_HapticProcessor;
-	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] HapticProcessor    m_HapticProcessor;
+	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	Action m_Action;
 
-	public void Setup(string _Reason, string _Title, string _Message, Action _Action = null)
+	public void Setup(string _ID, string _Place, string _Title, string _Message, Action _Action = null)
 	{
+		m_StatisticProcessor.LogError(_ID, _Place);
+		
 		m_Title.text   = _Title;
 		m_Message.text = _Message;
 		m_Action       = _Action;

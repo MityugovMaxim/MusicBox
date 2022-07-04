@@ -36,10 +36,11 @@ public class TutorialPlayer : ASFPlayer
 	[SerializeField, Sound] string m_HoldHitSound;
 	[SerializeField, Sound] string m_HoldSuccessSound;
 
-	[Inject] SignalBus       m_SignalBus;
-	[Inject] HealthManager   m_HealthManager;
-	[Inject] SoundProcessor  m_SoundProcessor;
-	[Inject] ConfigProcessor m_ConfigProcessor;
+	[Inject] SignalBus          m_SignalBus;
+	[Inject] HealthManager      m_HealthManager;
+	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] ConfigProcessor    m_ConfigProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	Action m_Finished;
 
@@ -150,6 +151,8 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task InputAction(CancellationToken _Token = default)
 	{
+		m_StatisticProcessor.LogTutorial(1, "health_bar");
+		
 		await Task.Delay(1000, _Token);
 		
 		if (_Token.IsCancellationRequested)
@@ -189,6 +192,8 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task ComboAction(CancellationToken _Token = default)
 	{
+		m_StatisticProcessor.LogTutorial(2, "combo_bar");
+		
 		await Task.Delay(1000, _Token);
 		
 		if (_Token.IsCancellationRequested)
@@ -233,26 +238,68 @@ public class TutorialPlayer : ASFPlayer
 		await Task.Delay(1500, _Token);
 	}
 
-	Task TapAutoAction(CancellationToken _Token = default) => AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup, _Token);
+	Task TapAutoAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(3, "tap_auto");
+		
+		return AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup, _Token);
+	}
 
-	Task TapManualAction(CancellationToken _Token = default) => ManualAction(0, 4, _Token);
+	Task TapManualAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(4, "tap_manual");
+		
+		return ManualAction(0, 4, _Token);
+	}
 
-	Task DoubleAutoAction(CancellationToken _Token = default) => AutoAction<DoubleSuccessSignal>(4, 5, m_DoubleGroup, _Token);
+	Task DoubleAutoAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(5, "double_auto");
+		
+		return AutoAction<DoubleSuccessSignal>(4, 5, m_DoubleGroup, _Token);
+	}
 
-	Task DoubleManualAction(CancellationToken _Token = default) => ManualAction(5, 11, _Token);
+	Task DoubleManualAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(6, "double_manual");
+		
+		return ManualAction(5, 11, _Token);
+	}
 
-	Task HoldSimpleAutoAction(CancellationToken _Token = default) => AutoAction<HoldHitSignal>(11, 12, m_HoldGroup, _Token);
+	Task HoldSimpleAutoAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(7, "hold_auto");
+		
+		return AutoAction<HoldHitSignal>(11, 12, m_HoldGroup, _Token);
+	}
 
-	Task HoldSimpleManualAction(CancellationToken _Token = default) => ManualAction(12, 20, _Token);
+	Task HoldSimpleManualAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(8, "hold_manual");
+		
+		return ManualAction(12, 20, _Token);
+	}
 
-	Task HoldAdvancedAutoAction(CancellationToken _Token = default) => AutoAction<HoldHitSignal>(20, 21, m_BendGroup, _Token);
+	Task HoldAdvancedAutoAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(9, "bend_auto");
+		
+		return AutoAction<HoldHitSignal>(20, 21, m_BendGroup, _Token);
+	}
 
-	Task HoldAdvancedManualAction(CancellationToken _Token = default) => ManualAction(21, 30, _Token);
+	Task HoldAdvancedManualAction(CancellationToken _Token = default)
+	{
+		m_StatisticProcessor.LogTutorial(10, "bend_manual");
+		
+		return ManualAction(21, 30, _Token);
+	}
 
 	async Task CompleteAction(CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
 			return;
+		
+		m_StatisticProcessor.LogTutorial(11, "complete");
 		
 		m_SoundProcessor.Play(m_OverlaySound);
 		

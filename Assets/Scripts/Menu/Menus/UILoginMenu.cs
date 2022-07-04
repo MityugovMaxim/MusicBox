@@ -32,6 +32,8 @@ public class UILoginMenu : UIMenu
 
 	public async Task Login()
 	{
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.Launch);
+		
 		while (true)
 		{
 			bool login = await m_SocialProcessor.Login();
@@ -41,6 +43,8 @@ public class UILoginMenu : UIMenu
 			
 			await Task.Delay(250);
 		}
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.Login);
 		
 		m_StatisticProcessor.LogLogin(m_SocialProcessor.UserID, m_SocialProcessor.Name);
 		

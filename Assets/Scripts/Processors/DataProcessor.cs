@@ -120,4 +120,11 @@ public abstract class DataProcessor<TSnapshot, TSignal> where TSnapshot : Snapsh
 	{
 		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ID);
 	}
+
+	protected int GetOrder(string _ID)
+	{
+		TSnapshot snapshot = GetSnapshot(_ID);
+		
+		return snapshot?.Order ?? 0;
+	}
 }

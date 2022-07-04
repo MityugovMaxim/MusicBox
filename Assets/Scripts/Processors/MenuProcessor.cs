@@ -36,31 +36,32 @@ public class MenuProcessor : IInitializable
 		await Show(MenuType.SplashMenu, true);
 	}
 
-	public async void ErrorLocalized(string _ID, string _TitleKey, string _MessageKey)
+	public async void ErrorLocalized(string _ID, string _Place, string _TitleKey, string _MessageKey)
 	{
-		await ErrorLocalizedAsync(_ID, _TitleKey, _MessageKey);
+		await ErrorLocalizedAsync(_ID, _Place, _TitleKey, _MessageKey);
 	}
 
-	public async void Error(string _ID, string _Title, string _Message)
+	public async void Error(string _ID, string _Place, string _Title, string _Message)
 	{
-		await ErrorAsync(_ID, _Title, _Message);
+		await ErrorAsync(_ID, _Place, _Title, _Message);
 	}
 
-	public Task ErrorLocalizedAsync(string _ID, string _TitleKey, string _MessageKey)
+	public Task ErrorLocalizedAsync(string _ID, string _Place, string _TitleKey, string _MessageKey)
 	{
 		return ErrorAsync(
 			_ID,
+			_Place,
 			m_LocalizationProcessor.Get(_TitleKey),
 			m_LocalizationProcessor.Get(_MessageKey)
 		);
 	}
 
-	public Task ErrorAsync(string _ID, string _Title, string _Message)
+	public Task ErrorAsync(string _ID, string _Place, string _Title, string _Message)
 	{
 		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
 		
 		if (errorMenu != null)
-			errorMenu.Setup(_ID, _Title, _Message);
+			errorMenu.Setup(_ID, _Place, _Title, _Message);
 		
 		return Show(MenuType.ErrorMenu);
 	}
