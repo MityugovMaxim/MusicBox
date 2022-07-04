@@ -150,10 +150,17 @@ public class ProfileProcessor : IInitializable, IDisposable
 		
 		ProductType productType = m_ProductsProcessor.GetType(_ProductID);
 		
-		if (productType != ProductType.NonConsumable)
-			return false;
-		
-		return m_Snapshot.Transactions.Any(_Transaction => _Transaction.ProductID == _ProductID);
+		switch (productType)
+		{
+			case ProductType.Consumable:
+				return false;
+			case ProductType.NonConsumable:
+				return m_Snapshot.Transactions.Any(_Transaction => _Transaction.ProductID == _ProductID);
+			case ProductType.Subscription:
+				return m_StoreProcessor.Subscribed(_ProductID);
+			default:
+				return false;
+		}
 	}
 
 	public bool HasNoAds()
