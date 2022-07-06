@@ -45,7 +45,6 @@ public class UIDisc : UIEntity
 	[SerializeField] ScoreRank m_Rank;
 	[SerializeField] Color     m_Color;
 	[SerializeField] Image     m_Graphic;
-	[SerializeField] Sprite    m_None;
 	[SerializeField] Sprite    m_Bronze;
 	[SerializeField] Sprite    m_Silver;
 	[SerializeField] Sprite    m_Gold;
@@ -82,11 +81,9 @@ public class UIDisc : UIEntity
 
 	void ProcessRank()
 	{
+		m_Graphic.enabled = Rank != ScoreRank.None;
 		switch (Rank)
 		{
-			case ScoreRank.None:
-				m_Graphic.sprite = m_None;
-				break;
 			case ScoreRank.Bronze:
 				m_Graphic.sprite = m_Bronze;
 				break;
