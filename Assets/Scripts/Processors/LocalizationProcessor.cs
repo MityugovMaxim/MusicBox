@@ -9,15 +9,21 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class LocalizationProcessor
+public class LocalizationProcessor : IInitializable
 {
 	[Inject] StorageProcessor m_StorageProcessor;
 
+	readonly Dictionary<string, string> m_BuiltIn      = new Dictionary<string, string>();
 	readonly Dictionary<string, string> m_Localization = new Dictionary<string, string>();
 
 	string m_Language;
 
 	CancellationTokenSource m_TokenSource;
+
+	void IInitializable.Initialize()
+	{
+		LocalizationRegistry.Load(m_BuiltIn);
+	}
 
 	public async Task Load(string _Language)
 	{
@@ -170,5 +176,16 @@ public class LocalizationProcessor
 			return value ?? $"[{m_Language}] GET: NULL";
 		
 		return _Default ?? (string.IsNullOrEmpty(_Key) ? $"[{m_Language}] GET: MISSING NULL" : $"[{m_Language}] GET: MISSING {_Key}");
+	}
+
+	public string GetBuiltIn(string _Key, string _Default = null)
+	{
+		if (string.IsNullOrEmpty(_Key))
+			return _Default ?? $"BUILT-IN: INVALID KEY";
+		
+		if (m_BuiltIn.TryGetValue(_Key, out string value))
+			return value ?? _Default;
+		
+		return _Default ?? $"BUILT-IN: {_Key}";
 	}
 }
