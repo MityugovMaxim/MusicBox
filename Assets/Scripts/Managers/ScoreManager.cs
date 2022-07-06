@@ -185,6 +185,11 @@ public class ScoreManager : IInitializable, IDisposable
 		return SourceScore;
 	}
 
+	public long GetScore(int _Accuracy)
+	{
+		return TargetScore / 100 * _Accuracy;
+	}
+
 	public ScoreGrade GetGrade(ScoreType _Type, float _Progress)
 	{
 		Threshold threshold = GetThreshold(_Type, _Progress);
