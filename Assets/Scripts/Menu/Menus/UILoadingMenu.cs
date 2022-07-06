@@ -7,8 +7,7 @@ using Zenject;
 [Menu(MenuType.LoadingMenu)]
 public class UILoadingMenu : UIAnimationMenu
 {
-	const string TUTORIAL_KEY        = "TUTORIAL";
-	
+	const string TUTORIAL_KEY = "TUTORIAL";
 
 	static bool Tutorial
 	{
@@ -27,7 +26,6 @@ public class UILoadingMenu : UIAnimationMenu
 	[Inject] TutorialController m_TutorialController;
 	[Inject] SongController     m_SongController;
 	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] AudioManager       m_AudioManager;
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 
@@ -52,8 +50,6 @@ public class UILoadingMenu : UIAnimationMenu
 	{
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
-		
-		await ProcessAudioOutput();
 		
 		if (Tutorial)
 			await LoadSong();
@@ -148,22 +144,6 @@ public class UILoadingMenu : UIAnimationMenu
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 		}
-	}
-
-	async Task ProcessAudioOutput()
-	{
-		if (m_AudioManager.HasSettings())
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.SetupMenu);
-		
-		UISetupMenu setupMenu = m_MenuProcessor.GetMenu<UISetupMenu>();
-		
-		await setupMenu.Process();
-		
-		await m_MenuProcessor.Hide(MenuType.SetupMenu);
-		
-		await Task.Delay(500);
 	}
 
 	void ProcessProgress(float _Progress)
