@@ -7,6 +7,7 @@ using ColorMode = UIStroke.ColorMode;
 
 public class UIMainMenuSongsPage : UIMainMenuPage
 {
+	const float ITEM_ASPECT  = 0.675f;
 	const float GRID_SPACING = 30;
 	const float LIST_SPACING = 15;
 
@@ -14,12 +15,18 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	[SerializeField] UILayout m_Content;
 
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] SongsManager       m_SongsManager;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] UISongHeader.Pool  m_HeaderPool;
-	[Inject] UISongItem.Pool    m_ItemPool;
-	[Inject] UISongElement.Pool m_ElementPool;
+	[Inject] SignalBus       m_SignalBus;
+	[Inject] SongsManager    m_SongsManager;
+	[Inject] ProductsManager m_ProductsManager;
+	[Inject] ConfigProcessor m_ConfigProcessor;
+	[Inject] SocialProcessor m_SocialProcessor;
+
+	[Inject] UISocialElement.Pool m_SocialPool;
+	[Inject] UISongHeader.Pool    m_HeaderPool;
+	[Inject] UIProductItem.Pool   m_ProductPool;
+	[Inject] UIProductPromo.Pool  m_PromoPool;
+	[Inject] UISongItem.Pool      m_ItemPool;
+	[Inject] UISongElement.Pool   m_ElementPool;
 
 	protected override void OnShowStarted()
 	{
@@ -62,6 +69,15 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
+		if (m_SocialProcessor.Guest)
+		{
+			VerticalStackLayout.Start(m_Content, LIST_SPACING);
+			
+			m_Content.Add(new SocialElementEntity(m_SocialPool));
+			
+			m_Content.Space(LIST_SPACING);
+		}
+		
 		int size = m_ConfigProcessor.SongLibraryGroupSize;
 		
 		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
@@ -73,7 +89,15 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		foreach (string songID in songIDs.Skip(size))
+		foreach (string songID in songIDs.Skip(size).Take(2))
+			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
+		
+		string productID = m_ProductsManager.GetPromoProductIDs().FirstOrDefault();
+		
+		if (!string.IsNullOrEmpty(productID))
+			m_Content.Add(new ProductPromoEntity(productID, m_PromoPool));
+		
+		foreach (string songID in songIDs.Skip(size + 2))
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
 		
 		m_Content.Space(LIST_SPACING);
@@ -96,7 +120,29 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		foreach (string songID in songIDs)
+		const int productsPosition = 6;
+		
+		foreach (string songID in songIDs.Take(productsPosition))
+			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
+		
+		List<string> productIDs = m_ProductsManager.GetAvailableProductIDs();
+		
+		if (productIDs != null && productIDs.Count >= 3)
+		{
+			m_Content.Space(LIST_SPACING);
+			
+			VerticalGridLayout.Start(m_Content, 3, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
+			
+			foreach (string productID in productIDs.Take(3))
+				m_Content.Add(new ProductItemEntity(productID, m_ProductPool));
+			
+			if (songIDs.Count > productsPosition)
+				m_Content.Space(LIST_SPACING);
+			
+			VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		}
+		
+		foreach (string songID in songIDs.Skip(productsPosition))
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
 		
 		m_Content.Space(LIST_SPACING);
