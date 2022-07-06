@@ -74,9 +74,6 @@ public class SongPlayer : ASFPlayer
 		if (holdTime > time)
 			time = holdTime;
 		
-		if (time > Music.length)
-			time = Music.length;
-		
 		return time > double.Epsilon ? time : Music.length;
 	}
 
@@ -108,7 +105,8 @@ public class SongPlayer : ASFPlayer
 		
 		m_InputReceiver.Sample();
 		
-		if (Time >= m_Length && State == ASFPlayerState.Play)
+		//if (Time >= Length && State == ASFPlayerState.Play)
+		if (Time >= 1)
 			m_Finished?.Invoke();
 	}
 }
