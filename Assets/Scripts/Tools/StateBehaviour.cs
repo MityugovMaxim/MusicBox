@@ -47,6 +47,37 @@ public class StateBehaviour : StateMachineBehaviour
 		}
 	}
 
+	public static void RegisterExit(Animator _Animator, string _ID, Action _Exit)
+	{
+		StateBehaviour[] states = GetBehaviours(_Animator, _ID);
+		
+		if (states == null || states.Length == 0)
+		{
+			Log.Warning(nameof(StateBehaviour), "Register exit failed. Animator: '{0}' ID: '{1}'.", _Animator.name, _ID);
+			return;
+		}
+		
+		foreach (StateBehaviour state in states)
+		{
+			if (state != null)
+				state.OnExit += _Exit;
+		}
+	}
+
+	public static void UnregisterExit(Animator _Animator, string _ID, Action _Exit)
+	{
+		StateBehaviour[] states = GetBehaviours(_Animator, _ID);
+		
+		if (states == null || states.Length == 0)
+			return;
+		
+		foreach (StateBehaviour state in states)
+		{
+			if (state != null)
+				state.OnExit -= _Exit;
+		}
+	}
+
 	public event Action OnEnter;
 	public event Action OnExit;
 	public event Action OnComplete;
