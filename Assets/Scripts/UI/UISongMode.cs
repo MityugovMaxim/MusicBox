@@ -19,9 +19,9 @@ public class UISongMode : UIEntity
 		
 		m_FreeMode.SetActive(songAvailable && songMode == SongMode.Free);
 		m_AdsMode.SetActive(songAvailable && songMode == SongMode.Ads);
-		m_ProductMode.SetActive(songAvailable && songMode == SongMode.Product);
+		m_ProductMode.SetActive(songAvailable && songMode == SongMode.Paid);
 		
 		m_Level.Level = m_ProgressProcessor.GetSongLevel(_SongID);
-		m_Level.gameObject.SetActive(!songAvailable && songMode != SongMode.Product);
+		m_Level.gameObject.SetActive(!songAvailable && songMode != SongMode.Paid);
 	}
 }

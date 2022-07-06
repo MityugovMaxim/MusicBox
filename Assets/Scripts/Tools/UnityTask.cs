@@ -125,6 +125,11 @@ public class UnityTask : MonoBehaviour
 		return Phase(_Action, 0, _Duration, _Token);
 	}
 
+	public static Task Phase(Action<float> _Action, float _Duration, AnimationCurve _Curve, CancellationToken _Token = default)
+	{
+		return Phase(_Action, 0, _Duration, _Curve.Evaluate, _Token);
+	}
+
 	public static Task Phase(Action<float> _Action, float _Duration, EaseFunction _Function, CancellationToken _Token = default)
 	{
 		return Phase(_Action, 0, _Duration, _Function.Get, _Token);

@@ -22,8 +22,6 @@ public class UIReviveMenu : UIMenu
 
 	string m_SongID;
 	int    m_Count;
-	int    m_RestartAdsCount;
-	int    m_LeaveAdsCount;
 
 	public void Setup(string _SongID)
 	{
@@ -171,12 +169,8 @@ public class UIReviveMenu : UIMenu
 		}
 		else
 		{
-			m_RestartAdsCount++;
-			
-			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
+			if (m_AdsProcessor.Cooldown())
 				return true;
-			
-			m_RestartAdsCount = 0;
 			
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
@@ -190,15 +184,8 @@ public class UIReviveMenu : UIMenu
 
 	async Task ProcessLeaveAds()
 	{
-		if (m_ProfileProcessor.HasNoAds())
+		if (m_ProfileProcessor.HasNoAds() || m_AdsProcessor.Cooldown())
 			return;
-		
-		m_LeaveAdsCount++;
-		
-		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
-			return;
-		
-		m_LeaveAdsCount = 0;
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
