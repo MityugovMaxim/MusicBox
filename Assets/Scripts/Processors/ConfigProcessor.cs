@@ -37,6 +37,7 @@ public class ConfigProcessor
 	const string SCORE_GREAT_THRESHOLD   = "score_great_threshold";
 	const string SCORE_GOOD_THRESHOLD    = "score_good_threshold";
 
+	const string ADS_COOLDOWN           = "ads_cooldown";
 	const string SONG_RESTART_ADS_COUNT = "song_restart_ads_count";
 	const string SONG_LEAVE_ADS_COUNT   = "song_leave_ads_count";
 	const string SONG_NEXT_ADS_COUNT    = "song_next_ads_count";
@@ -69,6 +70,7 @@ public class ConfigProcessor
 	public float ScorePerfectThreshold   => GetFloat(SCORE_PERFECT_THRESHOLD);
 	public float ScoreGreatThreshold     => GetFloat(SCORE_GREAT_THRESHOLD);
 	public float ScoreGoodThreshold      => GetFloat(SCORE_GOOD_THRESHOLD);
+	public float AdsCooldown             => GetFloat(ADS_COOLDOWN);
 	public int   SongRestartAdsCount     => GetInt(SONG_RESTART_ADS_COUNT);
 	public int   SongLeaveAdsCount       => GetInt(SONG_LEAVE_ADS_COUNT);
 	public int   SongNextAdsCount        => GetInt(SONG_NEXT_ADS_COUNT);
@@ -114,6 +116,7 @@ public class ConfigProcessor
 		{ SCORE_PERFECT_THRESHOLD, 0.85f },
 		
 		// Ads
+		{ ADS_COOLDOWN, 40 },
 		{ SONG_RESTART_ADS_COUNT, 2 },
 		{ SONG_LEAVE_ADS_COUNT, 3 },
 		{ SONG_NEXT_ADS_COUNT, 2 },

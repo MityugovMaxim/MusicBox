@@ -31,11 +31,17 @@ public class AdsProviderMadPixel : IAdsProvider
 
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
+	bool   m_Initialized;
 	string m_InterstitialID;
 	string m_RewardedID;
 
 	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
+		if (m_Initialized)
+			return Task.FromResult(true);
+		
+		m_Initialized = true;
+		
 		AdsManager.Instance.InitApplovin();
 		
 		m_InterstitialID = _InterstitialID;
@@ -140,8 +146,8 @@ public class AdsProviderSnapshot
 
 	public AdsProviderSnapshot(DataSnapshot _Data)
 	{
-		ID     = _Data.Key;
-		Active = _Data.GetBool("active");
+		ID       = _Data.Key;
+		Active   = _Data.GetBool("active");
 		#if UNITY_IOS
 		InterstitialID = _Data.GetString("ios_interstitial");
 		RewardedID     = _Data.GetString("ios_rewarded");
@@ -157,12 +163,14 @@ public class AdsProcessor
 {
 	bool Loaded { get; set; }
 
-	[Inject] IAdsProvider[] m_AdsProviders;
-	[Inject] AudioManager   m_AudioManager;
+	[Inject] IAdsProvider[]  m_AdsProviders;
+	[Inject] AudioManager    m_AudioManager;
+	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	readonly List<AdsProviderSnapshot> m_Snapshots = new List<AdsProviderSnapshot>();
 
 	DatabaseReference m_Data;
+	double            m_Time;
 
 	public async Task Load()
 	{
@@ -233,8 +241,20 @@ public class AdsProcessor
 		return m_AdsProviders.FirstOrDefault(_AdsProvider => _AdsProvider.ID == _AdsProviderID);
 	}
 
+	public bool Cooldown()
+	{
+		return Time.timeAsDouble < m_Time;
+	}
+
 	public async Task<bool> Interstitial()
 	{
+		double time = Time.timeAsDouble;
+		
+		if (time < m_Time)
+			return true;
+		
+		m_Time = time + m_ConfigProcessor.AdsCooldown;
+		
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
 			AudioListener.volume = 0;
@@ -258,58 +278,10 @@ public class AdsProcessor
 		return false;
 	}
 
-	public async Task<bool> Interstitial(string _PlacementID)
-	{
-		foreach (IAdsProvider provider in m_AdsProviders)
-		{
-			AudioListener.volume = 0;
-			
-			if (!await provider.Interstitial(_PlacementID))
-				continue;
-			
-			AudioListener.volume = 1;
-			
-			m_AudioManager.SetAudioActive(true);
-			
-			await UnityTask.Yield();
-			
-			return true;
-		}
-		
-		AudioListener.volume = 1;
-		
-		m_AudioManager.SetAudioActive(true);
-		
-		return false;
-	}
-
 	public async Task<bool> Rewarded()
 	{
-		foreach (IAdsProvider provider in m_AdsProviders)
-		{
-			AudioListener.volume = 0;
-			
-			if (!await provider.Rewarded())
-				continue;
-			
-			AudioListener.volume = 1;
-			
-			m_AudioManager.SetAudioActive(true);
-			
-			await UnityTask.Yield();
-			
-			return true;
-		}
+		m_Time = Time.timeAsDouble + m_ConfigProcessor.AdsCooldown;
 		
-		AudioListener.volume = 1;
-		
-		m_AudioManager.SetAudioActive(true);
-		
-		return false;
-	}
-
-	public async Task<bool> Rewarded(string _PlacementID)
-	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
 			AudioListener.volume = 0;
