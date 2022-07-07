@@ -1,94 +1,52 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using AudioBox.Logging;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
-public class UIFlare : UIGroup
+public class UIFlare : UIEntity
 {
-	[SerializeField] Graphic[]      m_Flares;
-	[SerializeField] float          m_MinSize     = 10;
-	[SerializeField] float          m_MaxSize     = 20;
-	[SerializeField] float          m_MinDelay    = 0.1f;
-	[SerializeField] float          m_MaxDelay    = 0.15f;
-	[SerializeField] float          m_MinDuration = 0.1f;
-	[SerializeField] float          m_MaxDuration = 0.15f;
-	[SerializeField] AnimationCurve m_Curve       = AnimationCurve.EaseInOut(0, 0, 1, 1);
+	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
+	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 
-	CancellationTokenSource m_TokenSource;
+	Animator    m_Animator;
+	IEnumerator m_Routine;
 
-	protected override void OnShowStarted()
+	protected override void Awake()
 	{
-		Stop();
+		base.Awake();
 		
-		m_TokenSource = new CancellationTokenSource();
+		m_Animator = GetComponent<Animator>();
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
 		
-		CancellationToken token = m_TokenSource.Token;
+		m_Animator.SetTrigger(m_RestoreParameterID);
+		m_Animator.ResetTrigger(m_PlayParameterID);
+		m_Animator.Update(0);
+	}
+
+	public void Play(float _Delay = 0)
+	{
+		if (m_Routine != null)
+			StopCoroutine(m_Routine);
 		
-		float delay = 0;
+		m_Routine = null;
 		
-		foreach (Graphic flare in m_Flares)
+		if (_Delay < float.Epsilon)
 		{
-			Play(flare, delay, token);
-			
-			delay += Random.Range(m_MinDelay, m_MaxDelay);
+			m_Animator.SetTrigger(m_PlayParameterID);
+			return;
 		}
+		
+		m_Routine = PlayRoutine(_Delay);
+		
+		StartCoroutine(m_Routine);
 	}
 
-	protected override void OnHideFinished()
+	IEnumerator PlayRoutine(float _Delay)
 	{
-		Stop();
-	}
-
-	async void Play(Graphic _Flare, float _Delay, CancellationToken _Token = default)
-	{
-		CancellationToken token = m_TokenSource.Token;
+		yield return new WaitForSeconds(_Delay);
 		
-		Color color       = _Flare.color;
-		Color sourceColor = new Color(color.r, color.g, color.b, 1);
-		Color targetColor = new Color(color.r, color.g, color.b, 0);
-		
-		RectTransform transform = _Flare.rectTransform;
-		
-		while (true)
-		{
-			if (token.IsCancellationRequested)
-				return;
-			
-			float duration   = Random.Range(m_MinDuration, m_MaxDuration);
-			float size       = Random.Range(m_MinSize, m_MaxSize);
-			
-			Vector2 sourceSize = new Vector2(size, size);
-			Vector2 targetSize = new Vector2(0, 0);
-			
-			_Flare.color        = targetColor;
-			transform.sizeDelta = sourceSize;
-			
-			try
-			{
-				await UnityTask.Phase(
-					_Phase =>
-					{
-						_Flare.color        = Color.Lerp(sourceColor, targetColor, _Phase);
-						transform.sizeDelta = Vector2.Lerp(sourceSize, targetSize, _Phase);
-					},
-					_Delay,
-					duration,
-					m_Curve,
-					token
-				);
-			}
-			catch (TaskCanceledException) { }
-			catch (Exception exception) { Log.Exception(this, exception); }
-		}
-	}
-
-	void Stop()
-	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		m_Animator.SetTrigger(m_PlayParameterID);
 	}
 }

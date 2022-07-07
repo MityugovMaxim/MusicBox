@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -176,7 +174,7 @@ public class UILine : UIEntity
 		float   centerUV = Mathf.Lerp(uv.yMin, uv.yMax, 0.5f);
 		Vector2 minUV    = new Vector2(uv.xMin, centerUV);
 		Vector2 maxUV    = new Vector2(uv.xMax, centerUV);
-
+		
 		void AddPoint(UISpline.Point _Point)
 		{
 			Vector2 width = _Point.Normal * size;

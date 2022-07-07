@@ -5,24 +5,6 @@ using Firebase.Auth;
 
 public static class FacebookAuth
 {
-	public static async Task Initialize()
-	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		if (FB.IsInitialized)
-			completionSource.SetResult(true);
-		else
-			FB.Init(() => completionSource.SetResult(true));
-		
-		await completionSource.Task;
-		
-		FB.ActivateApp();
-		
-		#if UNITY_IOS
-		FB.Mobile.SetAdvertiserTrackingEnabled(UnityEngine.iOS.Device.advertisingTrackingEnabled);
-		#endif
-	}
-
 	public static UserProfile GetProfile()
 	{
 		UserProfile profile = new UserProfile();
@@ -39,8 +21,6 @@ public static class FacebookAuth
 
 	public static async Task<string> LoginAsync()
 	{
-		await Initialize();
-		
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
 		FB.LogInWithReadPermissions(

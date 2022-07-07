@@ -15,26 +15,19 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	[SerializeField] UISongDiscs     m_Discs;
 	[SerializeField] UISongLabel     m_Label;
 	[SerializeField] UISongRating    m_Rating;
-	[SerializeField] UISongMode      m_Mode;
+	[SerializeField] UISongRestart   m_Restart;
 	[SerializeField] SongPreview     m_Preview;
 	[SerializeField] UISongPlatforms m_Platforms;
 	[SerializeField] UISongQRCode    m_QR;
 
 	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] ScoreManager       m_ScoreManager;
 	[Inject] ScoresProcessor    m_ScoresProcessor;
 	[Inject] SongsManager       m_SongsManager;
-	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] SongController     m_SongController;
 	[Inject] AdsProcessor       m_AdsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
-
-	int m_LeaveAdsCount;
-	int m_NextAdsCount;
-	int m_RestartAdsCount;
-	int m_ReviewRequestCount;
 
 	string m_SongID;
 
@@ -50,7 +43,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		m_Image.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
 		m_Rating.Setup(m_SongID);
-		m_Mode.Setup(m_SongID);
+		m_Restart.Setup(m_SongID);
 		m_Platforms.Setup(m_SongID);
 		
 		m_Preview.Stop();
@@ -112,18 +105,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		}
 	}
 
-	public async void Restart()
-	{
-		if (!await ProcessRestartAds())
-			return;
-		
-		m_SongController.Restart();
-		
-		await m_MenuProcessor.Show(MenuType.GameMenu, true);
-		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ResultMenu);
-	}
-
 	public void ToggleQR()
 	{
 		if (m_QR.Shown)
@@ -149,7 +130,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 			return songID;
 		
 		return m_SongsManager
-			.GetCoinsSongIDs()
+			.GetLibrarySongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 	}
 
@@ -165,14 +146,9 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		if (m_ReviewRequested)
 			return;
 		
-		m_ReviewRequestCount++;
-		
 		ScoreRank rank = m_ScoreManager.GetRank();
 		
-		if (rank < ScoreRank.Gold)
-			return;
-		
-		if (m_ReviewRequestCount >= m_ConfigProcessor.ReviewRequestCount)
+		if (rank >= ScoreRank.Gold)
 		{
 			m_ReviewRequested = true;
 			
@@ -189,53 +165,10 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		m_Rating.Execute();
 	}
 
-	async Task<bool> ProcessRestartAds()
-	{
-		if (m_ProfileProcessor.HasNoAds())
-			return true;
-		
-		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
-		
-		if (songMode == SongMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			bool success = await m_AdsProcessor.Rewarded();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return success;
-		}
-		else
-		{
-			m_RestartAdsCount++;
-			
-			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
-				return true;
-			
-			m_RestartAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return true;
-		}
-	}
-
 	async Task ProcessNextAds()
 	{
-		if (m_ProfileProcessor.HasNoAds())
+		if (m_AdsProcessor.CheckUnavailable() || m_ProfileProcessor.HasNoAds())
 			return;
-		
-		m_NextAdsCount++;
-		
-		if (m_NextAdsCount < m_ConfigProcessor.SongNextAdsCount)
-			return;
-		
-		m_NextAdsCount = 0;
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
@@ -246,15 +179,8 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	async Task ProcessLeaveAds()
 	{
-		if (m_ProfileProcessor.HasNoAds())
+		if (m_AdsProcessor.CheckUnavailable() || m_ProfileProcessor.HasNoAds())
 			return;
-		
-		m_LeaveAdsCount++;
-		
-		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
-			return;
-		
-		m_LeaveAdsCount = 0;
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		

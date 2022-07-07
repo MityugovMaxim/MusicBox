@@ -6,15 +6,12 @@ using Zenject;
 public class UIReviveMenu : UIMenu
 {
 	[SerializeField] UISongImage m_Image;
-	[SerializeField] UISongMode  m_Restart;
 	[SerializeField] UIUnitLabel m_Coins;
 
 	[SerializeField, Sound] string m_Sound;
 
 	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] ConfigProcessor  m_ConfigProcessor;
 	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] SongsProcessor   m_SongsProcessor;
 	[Inject] SongController   m_SongController;
 	[Inject] RevivesProcessor m_RevivesProcessor;
 	[Inject] MenuProcessor    m_MenuProcessor;
@@ -27,8 +24,6 @@ public class UIReviveMenu : UIMenu
 	{
 		m_SongID = _SongID;
 		m_Count  = 0;
-		
-		ProcessCoins();
 	}
 
 	public async void ReviveCoins()
@@ -108,19 +103,16 @@ public class UIReviveMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	protected override void OnShowStarted()
-	{
-		m_SoundProcessor.Play(m_Sound);
-		m_Image.Setup(m_SongID);
-		m_Restart.Setup(m_SongID);
-		
-		ProcessCoins();
-	}
-
 	public async void Restart()
 	{
-		if (!await ProcessRestartAds())
-			return;
+		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
+		{
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
 		
 		m_SongController.Restart();
 		
@@ -131,7 +123,14 @@ public class UIReviveMenu : UIMenu
 
 	public async void Leave()
 	{
-		await ProcessLeaveAds();
+		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
+		{
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -150,52 +149,12 @@ public class UIReviveMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 	}
 
-	async Task<bool> ProcessRestartAds()
+	protected override void OnShowStarted()
 	{
-		if (m_ProfileProcessor.HasNoAds())
-			return true;
+		m_SoundProcessor.Play(m_Sound);
 		
-		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
+		m_Image.Setup(m_SongID);
 		
-		if (songMode == SongMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			bool success = await m_AdsProcessor.Rewarded();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return success;
-		}
-		else
-		{
-			if (m_AdsProcessor.Cooldown())
-				return true;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return true;
-		}
-	}
-
-	async Task ProcessLeaveAds()
-	{
-		if (m_ProfileProcessor.HasNoAds() || m_AdsProcessor.Cooldown())
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_AdsProcessor.Interstitial();
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-	}
-
-	void ProcessCoins()
-	{
 		m_Coins.Value = m_RevivesProcessor.GetCoins(m_Count);
 	}
 }

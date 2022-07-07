@@ -11,6 +11,8 @@ public class UISongScoreList : UIEntity
 	[SerializeField] UISongLabel          m_Label;
 	[SerializeField] UIUnitLabel          m_Score;
 	[SerializeField] UIDisc               m_Disc;
+	[SerializeField] UIFlare              m_Flare;
+	[SerializeField] UISongScoreCoins     m_Coins;
 	[SerializeField] UISongScoreElement[] m_UpperElements;
 	[SerializeField] UISongScoreElement[] m_LowerElements;
 	[SerializeField] AnimationCurve       m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -29,6 +31,7 @@ public class UISongScoreList : UIEntity
 	[Inject] HapticProcessor m_HapticProcessor;
 
 	CancellationTokenSource m_DiscToken;
+	ScoreRank               m_CoinsRank;
 	ScoreRank               m_DiscRank;
 
 	string m_SongID;
@@ -56,8 +59,11 @@ public class UISongScoreList : UIEntity
 		m_Label.Setup(m_SongID);
 		
 		m_Score.Value = 0;
+		m_Coins.Value = 0;
 		
 		m_DiscRank  = m_ScoreProcessor.GetRank(m_SongID);
+		m_CoinsRank = ScoreRank.None;
+		
 		m_Disc.Rank = m_DiscRank;
 		
 		SetAccuracy(0);
@@ -67,42 +73,32 @@ public class UISongScoreList : UIEntity
 
 	public async Task PlayAsync()
 	{
-		await Task.Delay(500);
+		await Task.Delay(1000);
 		
 		await Task.WhenAll(
 			ScoreAsync(m_ScoreManager.GetScore()),
 			ShiftAsync()
 		);
-	}
-
-	void SetAccuracy(int _Accuracy)
-	{
-		int upperAccuracy = _Accuracy + 1;
-		foreach (UISongScoreElement upper in m_UpperElements)
-		{
-			upper.Setup(
-				upperAccuracy,
-				m_ScoreManager.GetScore(upperAccuracy),
-				GetRank(upperAccuracy),
-				upperAccuracy == m_SourceAccuracy
-			);
-			upperAccuracy++;
-		}
 		
-		int lowerAccuracy = _Accuracy;
-		foreach (UISongScoreElement lower in m_LowerElements)
-		{
-			lower.Setup(
-				lowerAccuracy,
-				m_ScoreManager.GetScore(lowerAccuracy),
-				ScoreRank.None,
-				lowerAccuracy == m_SourceAccuracy
-			);
-			lowerAccuracy--;
-		}
+		await Task.Delay(500);
+		
+		m_Coins.Next();
+		
+		await Task.Delay(3000);
+		
+		m_Coins.Next();
+		
+		await Task.Delay(500);
 	}
 
-	ScoreRank GetRank(int _Accuracy)
+	public async Task DoubleAsync()
+	{
+		m_Coins.Value *= 2;
+		
+		await Task.Delay(1500);
+	}
+
+	ScoreRank GetDisc(int _Accuracy)
 	{
 		if (_Accuracy == m_PlatinumThreshold)
 			return ScoreRank.Platinum;
@@ -114,6 +110,32 @@ public class UISongScoreList : UIEntity
 			return ScoreRank.Bronze;
 		else
 			return ScoreRank.None;
+	}
+
+	ScoreRank GetRank(int _Accuracy)
+	{
+		if (_Accuracy >= m_PlatinumThreshold)
+			return ScoreRank.Platinum;
+		else if (_Accuracy >= m_GoldThreshold)
+			return ScoreRank.Gold;
+		else if (_Accuracy >= m_SilverThreshold)
+			return ScoreRank.Silver;
+		else if (_Accuracy >= m_BronzeThreshold)
+			return ScoreRank.Bronze;
+		else
+			return ScoreRank.None;
+	}
+
+	string GetDiscSound(ScoreRank _Rank)
+	{
+		switch (_Rank)
+		{
+			case ScoreRank.Platinum: return m_PlatinumSound;
+			case ScoreRank.Gold:     return m_GoldSound;
+			case ScoreRank.Silver:   return m_SilverSound;
+			case ScoreRank.Bronze:   return m_BronzeSound;
+			default:                 return string.Empty;
+		}
 	}
 
 	Task ScoreAsync(long _Score)
@@ -143,27 +165,25 @@ public class UISongScoreList : UIEntity
 	{
 		int accuracy = Mathf.Min(m_TargetAccuracy, _Accuracy);
 		
-		ScoreRank rank;
-		if (accuracy >= m_PlatinumThreshold)
-			rank = ScoreRank.Platinum;
-		else if (accuracy >= m_GoldThreshold)
-			rank = ScoreRank.Gold;
-		else if (accuracy >= m_SilverThreshold)
-			rank = ScoreRank.Silver;
-		else if (accuracy >= m_BronzeThreshold)
-			rank = ScoreRank.Bronze;
-		else
-			rank = ScoreRank.None;
+		ScoreRank rank = GetRank(accuracy);
+		
+		if (m_CoinsRank < rank)
+		{
+			m_CoinsRank   =  rank;
+			m_Coins.Value += m_SongsProcessor.GetPayout(m_SongID, ScoreRank.None);
+		}
 		
 		if (m_DiscRank >= rank)
 			return;
+		
+		m_DiscRank = rank;
+		
+		m_Coins.Value += m_SongsProcessor.GetPayout(m_SongID, m_DiscRank);
 		
 		string sound = GetDiscSound(rank);
 		
 		if (!string.IsNullOrEmpty(sound))
 			m_SoundProcessor.Play(sound);
-		
-		m_DiscRank = rank;
 		
 		m_DiscToken?.Cancel();
 		m_DiscToken?.Dispose();
@@ -187,24 +207,16 @@ public class UISongScoreList : UIEntity
 		
 		Vector3 scale = new Vector3(0, 1.5f, 1);
 		
-		if (m_Disc.Rank > ScoreRank.None)
-		{
-			try
-			{
-				await ScaleDisc(scale, 0.1f, EaseFunction.EaseIn, token);
-			}
-			catch (TaskCanceledException)
-			{
-				return;
-			}
-		}
-		
-		m_Disc.RectTransform.localScale = scale;
-		
-		m_Disc.Rank = rank;
+		m_Flare.Play();
 		
 		try
 		{
+			await ScaleDisc(scale, 0.15f, EaseFunction.EaseIn, token);
+			
+			m_Disc.RectTransform.localScale = scale;
+			
+			m_Disc.Rank = rank;
+			
 			await ScaleDisc(Vector3.one, 0.2f, EaseFunction.EaseOutBack, token);
 		}
 		catch (TaskCanceledException)
@@ -218,15 +230,32 @@ public class UISongScoreList : UIEntity
 		m_DiscToken = null;
 	}
 
-	string GetDiscSound(ScoreRank _Rank)
+	void SetAccuracy(int _Accuracy)
 	{
-		switch (_Rank)
+		int upperAccuracy = _Accuracy + 1;
+		foreach (UISongScoreElement upper in m_UpperElements)
 		{
-			case ScoreRank.Platinum: return m_PlatinumSound;
-			case ScoreRank.Gold:     return m_GoldSound;
-			case ScoreRank.Silver:   return m_SilverSound;
-			case ScoreRank.Bronze:   return m_BronzeSound;
-			default:                 return string.Empty;
+			upper.Setup(
+				upperAccuracy,
+				m_ScoreManager.GetScore(upperAccuracy),
+				GetDisc(upperAccuracy - 1),
+				GetRank(upperAccuracy - 1),
+				upperAccuracy == m_SourceAccuracy
+			);
+			upperAccuracy++;
+		}
+		
+		int lowerAccuracy = _Accuracy;
+		foreach (UISongScoreElement lower in m_LowerElements)
+		{
+			lower.Setup(
+				lowerAccuracy,
+				m_ScoreManager.GetScore(lowerAccuracy),
+				ScoreRank.None,
+				GetRank(lowerAccuracy - 1),
+				lowerAccuracy == m_SourceAccuracy
+			);
+			lowerAccuracy--;
 		}
 	}
 

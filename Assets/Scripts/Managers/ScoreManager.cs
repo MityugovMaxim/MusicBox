@@ -168,6 +168,9 @@ public class ScoreManager : IInitializable, IDisposable
 
 	public int GetAccuracy()
 	{
+		if (SourceScore == TargetScore)
+			return 100;
+		
 		float accuracy = Mathf.InverseLerp(0, TargetScore, SourceScore);
 		
 		return Mathf.RoundToInt(accuracy * 100);
@@ -383,9 +386,10 @@ public class ScoreManager : IInitializable, IDisposable
 	{
 		Threshold threshold = GetThreshold(_Type, 1);
 		
-		float score = threshold?.Multiplier ?? 0;
+		float score    = threshold?.Multiplier ?? 0;
+		float progress = threshold?.Progress ?? 1;
 		
-		TargetScore += (long)(score * GetMultiplier(TargetCombo));
+		TargetScore += (long)(score * GetMultiplier(TargetCombo) * progress);
 	}
 
 	void ProcessScore(ScoreGrade _Grade = ScoreGrade.None)

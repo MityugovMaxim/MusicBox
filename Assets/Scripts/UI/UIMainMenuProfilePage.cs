@@ -11,7 +11,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	[SerializeField] UILevel        m_Level;
 	[SerializeField] UIUnitLabel    m_Coins;
 	[SerializeField] UILanguageItem m_Language;
-	[SerializeField] GameObject     m_LoginControls;
 	[SerializeField] GameObject     m_LogoutControls;
 
 	[Inject] SignalBus          m_SignalBus;
@@ -134,8 +133,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 		m_Username.text = m_SocialProcessor.GetUsername();
 		
 		m_Language.Setup(m_LanguageProcessor.Language, SetLanguage);
-		
-		m_LoginControls.SetActive(m_SocialProcessor.Guest);
 		
 		#if UNITY_EDITOR
 		m_LogoutControls.SetActive(true);

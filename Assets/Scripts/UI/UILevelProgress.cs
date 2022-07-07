@@ -1,180 +1,94 @@
-using System;
+using System.Threading;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
-using UnityEngine.Scripting;
-using Zenject;
 
-public class UILevelProgress : UIGroup
+public class UILevelProgress : UIEntity
 {
-	const string COLLECT_STATE = "collect";
+	[SerializeField] UISplineLine m_Progress;
+	[SerializeField] TMP_Text     m_Label;
+	[SerializeField] float        m_MinProgress;
+	[SerializeField] float        m_MaxProgress;
+	[SerializeField] float        m_Duration;
 
-	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
-	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
+	int m_Discs;
+	int m_SourceDiscs;
+	int m_TargetDiscs;
 
-	float Progress
+	CancellationTokenSource m_TokenSource;
+
+	protected override void OnDestroy()
 	{
-		get => m_Progress;
-		set
+		base.OnDestroy();
+		
+		Cancel();
+	}
+
+	public void Setup(int _Discs, int _SourceDiscs, int _TargetDiscs)
+	{
+		m_Discs       = _Discs;
+		m_SourceDiscs = _SourceDiscs;
+		m_TargetDiscs = _TargetDiscs;
+		
+		ProcessLabel();
+		
+		float progress = Mathf.InverseLerp(m_SourceDiscs, m_TargetDiscs, m_Discs);
+		
+		m_Progress.Max = Mathf.Lerp(m_MinProgress, m_MaxProgress, progress);
+	}
+
+	public async Task IncrementAsync()
+	{
+		Cancel();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		m_Discs++;
+		
+		try
 		{
-			if (Mathf.Approximately(m_Progress, value))
-				return;
-			
-			m_Progress = value;
-			
-			ProcessProgress();
+			float progress = Mathf.InverseLerp(m_SourceDiscs, m_TargetDiscs, m_Discs);
+			float source   = m_Progress.Max;
+			float target   = Mathf.Lerp(m_MinProgress, m_MaxProgress, progress);
+			await UnityTask.Phase(
+				_Phase => m_Progress.Max = Mathf.Lerp(source, target, _Phase),
+				m_Duration,
+				EaseFunction.EaseOut,
+				token
+			);
 		}
-	}
-
-	[SerializeField] RectTransform     m_Target;
-	[SerializeField] UICascadeTMPLabel m_Label;
-	[SerializeField] UILevel           m_SourceLevel;
-	[SerializeField] UILevel           m_TargetLevel;
-	[SerializeField] float             m_ProgressDelay;
-	[SerializeField] float             m_ProgressDuration;
-	[SerializeField] AnimationCurve    m_ProgressCurve;
-
-	[SerializeField, Range(0, 1)] float m_Progress;
-
-	[Header("Sounds")]
-	[SerializeField, Sound] string m_ProgressSound;
-	[SerializeField, Sound] string m_CollectSound;
-	[SerializeField, Sound] string m_LevelSound;
-
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
-	[Inject] SoundProcessor        m_SoundProcessor;
-	[Inject] HapticProcessor       m_HapticProcessor;
-
-	float m_SourceProgress;
-	float m_TargetProgress;
-
-	Animator m_Animator;
-	Action   m_CollectFinished;
-
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		m_Animator = GetComponent<Animator>();
-		
-		m_Animator.keepAnimatorControllerStateOnDisable = true;
-	}
-
-	#if UNITY_EDITOR
-	protected override void OnValidate()
-	{
-		base.OnValidate();
-		
-		if (Application.isPlaying)
+		catch (TaskCanceledException)
+		{
 			return;
+		}
+		finally
+		{
+			ProcessLabel();
+		}
 		
-		ProcessProgress();
-	}
-	#endif
-
-	public void Setup(
-		int   _SourceLevel,
-		int   _TargetLevel,
-		float _SourceProgress,
-		float _TargetProgress
-	)
-	{
-		Restore();
-		
-		m_SourceLevel.Level = _SourceLevel;
-		m_TargetLevel.Level = _TargetLevel;
-		
-		m_Progress       = _SourceProgress;
-		m_SourceProgress = _SourceProgress;
-		m_TargetProgress = _TargetProgress;
-		
-		m_Target.anchorMin = new Vector2(0, 0);
-		m_Target.anchorMax = new Vector2(m_SourceProgress, 1);
-		
-		ProcessTitle();
-		
-		ProcessProgress();
+		Complete();
 	}
 
-	public async Task ProgressAsync()
+	void ProcessLabel()
 	{
-		m_SoundProcessor.Start(m_ProgressSound);
+		int source = m_Discs - m_SourceDiscs;
+		int target = m_TargetDiscs - m_SourceDiscs;
 		
-		await UnityTask.Lerp(
-			_Value => Progress = _Value,
-			m_SourceProgress,
-			m_TargetProgress,
-			m_ProgressDelay,
-			m_ProgressDuration,
-			m_ProgressCurve
-		);
-		
-		m_SoundProcessor.Stop(m_ProgressSound);
+		m_Label.text = $"{source}/{target}";
 	}
 
-	public Task CollectAsync()
+	void Complete()
 	{
-		InvokeCollectFinished();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_CollectFinished = () => completionSource.TrySetResult(true);
-		
-		m_SoundProcessor.Play(m_CollectSound);
-		
-		m_Animator.SetTrigger(m_CollectParameterID);
-		
-		return completionSource.Task;
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
-	void Restore()
+	void Cancel()
 	{
-		InvokeCollectFinished();
-		
-		if (m_Animator == null)
-			return;
-		
-		m_Animator.ResetTrigger(m_CollectParameterID);
-		m_Animator.SetTrigger(m_RestoreParameterID);
-	}
-
-	[Preserve]
-	void LevelUp()
-	{
-		m_SoundProcessor.Play(m_LevelSound);
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
-		
-		m_Label.Play();
-	}
-
-	void ProcessTitle()
-	{
-		m_Label.Text = m_LocalizationProcessor.Get("RESULT_LEVEL_UP");
-	}
-
-	void ProcessProgress()
-	{
-		m_Target.anchorMax = new Vector2(Progress, 1);
-	}
-
-	protected override void OnShowStarted()
-	{
-		Restore();
-		
-		m_Animator.RegisterComplete(COLLECT_STATE, InvokeCollectFinished);
-	}
-
-	protected override void OnHideFinished()
-	{
-		Restore();
-		
-		m_Animator.UnregisterComplete(COLLECT_STATE, InvokeCollectFinished);
-	}
-
-	void InvokeCollectFinished()
-	{
-		Action action = m_CollectFinished;
-		m_CollectFinished = null;
-		action?.Invoke();
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 }

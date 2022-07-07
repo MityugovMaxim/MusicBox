@@ -48,9 +48,6 @@ public class UILoadingMenu : UIAnimationMenu
 
 	public async void Load()
 	{
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
-		
 		if (Tutorial)
 			await LoadSong();
 		else

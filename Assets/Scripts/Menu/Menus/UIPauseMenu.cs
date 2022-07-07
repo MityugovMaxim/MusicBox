@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.PauseMenu)]
@@ -10,15 +9,11 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UISongQRCode m_QR;
 
 	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] ConfigProcessor  m_ConfigProcessor;
-	[Inject] SongsProcessor   m_SongsProcessor;
 	[Inject] SongController   m_SongController;
 	[Inject] AdsProcessor     m_AdsProcessor;
 	[Inject] MenuProcessor    m_MenuProcessor;
 
 	string m_SongID;
-	int    m_RestartAdsCount;
-	int    m_LeaveAdsCount;
 
 	public void Setup(string _SongID)
 	{
@@ -27,8 +22,14 @@ public class UIPauseMenu : UIMenu
 
 	public async void Restart()
 	{
-		if (!await ProcessRestartAds())
-			return;
+		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
+		{
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -41,7 +42,14 @@ public class UIPauseMenu : UIMenu
 
 	public async void Leave()
 	{
-		await ProcessLeaveAds();
+		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
+		{
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		}
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -61,8 +69,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Resume()
 	{
-		// TODO: Statistics
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		m_SongController.Resume();
@@ -103,60 +109,5 @@ public class UIPauseMenu : UIMenu
 		Leave();
 		
 		return true;
-	}
-
-	async Task<bool> ProcessRestartAds()
-	{
-		if (m_ProfileProcessor.HasNoAds())
-			return true;
-		
-		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
-		
-		if (songMode == SongMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			bool success = await m_AdsProcessor.Rewarded();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return success;
-		}
-		else
-		{
-			m_RestartAdsCount++;
-			
-			if (m_RestartAdsCount < m_ConfigProcessor.SongRestartAdsCount)
-				return true;
-			
-			m_RestartAdsCount = 0;
-			
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-			
-			return true;
-		}
-	}
-
-	async Task ProcessLeaveAds()
-	{
-		if (m_ProfileProcessor.HasNoAds())
-			return;
-		
-		m_LeaveAdsCount++;
-		
-		if (m_LeaveAdsCount < m_ConfigProcessor.SongLeaveAdsCount)
-			return;
-		
-		m_LeaveAdsCount = 0;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_AdsProcessor.Interstitial();
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }

@@ -122,16 +122,19 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 		);
 	}
 
-	public void OnInitializePotentialDrag(PointerEventData _EventData)
+	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
 	{
-		m_Pressed = true;
-		
 		CancelSlide();
+		
+		m_Pressed = true;
 	}
 
 	void IBeginDragHandler.OnBeginDrag(PointerEventData _EventData)
 	{
 		CancelSlide();
+		
+		m_Pressed = true;
+		m_Drag    = true;
 	}
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
@@ -190,8 +193,9 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 
 	void CancelSlide()
 	{
-		m_Drag  = false;
-		m_Delta = Vector2.zero;
+		m_Drag    = false;
+		m_Pressed = false;
+		m_Delta   = Vector2.zero;
 		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();

@@ -186,22 +186,6 @@ public class StatisticUnity : IStatisticProvider
 [Preserve]
 public class StatisticFacebook : IStatisticProvider
 {
-	public StatisticFacebook()
-	{
-		FB.Init(
-			() =>
-			{
-				FB.ActivateApp();
-				
-				#if UNITY_IOS
-				bool success = FB.Mobile.SetAdvertiserTrackingEnabled(UnityEngine.iOS.Device.advertisingTrackingEnabled);
-				if (success)
-					AudioBox.Logging.Log.Info(this, "Advertiser Tracking Enabled: {0}", UnityEngine.iOS.Device.advertisingTrackingEnabled);
-				#endif
-			}
-		);
-	}
-
 	public void Purchase(string _ProductID, string _Currency, decimal _Price)
 	{
 		Log(

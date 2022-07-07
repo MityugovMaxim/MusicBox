@@ -22,14 +22,6 @@ public class SongsManager
 			.ToList();
 	}
 
-	public List<string> GetCoinsSongIDs()
-	{
-		return m_SongsProcessor.GetSongIDs()
-			.Where(IsSongLockedByCoins)
-			.OrderBy(m_SongsProcessor.GetPrice)
-			.ToList();
-	}
-
 	public Dictionary<int, string[]> GetLockedSongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()

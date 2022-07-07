@@ -55,8 +55,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateLibrary();
 		
-		CreateCoinsLocked();
-		
 		CreateLevelLocked();
 		
 		m_Content.Reposition();
@@ -89,60 +87,37 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		foreach (string songID in songIDs.Skip(size).Take(2))
+		const int promoPosition = 2;
+		const int coinsPosition = 4;
+		
+		foreach (string songID in songIDs.Skip(size).Take(promoPosition))
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
 		
-		string productID = m_ProductsManager.GetPromoProductIDs().FirstOrDefault();
+		// Promo product
+		string promoID = m_ProductsManager.GetPromoProductIDs().FirstOrDefault();
 		
-		if (!string.IsNullOrEmpty(productID))
-			m_Content.Add(new ProductPromoEntity(productID, m_PromoPool));
+		if (!string.IsNullOrEmpty(promoID))
+			m_Content.Add(new ProductPromoEntity(promoID, m_PromoPool));
 		
-		foreach (string songID in songIDs.Skip(size + 2))
+		foreach (string songID in songIDs.Skip(size + promoPosition).Take(coinsPosition))
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
 		
-		m_Content.Space(LIST_SPACING);
-	}
-
-	void CreateCoinsLocked()
-	{
-		List<string> songIDs = m_SongsManager.GetCoinsSongIDs();
+		// Coins products
+		List<string> coinsIDs = m_ProductsManager.GetAvailableProductIDs();
 		
-		if (songIDs == null || songIDs.Count == 0)
-			return;
-		
-		m_Content.Space(LIST_SPACING);
-		
-		VerticalStackLayout.Start(m_Content, 0);
-		
-		string title = GetLocalization("SONG_GROUP_COINS", "<sprite name=coins_icon>");
-		
-		m_Content.Add(new SongHeaderEntity(title, ColorMode.Blue, m_HeaderPool));
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		const int productsPosition = 6;
-		
-		foreach (string songID in songIDs.Take(productsPosition))
-			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
-		
-		List<string> productIDs = m_ProductsManager.GetAvailableProductIDs();
-		
-		if (productIDs != null && productIDs.Count >= 3)
+		if (coinsIDs != null && coinsIDs.Count >= 3)
 		{
 			m_Content.Space(LIST_SPACING);
 			
 			VerticalGridLayout.Start(m_Content, 3, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
 			
-			foreach (string productID in productIDs.Take(3))
-				m_Content.Add(new ProductItemEntity(productID, m_ProductPool));
-			
-			if (songIDs.Count > productsPosition)
-				m_Content.Space(LIST_SPACING);
+			foreach (string coinsID in coinsIDs.Take(3))
+				m_Content.Add(new ProductItemEntity(coinsID, m_ProductPool));
 			
 			VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		}
 		
-		foreach (string songID in songIDs.Skip(productsPosition))
+		foreach (string songID in songIDs.Skip(size + promoPosition + coinsPosition))
 			m_Content.Add(new SongElementEntity(songID, m_ElementPool));
 		
 		m_Content.Space(LIST_SPACING);

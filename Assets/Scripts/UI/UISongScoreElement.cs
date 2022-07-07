@@ -23,6 +23,11 @@ public class UISongScoreElement : UIEntity
 
 	[SerializeField] GameObject  m_Content;
 	[SerializeField] GameObject  m_Record;
+	[SerializeField] GameObject  m_NoneRange;
+	[SerializeField] GameObject  m_BronzeRange;
+	[SerializeField] GameObject  m_SilverRange;
+	[SerializeField] GameObject  m_GoldRange;
+	[SerializeField] GameObject  m_PlatinumRange;
 	[SerializeField] TMP_Text    m_Position;
 	[SerializeField] UIUnitLabel m_Score;
 	[SerializeField] UIDisc      m_Disc;
@@ -53,20 +58,35 @@ public class UISongScoreElement : UIEntity
 	{
 		base.OnValidate();
 		
+		if (m_CanvasGroup == null)
+			m_CanvasGroup = GetComponent<CanvasGroup>();
+		
 		ProcessPhase();
 	}
 	#endif
 
-	public void Setup(int _Position, long _Score, ScoreRank _Rank, bool _Record)
+	public void Setup(
+		int       _Position,
+		long      _Score,
+		ScoreRank _Disc,
+		ScoreRank _Rank,
+		bool      _Record
+	)
 	{
-		int position = 100 - _Position + 1;
+		int position = 101 - _Position;
 		
 		m_Content.SetActive(position >= 1 && position <= 100);
+		
 		m_Record.SetActive(_Record);
+		m_NoneRange.SetActive(!_Record && _Rank == ScoreRank.None);
+		m_BronzeRange.SetActive(!_Record && _Rank == ScoreRank.Bronze);
+		m_SilverRange.SetActive(!_Record && _Rank == ScoreRank.Silver);
+		m_GoldRange.SetActive(!_Record && _Rank == ScoreRank.Gold);
+		m_PlatinumRange.SetActive(!_Record && _Rank == ScoreRank.Platinum);
 		
 		m_Position.text = position.ToString();
 		m_Score.Value   = _Score;
-		m_Disc.Rank     = _Rank;
+		m_Disc.Rank     = _Disc;
 	}
 
 	void ProcessPhase()
@@ -79,6 +99,6 @@ public class UISongScoreElement : UIEntity
 		RectTransform.anchoredPosition = position;
 		
 		float scale = Mathf.Lerp(m_SourceScale, m_TargetScale, Phase);
-		RectTransform.localScale = new Vector3(scale, scale, 1);
+		RectTransform.localScale = new Vector3(scale, scale * scale, 1);
 	}
 }

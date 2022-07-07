@@ -50,8 +50,6 @@ public class ApplicationProcessor
 			m_Data.ValueChanged += OnUpdate;
 		}
 		
-		await FacebookAuth.Initialize();
-		
 		await Fetch();
 		
 		TryClearCache();

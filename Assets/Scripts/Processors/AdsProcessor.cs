@@ -37,13 +37,6 @@ public class AdsProviderMadPixel : IAdsProvider
 
 	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
-		if (m_Initialized)
-			return Task.FromResult(true);
-		
-		m_Initialized = true;
-		
-		AdsManager.Instance.InitApplovin();
-		
 		m_InterstitialID = _InterstitialID;
 		m_RewardedID     = _RewardedID;
 		
@@ -241,10 +234,9 @@ public class AdsProcessor
 		return m_AdsProviders.FirstOrDefault(_AdsProvider => _AdsProvider.ID == _AdsProviderID);
 	}
 
-	public bool Cooldown()
-	{
-		return Time.timeAsDouble < m_Time;
-	}
+	public bool CheckAvailable() => Time.timeAsDouble >= m_Time;
+
+	public bool CheckUnavailable() => Time.timeAsDouble < m_Time;
 
 	public async Task<bool> Interstitial()
 	{

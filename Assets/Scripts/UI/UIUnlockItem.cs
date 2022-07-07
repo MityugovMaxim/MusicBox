@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -23,7 +22,6 @@ public class UIUnlockItem : UIEntity
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
 	[SerializeField] WebGraphic  m_Image;
-	[SerializeField] TMP_Text    m_Label;
 	[SerializeField] UIUnitLabel m_Value;
 
 	[SerializeField, Sound] string m_Sound;
@@ -52,13 +50,11 @@ public class UIUnlockItem : UIEntity
 		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
-	public void Setup(string _Path, string _Label = null, long _Value = 0)
+	public void Setup(string _Path, long _Value = 0)
 	{
 		m_Image.Path  = _Path;
-		m_Label.text  = _Label;
 		m_Value.Value = _Value;
 		
-		m_Label.gameObject.SetActive(!string.IsNullOrEmpty(_Label));
 		m_Value.gameObject.SetActive(_Value != 0);
 		
 		Restore();

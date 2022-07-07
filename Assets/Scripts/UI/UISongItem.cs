@@ -8,8 +8,8 @@ public class UISongItem : UIOverlayButton
 	public class Pool : UIEntityPool<UISongItem> { }
 
 	[SerializeField] UISongImage m_Image;
+	[SerializeField] UISongLabel m_Label;
 	[SerializeField] UISongDiscs m_Discs;
-	[SerializeField] UISongLock  m_Lock;
 	[SerializeField] UISongBadge m_Badge;
 
 	[Inject] MenuProcessor m_MenuProcessor;
@@ -21,8 +21,8 @@ public class UISongItem : UIOverlayButton
 		m_SongID = _SongID;
 		
 		m_Image.Setup(m_SongID);
+		m_Label.Setup(m_SongID);
 		m_Discs.Setup(m_SongID);
-		m_Lock.Setup(m_SongID);
 		m_Badge.Setup(m_SongID);
 	}
 

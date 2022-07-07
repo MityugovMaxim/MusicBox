@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -11,134 +10,32 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UISongImage      m_Image;
 	[SerializeField] UISongDiscs      m_Discs;
 	[SerializeField] UISongLabel      m_Label;
-	[SerializeField] UISongPrice      m_Price;
-	[SerializeField] UISongMode       m_Play;
-	[SerializeField] SongPreview      m_PreviewSource;
-	[SerializeField] UIGroup          m_PlayGroup;
-	[SerializeField] UIGroup          m_UnlockGroup;
-	[SerializeField] UIGroup          m_LoaderGroup;
-	[SerializeField] UIGroup          m_CompleteGroup;
+	[SerializeField] SongPreview      m_Preview;
 	[SerializeField] UISongQRCode     m_QR;
+	[SerializeField] UISongPlay       m_Play;
 	[SerializeField] UISongDownload   m_Download;
 
-	[SerializeField, Sound] string m_UnlockSound;
-
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] SongsProcessor     m_SongsProcessor;
-	[Inject] SongsManager       m_SongsManager;
-	[Inject] AdsProcessor       m_AdsProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] SoundProcessor     m_SoundProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] SignalBus    m_SignalBus;
+	[Inject] SongsManager m_SongsManager;
 
 	string m_SongID;
-	int    m_PlayAdsCount;
 
 	public void Next()
 	{
-		Select(GetSongID(1));
+		string songID = GetSongID(1);
+		
+		Setup(songID);
+		
+		m_Preview.Play(songID);
 	}
 
 	public void Previous()
 	{
-		Select(GetSongID(-1));
-	}
-
-	public async void Unlock()
-	{
-		if (!m_SongsManager.IsSongLockedByCoins(m_SongID))
-			return;
+		string songID = GetSongID(-1);
 		
-		long coins = m_SongsProcessor.GetPrice(m_SongID);
+		Setup(songID);
 		
-		if (!await m_ProfileProcessor.CheckCoins(coins))
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await Task.WhenAll(
-			m_UnlockGroup.HideAsync(),
-			m_LoaderGroup.ShowAsync()
-		);
-		
-		SongUnlockRequest request = new SongUnlockRequest(m_SongID);
-		
-		bool success = await request.SendAsync();
-		
-		if (success)
-		{
-			m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongUnlock);
-			
-			await m_LoaderGroup.HideAsync();
-			
-			m_HapticProcessor.Process(Haptic.Type.Success);
-			m_SoundProcessor.Play(m_UnlockSound);
-			
-			await m_CompleteGroup.ShowAsync();
-			
-			await Task.WhenAll(
-				m_ProfileProcessor.Load(),
-				Task.Delay(1500)
-			);
-			
-			m_Play.Setup(m_SongID);
-			
-			m_PlayGroup.Show();
-			m_CompleteGroup.Hide();
-		}
-		else
-		{
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"unlock_song",
-				"song_menu",
-				"SONG_UNLOCK_ERROR_TITLE",
-				"SONG_UNLOCK_ERROR_MESSAGE",
-				Unlock,
-				() => { }
-			);
-			
-			await Task.WhenAll(
-				m_UnlockGroup.ShowAsync(),
-				m_CompleteGroup.HideAsync(),
-				m_LoaderGroup.HideAsync(),
-				m_PlayGroup.HideAsync()
-			);
-		}
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-	}
-
-	public async void Play()
-	{
-		if (!m_SongsManager.IsSongAvailable(m_SongID))
-			return;
-		
-		m_PreviewSource.Stop();
-		
-		if (!await ProcessPlayAds())
-		{
-			m_PreviewSource.Play(m_SongID);
-			return;
-		}
-		
-		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
-		
-		loadingMenu.Setup(m_SongID);
-		
-		await m_MenuProcessor.Show(MenuType.LoadingMenu);
-		
-		loadingMenu.Load();
-		
-		await m_PlayGroup.ShowAsync(true);
-		await m_LoaderGroup.HideAsync(true);
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ProductMenu, true);
+		m_Preview.Play(songID);
 	}
 
 	public void ToggleQR()
@@ -156,19 +53,26 @@ public class UISongMenu : UISlideMenu
 
 	void RegisterScoreDataUpdate()
 	{
-		Select(m_SongID);
+		Setup(m_SongID);
 	}
 
 	public void Setup(string _SongID)
 	{
-		Select(_SongID);
+		m_SongID = _SongID;
+		
+		m_Background.Setup(m_SongID);
+		m_Image.Setup(m_SongID);
+		m_Discs.Setup(m_SongID);
+		m_Label.Setup(m_SongID);
+		m_Play.Setup(m_SongID);
+		m_Download.Setup(m_SongID);
+		
+		m_QR.Hide(true);
 	}
 
 	string GetSongID(int _Offset)
 	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs()
-			.Concat(m_SongsManager.GetCoinsSongIDs())
-			.ToList();
+		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
 		
 		int index = songIDs.IndexOf(m_SongID);
 		if (index >= 0 && index < songIDs.Count)
@@ -190,14 +94,14 @@ public class UISongMenu : UISlideMenu
 	{
 		base.OnShowFinished();
 		
-		m_PreviewSource.Play(m_SongID);
+		m_Preview.Play(m_SongID);
 	}
 
 	protected override void OnHideStarted()
 	{
 		base.OnHideStarted();
 		
-		m_PreviewSource.Stop();
+		m_Preview.Stop();
 		
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
@@ -207,94 +111,5 @@ public class UISongMenu : UISlideMenu
 		Hide();
 		
 		return true;
-	}
-
-	void Select(string _SongID)
-	{
-		m_SongID = _SongID;
-		
-		m_Background.Setup(m_SongID);
-		m_Image.Setup(m_SongID);
-		m_Discs.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
-		m_Play.Setup(m_SongID);
-		m_Price.Setup(m_SongID);
-		m_Download.Setup(m_SongID);
-		
-		m_QR.Hide(true);
-		
-		if (m_SongsManager.IsSongLockedByCoins(m_SongID))
-		{
-			m_UnlockGroup.Show(true);
-			m_PlayGroup.Hide(true);
-		}
-		else
-		{
-			m_PlayGroup.Show(true);
-			m_UnlockGroup.Hide(true);
-		}
-		
-		m_LoaderGroup.Hide(true);
-		m_CompleteGroup.Hide(true);
-		
-		if (Shown)
-			m_PreviewSource.Play(m_SongID);
-	}
-
-	async Task<bool> ProcessPlayAds()
-	{
-		if (m_ProfileProcessor.HasNoAds())
-			return true;
-		
-		SongMode songMode = m_SongsProcessor.GetMode(m_SongID);
-		
-		if (songMode == SongMode.Ads)
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			m_PlayGroup.Hide();
-			m_LoaderGroup.Show();
-			
-			bool success = await m_AdsProcessor.Rewarded();
-			
-			await Task.Delay(500);
-			
-			if (success)
-				return true;
-			
-			Debug.LogErrorFormat("[UILevelMenu] Play failed. Rewarded video error occured. Level ID: {0}.", m_SongID);
-			
-			m_PlayGroup.Show();
-			m_LoaderGroup.Hide();
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-			
-			return false;
-		}
-		else
-		{
-			m_PlayAdsCount++;
-			
-			if (m_PlayAdsCount < m_ConfigProcessor.SongPlayAdsCount)
-				return true;
-			
-			m_PlayAdsCount = 0;
-			
-			m_PlayGroup.Hide();
-			m_LoaderGroup.Show();
-			
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_AdsProcessor.Interstitial();
-			
-			await Task.Delay(500);
-			
-			m_PlayGroup.Hide();
-			m_LoaderGroup.Show();
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-			
-			return true;
-		}
 	}
 }

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 public class UIResultMenuRewardPage : UIResultMenuPage
@@ -9,33 +8,19 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	public override bool Valid => true;
 
 	[SerializeField] UISongScoreList m_ScoreList;
-	[SerializeField] Button          m_DoubleButton;
 	[SerializeField] UIGroup         m_ContinueGroup;
 	[SerializeField] UIGroup         m_LoaderGroup;
 
-	[Inject] ScoreManager    m_ScoreManager;
-	[Inject] ScoresProcessor m_ScoresProcessor;
-	[Inject] AdsProcessor    m_AdsProcessor;
-	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] ScoreManager     m_ScoreManager;
+	[Inject] ScoresProcessor  m_ScoresProcessor;
+	[Inject] AdsProcessor     m_AdsProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
 
 	string    m_SongID;
 	bool      m_Double;
 	ScoreRank m_SourceRank;
 	ScoreRank m_TargetRank;
-
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		m_DoubleButton.onClick.AddListener(Double);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		m_DoubleButton.onClick.RemoveListener(Double);
-	}
 
 	public override void Setup(string _SongID)
 	{
@@ -51,9 +36,9 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 
 	public override async void Play()
 	{
-		await m_ScoreList.PlayAsync();
-		
 		await m_ContinueGroup.ShowAsync();
+		
+		await m_ScoreList.PlayAsync();
 	}
 
 	public async void Double()
@@ -71,6 +56,8 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
 			
 			m_Double = true;
+			
+			await m_ScoreList.DoubleAsync();
 			
 			Continue();
 		}
@@ -93,13 +80,15 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	{
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		m_ContinueGroup.Hide();
-		m_LoaderGroup.Show();
+		await m_ContinueGroup.HideAsync();
+		
+		await m_LoaderGroup.ShowAsync();
 		
 		SongFinishRequest request = new SongFinishRequest(
 			m_SongID,
 			m_ScoreManager.GetScore(),
-			m_ScoreManager.GetAccuracy()
+			m_ScoreManager.GetAccuracy(),
+			m_Double
 		);
 		
 		bool success = await request.SendAsync();
@@ -127,8 +116,17 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		}
 	}
 
-	void Next()
+	async void Next()
 	{
+		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
+		{
+			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			
+			await m_AdsProcessor.Interstitial();
+			
+			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+		}
+		
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
 		
 		resultMenu.Next();

@@ -123,29 +123,21 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return snapshot?.Title ?? string.Empty;
 	}
 
-	public long GetPayout(string _SongID, ScoreRank _SourceRank, ScoreRank _TargetRank)
+	public long GetPayout(string _SongID, ScoreRank _Rank)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		if (snapshot == null)
 			return 0;
 		
-		int sourceRank = (int)_SourceRank;
-		int targetRank = (int)_TargetRank;
-		
-		long payout = snapshot.DefaultPayout * targetRank;
-		for (int rank = sourceRank + 1; rank <= targetRank; rank++)
+		switch (_Rank)
 		{
-			if (rank == 1)
-				payout += snapshot.BronzePayout;
-			else if (rank == 2)
-				payout += snapshot.SilverPayout;
-			else if (rank == 3)
-				payout += snapshot.GoldPayout;
-			else if (rank == 4)
-				payout += snapshot.PlatinumPayout;
+			case ScoreRank.Bronze:   return snapshot.BronzePayout;
+			case ScoreRank.Silver:   return snapshot.SilverPayout;
+			case ScoreRank.Gold:     return snapshot.GoldPayout;
+			case ScoreRank.Platinum: return snapshot.PlatinumPayout;
+			default:                 return snapshot.DefaultPayout;
 		}
-		return payout;
 	}
 
 	public long GetPrice(string _SongID)
