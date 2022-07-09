@@ -10,41 +10,53 @@ public class InputModule
 	public event Action<int, Vector2> OnPointerUp;
 	public event Action<int, Vector2> OnPointerCancel;
 
-	readonly Camera        m_Camera;
-	readonly RectTransform m_RectTransform;
-	readonly HashSet<int>  m_PointerIDs;
+	readonly Camera                   m_Camera;
+	readonly RectTransform            m_RectTransform;
+	readonly HashSet<int>             m_PointerIDs;
+	readonly Dictionary<int, Vector2> m_Positions;
 
 	public InputModule(Camera _Camera, RectTransform _RectTransform)
 	{
 		m_Camera        = _Camera;
 		m_RectTransform = _RectTransform;
 		m_PointerIDs    = new HashSet<int>();
+		m_Positions     = new Dictionary<int, Vector2>();
 	}
 
 	public void Process()
 	{
 		#if UNITY_EDITOR
+		Vector2 position = Input.mousePosition;
 		if (Input.GetMouseButtonDown(0))
-			ProcessTouchDown(0, Input.mousePosition);
+			ProcessTouchDown(0, position);
 		if (Input.GetMouseButton(0))
-			ProcessTouchMove(0, Input.mousePosition);
+			ProcessTouchMove(0, m_Positions[0] - position);
 		if (Input.GetMouseButtonUp(0))
-			ProcessTouchUp(0, Input.mousePosition);
+			ProcessTouchUp(0, position);
 		if (!Input.GetMouseButton(0))
-			ProcessTouchCancel(0, Input.mousePosition);
+			ProcessTouchCancel(0, position);
 		#else
 		for (int i = 0; i < Input.touchCount; i++)
 			ProcessTouch(i);
 		#endif
 	}
 
+	bool ContainsPointer(Vector2 _Position)
+	{
+		return RectTransformUtility.RectangleContainsScreenPoint(
+			m_RectTransform,
+			_Position,
+			m_Camera
+		);
+	}
+
 	Vector2 GetLocalPosition(Vector2 _Position)
 	{
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(
+		RectTransformUtility.ScreenPointToWorldPointInRectangle(
 			m_RectTransform,
 			_Position,
 			m_Camera,
-			out Vector2 position
+			out Vector3 position
 		);
 		return position;
 	}
@@ -61,7 +73,7 @@ public class InputModule
 				break;
 			
 			case TouchPhase.Moved:
-				ProcessTouchMove(touch.fingerId, touch.position);
+				ProcessTouchMove(touch.fingerId, touch.deltaPosition);
 				break;
 			
 			case TouchPhase.Ended:
@@ -77,20 +89,25 @@ public class InputModule
 
 	void ProcessTouchDown(int _PointerID, Vector2 _Position)
 	{
-		if (OnPointerDown == null || m_PointerIDs.Contains(_PointerID))
+		if (OnPointerDown == null || !ContainsPointer(_Position) || m_PointerIDs.Contains(_PointerID))
 			return;
 		
 		m_PointerIDs.Add(_PointerID);
+		m_Positions[_PointerID] = _Position;
 		
 		OnPointerDown.Invoke(_PointerID, GetLocalPosition(_Position));
 	}
 
-	void ProcessTouchMove(int _PointerID, Vector2 _Position)
+	void ProcessTouchMove(int _PointerID, Vector2 _Delta)
 	{
 		if (OnPointerMove == null || !m_PointerIDs.Contains(_PointerID))
 			return;
 		
-		OnPointerMove.Invoke(_PointerID, GetLocalPosition(_Position));
+		Vector2 position = m_Positions[_PointerID] + _Delta;
+		
+		m_Positions[_PointerID] = position;
+		
+		OnPointerMove.Invoke(_PointerID, GetLocalPosition(position));
 	}
 
 	void ProcessTouchUp(int _PointerID, Vector2 _Position)

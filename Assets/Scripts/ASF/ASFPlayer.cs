@@ -81,7 +81,8 @@ namespace AudioBox.ASF
 		{
 			base.OnValidate();
 			
-			Sample();
+			if (IsInstanced && !Application.isPlaying)
+				Sample();
 		}
 		#endif
 

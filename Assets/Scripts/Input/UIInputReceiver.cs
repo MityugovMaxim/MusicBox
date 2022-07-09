@@ -7,10 +7,8 @@ public class UIInputReceiver : UIEntity
 	[SerializeField] RectTransform m_InputArea;
 
 	InputModule m_InputModule;
-	bool        m_Initialized;
 
-	float InputExtend { get; set; }
-	float InputOffset { get; set; }
+	Rect Area { get; set; }
 
 	[Inject] SignalBus       m_SignalBus;
 	[Inject] ConfigProcessor m_ConfigProcessor;
@@ -22,19 +20,38 @@ public class UIInputReceiver : UIEntity
 
 	bool m_Processing;
 
-	protected override void Awake()
+	#if UNITY_EDITOR
+	void OnDrawGizmosSelected()
 	{
-		base.Awake();
+		UnityEditor.Handles.DrawSolidRectangleWithOutline(
+			Area,
+			new Color(0, 1, 0, 0.25f),
+			new Color(0, 1, 0, 0.75f)
+		);
+	}
+	#endif
+
+	public void Setup(float _Ratio)
+	{
+		float position = 1.0f - _Ratio;
+		m_InputArea.anchorMin = new Vector2(0, position);
+		m_InputArea.anchorMax = new Vector2(1, position);
 		
-		m_Initialized = true;
-		
-		InputExtend = m_ConfigProcessor.InputExtend;
-		InputOffset = m_ConfigProcessor.InputOffset;
-		
-		m_InputModule             =  new InputModule(Camera.main, RectTransform);
+		m_InputModule               =  new InputModule(Camera.main, RectTransform);
 		m_InputModule.OnPointerDown += PointerDown;
 		m_InputModule.OnPointerMove += PointerMove;
 		m_InputModule.OnPointerUp   += PointerUp;
+		
+		float extend = m_ConfigProcessor.InputExtend;
+		float offset = m_ConfigProcessor.InputOffset;
+		
+		Rect area = m_InputArea.GetWorldRect();
+		
+		area.y      += offset;
+		area.y      -= extend;
+		area.height += extend * 2;
+		
+		Area = area;
 	}
 
 	public void Sample()
@@ -46,8 +63,7 @@ public class UIInputReceiver : UIEntity
 		
 		EnableHandles();
 		
-		if (m_Initialized)
-			m_InputModule.Process();
+		m_InputModule.Process();
 		
 		MoveInput();
 		
@@ -58,8 +74,6 @@ public class UIInputReceiver : UIEntity
 
 	public void Release()
 	{
-		Rect area = m_InputArea.GetWorldRect();
-		
 		foreach (int pointerID in m_Pointers.Keys)
 		foreach (UIHandle handle in m_ActiveHandles)
 		{
@@ -67,7 +81,7 @@ public class UIInputReceiver : UIEntity
 				continue;
 			
 			if (DeselectHandle(handle, pointerID))
-				handle.TouchUp(pointerID, area);
+				handle.TouchUp(pointerID, Area);
 		}
 		
 		m_Pointers.Clear();
@@ -102,7 +116,7 @@ public class UIInputReceiver : UIEntity
 
 	void PointerDown(int _PointerID, Vector2 _Position)
 	{
-		Rect area = GetZoneArea(_Position);
+		Rect area = GetPointerArea(_Position);
 		
 		m_Pointers[_PointerID] = area;
 		
@@ -124,7 +138,7 @@ public class UIInputReceiver : UIEntity
 
 	void PointerUp(int _PointerID, Vector2 _Position)
 	{
-		Rect area = GetZoneArea(_Position);
+		Rect area = GetPointerArea(_Position);
 		
 		m_Pointers.Remove(_PointerID);
 		
@@ -140,7 +154,7 @@ public class UIInputReceiver : UIEntity
 
 	void PointerMove(int _PointerID, Vector2 _Position)
 	{
-		Rect area = GetZoneArea(_Position);
+		Rect area = GetPointerArea(_Position);
 		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
@@ -160,27 +174,14 @@ public class UIInputReceiver : UIEntity
 		m_Pointers[_PointerID] = area;
 	}
 
-	Rect GetAreaRect()
+	Rect GetPointerArea(Vector2 _Position)
 	{
-		Rect rect = m_InputArea.GetWorldRect();
-		
-		rect.y      += InputOffset;
-		rect.y      -= InputExtend;
-		rect.height += InputExtend * 2;
-		
-		return rect;
-	}
-
-	Rect GetZoneArea(Vector2 _Position)
-	{
-		Rect rect = GetAreaRect();
-		
 		Vector2 position = new Vector2(
 			_Position.x,
-			rect.y + rect.height * 0.5f
+			Area.y + Area.height * 0.5f
 		);
 		
-		Vector2 size = new Vector2(0, rect.height);
+		Vector2 size = new Vector2(0, Area.height);
 		
 		return new Rect(position - size * 0.5f, size);
 	}
@@ -192,10 +193,8 @@ public class UIInputReceiver : UIEntity
 
 	void EnableHandles()
 	{
-		Rect rect = GetAreaRect();
-		
-		float enterThreshold = rect.yMax;
-		float exitThreshold  = rect.yMin;
+		float enterThreshold = Area.yMax;
+		float exitThreshold  = Area.yMin;
 		
 		for (int i = m_InactiveHandles.Count - 1; i >= 0; i--)
 		{
@@ -227,10 +226,8 @@ public class UIInputReceiver : UIEntity
 
 	void DisableHandles()
 	{
-		Rect rect = GetAreaRect();
-		
-		float enterThreshold = rect.yMax;
-		float exitThreshold  = rect.yMin;
+		float enterThreshold = Area.yMax;
+		float exitThreshold  = Area.yMin;
 		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{

@@ -16,7 +16,6 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
 	[SerializeField] UIHoldTrack     m_HoldTrack;
 	[SerializeField] UIColorTrack    m_ColorTrack;
-	[SerializeField] RectTransform   m_InputArea;
 	[SerializeField] UIInputReceiver m_InputReceiver;
 	[SerializeField] UICountdown     m_Countdown;
 
@@ -29,12 +28,9 @@ public class SongPlayer : ASFPlayer
 		Duration = _Duration;
 		Music    = _Music;
 		
-		float position = 1.0f - Ratio;
-		
 		m_Finished = _Finished;
 		
-		m_InputArea.anchorMin = new Vector2(0, position);
-		m_InputArea.anchorMax = new Vector2(1, position);
+		m_InputReceiver.Setup(Ratio);
 		
 		AddTrack(new ASFTapTrack(m_TapTrack));
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));
