@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using Zenject;
 
-public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class UIInputReceiver : UIEntity
 {
 	[SerializeField] RectTransform m_InputArea;
+
+	InputModule m_InputModule;
+	bool        m_Initialized;
 
 	float InputExtend { get; set; }
 	float InputOffset { get; set; }
@@ -24,8 +26,15 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 	{
 		base.Awake();
 		
+		m_Initialized = true;
+		
 		InputExtend = m_ConfigProcessor.InputExtend;
 		InputOffset = m_ConfigProcessor.InputOffset;
+		
+		m_InputModule             =  new InputModule(Camera.main, RectTransform);
+		m_InputModule.OnPointerDown += PointerDown;
+		m_InputModule.OnPointerMove += PointerMove;
+		m_InputModule.OnPointerUp   += PointerUp;
 	}
 
 	public void Sample()
@@ -36,6 +45,9 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		m_Processing = true;
 		
 		EnableHandles();
+		
+		if (m_Initialized)
+			m_InputModule.Process();
 		
 		MoveInput();
 		
@@ -88,23 +100,20 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		m_ActiveHandles.Remove(handle);
 	}
 
-	void IPointerDownHandler.OnPointerDown(PointerEventData _EventData)
+	void PointerDown(int _PointerID, Vector2 _Position)
 	{
-		int  pointerID = _EventData.pointerId;
-		Rect area      = GetZoneArea(_EventData);
+		Rect area = GetZoneArea(_Position);
 		
-		m_Pointers[pointerID] = area;
-		
-		_EventData.Use();
+		m_Pointers[_PointerID] = area;
 		
 		foreach (UIHandle handle in m_ActiveHandles)
 		{
 			if (handle == null)
 				continue;
 			
-			if (handle.Select(area) && SelectHandle(handle, pointerID))
+			if (handle.Select(area) && SelectHandle(_PointerID, handle))
 			{
-				handle.TouchDown(pointerID, area);
+				handle.TouchDown(_PointerID, area);
 				return;
 			}
 		}
@@ -113,29 +122,25 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			m_SignalBus.Fire<InputMissSignal>();
 	}
 
-	void IPointerUpHandler.OnPointerUp(PointerEventData _EventData)
+	void PointerUp(int _PointerID, Vector2 _Position)
 	{
-		int  pointerID = _EventData.pointerId;
-		Rect area      = GetZoneArea(_EventData);
+		Rect area = GetZoneArea(_Position);
 		
-		m_Pointers.Remove(pointerID);
+		m_Pointers.Remove(_PointerID);
 		
 		foreach (UIHandle handle in m_ActiveHandles)
 		{
 			if (handle == null)
 				continue;
 			
-			if (DeselectHandle(handle, pointerID))
-				handle.TouchUp(pointerID, area);
+			if (DeselectHandle(handle, _PointerID))
+				handle.TouchUp(_PointerID, area);
 		}
-		
-		_EventData.Use();
 	}
 
-	void IDragHandler.OnDrag(PointerEventData _EventData)
+	void PointerMove(int _PointerID, Vector2 _Position)
 	{
-		int  pointerID = _EventData.pointerId;
-		Rect area      = GetZoneArea(_EventData);
+		Rect area = GetZoneArea(_Position);
 		
 		for (int i = m_ActiveHandles.Count - 1; i >= 0; i--)
 		{
@@ -146,15 +151,13 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 			
 			List<int> pointerIDs = GetPointerIDs(handle);
 			
-			if (pointerIDs == null || !pointerIDs.Contains(pointerID))
+			if (pointerIDs == null || !pointerIDs.Contains(_PointerID))
 				continue;
 			
-			handle.TouchMove(pointerID, area);
+			handle.TouchMove(_PointerID, area);
 		}
 		
-		m_Pointers[pointerID] = area;
-		
-		_EventData.Use();
+		m_Pointers[_PointerID] = area;
 	}
 
 	Rect GetAreaRect()
@@ -168,12 +171,12 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		return rect;
 	}
 
-	Rect GetZoneArea(PointerEventData _EventData)
+	Rect GetZoneArea(Vector2 _Position)
 	{
 		Rect rect = GetAreaRect();
 		
 		Vector2 position = new Vector2(
-			_EventData.pointerCurrentRaycast.worldPosition.x,
+			_Position.x,
 			rect.y + rect.height * 0.5f
 		);
 		
@@ -283,7 +286,7 @@ public class UIInputReceiver : UIEntity, IPointerDownHandler, IPointerUpHandler,
 		}
 	}
 
-	bool SelectHandle(UIHandle _Handle, int _PointerID)
+	bool SelectHandle(int _PointerID, UIHandle _Handle)
 	{
 		if (!m_Selection.ContainsKey(_Handle))
 			m_Selection[_Handle] = new List<int>();

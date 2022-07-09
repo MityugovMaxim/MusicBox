@@ -105,8 +105,7 @@ public class SongPlayer : ASFPlayer
 		
 		m_InputReceiver.Sample();
 		
-		//if (Time >= Length && State == ASFPlayerState.Play)
-		if (Time >= 1)
+		if (Time >= Length && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();
 	}
 }
