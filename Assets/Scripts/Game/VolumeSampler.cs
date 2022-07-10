@@ -2,12 +2,10 @@ using UnityEngine;
 
 public class VolumeSampler : MonoBehaviour
 {
-	[SerializeField]              AudioSource  m_AudioSource;
-	[SerializeField]              UISpectrum[] m_Items;
-	[SerializeField]              int          m_Samples    = 64;
-	[SerializeField]              int          m_Channels   = 1;
-	[SerializeField, Range(0, 1)] float        m_AttackDamp = 0.3f;
-	[SerializeField, Range(0, 1)] float        m_DecayDamp  = 0.15f;
+	[SerializeField] AudioSource  m_AudioSource;
+	[SerializeField] UISpectrum[] m_Items;
+	[SerializeField] int          m_Samples  = 64;
+	[SerializeField] int          m_Channels = 1;
 
 	int     m_SamplesCache;
 	int     m_ChannelsCache;
@@ -36,14 +34,10 @@ public class VolumeSampler : MonoBehaviour
 	{
 		m_AudioSource.GetOutputData(m_Spectrum, _Channel);
 		
-		float source = m_Amplitude[_Channel];
-		float target = 0;
+		float rms = 0;
 		foreach (float spectrum in m_Spectrum)
-			target += spectrum * spectrum;
-		target = Mathf.Sqrt(target / m_Spectrum.Length);
-		
-		m_Amplitude[_Channel] = target > source
-			? Mathf.Lerp(source, target, m_AttackDamp)
-			: Mathf.Lerp(source, target, m_DecayDamp);
+			rms += spectrum * spectrum;
+		rms = Mathf.Sqrt(rms / m_Spectrum.Length);
+		m_Amplitude[_Channel] = rms;
 	}
 }

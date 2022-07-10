@@ -1,11 +1,9 @@
-using System;
-using System.Threading.Tasks;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(Animator))]
-public class UIMultiplierLabel : UIEntity
+public class UIMultiplierLabel : UIOrder
 {
 	const string PLAY_STATE = "play";
 
@@ -34,22 +32,12 @@ public class UIMultiplierLabel : UIEntity
 	[SerializeField] float         m_Rotation;
 
 	Animator m_Animator;
-	Action   m_PlayFinished;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
 		m_Animator = GetComponent<Animator>();
-		
-		m_Animator.RegisterComplete(PLAY_STATE, InvokePlayFinished);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	protected override void OnEnable()
@@ -85,24 +73,16 @@ public class UIMultiplierLabel : UIEntity
 
 	public void Restore()
 	{
-		InvokePlayFinished();
-		
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
-	public Task PlayAsync()
+	public void Play()
 	{
 		Restore();
-		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_PlayFinished = () => completionSource.TrySetResult(true);
 		
 		m_Offset = Random.rotation * Vector2.up;
 		
 		m_Animator.SetTrigger(m_PlayParameterID);
-		
-		return completionSource.Task;
 	}
 
 	void ProcessMultiplier()
@@ -130,12 +110,5 @@ public class UIMultiplierLabel : UIEntity
 		float step = 1.0f / (m_Labels.Length - 1);
 		for (int i = 0; i < m_Labels.Length; i++)
 			m_Labels[i].RectTransform.localEulerAngles = new Vector3(0, 0, m_Rotation * step * i);
-	}
-
-	void InvokePlayFinished()
-	{
-		Action action = m_PlayFinished;
-		m_PlayFinished = null;
-		action?.Invoke();
 	}
 }

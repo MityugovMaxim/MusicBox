@@ -3,7 +3,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
-public class UISpectrumRing : UIEntity
+public class UISpectrumRing : UIOrder
 {
 	public enum PositionMode
 	{
@@ -11,6 +11,8 @@ public class UISpectrumRing : UIEntity
 		Inner,
 		Center
 	}
+
+	public override int Thickness => 1;
 
 	static readonly int m_MainTexPropertyID = Shader.PropertyToID("_MainTex");
 	static readonly int m_ColorPropertyID   = Shader.PropertyToID("_Color");
@@ -22,6 +24,7 @@ public class UISpectrumRing : UIEntity
 	[SerializeField] int          m_Count = 64;
 	[SerializeField] float        m_Width;
 	[SerializeField] float        m_Height;
+	[SerializeField] float        m_Rotation;
 
 	readonly List<Vector3> m_Vertices  = new List<Vector3>();
 	readonly List<Vector2> m_UV0       = new List<Vector2>();
@@ -32,6 +35,8 @@ public class UISpectrumRing : UIEntity
 	MeshFilter            m_MeshFilter;
 	MaterialPropertyBlock m_PropertyBlock;
 	Mesh                  m_Mesh;
+	Vector3               m_Angle;
+	Transform             m_Target;
 
 	protected override void Awake()
 	{
@@ -41,16 +46,27 @@ public class UISpectrumRing : UIEntity
 		m_MeshRenderer  = GetComponent<MeshRenderer>();
 		m_PropertyBlock = new MaterialPropertyBlock();
 		m_Mesh          = new Mesh();
+		m_Target        = RectTransform;
 		
 		GenerateMesh();
 		
 		GenerateProperties();
 	}
 
+	void Update()
+	{
+		m_Angle.z += m_Rotation * Time.deltaTime;
+		m_Angle.z %= 360;
+		m_Target.localEulerAngles = m_Angle;
+	}
+
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
 		base.OnValidate();
+		
+		if (!IsInstanced || Application.isPlaying)
+			return;
 		
 		if (m_MeshRenderer == null)
 			m_MeshRenderer = GetComponent<MeshRenderer>();

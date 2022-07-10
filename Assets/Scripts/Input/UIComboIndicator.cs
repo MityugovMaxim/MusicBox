@@ -1,11 +1,12 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class UIComboIndicator : UIGroup
+public class UIComboIndicator : UIOrder
 {
+	public override int Thickness => 1;
+
 	[SerializeField] UIUnitLabel m_Label;
 	[SerializeField] Graphic     m_Graphic;
 	[SerializeField] Color       m_DefaultColor;
@@ -13,32 +14,32 @@ public class UIComboIndicator : UIGroup
 	[SerializeField] Color       m_GoodColor;
 	[SerializeField] Color       m_BadColor;
 	[SerializeField] Color       m_FailColor;
-	[SerializeField] float       m_SourcePosition;
-	[SerializeField] float       m_TargetPosition;
-	[SerializeField] float       m_Duration;
+	[SerializeField] Vector2     m_SourcePosition = new Vector2(0, -30);
+	[SerializeField] Vector2     m_TargetPosition = Vector2.zero;
+	[SerializeField] float       m_Duration       = 0.2f;
 
-	[Inject] SignalBus m_SignalBus;
-
-	CancellationTokenSource m_TokenSource;
+	[Inject] ScoreManager m_ScoreManager;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnComboChanged += OnComboChanged;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnComboChanged -= OnComboChanged;
 	}
 
-	async void RegisterScore(ScoreSignal _Signal)
+	void OnComboChanged(int _Combo, ScoreGrade _Grade)
 	{
-		Color color = m_DefaultColor;
-		switch (_Signal.Grade)
+		Color color;
+		switch (_Grade)
 		{
 			case ScoreGrade.Perfect:
 				color = m_PerfectColor;
@@ -52,72 +53,57 @@ public class UIComboIndicator : UIGroup
 			case ScoreGrade.Fail:
 				color = m_FailColor;
 				break;
+			default:
+				color = m_DefaultColor;
+				break;
 		}
 		
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		if (m_Label.Value < _Combo)
+			Increment(color);
+		else
+			Decrement(color);
 		
-		m_TokenSource = new CancellationTokenSource();
+		m_Label.Value = _Combo;
+	}
+
+	IEnumerator m_ColorRoutine;
+	IEnumerator m_PositionRoutine;
+
+	void Increment(Color _Color)
+	{
+		if (m_ColorRoutine != null)
+			StopCoroutine(m_ColorRoutine);
 		
-		CancellationToken token = m_TokenSource.Token;
+		if (m_PositionRoutine != null)
+			StopCoroutine(m_PositionRoutine);
 		
-		if (_Signal.Combo > 0)
-			Show(true);
-		
-		try
-		{
-			if (m_Label.Value < _Signal.Combo)
-			{
-				m_Label.Value = _Signal.Combo;
-				
-				await Task.WhenAll(
-					ColorAsync(color, m_DefaultColor, token),
-					PositionAsync(m_SourcePosition, m_TargetPosition, token)
-				);
-			}
-			else
-			{
-				m_Label.Value = _Signal.Combo;
-				
-				await ColorAsync(m_Graphic.color, color, token);
-			}
-		}
-		catch (TaskCanceledException) { }
-		
-		if (token.IsCancellationRequested)
+		if (!gameObject.activeInHierarchy)
 			return;
 		
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		m_ColorRoutine = UnityRoutine.ColorRoutine(m_Graphic, _Color, m_DefaultColor, m_Duration, EaseFunction.Linear);
 		
-		if (_Signal.Combo <= 0)
-			Hide(true);
+		m_PositionRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_SourcePosition, m_TargetPosition, m_Duration, EaseFunction.EaseOutBack);
+		
+		StartCoroutine(m_ColorRoutine);
+		StartCoroutine(m_PositionRoutine);
 	}
 
-	Task ColorAsync(Color _Source, Color _Target, CancellationToken _Token = default)
+	void Decrement(Color _Color)
 	{
-		return UnityTask.Phase(
-			_Phase =>
-			{
-				m_Graphic.color = EaseFunction.EaseOutQuad.Get(_Source, _Target, _Phase);
-			},
-			m_Duration,
-			_Token
-		);
-	}
-
-	Task PositionAsync(float _Source, float _Target, CancellationToken _Token = default)
-	{
-		Vector2 source = new Vector2(0, _Source);
-		Vector2 target = new Vector2(0, _Target);
+		if (m_ColorRoutine != null)
+			StopCoroutine(m_ColorRoutine);
 		
-		return UnityTask.Phase(
-			_Phase =>
-			{
-				m_Graphic.rectTransform.localPosition = EaseFunction.EaseOutBack.Get(source, target, _Phase);
-			},
-			m_Duration,
-			_Token
-		);
+		if (m_PositionRoutine != null)
+			StopCoroutine(m_PositionRoutine);
+		
+		if (!gameObject.activeInHierarchy)
+			return;
+		
+		m_ColorRoutine = UnityRoutine.ColorRoutine(m_Graphic, _Color, m_Duration, EaseFunction.Linear);
+		
+		m_PositionRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_TargetPosition, m_Duration, EaseFunction.EaseOut);
+		
+		StartCoroutine(m_ColorRoutine);
+		StartCoroutine(m_PositionRoutine);
 	}
 }

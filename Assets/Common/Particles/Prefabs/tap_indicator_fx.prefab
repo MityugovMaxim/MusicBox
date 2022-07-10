@@ -34144,7 +34144,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6371287096833468892}
-  - component: {fileID: 9187814483357980488}
   m_Layer: 9
   m_Name: great
   m_TagString: Untagged
@@ -34177,26 +34176,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &9187814483357980488
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3006037835240551842}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b1b0a0245ff4408b9caa8400fa29aa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ParticleSystems:
-  - {fileID: 6023910883315458538}
-  - {fileID: 5790632263472951442}
-  - {fileID: 2126643776808535749}
-  - {fileID: 8773968657005447330}
-  - {fileID: 3233210080321360142}
-  m_ScaleMode: 3
-  m_Size: {x: 150, y: 150}
 --- !u!1 &3088269463005376698
 GameObject:
   m_ObjectHideFlags: 0
@@ -39120,6 +39099,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9db9511292949858011c3fe453e19c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Mode: 0
+  m_Thickness: 0
   m_Grades:
   - m_Grade: 1
     m_FX: {fileID: 4910387855024611759}
@@ -39143,7 +39124,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6335065914546527342}
-  - component: {fileID: 8070551336192516862}
   m_Layer: 9
   m_Name: perfect
   m_TagString: Untagged
@@ -39177,27 +39157,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8070551336192516862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4910387855024611759}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b1b0a0245ff4408b9caa8400fa29aa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ParticleSystems:
-  - {fileID: 8937045894390413033}
-  - {fileID: 7638622162793509240}
-  - {fileID: 5675576165730087195}
-  - {fileID: 1894861034000799931}
-  - {fileID: 8942620500991006759}
-  - {fileID: 60468051755715250}
-  m_ScaleMode: 3
-  m_Size: {x: 150, y: 150}
 --- !u!1 &5837520270916278520
 GameObject:
   m_ObjectHideFlags: 0
@@ -39207,7 +39166,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2580671924016707009}
-  - component: {fileID: 8568659653019264628}
   m_Layer: 9
   m_Name: good
   m_TagString: Untagged
@@ -39239,25 +39197,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8568659653019264628
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5837520270916278520}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b1b0a0245ff4408b9caa8400fa29aa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ParticleSystems:
-  - {fileID: 7577663987068161928}
-  - {fileID: 960786836046870676}
-  - {fileID: 6624908007166043828}
-  - {fileID: 5501295814495886238}
-  m_ScaleMode: 3
-  m_Size: {x: 150, y: 150}
 --- !u!1 &6244035393632652026
 GameObject:
   m_ObjectHideFlags: 0
@@ -53877,7 +53816,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3739894052829893941}
-  - component: {fileID: 5360881137596233500}
   m_Layer: 9
   m_Name: bad
   m_TagString: Untagged
@@ -53907,23 +53845,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5360881137596233500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7894629490120706432}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b1b0a0245ff4408b9caa8400fa29aa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ParticleSystems:
-  - {fileID: 8338985677314117656}
-  - {fileID: 191260112828703241}
-  m_ScaleMode: 3
-  m_Size: {x: 150, y: 150}
 --- !u!1 &7915540001881999422
 GameObject:
   m_ObjectHideFlags: 0

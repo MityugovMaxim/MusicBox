@@ -1,7 +1,7 @@
 using UnityEngine;
 using Zenject;
 
-public class UIHealthIndicator : UIEntity
+public class UIHealthIndicator : UIOrder
 {
 	[SerializeField] UIHealthHandle[] m_Handles;
 
@@ -13,14 +13,16 @@ public class UIHealthIndicator : UIEntity
 	{
 		base.Awake();
 		
-		m_SignalBus.Subscribe<HealthSignal>(RegisterHealth);
+		if (m_SignalBus != null)
+			m_SignalBus.Subscribe<HealthSignal>(RegisterHealth);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_SignalBus.Unsubscribe<HealthSignal>(RegisterHealth);
+		if (m_SignalBus != null)
+			m_SignalBus.Unsubscribe<HealthSignal>(RegisterHealth);
 	}
 
 	void RegisterHealth(HealthSignal _Signal)

@@ -20,6 +20,7 @@ public class HealthManager : IInitializable, IDisposable
 	const int MAX_HEALTH = 4;
 
 	[Inject] SignalBus       m_SignalBus;
+	[Inject] ScoreManager    m_ScoreManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	Action m_Death;
@@ -29,20 +30,12 @@ public class HealthManager : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<InputMissSignal>(Damage);
-		m_SignalBus.Subscribe<TapFailSignal>(Damage);
-		m_SignalBus.Subscribe<DoubleFailSignal>(Damage);
-		m_SignalBus.Subscribe<HoldFailSignal>(Damage);
-		m_SignalBus.Subscribe<HoldMissSignal>(Damage);
+		m_ScoreManager.OnComboChanged += OnComboChanged;
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<InputMissSignal>(Damage);
-		m_SignalBus.Unsubscribe<TapFailSignal>(Damage);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(Damage);
-		m_SignalBus.Unsubscribe<HoldFailSignal>(Damage);
-		m_SignalBus.Unsubscribe<HoldMissSignal>(Damage);
+		m_ScoreManager.OnComboChanged -= OnComboChanged;
 	}
 
 	public void Setup(Action _Death)
@@ -59,6 +52,12 @@ public class HealthManager : IInitializable, IDisposable
 		m_InvincibilityTime = 0;
 		
 		m_SignalBus.Fire(new HealthSignal(m_Health));
+	}
+
+	void OnComboChanged(int _Combo, ScoreGrade _Grade)
+	{
+		if (_Grade == ScoreGrade.Fail || _Grade == ScoreGrade.Miss)
+			Damage();
 	}
 
 	void Damage()

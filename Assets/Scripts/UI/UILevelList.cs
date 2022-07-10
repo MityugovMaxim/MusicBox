@@ -14,10 +14,14 @@ public class UILevelList : UIEntity
 	[SerializeField] float            m_Duration = 0.2f;
 	[SerializeField] AnimationCurve   m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+	[SerializeField, Sound] string m_Sound;
+
 	[Inject] ScoreManager      m_ScoreManager;
 	[Inject] ScoresProcessor   m_ScoresProcessor;
 	[Inject] ProfileProcessor  m_ProfileProcessor;
 	[Inject] ProgressProcessor m_ProgressProcessor;
+	[Inject] SoundProcessor    m_SoundProcessor;
+	[Inject] HapticProcessor   m_HapticProcessor;
 
 	string    m_SongID;
 	int       m_Discs;
@@ -108,6 +112,9 @@ public class UILevelList : UIEntity
 
 	Task ShiftAsync()
 	{
+		m_SoundProcessor.Play(m_Sound);
+		m_HapticProcessor.Process(Haptic.Type.ImpactRigid);
+		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = ShiftRoutine(() => completionSource.TrySetResult(true));

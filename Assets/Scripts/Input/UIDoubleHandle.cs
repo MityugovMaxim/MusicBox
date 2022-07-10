@@ -24,10 +24,10 @@ public class UIDoubleHandle : UIHandle
 		if (m_Processed)
 			return;
 		
-		ProcessFail(0);
-		
 		m_Processed = true;
 		m_Count     = 0;
+		
+		m_Indicator.Fail(0);
 	}
 
 	public override void Reverse()
@@ -68,7 +68,7 @@ public class UIDoubleHandle : UIHandle
 		
 		m_Processed = true;
 		
-		ProcessSuccess(progress);
+		m_Indicator.Success(progress);
 	}
 
 	public override void TouchUp(int _ID, Rect _Area)
@@ -80,14 +80,4 @@ public class UIDoubleHandle : UIHandle
 	}
 
 	public override void TouchMove(int _ID, Rect _Area) { }
-
-	void ProcessSuccess(float _Progress)
-	{
-		m_Indicator.Success(_Progress);
-	}
-
-	void ProcessFail(float _Progress)
-	{
-		m_Indicator.Fail(_Progress);
-	}
 }

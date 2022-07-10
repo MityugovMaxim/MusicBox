@@ -45,11 +45,10 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	{
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		await m_ContinueGroup.HideAsync();
+		await m_LoaderGroup.ShowAsync();
 		
 		bool success = await m_AdsProcessor.Rewarded();
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
 		if (success)
 		{
@@ -81,7 +80,6 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_ContinueGroup.HideAsync();
-		
 		await m_LoaderGroup.ShowAsync();
 		
 		SongFinishRequest request = new SongFinishRequest(
@@ -120,11 +118,14 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	{
 		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
 		{
-			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+			
+			await m_ContinueGroup.HideAsync();
+			await m_LoaderGroup.ShowAsync();
 			
 			await m_AdsProcessor.Interstitial();
 			
-			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}
 		
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();

@@ -2,9 +2,19 @@ using UnityEngine;
 
 public static class RectExtension
 {
+	public static float GetAspect(this Rect _Rect)
+	{
+		return !Mathf.Approximately(_Rect.height, 0) ? _Rect.width / _Rect.height : 1;
+	}
+
 	public static Vector4 ToVector(this Rect _Rect)
 	{
 		return new Vector4(_Rect.x, _Rect.y, _Rect.width, _Rect.height);
+	}
+
+	public static Bounds ToBounds(this Rect _Rect)
+	{
+		return new Bounds(_Rect.center, _Rect.size);
 	}
 
 	public static Rect Transform(this Rect _Rect, Transform _Source, Transform _Target)

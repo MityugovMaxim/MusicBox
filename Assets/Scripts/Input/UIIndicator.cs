@@ -3,7 +3,7 @@ using AudioBox.ASF;
 using UnityEngine;
 using Zenject;
 
-public abstract class UIIndicator : UIEntity
+public abstract class UIIndicator : UIOrder
 {
 	public abstract UIHandle Handle { get; }
 
@@ -26,14 +26,16 @@ public abstract class UIIndicator : UIEntity
 		}
 	}
 
-	protected Animator    Animator    => m_Animator;
-	protected SignalBus   SignalBus   => m_SignalBus;
-	protected FXProcessor FXProcessor => m_FXProcessor;
+	protected Animator        Animator        => m_Animator;
+	protected ScoreManager    ScoreManager    => m_ScoreManager;
+	protected FXProcessor     FXProcessor     => m_FXProcessor;
+	protected HapticProcessor HapticProcessor => m_HapticProcessor;
 
 	[SerializeField] Animator m_Animator;
 
-	[Inject] SignalBus   m_SignalBus;
-	[Inject] FXProcessor m_FXProcessor;
+	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] FXProcessor     m_FXProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	Rect m_ViewRect;
 

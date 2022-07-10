@@ -5,10 +5,12 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIIndicatorFX : UIEntity
+public class UIIndicatorFX : UIOrder
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UIIndicatorFX> { }
+
+	public override int Thickness => 1;
 
 	[Serializable]
 	public class FX

@@ -90,20 +90,6 @@ public class ProgressProcessor : DataProcessor<ProgressSnapshot, ProgressDataUpd
 			: minLevel;
 	}
 
-	public float GetProgress(int _Level, int _Discs)
-	{
-		int minThreshold = GetDiscs(_Level);
-		int maxThreshold = GetDiscs(_Level + 1);
-		
-		if (_Discs >= maxThreshold)
-			return 1;
-		
-		if (_Discs <= minThreshold)
-			return 0;
-		
-		return Mathf.InverseLerp(minThreshold, maxThreshold, _Discs);
-	}
-
 	public int GetMinLevel()
 	{
 		if (Snapshots.Count == 0)

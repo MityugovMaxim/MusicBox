@@ -1,11 +1,10 @@
 using System;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
-public class UICountdown : UIEntity
+public class UICountdown : UIOrder
 {
 	static readonly int m_PlayParameterID = Animator.StringToHash("Play");
 
@@ -24,25 +23,13 @@ public class UICountdown : UIEntity
 		m_Animator.RegisterComplete("play", InvokePlayFinished);
 	}
 
-	public async void Play()
+	public void Play()
 	{
-		await PlayAsync();
+		if (m_Animator != null)
+			m_Animator.SetTrigger(m_PlayParameterID);
 	}
 
-	public Task PlayAsync()
-	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		InvokePlayFinished();
-		
-		m_Finished = () => completionSource.SetResult(true);
-		
-		m_Animator.SetTrigger(m_PlayParameterID);
-		
-		return completionSource.Task;
-	}
-
-	[UsedImplicitly]
+	[Preserve]
 	void PlaySound(string _SoundID)
 	{
 		m_SoundProcessor.Play(_SoundID);

@@ -1,8 +1,5 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using AudioBox.ASF;
-using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -37,14 +34,14 @@ public class UIHoldIndicator : UIIndicator
 	static readonly int m_FailParameterID    = Animator.StringToHash("Fail");
 	static readonly int m_HoldParameterID    = Animator.StringToHash("Hold");
 
-	[SerializeField] UIHoldHandle     m_Handle;
-	[SerializeField] UISpline         m_Spline;
-	[SerializeField] UILine           m_Line;
-	[SerializeField] UISplineProgress m_Highlight;
-	[SerializeField] float            m_SamplesPerUnit = 0.5f;
-	[SerializeField] float            m_Weight         = 0.25f;
+	[SerializeField] UIHoldHandle m_Handle;
+	[SerializeField] UISpline     m_Spline;
+	[SerializeField] UILine       m_Line;
+	[SerializeField] UILine       m_Highlight;
+	[SerializeField] float        m_SamplesPerUnit = 0.5f;
+	[SerializeField] float        m_Weight         = 0.25f;
 
-	CancellationTokenSource m_HighlightToken;
+	IEnumerator m_HighlightRoutine;
 
 	public void Build(ASFHoldClip _Clip)
 	{
@@ -126,69 +123,56 @@ public class UIHoldIndicator : UIIndicator
 		m_Handle.RectTransform.anchoredPosition = position;
 	}
 
-	public void Success(float _MinProgress, float _MaxProgress)
+	public void Success(float _Progress, float _Length)
 	{
 		Animator.SetTrigger(m_SuccessParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		
-		float progress = Mathf.Max(0, _MaxProgress - _MinProgress);
+		FXProcessor.HoldFX(Handle.GetWorldRect(), _Progress);
 		
-		FXProcessor.HoldFX(Handle.GetWorldRect(), progress);
+		HapticProcessor.Process(Haptic.Type.ImpactMedium);
+		
+		ScoreManager.HoldHit(_Progress, _Length);
 		
 		InvokeCallback();
-		
-		SignalBus.Fire(new HoldSuccessSignal(_MinProgress, _MaxProgress));
 	}
 
-	public void Fail(float _MinProgress, float _MaxProgress)
+	public void Fail()
 	{
 		Animator.SetTrigger(m_FailParameterID);
 		Animator.SetBool(m_HoldParameterID, false);
 		
 		FXProcessor.Fail();
 		
-		InvokeCallback();
+		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		SignalBus.Fire(new HoldFailSignal(_MinProgress, _MaxProgress));
+		ScoreManager.HoldFail();
+		
+		InvokeCallback();
 	}
 
-	public void Hit(float _Progress)
+	public void Hit()
 	{
 		Highlight();
 		
 		Animator.SetBool(m_HoldParameterID, true);
 		
+		HapticProcessor.Process(Haptic.Type.ImpactLight);
+		
 		InvokeCallback();
-		
-		SignalBus.Fire(new HoldHitSignal(_Progress));
 	}
 
-	public void Miss(float _MinProgress, float _MaxProgress)
+	void Highlight()
 	{
-		SignalBus.Fire(new HoldMissSignal(_MinProgress, _MaxProgress));
-	}
-
-	async void Highlight()
-	{
-		m_HighlightToken?.Cancel();
-		m_HighlightToken?.Dispose();
+		if (m_HighlightRoutine != null)
+			StopCoroutine(m_HighlightRoutine);
 		
-		m_HighlightToken = new CancellationTokenSource();
+		if (!gameObject.activeInHierarchy)
+			return;
 		
-		CancellationToken token = m_HighlightToken.Token;
+		m_HighlightRoutine = HighlightRoutine();
 		
-		try
-		{
-			await HighlightAsync(token);
-		}
-		catch (TaskCanceledException) { }
-		catch (Exception exception)
-		{
-			Log.Exception(this, exception);
-		}
-		
-		m_HighlightToken?.Dispose();
-		m_HighlightToken = null;
+		StartCoroutine(m_HighlightRoutine);
 	}
 
 	Vector2 GetKeyPosition(double _Time, float _Position, double _Length)
@@ -203,21 +187,27 @@ public class UIHoldIndicator : UIIndicator
 		);
 	}
 
-	Task HighlightAsync(CancellationToken _Token = default)
+	IEnumerator HighlightRoutine()
 	{
 		float source = m_Spline.GetLength(m_Highlight.Min);
 		float target = m_Spline.GetLength(1);
 		
-		const float speed = 1500;
+		const float speed = 2000;
 		
 		float duration = Mathf.Abs(target - source) / speed;
 		
 		m_Highlight.Max = m_Highlight.Min;
 		
-		return UnityTask.Phase(
-			_Phase => m_Highlight.Max = Mathf.Lerp(m_Highlight.Min, 1, _Phase),
-			duration,
-			_Token
-		);
+		float time = 0;
+		while (time < duration)
+		{
+			yield return null;
+			
+			time += Time.deltaTime;
+			
+			m_Highlight.Max = Mathf.LerpUnclamped(m_Highlight.Min, 1, time / duration);
+		}
+		
+		m_Highlight.Max = target;
 	}
 }

@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public class UISongScoreCoins : UIGroup
 {
@@ -23,6 +24,10 @@ public class UISongScoreCoins : UIGroup
 
 	[SerializeField] UIUnitLabel m_Coins;
 	[SerializeField] float       m_Duration;
+
+	[SerializeField, Sound] string m_Sound;
+
+	[Inject] SoundProcessor m_SoundProcessor;
 
 	long m_Value;
 
@@ -48,6 +53,8 @@ public class UISongScoreCoins : UIGroup
 
 	public void Next()
 	{
+		m_SoundProcessor.Play(m_Sound);
+		
 		m_Animator.SetTrigger(m_NextParameterID);
 	}
 

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UINormal : UIRenderer
+public class UINormal : UISprite
 {
 	static readonly int m_NormalTexPropertyID  = Shader.PropertyToID("_NormalTex");
 	static readonly int m_RefractionPropertyID = Shader.PropertyToID("_Refraction");
@@ -20,13 +20,17 @@ public class UINormal : UIRenderer
 
 	protected override void FillMesh(Mesh _Mesh)
 	{
-		FillUV(m_Normal, m_UV);
+		base.FillMesh(_Mesh);
+		
+		FillUV(MeshUtility.GetUV(m_Normal), m_UV);
 		
 		_Mesh.SetUVs(1, m_UV);
 	}
 
 	protected override void FillProperty(MaterialPropertyBlock _PropertyBlock)
 	{
+		base.FillProperty(_PropertyBlock);
+		
 		Texture2D texture = m_Normal != null && m_Normal.texture != null
 			? m_Normal.texture
 			: Texture2D.whiteTexture;

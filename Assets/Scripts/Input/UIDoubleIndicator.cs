@@ -30,9 +30,11 @@ public class UIDoubleIndicator : UIIndicator
 		
 		FXProcessor.DoubleFX(Handle.GetWorldRect(), _Progress);
 		
-		InvokeCallback();
+		HapticProcessor.Process(Haptic.Type.ImpactHeavy);
 		
-		SignalBus.Fire(new DoubleSuccessSignal(_Progress));
+		ScoreManager.DoubleHit(_Progress);
+		
+		InvokeCallback();
 	}
 
 	public void Fail(float _Progress)
@@ -41,8 +43,10 @@ public class UIDoubleIndicator : UIIndicator
 		
 		FXProcessor.Fail();
 		
-		InvokeCallback();
+		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		SignalBus.Fire(new DoubleFailSignal(_Progress));
+		ScoreManager.DoubleFail();
+		
+		InvokeCallback();
 	}
 }

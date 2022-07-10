@@ -58,10 +58,12 @@ public class TutorialPlayer : ASFPlayer
 		m_TokenSource = null;
 	}
 
-	public void Setup(float _Ratio, float _Duration, Action _Finished)
+	public void Setup(float _Ratio, float _Speed, Action _Finished)
 	{
+		Rect rect = GetLocalRect();
+		
 		Ratio    = _Ratio;
-		Duration = _Duration;
+		Duration = rect.height / _Speed;
 		
 		float position = 1.0f - Ratio;
 		
@@ -108,16 +110,6 @@ public class TutorialPlayer : ASFPlayer
 		
 		token.Register(() => m_Actions.Clear());
 		
-		void TapSuccess() => PlaySound(m_TapSuccessSound);
-		void DoubleSuccess() => PlaySound(m_DoubleSuccessSound);
-		void HoldHit() => PlaySound(m_HoldHitSound);
-		void HoldSuccess() => PlaySound(m_HoldSuccessSound);
-		
-		m_SignalBus.Subscribe<TapSuccessSignal>(TapSuccess);
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(DoubleSuccess);
-		m_SignalBus.Subscribe<HoldHitSignal>(HoldHit);
-		m_SignalBus.Subscribe<HoldSuccessSignal>(HoldSuccess);
-		
 		while (m_Actions.Count > 0)
 		{
 			if (token.IsCancellationRequested)
@@ -133,11 +125,6 @@ public class TutorialPlayer : ASFPlayer
 				Log.Exception(this, exception);
 			}
 		}
-		
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(TapSuccess);
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(DoubleSuccess);
-		m_SignalBus.Unsubscribe<HoldHitSignal>(HoldHit);
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(HoldSuccess);
 		
 		if (token.IsCancellationRequested)
 			return;
@@ -164,14 +151,10 @@ public class TutorialPlayer : ASFPlayer
 		
 		await Task.Delay(2000, _Token);
 		
-		TapFailSignal signal = new TapFailSignal(0);
-		
 		float iframes = m_ConfigProcessor.SongIFrames;
 		
 		for (int i = 0; i < 4; i++)
 		{
-			m_SignalBus.Fire(signal);
-			
 			await UnityTask.Delay(iframes, _Token);
 			
 			await Task.Delay(150, _Token);
@@ -208,17 +191,7 @@ public class TutorialPlayer : ASFPlayer
 		int combo = m_ConfigProcessor.ComboX2;
 		for (int i = 1; i <= combo; i++)
 		{
-			ScoreSignal signal = new ScoreSignal(
-				i * 100,
-				i,
-				i < combo ? 1 : 2,
-				(float)(i % combo) / combo,
-				ScoreGrade.None
-			);
-			
 			await Task.Delay(250, _Token);
-			
-			m_SignalBus.Fire(signal);
 			
 			if (_Token.IsCancellationRequested)
 				break;
@@ -233,8 +206,6 @@ public class TutorialPlayer : ASFPlayer
 		
 		await Task.Delay(1000, _Token);
 		
-		m_SignalBus.Fire(new TapFailSignal(0));
-		
 		await Task.Delay(1500, _Token);
 	}
 
@@ -242,7 +213,7 @@ public class TutorialPlayer : ASFPlayer
 	{
 		m_StatisticProcessor.LogTutorial(3, "tap_auto");
 		
-		return AutoAction<TapSuccessSignal>(Time, 0, m_TapGroup, _Token);
+		return AutoAction<HealthSignal>(Time, 0, m_TapGroup, _Token);
 	}
 
 	Task TapManualAction(CancellationToken _Token = default)
@@ -256,7 +227,7 @@ public class TutorialPlayer : ASFPlayer
 	{
 		m_StatisticProcessor.LogTutorial(5, "double_auto");
 		
-		return AutoAction<DoubleSuccessSignal>(4, 5, m_DoubleGroup, _Token);
+		return AutoAction<HealthSignal>(4, 5, m_DoubleGroup, _Token);
 	}
 
 	Task DoubleManualAction(CancellationToken _Token = default)
@@ -270,7 +241,7 @@ public class TutorialPlayer : ASFPlayer
 	{
 		m_StatisticProcessor.LogTutorial(7, "hold_auto");
 		
-		return AutoAction<HoldHitSignal>(11, 12, m_HoldGroup, _Token);
+		return AutoAction<HealthSignal>(11, 12, m_HoldGroup, _Token);
 	}
 
 	Task HoldSimpleManualAction(CancellationToken _Token = default)
@@ -284,7 +255,7 @@ public class TutorialPlayer : ASFPlayer
 	{
 		m_StatisticProcessor.LogTutorial(9, "bend_auto");
 		
-		return AutoAction<HoldHitSignal>(20, 21, m_BendGroup, _Token);
+		return AutoAction<HealthSignal>(20, 21, m_BendGroup, _Token);
 	}
 
 	Task HoldAdvancedManualAction(CancellationToken _Token = default)

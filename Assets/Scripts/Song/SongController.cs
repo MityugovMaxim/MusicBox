@@ -11,7 +11,6 @@ using Zenject;
 public class SongController
 {
 	[Inject] AudioManager       m_AudioManager;
-	[Inject] UISongContainer    m_SongContainer;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] SongsProcessor     m_SongsProcessor;
 	[Inject] StorageProcessor   m_StorageProcessor;
@@ -90,13 +89,11 @@ public class SongController
 		
 		m_Progress = null;
 		
-		float ratio    = m_ConfigProcessor.SongRatio;
-		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
-		float duration = m_SongContainer.Size / speed;
+		float ratio = m_ConfigProcessor.SongRatio;
+		float speed = m_SongsProcessor.GetSpeed(m_SongID);
 		
 		m_Player = m_SongFactory.Create(player);
-		m_Player.RectTransform.SetParent(m_SongContainer.RectTransform, false);
-		m_Player.Setup(ratio, duration, music, asf, Finish);
+		m_Player.Setup(ratio, speed, music, asf, Finish);
 		
 		m_ScoreManager.Setup(m_SongID);
 		m_HealthManager.Setup(Death);

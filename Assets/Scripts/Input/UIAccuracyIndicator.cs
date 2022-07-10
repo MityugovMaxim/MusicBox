@@ -1,7 +1,7 @@
 using UnityEngine;
 using Zenject;
 
-public class UIAccuracyIndicator : UIEntity
+public class UIAccuracyIndicator : UIOrder
 {
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
@@ -9,18 +9,27 @@ public class UIAccuracyIndicator : UIEntity
 	[SerializeField] Animator m_AccuracyPerfect;
 	[SerializeField] Animator m_AccuracyBad;
 
-	[Inject] SignalBus m_SignalBus;
+	[Inject] ScoreManager m_ScoreManager;
 
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
-		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnComboChanged += OnComboChanged;
 	}
 
-	void RegisterScore(ScoreSignal _Signal)
+	protected override void OnDisable()
 	{
-		switch (_Signal.Grade)
+		base.OnDisable();
+		
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnComboChanged -= OnComboChanged;
+	}
+
+	void OnComboChanged(int _Combo, ScoreGrade _Grade)
+	{
+		switch (_Grade)
 		{
 			case ScoreGrade.Perfect:
 				m_AccuracyPerfect.SetTrigger(m_PlayParameterID);

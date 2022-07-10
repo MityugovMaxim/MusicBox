@@ -10,7 +10,6 @@ public class TutorialController
 	const string TUTORIAL_PATH  = "tutorial";
 	const float  TUTORIAL_SPEED = 800;
 
-	[Inject] UISongContainer        m_SongContainer;
 	[Inject] ConfigProcessor        m_ConfigProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
 	[Inject] ScoreManager           m_ScoreManager;
@@ -38,13 +37,11 @@ public class TutorialController
 		
 		TutorialPlayer player = await ResourceManager.LoadAsync<TutorialPlayer>(TUTORIAL_PATH);
 		
-		float ratio    = m_ConfigProcessor.SongRatio;
-		float speed    = TUTORIAL_SPEED;
-		float duration = m_SongContainer.Size / speed;
+		float ratio = m_ConfigProcessor.SongRatio;
+		float speed = TUTORIAL_SPEED;
 		
 		m_Player = m_TutorialFactory.Create(player);
-		m_Player.RectTransform.SetParent(m_SongContainer.RectTransform, false);
-		m_Player.Setup(ratio, duration, Finish);
+		m_Player.Setup(ratio, speed, Finish);
 		
 		m_ScoreManager.Setup(m_SongID);
 		m_HealthManager.Setup(null);

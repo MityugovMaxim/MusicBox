@@ -13,6 +13,7 @@ public class UISongScoreList : UIEntity
 	[SerializeField] UIDisc               m_Disc;
 	[SerializeField] UIFlare              m_Flare;
 	[SerializeField] UISongScoreCoins     m_Coins;
+	[SerializeField] UISongStatistics     m_Statistics;
 	[SerializeField] UISongScoreElement[] m_UpperElements;
 	[SerializeField] UISongScoreElement[] m_LowerElements;
 	[SerializeField] AnimationCurve       m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -74,6 +75,8 @@ public class UISongScoreList : UIEntity
 	public async Task PlayAsync()
 	{
 		await Task.Delay(1000);
+		
+		await m_Statistics.PlayAsync();
 		
 		await Task.WhenAll(
 			ScoreAsync(m_ScoreManager.GetScore()),

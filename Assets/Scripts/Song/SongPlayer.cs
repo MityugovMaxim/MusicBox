@@ -22,10 +22,12 @@ public class SongPlayer : ASFPlayer
 	Action m_Finished;
 	double m_Length;
 
-	public void Setup(float _Ratio, float _Duration, AudioClip _Music, string _ASF, Action _Finished)
+	public void Setup(float _Ratio, float _Speed, AudioClip _Music, string _ASF, Action _Finished)
 	{
+		Rect rect = GetLocalRect();
+		
 		Ratio    = _Ratio;
-		Duration = _Duration;
+		Duration = rect.height / _Speed;
 		Music    = _Music;
 		
 		m_Finished = _Finished;

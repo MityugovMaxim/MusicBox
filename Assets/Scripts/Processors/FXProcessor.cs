@@ -1,9 +1,8 @@
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class FXProcessor : UIEntity
+public class FXProcessor : UIOrder
 {
 	[SerializeField] UIFXHighlight[] m_Highlights;
 	[SerializeField] UIFXHighlight   m_Flash;
@@ -11,25 +10,8 @@ public class FXProcessor : UIEntity
 	[SerializeField] RectTransform   m_InputArea;
 	[SerializeField] RectTransform   m_FXContainer;
 
-	[Inject] SignalBus m_SignalBus;
-
 	[Inject(Id = ScoreType.Tap)]    UIIndicatorFX.Pool m_TapFXPool;
 	[Inject(Id = ScoreType.Double)] UIIndicatorFX.Pool m_DoubleFXPool;
-	[Inject(Id = ScoreType.Hold)]   UIIndicatorFX.Pool m_HoldFXPool;
-
-	protected override void OnEnable()
-	{
-		base.OnEnable();
-		
-		m_SignalBus.Subscribe<InputMissSignal>(Dim);
-	}
-
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		m_SignalBus.Unsubscribe<InputMissSignal>(Dim);
-	}
 
 	public async void TapFX(Rect _Rect, float _Progress)
 	{
@@ -87,30 +69,23 @@ public class FXProcessor : UIEntity
 		return RectTransform.InverseTransformPoint(position);
 	}
 
-	async void Flash()
+	void Flash()
 	{
-		await m_Flash.PlayAsync();
+		m_Flash.Play();
 	}
 
-	async void Dim()
+	void Dim()
 	{
-		await m_Dim.PlayAsync();
+		m_Dim.Play();
 	}
 
-	async void Highlight(Vector2 _Position)
+	void Highlight(Vector2 _Position)
 	{
-		await HighlightAsync(_Position);
-	}
-
-	Task HighlightAsync(Vector2 _Position)
-	{
-		UIFXHighlight highlight = GetHighlight(_Position);
+		UIFXHighlight highlight = m_Highlights.FirstOrDefault(_Highlight => _Highlight != null && _Highlight.GetWorldRect().Contains(_Position, true));
 		
-		return highlight != null ? highlight.PlayAsync() : null;
-	}
-
-	UIFXHighlight GetHighlight(Vector2 _Position)
-	{
-		return m_Highlights.FirstOrDefault(_Highlight => _Highlight != null && _Highlight.GetWorldRect().Contains(_Position, true));
+		if (highlight == null)
+			return;
+		
+		highlight.Play();
 	}
 }

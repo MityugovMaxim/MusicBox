@@ -1,90 +1,52 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using Zenject;
 
-public class UIScoreIndicator : UIEntity
+public class UIScoreIndicator : UIOrder
 {
+	public override int Thickness => 1;
+
 	[SerializeField] UIUnitLabel m_ScoreLabel;
 	[SerializeField] float       m_Duration = 0.15f;
 
-	[Inject] SignalBus m_SignalBus;
+	[Inject] ScoreManager m_ScoreManager;
 
 	long m_Score;
 
-	CancellationTokenSource m_TokenSource;
+	IEnumerator m_ScoreRoutine;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_SignalBus.Subscribe<ScoreSignal>(RegisterScore);
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnScoreChanged += OnScoreChanged;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_SignalBus.Unsubscribe<ScoreSignal>(RegisterScore);
+		if (m_ScoreManager != null)
+			m_ScoreManager.OnScoreChanged -= OnScoreChanged;
 	}
 
-	void RegisterScore(ScoreSignal _Signal)
+	void OnScoreChanged(long _Score)
 	{
-		ProcessScore(_Signal.Score);
-	}
-
-	async void ProcessScore(long _Score)
-	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		m_Score = _Score;
 		
-		m_TokenSource = new CancellationTokenSource();
+		if (m_ScoreRoutine != null)
+			StopCoroutine(m_ScoreRoutine);
 		
-		CancellationToken token = m_TokenSource.Token;
-		
-		try
+		if (m_Score > m_ScoreLabel.Value && gameObject.activeInHierarchy)
 		{
-			await ScoreAsync(_Score, token);
+			m_ScoreRoutine = UnityRoutine.UnitRoutine(m_ScoreLabel, m_Score, m_Duration, EaseFunction.EaseOut);
+			
+			StartCoroutine(m_ScoreRoutine);
 		}
-		catch (TaskCanceledException) { }
-		
-		if (token.IsCancellationRequested)
-			return;
-		
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
-	}
-
-	Task ScoreAsync(long _Score, CancellationToken _Token = default)
-	{
-		long source = m_Score;
-		long target = _Score;
-		
-		if (source >= target || _Token.IsCancellationRequested)
+		else
 		{
-			m_Score            = target;
 			m_ScoreLabel.Value = m_Score;
-			return Task.CompletedTask;
 		}
-		
-		_Token.Register(
-			() =>
-			{
-				m_Score            = target;
-				m_ScoreLabel.Value = m_Score;
-			}
-		);
-		
-		long delta = target - source;
-		
-		return UnityTask.Phase(
-			_Phase =>
-			{
-				m_Score            = source + (long)(delta * _Phase);
-				m_ScoreLabel.Value = m_Score;
-			},
-			m_Duration,
-			_Token
-		);
 	}
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class UIHandle : UIEntity
+public abstract class UIHandle : UIOrder
 {
 	protected abstract bool Processed { get; }
 

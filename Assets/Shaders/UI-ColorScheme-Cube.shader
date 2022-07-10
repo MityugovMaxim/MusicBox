@@ -141,8 +141,6 @@ Shader "UI/ColorScheme/Cube"
 					normal.a
 				);
 				
-				color = useUIMask(color, IN.mask);
-				
 				return color;
 			}
 			ENDCG

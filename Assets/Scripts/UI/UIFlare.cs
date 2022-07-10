@@ -14,6 +14,8 @@ public class UIFlare : UIEntity
 		base.Awake();
 		
 		m_Animator = GetComponent<Animator>();
+		
+		m_Animator.keepAnimatorControllerStateOnDisable = true;
 	}
 
 	protected override void OnDisable()
@@ -22,7 +24,6 @@ public class UIFlare : UIEntity
 		
 		m_Animator.SetTrigger(m_RestoreParameterID);
 		m_Animator.ResetTrigger(m_PlayParameterID);
-		m_Animator.Update(0);
 	}
 
 	public void Play(float _Delay = 0)

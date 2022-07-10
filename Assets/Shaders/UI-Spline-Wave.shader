@@ -64,13 +64,9 @@
 
 			struct vertData
 			{
-				float4 vertex   : POSITION;
-				fixed4 color    : COLOR;
-				half2 uv        : TEXCOORD0;
-				half2 fade      : TEXCOORD1;
-				half4 rect      : TANGENT;
-				float4 progress : NORMAL;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
+				float4 vertex : POSITION;
+				fixed4 color  : COLOR;
+				half2 uv      : TEXCOORD0;
 			};
 
 			struct fragData
@@ -78,11 +74,7 @@
 				float4 vertex   : SV_POSITION;
 				fixed4 color    : COLOR;
 				half2 uv        : TEXCOORD0;
-				half4 mask      : TEXCOORD1;
-				half2 fade      : TEXCOORD2;
-				half2 wave      : TEXCOORD3;
-				half4 rect      : TANGENT;
-				float4 progress : NORMAL;
+				half2 wave      : TEXCOORD2;
 			};
 
 			sampler2D _MainTex;
@@ -96,22 +88,14 @@
 			fragData vert(const vertData IN)
 			{
 				fragData OUT;
-				UNITY_SETUP_INSTANCE_ID(IN);
 				
 				const half offset = frac(_Time.y * _Speed);
 				
 				OUT.vertex   = UnityObjectToClipPos(IN.vertex);
-				#ifdef COLOR_SCHEME
-				OUT.color    = IN.color * _ForegroundSecondaryColor;
-				#else
-				OUT.color    = IN.color;
-				#endif
-				OUT.uv       = IN.rect.xy + IN.rect.zw * IN.uv.xy;
-				OUT.fade     = IN.fade;
-				OUT.wave     = ComputeScreenPos(OUT.vertex).xy * _Scale - offset;
-				OUT.rect     = IN.rect;
-				OUT.progress = IN.progress;
-				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
+				
+				OUT.color = IN.color;
+				OUT.uv    = IN.uv;
+				OUT.wave  = ComputeScreenPos(OUT.vertex).xy * _Scale - offset;
 				
 				return OUT;
 			}
@@ -119,27 +103,25 @@
 			fixed4 frag(const fragData IN) : SV_Target
 			{
 				const half3 wave = UnpackNormal(tex2D(_WaveTex, IN.wave)) * _Strength;
-				const half2 uv   = IN.uv + wave.xy * IN.rect.zz;
+				const half2 uv   = IN.uv + wave.xy;
 				
-				fixed4 color = (tex2D(_MainTex, uv) + _TextureSampleAdd) * IN.color;
+				fixed4 color = tex2D(_MainTex, uv) * IN.color;
 				
-				color.rgb *= color.a;
+				// #ifdef COLOR_SCHEME
+				// color = BACKGROUND_BY_GRAYSCALE(color);
+				// #endif
 				
-				color += grayscale(color);
+				//const fixed phase = grayscale(color);
 				
-				#ifdef UNITY_UI_CLIP_RECT
-				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-				color.a *= m.x * m.y;
-				#endif
+				//color.rgb *= phase;
 				
-				#ifdef UNITY_UI_ALPHACLIP
-				clip (color.a - 0.001);
-				#endif
+				//color += grayscale(color);
 				
-				color.a *= smoothstep(IN.progress.x, IN.progress.x + IN.fade.x, IN.progress.z);
-				color.a *= smoothstep(IN.progress.y, IN.progress.y - IN.fade.y, IN.progress.z);
+				//color *= 6;
 				
-				return color;
+				//color.rgb += smoothstep(0.6, 0.8, phase) * 4;
+				
+				return color * color;
 			}
 			ENDCG
 		}

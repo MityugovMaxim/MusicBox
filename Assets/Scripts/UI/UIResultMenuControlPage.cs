@@ -63,10 +63,11 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		m_SongController.Leave();
 		
-		await m_MenuProcessor.Show(MenuType.MainMenu);
-		await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
 		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		
+		await m_MenuProcessor.Hide(MenuType.ResultMenu);
 	}
 
 	public async void Next()
@@ -91,6 +92,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		if (string.IsNullOrEmpty(songID))
 		{
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
+			
 			await m_MenuProcessor.Hide(MenuType.ResultMenu);
 		}
 		else
@@ -100,6 +102,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 			songMenu.Setup(songID);
 			
 			await m_MenuProcessor.Show(MenuType.SongMenu);
+			
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
 			await m_MenuProcessor.Hide(MenuType.ResultMenu, true);
 		}

@@ -45,19 +45,23 @@ public class UITapIndicator : UIIndicator
 		
 		FXProcessor.TapFX(Handle.GetWorldRect(), _Progress);
 		
-		InvokeCallback();
+		HapticProcessor.Process(Haptic.Type.ImpactMedium);
 		
-		SignalBus.Fire(new TapSuccessSignal(_Progress));
+		ScoreManager.TapHit(_Progress);
+		
+		InvokeCallback();
 	}
 
-	public void Fail(float _Progress)
+	public void Fail()
 	{
 		Animator.SetTrigger(m_FailParameterID);
 		
 		FXProcessor.Fail();
 		
-		InvokeCallback();
+		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		SignalBus.Fire(new TapFailSignal(_Progress));
+		ScoreManager.TapFail();
+		
+		InvokeCallback();
 	}
 }

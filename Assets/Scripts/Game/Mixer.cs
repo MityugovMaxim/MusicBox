@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -13,21 +12,13 @@ public class Mixer : MonoBehaviour
 	[SerializeField] AudioMixerSnapshot m_HighpassDisabledSnapshot;
 	[SerializeField] AudioMixerSnapshot m_HighpassEnabledSnapshot;
 
-	[Inject] SignalBus m_SignalBus;
+	[Inject] ScoreManager m_ScoreManager;
 
 	CancellationTokenSource m_TokenSource;
 
 	void Awake()
 	{
-		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHit);
-		m_SignalBus.Subscribe<HoldHitSignal>(RegisterHit);
-		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterHit);
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterHit);
-		
-		m_SignalBus.Subscribe<HoldFailSignal>(RegisterMiss);
-		m_SignalBus.Subscribe<HoldMissSignal>(RegisterMiss);
-		m_SignalBus.Subscribe<TapFailSignal>(RegisterMiss);
-		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterMiss);
+		m_ScoreManager.OnComboChanged += OnComboChanged;
 	}
 
 	void OnDestroy()
@@ -36,27 +27,15 @@ public class Mixer : MonoBehaviour
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHit);
-		m_SignalBus.Unsubscribe<HoldHitSignal>(RegisterHit);
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterHit);
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterHit);
-		
-		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterMiss);
-		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterMiss);
-		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterMiss);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterMiss);
+		m_ScoreManager.OnComboChanged -= OnComboChanged;
 	}
 
-	void RegisterHit()
+	void OnComboChanged(int _Combo, ScoreGrade _Grade)
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
-		
-		m_AudioSource.outputAudioMixerGroup = m_MasterGroup;
+		if (_Grade == ScoreGrade.Fail || _Grade == ScoreGrade.Miss)
+			RegisterMiss();
+		else
+			RegisterHit();
 	}
 
 	async void RegisterMiss()
@@ -90,5 +69,14 @@ public class Mixer : MonoBehaviour
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	void RegisterHit()
+	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
+		
+		m_AudioSource.outputAudioMixerGroup = m_MasterGroup;
 	}
 }

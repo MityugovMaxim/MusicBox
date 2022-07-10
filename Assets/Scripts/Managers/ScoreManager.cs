@@ -5,24 +5,6 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class ScoreSignal
-{
-	public long       Score      { get; }
-	public int        Combo      { get; }
-	public int        Multiplier { get; }
-	public float      Progress   { get; }
-	public ScoreGrade Grade      { get; }
-
-	public ScoreSignal(long _Score, int _Combo, int _Multiplier, float _Progress, ScoreGrade _Grade)
-	{
-		Score      = _Score;
-		Combo      = _Combo;
-		Multiplier = _Multiplier;
-		Progress   = _Progress;
-		Grade      = _Grade;
-	}
-}
-
 public enum ScoreType
 {
 	Tap    = 0,
@@ -42,7 +24,7 @@ public enum ScoreGrade
 }
 
 [Preserve]
-public class ScoreManager : IInitializable, IDisposable
+public class ScoreManager
 {
 	public class Threshold
 	{
@@ -69,7 +51,7 @@ public class ScoreManager : IInitializable, IDisposable
 		{
 			int minProgress = GetMinProgress(SourceCombo);
 			int maxProgress = GetMaxProgress(SourceCombo);
-			return Mathf.InverseLerp(minProgress, maxProgress - 1, SourceCombo);
+			return minProgress < maxProgress ? Mathf.InverseLerp(minProgress, maxProgress - 1, SourceCombo) : 1;
 		}
 	}
 
@@ -78,7 +60,10 @@ public class ScoreManager : IInitializable, IDisposable
 	int ComboX4 { get; set; }
 	int ComboX2 { get; set; }
 
-	[Inject] SignalBus        m_SignalBus;
+	public event Action<long>            OnScoreChanged;
+	public event Action<int, ScoreGrade> OnComboChanged;
+	public event Action<int, float>      OnMultiplierChanged;
+
 	[Inject] ScoresProcessor  m_ScoresProcessor;
 	[Inject] SongsProcessor   m_SongsProcessor;
 	[Inject] ProfileProcessor m_ProfileProcessor;
@@ -86,39 +71,10 @@ public class ScoreManager : IInitializable, IDisposable
 
 	string m_SongID;
 
-	readonly List<Threshold> m_TapThresholds    = new List<Threshold>();
-	readonly List<Threshold> m_DoubleThresholds = new List<Threshold>();
-	readonly List<Threshold> m_HoldThresholds   = new List<Threshold>();
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<InputMissSignal>(RegisterInputMiss);
-		
-		m_SignalBus.Subscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Subscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Subscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_SignalBus.Subscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Subscribe<HoldFailSignal>(RegisterHoldFail);
-		m_SignalBus.Subscribe<HoldMissSignal>(RegisterHoldMiss);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<InputMissSignal>(RegisterInputMiss);
-		
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(RegisterTapSuccess);
-		m_SignalBus.Unsubscribe<TapFailSignal>(RegisterTapFail);
-		
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(RegisterDoubleSuccess);
-		m_SignalBus.Unsubscribe<DoubleFailSignal>(RegisterDoubleFail);
-		
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(RegisterHoldSuccess);
-		m_SignalBus.Unsubscribe<HoldFailSignal>(RegisterHoldFail);
-		m_SignalBus.Unsubscribe<HoldMissSignal>(RegisterHoldMiss);
-	}
+	readonly List<Threshold>             m_TapThresholds    = new List<Threshold>();
+	readonly List<Threshold>             m_DoubleThresholds = new List<Threshold>();
+	readonly List<Threshold>             m_HoldThresholds   = new List<Threshold>();
+	readonly Dictionary<ScoreGrade, int> m_Statistics       = new Dictionary<ScoreGrade, int>();
 
 	public void Setup(string _SongID)
 	{
@@ -162,6 +118,8 @@ public class ScoreManager : IInitializable, IDisposable
 		
 		SourceCombo = 0;
 		TargetCombo = 0;
+		
+		m_Statistics.Clear();
 		
 		ProcessScore();
 	}
@@ -215,18 +173,9 @@ public class ScoreManager : IInitializable, IDisposable
 		return m_ProfileProcessor.Discs + discs;
 	}
 
-	public float GetRankProgress(ScoreRank _Rank, int _Accuracy)
+	public int GetStatistics(ScoreGrade _Grade)
 	{
-		int minThreshold = m_SongsProcessor.GetThreshold(m_SongID, _Rank);
-		int maxThreshold = m_SongsProcessor.GetThreshold(m_SongID, _Rank + 1);
-		
-		if (_Accuracy <= minThreshold)
-			return 0;
-		
-		if (_Accuracy >= maxThreshold)
-			return 1;
-		
-		return Mathf.InverseLerp(minThreshold, maxThreshold, _Accuracy);
+		return m_Statistics.TryGetValue(_Grade, out int count) ? count : 0;
 	}
 
 	Threshold GetThreshold(ScoreType _Type, float _Progress)
@@ -259,14 +208,7 @@ public class ScoreManager : IInitializable, IDisposable
 		return m_HoldThresholds.FirstOrDefault(_Threshold => _Threshold.Progress <= _Progress);
 	}
 
-	void RegisterInputMiss()
-	{
-		SourceCombo = 0;
-		
-		ProcessScore(ScoreGrade.Miss);
-	}
-
-	void RegisterSuccess(ScoreType _Type, float _Progress)
+	void RegisterHit(ScoreType _Type, float _Progress)
 	{
 		Threshold threshold = GetThreshold(_Type, _Progress);
 		
@@ -298,37 +240,60 @@ public class ScoreManager : IInitializable, IDisposable
 		ProcessScore(ScoreGrade.Fail);
 	}
 
-	void RegisterTapSuccess(TapSuccessSignal _Signal)
+	public void TapHit(float _Progress)
 	{
-		RegisterSuccess(ScoreType.Tap, _Signal.Progress);
+		RegisterHit(ScoreType.Tap, _Progress);
 	}
 
-	void RegisterTapFail(TapFailSignal _Signal)
+	public void DoubleHit(float _Progress)
 	{
-		RegisterFail(ScoreType.Tap);
+		RegisterHit(ScoreType.Tap, _Progress);
 	}
 
-	void RegisterDoubleSuccess(DoubleSuccessSignal _Signal)
+	public void HoldHit(float _Progress, float _Length)
 	{
-		RegisterSuccess(ScoreType.Double, _Signal.Progress);
+		Threshold threshold = GetThreshold(ScoreType.Hold, _Progress);
+		
+		float      progress   = threshold?.Progress ?? 0;
+		ScoreGrade grade      = threshold?.Grade ?? ScoreGrade.None;
+		float      multiplier = threshold?.Multiplier ?? 0;
+		
+		
+		if (grade < ScoreGrade.Bad)
+			SourceCombo++;
+		else
+			SourceCombo = 0;
+		
+		TargetCombo++;
+		
+		AddSourceScore(_Length * multiplier);
+		
+		AddTargetScore(ScoreType.Hold);
+		
+		float length = 1.0f - _Progress + _Length;
+		if (length < progress)
+		{
+			switch (grade)
+			{
+				case ScoreGrade.Perfect:
+					grade = ScoreGrade.Good;
+					break;
+				case ScoreGrade.Great:
+					grade = ScoreGrade.Good;
+					break;
+			}
+		}
+		
+		ProcessScore(grade);
 	}
 
-	void RegisterDoubleFail(DoubleFailSignal _Signal)
-	{
-		RegisterFail(ScoreType.Double);
-	}
+	public void TapFail() => RegisterFail(ScoreType.Tap);
 
-	void RegisterHoldSuccess(HoldSuccessSignal _Signal)
-	{
-		RegisterSuccess(ScoreType.Hold, _Signal.Progress);
-	}
+	public void DoubleFail() => RegisterFail(ScoreType.Double);
 
-	void RegisterHoldFail(HoldFailSignal _Signal)
-	{
-		RegisterFail(ScoreType.Hold);
-	}
+	public void HoldFail() => RegisterFail(ScoreType.Double);
 
-	void RegisterHoldMiss(HoldMissSignal _Signal)
+	public void Miss()
 	{
 		SourceCombo = 0;
 		
@@ -394,14 +359,13 @@ public class ScoreManager : IInitializable, IDisposable
 
 	void ProcessScore(ScoreGrade _Grade = ScoreGrade.None)
 	{
-		ScoreSignal signal = new ScoreSignal(
-			SourceScore,
-			SourceCombo,
-			GetMultiplier(SourceCombo),
-			Progress,
-			_Grade
-		);
+		if (m_Statistics.ContainsKey(_Grade))
+			m_Statistics[_Grade]++;
+		else
+			m_Statistics[_Grade] = 1;
 		
-		m_SignalBus.Fire(signal);
+		OnScoreChanged?.Invoke(SourceScore);
+		OnComboChanged?.Invoke(SourceCombo, _Grade);
+		OnMultiplierChanged?.Invoke(GetMultiplier(SourceCombo), Progress);
 	}
 }

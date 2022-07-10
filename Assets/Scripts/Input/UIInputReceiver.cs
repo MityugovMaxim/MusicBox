@@ -4,14 +4,16 @@ using Zenject;
 
 public class UIInputReceiver : UIEntity
 {
-	[SerializeField] RectTransform m_InputArea;
-
-	InputModule m_InputModule;
-
 	Rect Area { get; set; }
 
-	[Inject] SignalBus       m_SignalBus;
+	[SerializeField] Camera        m_Camera;
+	[SerializeField] RectTransform m_InputArea;
+
+	[Inject] FXProcessor     m_FXProcessor;
+	[Inject] ScoreManager    m_ScoreManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
+
+	InputModule m_InputModule;
 
 	readonly Dictionary<int, Rect>           m_Pointers        = new Dictionary<int, Rect>();
 	readonly Dictionary<UIHandle, List<int>> m_Selection       = new Dictionary<UIHandle, List<int>>();
@@ -37,7 +39,7 @@ public class UIInputReceiver : UIEntity
 		m_InputArea.anchorMin = new Vector2(0, position);
 		m_InputArea.anchorMax = new Vector2(1, position);
 		
-		m_InputModule               =  new InputModule(Camera.main, RectTransform);
+		m_InputModule               =  new InputModule(m_Camera, RectTransform);
 		m_InputModule.OnPointerDown += PointerDown;
 		m_InputModule.OnPointerMove += PointerMove;
 		m_InputModule.OnPointerUp   += PointerUp;
@@ -132,8 +134,12 @@ public class UIInputReceiver : UIEntity
 			}
 		}
 		
-		if (m_ActiveHandles.Count > 0 || m_InactiveHandles.Count > 0)
-			m_SignalBus.Fire<InputMissSignal>();
+		if (m_ActiveHandles.Count <= 0 && m_InactiveHandles.Count <= 0)
+			return;
+		
+		m_FXProcessor.Fail();
+		
+		m_ScoreManager.Miss();
 	}
 
 	void PointerUp(int _PointerID, Vector2 _Position)

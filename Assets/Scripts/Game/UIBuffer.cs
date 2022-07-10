@@ -1,30 +1,31 @@
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
-[ExecuteAlways]
-public class UIBuffer : MonoBehaviour
+public class UIBuffer : UIOrder
 {
-	[SerializeField] Camera   m_Camera;
-	[SerializeField] RawImage m_Target;
-	[SerializeField] Renderer m_Renderer;
-	[SerializeField] Vector2  m_Size;
+	[SerializeField] Camera    m_ACamera;
+	[SerializeField] Camera    m_BCamera;
+	[SerializeField] UITexture m_AGraphic;
+	[SerializeField] UITexture m_BGraphic;
+	[SerializeField] UITexture m_Target;
+	[SerializeField] Vector2   m_Size;
 
 	bool m_Active;
+	bool m_Switch;
 
-	MaterialPropertyBlock m_PropertyBlock;
+	RenderTexture m_A;
+	RenderTexture m_B;
 
-	RenderTexture       m_A;
-	RenderTexture       m_B;
-	static readonly int m_MainTexPropertyID = Shader.PropertyToID("_MainTex");
-
-	protected void OnEnable()
+	protected override void OnEnable()
 	{
+		base.OnEnable();
+		
 		CreateBuffer();
 	}
 
-	protected void OnDisable()
+	protected override void OnDisable()
 	{
+		base.OnDisable();
+		
 		RemoveBuffer();
 	}
 
@@ -34,7 +35,7 @@ public class UIBuffer : MonoBehaviour
 			return;
 		
 		#if UNITY_EDITOR
-		Vector2 screen = Handles.GetMainGameViewSize();
+		Vector2 screen = UnityEditor.Handles.GetMainGameViewSize();
 		#else
 		Vector2 screen = new Vector2(Screen.width, Screen.height);
 		#endif
@@ -51,12 +52,17 @@ public class UIBuffer : MonoBehaviour
 		
 		m_Active = true;
 		
-		m_Renderer.transform.localScale  = new Vector3(size.x, size.y, 1);
-		
-		m_PropertyBlock = new MaterialPropertyBlock();
-		
 		m_A = new RenderTexture(width, height, 0, RenderTextureFormat.R8);
-		m_B = new RenderTexture(width >> 1, height >> 1, 0, RenderTextureFormat.R8);
+		m_B = new RenderTexture(width, height, 0, RenderTextureFormat.R8);
+		
+		m_ACamera.enabled = false;
+		m_BCamera.enabled = false;
+		
+		m_ACamera.targetTexture = m_A;
+		m_BCamera.targetTexture = m_B;
+		
+		m_AGraphic.Texture = m_B;
+		m_BGraphic.Texture = m_A;
 	}
 
 	void RemoveBuffer()
@@ -66,18 +72,16 @@ public class UIBuffer : MonoBehaviour
 		
 		m_Active = false;
 		
-		if (m_PropertyBlock != null)
-		{
-			m_Renderer.GetPropertyBlock(m_PropertyBlock);
-			
-			m_PropertyBlock.SetTexture(m_MainTexPropertyID, Texture2D.blackTexture);
-			
-			m_Renderer.SetPropertyBlock(m_PropertyBlock);
-		}
+		m_ACamera.enabled = false;
+		m_BCamera.enabled = false;
 		
-		m_Camera.targetTexture = null;
-		m_Target.texture       = null;
-		m_PropertyBlock        = null;
+		m_ACamera.targetTexture = null;
+		m_BCamera.targetTexture = null;
+		
+		m_AGraphic.Texture = null;
+		m_BGraphic.Texture = null;
+		
+		m_Target.Texture = null;
 		
 		DestroyImmediate(m_A);
 		DestroyImmediate(m_B);
@@ -86,33 +90,26 @@ public class UIBuffer : MonoBehaviour
 		m_B = null;
 	}
 
-	void SetTexture(Texture _Texture)
-	{
-		m_Renderer.GetPropertyBlock(m_PropertyBlock);
-		
-		m_PropertyBlock.SetTexture(m_MainTexPropertyID, _Texture);
-		
-		m_Renderer.SetPropertyBlock(m_PropertyBlock);
-	}
-
 	void Update()
 	{
 		if (!m_Active)
 			return;
 		
-		if (Time.frameCount % 2 == 0)
+		m_Switch = !m_Switch;
+		
+		if (m_Switch)
 		{
-			m_Camera.targetTexture = m_A;
-			m_Target.texture       = m_B;
+			m_ACamera.enabled = true;
+			m_BCamera.enabled = false;
 			
-			SetTexture(m_B);
+			m_Target.Texture = m_B;
 		}
 		else
 		{
-			m_Camera.targetTexture = m_B;
-			m_Target.texture       = m_A;
+			m_BCamera.enabled = true;
+			m_ACamera.enabled = false;
 			
-			SetTexture(m_A);
+			m_Target.Texture = m_A;
 		}
 	}
 }

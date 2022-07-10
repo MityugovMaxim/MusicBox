@@ -15,9 +15,9 @@ public class UITapHandle : UIHandle
 		if (m_Processed)
 			return;
 		
-		ProcessFail(0);
-		
 		m_Processed = true;
+		
+		m_Indicator.Fail();
 	}
 
 	public override void Reverse() { }
@@ -42,20 +42,10 @@ public class UITapHandle : UIHandle
 		
 		m_Processed = true;
 		
-		ProcessSuccess(progress);
+		m_Indicator.Success(progress);
 	}
 
 	public override void TouchUp(int _ID, Rect _Area) { }
 
 	public override void TouchMove(int _ID, Rect _Area) { }
-
-	void ProcessSuccess(float _Progress)
-	{
-		m_Indicator.Success(_Progress);
-	}
-
-	void ProcessFail(float _Progress)
-	{
-		m_Indicator.Fail(_Progress);
-	}
 }

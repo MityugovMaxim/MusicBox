@@ -30,7 +30,7 @@ public class InputModule
 		if (Input.GetMouseButtonDown(0))
 			ProcessTouchDown(0, position);
 		if (Input.GetMouseButton(0))
-			ProcessTouchMove(0, m_Positions[0] - position);
+			ProcessTouchMove(0, position - m_Positions[0]);
 		if (Input.GetMouseButtonUp(0))
 			ProcessTouchUp(0, position);
 		if (!Input.GetMouseButton(0))
@@ -89,13 +89,13 @@ public class InputModule
 
 	void ProcessTouchDown(int _PointerID, Vector2 _Position)
 	{
-		if (OnPointerDown == null || !ContainsPointer(_Position) || m_PointerIDs.Contains(_PointerID))
+		if (!ContainsPointer(_Position) || m_PointerIDs.Contains(_PointerID))
 			return;
 		
 		m_PointerIDs.Add(_PointerID);
 		m_Positions[_PointerID] = _Position;
 		
-		OnPointerDown.Invoke(_PointerID, GetLocalPosition(_Position));
+		OnPointerDown?.Invoke(_PointerID, GetLocalPosition(_Position));
 	}
 
 	void ProcessTouchMove(int _PointerID, Vector2 _Delta)

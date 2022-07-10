@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public class UILevelCollect : UIEntity
 {
@@ -10,6 +11,12 @@ public class UILevelCollect : UIEntity
 	[SerializeField] UISpline[]     m_Splines;
 	[SerializeField] float          m_Duration;
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+	[SerializeField, Sound] string m_FlySound;
+	[SerializeField, Sound] string m_CollectSound;
+
+	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
 
 	CancellationTokenSource m_TokenSource;
 
@@ -34,11 +41,16 @@ public class UILevelCollect : UIEntity
 		
 		try
 		{
+			m_SoundProcessor.Play(m_FlySound);
+			
 			await UnityTask.Phase(
 				_Phase => m_Path.Phase = _Phase,
 				m_Duration,
 				m_Curve
 			);
+			
+			m_SoundProcessor.Play(m_CollectSound);
+			m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 			
 			await Task.Yield();
 		}

@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class UIAlphaSpectrum : UISpectrum
 {
-	[SerializeField, Range(0, 1)] float      m_Threshold = 0.3f;
-	[SerializeField]              UIRenderer m_Graphic;
-	[SerializeField]              float      m_MinAlpha;
-	[SerializeField]              float      m_MaxAlpha;
-	[SerializeField]              float      m_AttackDamp = 0.6f;
-	[SerializeField]              float      m_DecayDamp  = 0.1f;
+	[SerializeField, Range(0, 1)] float    m_Threshold = 0.3f;
+	[SerializeField]              UISprite m_Graphic;
+	[SerializeField]              float    m_MinAlpha;
+	[SerializeField]              float    m_MaxAlpha;
+	[SerializeField]              float    m_AttackDamp = 0.6f;
+	[SerializeField]              float    m_DecayDamp  = 0.1f;
 
 	public override void Reposition() { }
 

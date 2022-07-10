@@ -42,6 +42,15 @@ public class UISplinePath : UIEntity
 		base.OnEnable();
 		
 		ProcessPhase();
+		
+		m_Spline.OnRebuild += ProcessPhase;
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		m_Spline.OnRebuild -= ProcessPhase;
 	}
 
 	protected override void OnDidApplyAnimationProperties()
@@ -55,6 +64,9 @@ public class UISplinePath : UIEntity
 	protected override void OnValidate()
 	{
 		base.OnValidate();
+		
+		if (!IsInstanced || Application.isPlaying)
+			return;
 		
 		ProcessPhase();
 	}

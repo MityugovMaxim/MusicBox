@@ -1,81 +1,84 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 
-public class UIFXHighlight : UIEntity
+public class UIFXHighlight : UIOrder
 {
+	public float Phase
+	{
+		get => m_Phase;
+		set
+		{
+			if (Mathf.Approximately(m_Phase, value))
+				return;
+			
+			m_Phase = value;
+			
+			ProcessPhase();
+		}
+	}
+
+	[SerializeField, Range(0, 1)] float m_Phase;
+
+	[SerializeField] UISprite       m_Graphic;
 	[SerializeField] float          m_Duration;
-	[SerializeField] float          m_Source = 1;
-	[SerializeField] float          m_Target = 0;
-	[SerializeField] CanvasGroup    m_CanvasGroup;
-	[SerializeField] RectTransform  m_Background;
+	[SerializeField] float          m_SourceAlpha = 1;
+	[SerializeField] float          m_TargetAlpha = 0;
+	[SerializeField] Vector3        m_SourceScale;
+	[SerializeField] Vector3        m_TargetScale;
 	[SerializeField] AnimationCurve m_Curve = AnimationCurve.Linear(0, 0, 1, 1);
 
-	CancellationTokenSource m_TokenSource;
+	IEnumerator m_PlayRoutine;
 
-	public async Task PlayAsync()
+	#if UNITY_EDITOR
+	protected override void OnValidate()
 	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		base.OnValidate();
 		
-		m_TokenSource = new CancellationTokenSource();
-		
-		CancellationToken token = m_TokenSource.Token;
-		
-		try
-		{
-			await Task.WhenAll(
-				AlphaAsync(token),
-				WidthAsync(token)
-			);
-		}
-		catch (TaskCanceledException) { }
-		
-		if (token.IsCancellationRequested)
+		if (!IsInstanced)
 			return;
 		
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		ProcessPhase();
+	}
+	#endif
+
+	public void Play()
+	{
+		if (m_PlayRoutine != null)
+			StopCoroutine(m_PlayRoutine);
+		
+		if (!gameObject.activeInHierarchy)
+			return;
+		
+		m_PlayRoutine = PlayRoutine();
+		
+		StartCoroutine(m_PlayRoutine);
 	}
 
-	Task AlphaAsync(CancellationToken _Token)
+	IEnumerator PlayRoutine()
 	{
-		if (m_CanvasGroup == null)
-			return Task.CompletedTask;
+		m_Graphic.gameObject.SetActive(true);
 		
-		return UnityTask.Lerp(
-			_Value => m_CanvasGroup.alpha = _Value,
-			m_Source,
-			m_Target,
-			m_Duration,
-			m_Curve,
-			_Token
-		);
+		float time = 0;
+		while (time < m_Duration)
+		{
+			yield return null;
+			
+			time += Time.deltaTime;
+			
+			Phase = time / m_Duration;
+		}
+		
+		m_Graphic.gameObject.SetActive(false);
 	}
 
-	Task WidthAsync(CancellationToken _Token)
+	void ProcessPhase()
 	{
-		if (m_Background == null)
-			return Task.CompletedTask;
+		float phase = m_Curve.Evaluate(Phase);
 		
-		const float sourceMin = 0;
-		const float sourceMax = 1;
-		const float targetMin = 0.45f;
-		const float targetMax = 0.55f;
+		float   alpha = Mathf.Lerp(m_SourceAlpha, m_TargetAlpha, phase);
+		Vector3 scale = Vector4.Lerp(m_SourceScale, m_TargetScale, phase);
 		
-		return UnityTask.Phase(
-			_Phase =>
-			{
-				Vector2 anchorMin = m_Background.anchorMin;
-				Vector2 anchorMax = m_Background.anchorMax;
-				float   phase     = m_Curve.Evaluate(_Phase);
-				anchorMin.x            = Mathf.Lerp(sourceMin, targetMin, phase);
-				anchorMax.x            = Mathf.Lerp(sourceMax, targetMax, phase);
-				m_Background.anchorMin = anchorMin;
-				m_Background.anchorMax = anchorMax;
-			},
-			m_Duration,
-			_Token
-		);
+		m_Graphic.Alpha                    = alpha;
+		m_Graphic.RectTransform.localScale = scale;
 	}
 }

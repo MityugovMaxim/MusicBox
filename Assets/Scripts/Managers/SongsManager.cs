@@ -22,13 +22,13 @@ public class SongsManager
 			.ToList();
 	}
 
-	public Dictionary<int, string[]> GetLockedSongIDs()
+	public Dictionary<int, List<string>> GetLockedSongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()
 			.Where(IsSongLockedByLevel)
 			.GroupBy(m_ProgressProcessor.GetSongLevel)
 			.OrderBy(_LevelIDs => _LevelIDs.Key)
-			.ToDictionary(_LevelIDs => _LevelIDs.Key, _LevelIDs => _LevelIDs.ToArray());
+			.ToDictionary(_LevelIDs => _LevelIDs.Key, _LevelIDs => _LevelIDs.ToList());
 	}
 
 	public bool IsSongLockedByLevel(string _SongID)

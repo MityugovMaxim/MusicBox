@@ -1,51 +1,46 @@
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(Animator))]
-public class UIMultiplierProgress : UIEntity
+public class UIMultiplierProgress : UIOrder
 {
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 
-	public float Progress
+	public float Phase
 	{
-		get => m_Progress;
+		get => m_Phase;
 		set
 		{
-			if (Mathf.Approximately(m_Progress, value))
+			if (Mathf.Approximately(m_Phase, value))
 				return;
 			
-			m_Progress = value;
+			m_Phase = value;
 			
-			ProcessProgress();
+			ProcessPhase();
 		}
 	}
 
-	[SerializeField] UIRing         m_Ring;
-	[SerializeField] float          m_Progress;
-	[SerializeField] float          m_Duration = 0.2f;
-	[SerializeField] AnimationCurve m_Curve    = AnimationCurve.Linear(0, 0, 1, 1);
+	[SerializeField, Range(0, 1)] float m_Phase;
 
-	Animator m_Animator;
-	Action   m_PlayFinished;
+	[SerializeField] UILine         m_Progress;
+	[SerializeField] float          m_MinProgress = 0;
+	[SerializeField] float          m_MaxProgress = 1;
+	[SerializeField] float          m_Duration    = 0.2f;
+	[SerializeField] AnimationCurve m_Curve       = AnimationCurve.Linear(0, 0, 1, 1);
+
+	Animator    m_Animator;
+	IEnumerator m_ProgressRoutine;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
 		m_Animator = GetComponent<Animator>();
-		
-		m_Animator.RegisterComplete("play", InvokePlayFinished);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		m_Animator.UnregisterComplete("play", InvokePlayFinished);
 	}
 
 	#if UNITY_EDITOR
@@ -53,54 +48,62 @@ public class UIMultiplierProgress : UIEntity
 	{
 		base.OnValidate();
 		
-		ProcessProgress();
+		ProcessPhase();
 	}
 	#endif
 
 	public void Restore()
 	{
-		InvokePlayFinished();
-		
 		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
-	public Task ProgressAsync(float _Progress, CancellationToken _Token = default)
+	public void Progress(float _Progress, bool _Instant = false)
 	{
-		if (_Token.IsCancellationRequested)
-			return Task.FromCanceled(_Token);
+		if (m_ProgressRoutine != null)
+			StopCoroutine(m_ProgressRoutine);
 		
-		return UnityTask.Lerp(
-			_Value => Progress = _Value,
-			Progress,
-			_Progress,
-			m_Duration,
-			m_Curve,
-			_Token
-		);
+		if (_Instant || !gameObject.activeInHierarchy)
+		{
+			m_Phase = 0;
+			
+			ProcessPhase();
+			
+			return;
+		}
+		
+		m_ProgressRoutine = ProgressRoutine(_Progress);
+		
+		StartCoroutine(m_ProgressRoutine);
 	}
 
-	public Task PlayAsync()
+	public void Play(float _Progress)
 	{
 		Restore();
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
-		m_PlayFinished = () => completionSource.TrySetResult(true);
+		m_Phase = _Progress;
 		
 		m_Animator.SetTrigger(m_PlayParameterID);
+	}
+
+	IEnumerator ProgressRoutine(float _Progress)
+	{
+		float source = Phase;
+		float target = _Progress;
+		float time   = 0;
+		while (time < m_Duration)
+		{
+			yield return null;
+			
+			time += Time.deltaTime;
+			
+			Phase = Mathf.Lerp(source, target, m_Curve.Evaluate(time / m_Duration));
+		}
 		
-		return completionSource.Task;
+		Phase = target;
 	}
 
-	void ProcessProgress()
+	void ProcessPhase()
 	{
-		m_Ring.Arc = Progress;
-	}
-
-	void InvokePlayFinished()
-	{
-		Action action = m_PlayFinished;
-		m_PlayFinished = null;
-		action?.Invoke();
+		m_Progress.Max = Mathf.Lerp(m_MinProgress, m_MaxProgress, Phase);
 	}
 }

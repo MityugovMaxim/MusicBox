@@ -53,11 +53,13 @@ public class UIBlur : MaskableGraphic
 
 	public async Task BlurAsync()
 	{
+		const string tag = "Blur";
+		
 		await UnityTask.Instruction(new WaitForEndOfFrame());
 		
 		foreach (Camera camera in Camera.allCameras)
 		{
-			if (!camera.CompareTag("MainCamera"))
+			if (!camera.CompareTag(tag))
 				continue;
 			
 			RenderTexture target = camera.targetTexture;

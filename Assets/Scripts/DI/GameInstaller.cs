@@ -10,8 +10,7 @@ using Object = UnityEngine.Object;
 
 public class GameInstaller : MonoInstaller
 {
-	[SerializeField] Canvas          m_Canvas;
-	[SerializeField] UISongContainer m_SongContainer;
+	[SerializeField] Canvas m_Canvas;
 
 	[SerializeField] UISocialElement m_SocialElement;
 
@@ -53,7 +52,6 @@ public class GameInstaller : MonoInstaller
 		InstallAudioManager();
 		
 		Container.Bind<Canvas>().To<Canvas>().FromInstance(m_Canvas).AsSingle();
-		Container.BindInterfacesAndSelfTo<UISongContainer>().FromInstance(m_SongContainer).AsSingle();
 		
 		Container.Bind<IAdsProvider>().To<AdsProviderMadPixel>().FromNew().AsSingle();
 		
@@ -208,20 +206,6 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<RevivesDataUpdateSignal>().OptionalSubscriber();
 		
-		Container.DeclareSignal<InputMissSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<TapSuccessSignal>().OptionalSubscriber();
-		Container.DeclareSignal<TapFailSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<DoubleSuccessSignal>().OptionalSubscriber();
-		Container.DeclareSignal<DoubleFailSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<HoldHitSignal>().OptionalSubscriber();
-		Container.DeclareSignal<HoldMissSignal>().OptionalSubscriber();
-		Container.DeclareSignal<HoldSuccessSignal>().OptionalSubscriber();
-		Container.DeclareSignal<HoldFailSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<ScoreSignal>().OptionalSubscriber();
 		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();
 	}
 

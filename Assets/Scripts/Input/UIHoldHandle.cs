@@ -7,9 +7,8 @@ public class UIHoldHandle : UIHandle
 	[Serializable]
 	public class HoldEvent : UnityEvent<bool> { }
 
-	public float MinProgress { get; private set; }
-
-	public float MaxProgress { get; private set; }
+	float Progress { get; set; }
+	float Length   => Mathf.Max(0, m_Max - m_Min);
 
 	protected override bool Processed => m_Processed;
 
@@ -17,23 +16,19 @@ public class UIHoldHandle : UIHandle
 	[SerializeField] RectTransform   m_Marker;
 	[SerializeField] RectOffset      m_Margin;
 
-	bool m_Processed;
-	bool m_Hold;
-	bool m_Move;
-	bool m_Miss;
-	Rect m_Area;
+	bool  m_Processed;
+	bool  m_Hold;
+	float m_Position;
+	float m_Min;
+	float m_Max;
 
 	public override void EnterZone()
 	{
 		if (m_Processed)
 			return;
 		
-		MinProgress = 0;
-		MaxProgress = 0;
-		
-		m_Hold = false;
-		m_Move = false;
-		m_Miss = false;
+		m_Min = 0;
+		m_Max = 0;
 	}
 
 	public override void ExitZone()
@@ -41,12 +36,14 @@ public class UIHoldHandle : UIHandle
 		if (m_Processed)
 			return;
 		
-		ProcessFail();
-		
 		m_Processed = true;
-		m_Hold      = false;
-		m_Move      = false;
-		m_Miss      = false;
+		
+		if (m_Hold)
+			m_Indicator.Success(Progress, Length);
+		else
+			m_Indicator.Fail();
+		
+		m_Hold = false;
 	}
 
 	public override void Reverse()
@@ -54,12 +51,8 @@ public class UIHoldHandle : UIHandle
 		if (m_Processed)
 			return;
 		
-		MinProgress = 0;
-		MaxProgress = 0;
-		
-		m_Hold = false;
-		m_Move = false;
-		m_Miss = false;
+		m_Min = 0;
+		m_Max = 0;
 	}
 
 	public override void Restore()
@@ -67,12 +60,11 @@ public class UIHoldHandle : UIHandle
 		if (m_Marker != null)
 			m_Marker.anchoredPosition = Vector2.zero;
 		
-		MinProgress = 0;
-		MaxProgress = 0;
+		m_Min = 0;
+		m_Max = 0;
 		
 		m_Processed = false;
 		m_Hold      = false;
-		m_Miss      = false;
 	}
 
 	public void Process(float _Phase)
@@ -80,116 +72,74 @@ public class UIHoldHandle : UIHandle
 		if (m_Processed)
 			return;
 		
+		m_Max = _Phase;
+		
+		if (m_Max < 1 && !Mathf.Approximately(m_Max, 1))
+			return;
+		
+		m_Processed = true;
+		
 		if (m_Hold)
-		{
-			MaxProgress = _Phase;
-			
-			if (MaxProgress >= 1 || Mathf.Approximately(MaxProgress, 1))
-			{
-				m_Hold      = false;
-				m_Processed = true;
-				
-				ProcessSuccess();
-			}
-		}
+			m_Indicator.Success(Progress, Length);
 		else
-		{
-			MinProgress = _Phase;
-			MaxProgress = _Phase;
-			
-			Rect  indicatorRect = m_Indicator.GetWorldRect();
-			Rect  handleRect    = GetWorldRect();
-			float missThreshold = indicatorRect.yMin + handleRect.height;
-			
-			if (m_Miss || handleRect.yMin < missThreshold)
-				return;
-			
-			m_Miss = true;
-			
-			ProcessMiss();
-		}
+			m_Indicator.Fail();
+		
+		m_Hold = false;
 	}
 
 	public override void TouchDown(int _ID, Rect _Area)
 	{
-		if (m_Processed || m_Hold)
+		if (m_Processed)
 			return;
 		
 		m_Hold = true;
-		m_Move = false;
-		m_Area = GetLocalRect(_Area);
 		
-		Rect rect      = RectTransform.rect;
+		m_Min = m_Max;
+		
+		Rect rect = RectTransform.rect;
+		Rect area = GetLocalRect(_Area);
+		
 		Rect indicator = GetLocalRect(m_Indicator.GetWorldRect());
 		
-		float position = m_Area.center.y;
-		float distance = Mathf.Abs(position - indicator.yMin - rect.height * 0.5f);
-		float length   = m_Area.height;
-		float progress = 1.0f - distance / length;
+		m_Position = area.center.x;
 		
-		ProcessHit(progress);
-	}
-
-	public override void TouchUp(int _ID, Rect _Area)
-	{
-		if (m_Processed || !m_Hold)
-			return;
+		float position = area.center.y;
+		float distance = Mathf.Abs(position - (indicator.yMin + rect.height * 0.5f));
+		float length   = area.height;
 		
-		if (m_Marker != null)
-			m_Marker.anchoredPosition = Vector2.zero;
+		Progress = Mathf.Max(0, 1.0f - distance / length);
 		
-		m_Hold      = false;
-		m_Move      = false;
-		m_Processed = true;
-		
-		ProcessSuccess();
+		m_Indicator.Hit();
 	}
 
 	public override void TouchMove(int _ID, Rect _Area)
 	{
-		if (m_Processed || !m_Hold)
+		if (m_Processed)
 			return;
 		
 		Rect area = GetLocalRect(_Area);
-		
-		if (!m_Move && m_Area != area)
-		{
-			m_Move = true;
-			m_Area = area;
-		}
-		
 		Rect rect = GetLocalRect(m_Margin);
 		
 		if (m_Marker != null)
-			m_Marker.anchoredPosition = new Vector2(area.center.x - m_Area.center.x, 0);
+			m_Marker.anchoredPosition = new Vector2(area.center.x - m_Position, 0);
 		
 		if (rect.Overlaps(area))
 			return;
 		
-		m_Hold      = false;
-		m_Move      = false;
 		m_Processed = true;
+		m_Hold      = false;
 		
-		ProcessSuccess();
+		m_Indicator.Success(Progress, Length);
 	}
 
-	void ProcessHit(float _Progress)
+	public override void TouchUp(int _ID, Rect _Area)
 	{
-		m_Indicator.Hit(_Progress);
-	}
-
-	void ProcessMiss()
-	{
-		m_Indicator.Miss(MinProgress, MaxProgress);
-	}
-
-	void ProcessSuccess()
-	{
-		m_Indicator.Success(MinProgress, MaxProgress);
-	}
-
-	void ProcessFail()
-	{
-		m_Indicator.Fail(MinProgress, MaxProgress);
+		if (m_Processed)
+			return;
+		
+		m_Processed = true;
+		m_Hold      = false;
+		
+		m_Indicator.Success(Progress, Length);
 	}
 }

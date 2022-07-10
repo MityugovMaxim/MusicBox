@@ -1,10 +1,8 @@
-using System;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [Preserve]
-public class HapticProcessor : IInitializable, IDisposable
+public class HapticProcessor
 {
 	const string HAPTIC_ENABLED_KEY = "HAPTIC_ENABLED";
 
@@ -24,10 +22,14 @@ public class HapticProcessor : IInitializable, IDisposable
 		}
 	}
 
-	[Inject] SignalBus m_SignalBus;
-
 	Haptic m_Haptic;
 	bool   m_HapticEnabled;
+
+	public HapticProcessor()
+	{
+		m_Haptic        = Haptic.Create();
+		m_HapticEnabled = PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 1) > 0;
+	}
 
 	public void Process(Haptic.Type _HapticType)
 	{
@@ -38,39 +40,5 @@ public class HapticProcessor : IInitializable, IDisposable
 	public async void Play(Haptic.Type _HapticType, int _Frequency, float _Duration)
 	{
 		await UnityTask.Tick(() => Process(_HapticType), _Frequency, _Duration);
-	}
-
-	void IInitializable.Initialize()
-	{
-		m_Haptic        = Haptic.Create();
-		m_HapticEnabled = PlayerPrefs.GetInt(HAPTIC_ENABLED_KEY, 1) > 0;
-		
-		m_SignalBus.Subscribe<DoubleSuccessSignal>(ImpactHeavy);
-		m_SignalBus.Subscribe<HoldSuccessSignal>(ImpactMedium);
-		m_SignalBus.Subscribe<TapSuccessSignal>(ImpactMedium);
-		m_SignalBus.Subscribe<HoldHitSignal>(ImpactLight);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<DoubleSuccessSignal>(ImpactHeavy);
-		m_SignalBus.Unsubscribe<HoldSuccessSignal>(ImpactMedium);
-		m_SignalBus.Unsubscribe<TapSuccessSignal>(ImpactMedium);
-		m_SignalBus.Unsubscribe<HoldHitSignal>(ImpactLight);
-	}
-
-	void ImpactHeavy()
-	{
-		Process(Haptic.Type.ImpactHeavy);
-	}
-
-	void ImpactMedium()
-	{
-		Process(Haptic.Type.ImpactMedium);
-	}
-
-	void ImpactLight()
-	{
-		Process(Haptic.Type.ImpactLight);
 	}
 }

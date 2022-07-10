@@ -4,8 +4,10 @@ using UnityEngine;
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
-public class UILine : UIEntity
+public class UILine : UIOrder
 {
+	public override int Thickness => 1;
+
 	public Color Color
 	{
 		get => m_Color;
@@ -39,10 +41,10 @@ public class UILine : UIEntity
 		get => m_MaxProgress;
 		set
 		{
-			if (Mathf.Approximately(m_MinProgress, value))
+			if (Mathf.Approximately(m_MaxProgress, value))
 				return;
 			
-			m_MinProgress = value;
+			m_MaxProgress = value;
 			
 			InvalidateMesh();
 		}
@@ -127,6 +129,9 @@ public class UILine : UIEntity
 	{
 		base.OnValidate();
 		
+		if (!IsInstanced)
+			return;
+		
 		if (m_MeshRenderer == null)
 			m_MeshRenderer = GetComponent<MeshRenderer>();
 		
@@ -171,6 +176,7 @@ public class UILine : UIEntity
 		
 		Rect uv = MeshUtility.GetUV(m_Sprite);
 		
+		float   aspect   = m_Sprite != null ? m_Sprite.textureRect.width / m_Sprite.textureRect.height : 1;
 		float   centerUV = Mathf.Lerp(uv.yMin, uv.yMax, 0.5f);
 		Vector2 minUV    = new Vector2(uv.xMin, centerUV);
 		Vector2 maxUV    = new Vector2(uv.xMax, centerUV);
@@ -186,7 +192,7 @@ public class UILine : UIEntity
 		}
 		
 		// Min Cap
-		GenerateMinCap(uv);
+		GenerateMinCap(aspect, uv);
 		
 		UISpline.Point a = m_Spline.GetPoint(m_MinProgress);
 		AddPoint(a);
@@ -202,7 +208,7 @@ public class UILine : UIEntity
 		UISpline.Point b = m_Spline.GetPoint(m_MaxProgress);
 		AddPoint(b);
 		
-		GenerateMaxCap(uv);
+		GenerateMaxCap(aspect, uv);
 		
 		int quads = m_Vertices.Count / 2 - 1;
 		for (int i = 0; i < quads; i++)
@@ -227,9 +233,9 @@ public class UILine : UIEntity
 		m_MeshFilter.sharedMesh = m_Mesh;
 	}
 
-	void GenerateMinCap(Rect _UV)
+	void GenerateMinCap(float _Aspect, Rect _UV)
 	{
-		float height = m_Width / (_UV.width / _UV.height) * 0.5f;
+		float height = m_Width / _Aspect * 0.5f;
 		
 		UISpline.Point point = m_Spline.GetPoint(m_MinProgress);
 		
@@ -243,9 +249,9 @@ public class UILine : UIEntity
 		m_UV.Add(new Vector2(_UV.xMax, _UV.yMin));
 	}
 
-	void GenerateMaxCap(Rect _UV)
+	void GenerateMaxCap(float _Aspect, Rect _UV)
 	{
-		float height = m_Width / (_UV.width / _UV.height) * 0.5f;
+		float height = m_Width / _Aspect * 0.5f;
 		
 		UISpline.Point point = m_Spline.GetPoint(m_MaxProgress);
 		
@@ -262,7 +268,7 @@ public class UILine : UIEntity
 	void GenerateProperties()
 	{
 		m_MeshRenderer.GetPropertyBlock(m_PropertyBlock);
-
+		
 		Texture2D texture = m_Sprite != null && m_Sprite.texture != null
 			? m_Sprite.texture
 			: Texture2D.whiteTexture;

@@ -41,7 +41,6 @@ public class UILevelElement : UIEntity
 	[SerializeField] float m_SourceProgressAlpha = 0;
 	[SerializeField] float m_TargetProgressAlpha = 1;
 
-	[Inject] ProfileProcessor  m_ProfileProcessor;
 	[Inject] ProgressProcessor m_ProgressProcessor;
 
 	CanvasGroup m_CanvasGroup;
@@ -74,6 +73,7 @@ public class UILevelElement : UIEntity
 		
 		m_Level.Level = _Level;
 		
+		m_Progress.gameObject.SetActive(_Level < maxLevel);
 		m_Progress.Setup(
 			_Discs,
 			m_ProgressProcessor.GetDiscs(_Level),
