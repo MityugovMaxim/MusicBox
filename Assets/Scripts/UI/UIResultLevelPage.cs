@@ -17,19 +17,19 @@ public class UIResultLevelPage : UIResultMenuPage
 
 	string m_SongID;
 
-	int m_Level;
-	int m_LevelLimit;
 	int m_SourceDiscs;
 	int m_TargetDiscs;
+	int m_Level;
+	int m_LevelLimit;
 
 	public override void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
 		
-		m_Level       = m_ProgressProcessor.GetLevel(m_SourceDiscs);
-		m_LevelLimit  = m_ProgressProcessor.GetMaxLevel();
 		m_SourceDiscs = m_ScoreManager.GetSourceDiscs();
 		m_TargetDiscs = m_ScoreManager.GetTargetDiscs();
+		m_Level       = m_ProgressProcessor.GetLevel(m_SourceDiscs);
+		m_LevelLimit  = m_ProgressProcessor.GetMaxLevel();
 		
 		m_LevelList.Setup(m_SongID);
 		
