@@ -6,9 +6,12 @@ namespace AudioBox.ASF
 	{
 		const int COUNT = 4;
 
-		protected override float Size => Context.GetLocalRect().width / COUNT;
+		protected override float Size { get; }
 
-		public ASFHoldTrack(ASFTrackContext<ASFHoldClip> _Context) : base(_Context) { }
+		public ASFHoldTrack(ASFTrackContext<ASFHoldClip> _Context) : base(_Context)
+		{
+			Size = Context.GetLocalRect().width / COUNT;
+		}
 
 		public override void Sample(double _Time, double _MinTime, double _MaxTime)
 		{

@@ -79,7 +79,7 @@ public class UILayout : UIEntity
 	{
 		EndLayout();
 		
-		Rect rect = m_Viewport.GetWorldRect();
+		Rect rect = GetLocalRect(m_Viewport.GetWorldRect());
 		
 		float min = rect.yMin;
 		float max = rect.yMax;
@@ -114,16 +114,13 @@ public class UILayout : UIEntity
 
 	(int minIndex, int maxIndex) GetRange(float _Min, float _Max)
 	{
-		float min = GetLocalPoint(new Vector2(0, _Min)).y;
-		float max = GetLocalPoint(new Vector2(0, _Max)).y;
-		
-		int anchor = FindAnchor(min, max);
+		int anchor = FindAnchor(_Min, _Max);
 		
 		if (anchor < 0)
 			return (anchor, anchor);
 		
-		int minIndex = FindMin(anchor, max);
-		int maxIndex = FindMax(anchor, min);
+		int minIndex = FindMin(anchor, _Max);
+		int maxIndex = FindMax(anchor, _Min);
 		
 		return (minIndex, maxIndex);
 	}

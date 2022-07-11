@@ -879,7 +879,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8826910917943886902
 RectTransform:
   m_ObjectHideFlags: 0
@@ -929,9 +929,9 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8826910917943886901}
   m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &-112934484600366884
 MonoBehaviour:
@@ -1039,8 +1039,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -7.729431}
-  m_SizeDelta: {x: 0, y: -120.57971}
+  m_AnchoredPosition: {x: 0, y: 120.70001}
+  m_SizeDelta: {x: 0, y: -241.40002}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8826910918028740119
 MonoBehaviour:
@@ -1374,6 +1374,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4281759431106505002}
     m_Modifications:
+    - target: {fileID: 207015653476668227, guid: 756cec71fec1940de91ef09b0b53fb9f,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 207015653476668227, guid: 756cec71fec1940de91ef09b0b53fb9f,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1679959708637045688, guid: 756cec71fec1940de91ef09b0b53fb9f,
         type: 3}
       propertyPath: m_Pivot.x

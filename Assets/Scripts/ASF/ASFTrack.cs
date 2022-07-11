@@ -22,11 +22,17 @@ namespace AudioBox.ASF
 
 		protected abstract float Size { get; }
 
+		int  MinIndex { get; set; } = -1;
+		int  MaxIndex { get; set; } = -1;
+		Rect Rect     { get; }
+
 		readonly List<T> m_Clips = new List<T>();
 
 		public ASFTrack(ASFTrackContext<T> _Context)
 		{
 			Context = _Context;
+			
+			Rect = Context.GetLocalRect();
 			
 			Context.Clear();
 		}
@@ -101,12 +107,10 @@ namespace AudioBox.ASF
 
 		protected (int minIndex, int maxIndex) GetRange(double _MinTime, double _MaxTime)
 		{
-			Rect rect = Context.GetLocalRect();
-			
 			float padding = Size * 0.5f;
 			
-			double minTime = ASFMath.PositionToTime(rect.yMin - padding, rect.yMin, rect.yMax, _MinTime, _MaxTime);
-			double maxTime = ASFMath.PositionToTime(rect.yMax + padding, rect.yMin, rect.yMax, _MinTime, _MaxTime);
+			double minTime = ASFMath.PositionToTime(Rect.yMin - padding, Rect.yMin, Rect.yMax, _MinTime, _MaxTime);
+			double maxTime = ASFMath.PositionToTime(Rect.yMax + padding, Rect.yMin, Rect.yMax, _MinTime, _MaxTime);
 			
 			int anchor = FindAnchor(minTime, maxTime);
 			
@@ -119,13 +123,8 @@ namespace AudioBox.ASF
 			return (minIndex, maxIndex);
 		}
 
-		protected int MinIndex { get; set; } = -1;
-		protected int MaxIndex { get; set; } = -1;
-
 		protected virtual void Reposition(int _MinIndex, int _MaxIndex, double _MinTime, double _MaxTime)
 		{
-			Rect rect = Context.GetLocalRect();
-			
 			float padding = Size * 0.5f;
 			
 			// Remove clips
@@ -136,8 +135,8 @@ namespace AudioBox.ASF
 				if (clip == null || i >= _MinIndex && i <= _MaxIndex)
 					continue;
 				
-				Rect clipRect = GetClipRect(clip, rect, _MinTime, _MaxTime);
-				Rect viewRect = GetViewRect(clip, rect, _MinTime, _MaxTime, padding);
+				Rect clipRect = GetClipRect(clip, Rect, _MinTime, _MaxTime);
+				Rect viewRect = GetViewRect(clip, Rect, _MinTime, _MaxTime, padding);
 				
 				Context.RemoveClip(clip, clipRect, viewRect);
 			}
@@ -150,8 +149,8 @@ namespace AudioBox.ASF
 				if (clip == null || i >= MinIndex && i <= MaxIndex)
 					continue;
 				
-				Rect clipRect = GetClipRect(clip, rect, _MinTime, _MaxTime);
-				Rect viewRect = GetViewRect(clip, rect, _MinTime, _MaxTime, padding);
+				Rect clipRect = GetClipRect(clip, Rect, _MinTime, _MaxTime);
+				Rect viewRect = GetViewRect(clip, Rect, _MinTime, _MaxTime, padding);
 				
 				Context.AddClip(clip, clipRect, viewRect);
 			}
@@ -164,8 +163,8 @@ namespace AudioBox.ASF
 				if (clip == null || i < MinIndex || i > MaxIndex)
 					continue;
 				
-				Rect clipRect = GetClipRect(clip, rect, _MinTime, _MaxTime);
-				Rect viewRect = GetViewRect(clip, rect, _MinTime, _MaxTime, padding);
+				Rect clipRect = GetClipRect(clip, Rect, _MinTime, _MaxTime);
+				Rect viewRect = GetViewRect(clip, Rect, _MinTime, _MaxTime, padding);
 				
 				Context.ProcessClip(clip, clipRect, viewRect);
 			}
