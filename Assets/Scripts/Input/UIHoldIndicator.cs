@@ -74,12 +74,10 @@ public class UIHoldIndicator : UIIndicator
 			m_Spline.SetKey(i, target);
 		}
 		
-		// Build spline with low amount samples for calculating length of spline
-		m_Spline.Samples = 25;
-		m_Spline.Rebuild();
+		float distance = m_Spline.CalcLength(25);
 		
 		// Calculate samples amount by spline length
-		m_Spline.Samples = Mathf.CeilToInt(m_Spline.GetLength(1) * m_SamplesPerUnit);
+		m_Spline.Samples = Mathf.CeilToInt(distance * m_SamplesPerUnit);
 		m_Spline.Rebuild();
 		
 		m_Line.Min = 0;

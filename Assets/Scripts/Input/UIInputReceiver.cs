@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -5,6 +6,8 @@ using Zenject;
 public class UIInputReceiver : UIEntity
 {
 	Rect Area { get; set; }
+
+	public event Action<UIHandle> OnSelect;
 
 	[SerializeField] Camera        m_Camera;
 	[SerializeField] RectTransform m_InputArea;
@@ -130,6 +133,7 @@ public class UIInputReceiver : UIEntity
 			if (handle.Select(area) && SelectHandle(_PointerID, handle))
 			{
 				handle.TouchDown(_PointerID, area);
+				OnSelect?.Invoke(handle);
 				return;
 			}
 		}

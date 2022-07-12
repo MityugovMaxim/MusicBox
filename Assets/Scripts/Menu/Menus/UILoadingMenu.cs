@@ -76,6 +76,7 @@ public class UILoadingMenu : UIAnimationMenu
 		{
 			await Task.Delay(500);
 			
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 			
 			m_TutorialController.Start();
@@ -119,6 +120,7 @@ public class UILoadingMenu : UIAnimationMenu
 		{
 			await Task.Delay(500);
 			
+			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 			
 			m_SongController.Start();

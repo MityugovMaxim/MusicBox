@@ -1,23 +1,41 @@
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class UITutorialOverlay : UIGroup
+public class UITutorialOverlay : UIOrder
 {
-	[SerializeField] Graphic m_Top;
-	[SerializeField] Graphic m_Center;
-	[SerializeField] Graphic m_Bottom;
-	[SerializeField] float   m_SourceHeight;
-	[SerializeField] float   m_TargetHeight;
-	[SerializeField] float   m_Ratio;
+	float Phase
+	{
+		get => m_Phase;
+		set
+		{
+			if (Mathf.Approximately(m_Phase, value))
+				return;
+			
+			m_Phase = value;
+			
+			ProcessPhase();
+		}
+	}
 
 	[SerializeField, Range(0, 1)] float m_Phase;
+
+	[SerializeField] UISprite m_Top;
+	[SerializeField] UISprite m_Center;
+	[SerializeField] UISprite m_Bottom;
+	[SerializeField] float    m_SourceAlpha = 0;
+	[SerializeField] float    m_TargetAlpha = 0.7f;
+	[SerializeField] float    m_SourceHeight;
+	[SerializeField] float    m_TargetHeight;
+	[SerializeField] float    m_Ratio;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
 		base.OnValidate();
+		
+		if (!IsInstanced || Application.isPlaying)
+			return;
 		
 		ProcessRatio();
 		
@@ -36,67 +54,58 @@ public class UITutorialOverlay : UIGroup
 
 	void ProcessPhase()
 	{
-		float height = Mathf.Lerp(m_SourceHeight, m_TargetHeight, m_Phase);
+		float alpha  = Mathf.Lerp(m_SourceAlpha, m_TargetAlpha, Phase);
+		float height = Mathf.Lerp(m_SourceHeight, m_TargetHeight, Phase);
 		
-		m_Top.rectTransform.offsetMin = new Vector2(0, height * 0.5f);
+		m_Top.Alpha    = alpha;
+		m_Center.Alpha = alpha;
+		m_Bottom.Alpha = alpha;
 		
-		Vector2 size = m_Center.rectTransform.sizeDelta;
+		m_Top.RectTransform.offsetMin = new Vector2(0, height * 0.5f);
+		
+		Vector2 size = m_Center.RectTransform.sizeDelta;
 		size.y = height;
-		m_Center.rectTransform.sizeDelta = size;
+		m_Center.RectTransform.sizeDelta = size;
 		
-		m_Bottom.rectTransform.offsetMax = new Vector2(0, -height * 0.5f);
+		m_Bottom.RectTransform.offsetMax = new Vector2(0, -height * 0.5f);
 	}
 
 	void ProcessRatio()
 	{
 		float position = 1.0f - m_Ratio;
 		
-		m_Top.rectTransform.anchorMin = new Vector2(0, position);
-		m_Top.rectTransform.anchorMax = new Vector2(1, 1);
+		m_Top.RectTransform.anchorMin = new Vector2(0, position);
+		m_Top.RectTransform.anchorMax = new Vector2(1, 1);
 		
-		m_Center.rectTransform.anchorMin = new Vector2(0, position);
-		m_Center.rectTransform.anchorMax = new Vector2(1, position);
+		m_Center.RectTransform.anchorMin = new Vector2(0, position);
+		m_Center.RectTransform.anchorMax = new Vector2(1, position);
 		
-		m_Bottom.rectTransform.anchorMin = new Vector2(0, 0);
-		m_Bottom.rectTransform.anchorMax = new Vector2(1, position);
+		m_Bottom.RectTransform.anchorMin = new Vector2(0, 0);
+		m_Bottom.RectTransform.anchorMax = new Vector2(1, position);
 	}
 
-	protected override Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
+	public Task ShowAsync(CancellationToken _Token = default)
 	{
-		return Task.WhenAll(
-			base.ShowAnimation(_Duration, _Instant, _Token),
-			HeightAnimation(_Duration, 1, _Instant, _Token)
-		);
-	}
-
-	protected override Task HideAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
-	{
-		return Task.WhenAll(
-			base.HideAnimation(_Duration, _Instant, _Token),
-			HeightAnimation(_Duration, 0, _Instant, _Token)
-		);
-	}
-
-	Task HeightAnimation(float _Duration, float _Target, bool _Instant = false, CancellationToken _Token = default)
-	{
-		if (_Instant)
-		{
-			m_Phase = _Target;
-			ProcessPhase();
-			return Task.CompletedTask;
-		}
-		
-		float source = m_Phase;
-		float target = _Target;
+		float source = Phase;
+		float target = 1;
 		
 		return UnityTask.Phase(
-			_Phase =>
-			{
-				m_Phase = EaseFunction.EaseInQuad.Get(source, target, _Phase);
-				
-				ProcessPhase();
-			},
-			_Duration,
+			_Phase => Phase = Mathf.Lerp(source, target, _Phase),
+			0.3f,
+			EaseFunction.EaseOutCubic,
+			_Token
+		);
+	}
+
+	public Task HideAsync(CancellationToken _Token = default)
+	{
+		float source = Phase;
+		float target = 0;
+		
+		return UnityTask.Phase(
+			_Phase => Phase = Mathf.Lerp(source, target, _Phase),
+			0.15f,
+			EaseFunction.EaseIn,
 			_Token
 		);
 	}

@@ -313,6 +313,24 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 		return count;
 	}
 
+	public float CalcLength(int _Samples)
+	{
+		int samples = Samples;
+		
+		m_Samples = _Samples;
+		
+		GenerateLUT();
+		
+		if (Loop)
+			GenerateLoopPoints();
+		else
+			GenerateStraightPoints();
+		
+		m_Samples = samples;
+		
+		return GetLength(1);
+	}
+
 	public float GetLength(float _Phase)
 	{
 		if (m_LUT.Count == 0)

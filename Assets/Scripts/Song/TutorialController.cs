@@ -36,6 +36,11 @@ public class TutorialController
 		await ResourceManager.UnloadAsync();
 		
 		TutorialPlayer player = await ResourceManager.LoadAsync<TutorialPlayer>(TUTORIAL_PATH);
+		if (ReferenceEquals(player, null))
+		{
+			Log.Error(this, "Load tutorial failed. Player with ID '{0}' is null.", TUTORIAL_PATH);
+			return false;
+		}
 		
 		float ratio = m_ConfigProcessor.SongRatio;
 		float speed = TUTORIAL_SPEED;
@@ -48,17 +53,16 @@ public class TutorialController
 		
 		UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>();
 		if (tutorialMenu != null)
-		{
-			tutorialMenu.Show(true);
 			m_Player.AddSampler(tutorialMenu.Sampler);
-		}
+		
+		await m_MenuProcessor.Show(MenuType.TutorialMenu, true);
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Sample();
 		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.TutorialStart);
-		
 		await UnityTask.Yield();
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.TutorialStart);
 		
 		return true;
 	}
