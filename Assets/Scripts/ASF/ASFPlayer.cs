@@ -54,7 +54,8 @@ namespace AudioBox.ASF
 
 		public ASFPlayerState State { get; private set; } = ASFPlayerState.Stop;
 
-		protected AudioSource AudioSource => m_AudioSource;
+		protected IReadOnlyCollection<IASFSampler> Samplers    => m_Samplers;
+		protected AudioSource                      AudioSource => m_AudioSource;
 
 		float MinTime => m_Duration * (m_Ratio - 1);
 
@@ -170,7 +171,12 @@ namespace AudioBox.ASF
 			foreach (ASFTrack track in m_Tracks)
 				track.Sample(Time, minTime, maxTime);
 			
-			foreach (IASFSampler sampler in m_Samplers)
+			ProcessSamplers();
+		}
+
+		protected virtual void ProcessSamplers()
+		{
+			foreach (IASFSampler sampler in Samplers)
 				sampler.Sample(Time, Length);
 		}
 

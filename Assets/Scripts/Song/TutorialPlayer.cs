@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
+using UnityEngine.Video;
 using Zenject;
 
 public class TutorialPlayer : ASFPlayer
@@ -19,21 +21,31 @@ public class TutorialPlayer : ASFPlayer
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
 	[SerializeField] UIHoldTrack     m_HoldTrack;
 
+	[SerializeField] UITutorialFingers m_Fingers;
 	[SerializeField] UITutorialOverlay m_InputOverlay;
 	[SerializeField] UITutorialOverlay m_ComboOverlay;
+	[SerializeField] UITutorialLabel   m_HealthLabel;
+	[SerializeField] UITutorialLabel   m_ComboLabel;
 	[SerializeField] UITutorialLabel   m_TapLabel;
 	[SerializeField] UITutorialLabel   m_DoubleLabel;
 	[SerializeField] UITutorialLabel   m_HoldLabel;
 	[SerializeField] UITutorialLabel   m_BendLabel;
 	[SerializeField] UITutorialLabel   m_CompleteLabel;
 
-	[SerializeField, Sound] string m_OverlaySound;
-	[SerializeField, Sound] string m_TapSuccessSound;
-	[SerializeField, Sound] string m_DoubleSuccessSound;
-	[SerializeField, Sound] string m_HoldHitSound;
-	[SerializeField, Sound] string m_HoldSuccessSound;
+	[SerializeField, Path(typeof(VideoClip))] string m_TapVideoClip;
+	[SerializeField, Path(typeof(VideoClip))] string m_DoubleVideoClip;
+	[SerializeField, Path(typeof(VideoClip))] string m_HoldVideoClip;
+	[SerializeField, Path(typeof(VideoClip))] string m_BendVideoClip;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[SerializeField, Sound] string m_TapSound;
+	[SerializeField, Sound] string m_DoubleSound;
+	[SerializeField, Sound] string m_HoldSound;
+	[SerializeField, Sound] string m_BendSound;
+
+	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] ConfigProcessor m_ConfigProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
 
 	Action m_Finished;
 
@@ -57,6 +69,8 @@ public class TutorialPlayer : ASFPlayer
 			m_InputReceiver.Sample();
 	}
 
+	protected override void ProcessSamplers() { }
+
 	public void Setup(float _Ratio, float _Speed, Action _Finished)
 	{
 		Rect rect = GetLocalRect();
@@ -66,14 +80,25 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_Finished = _Finished;
 		
-		m_InputOverlay.Setup(Ratio);
 		m_InputReceiver.Setup(Ratio);
+		m_InputOverlay.Setup(Ratio);
+		m_Fingers.Setup(Ratio);
 		
 		AddTrack(new ASFTapTrack(m_TapTrack));
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));
 		AddTrack(new ASFHoldTrack(m_HoldTrack));
 		AddTrack(new ASFHoldTrack(m_HoldTrack));
 		AddTrack(new ASFColorTrack(m_ColorTrack, m_ColorTrack));
+		
+		ASFColorClip color = new ASFColorClip(
+			0,
+			new Color(0, 1, 0.87f),
+			new Color(1, 0.25f, 0.5f),
+			new Color(1, 1, 1, 0.75f),
+			new Color(1, 0.25f, 0.5f)
+		);
+		
+		AddClips(color);
 	}
 
 	public async void Process()
@@ -90,21 +115,39 @@ public class TutorialPlayer : ASFPlayer
 		
 		try
 		{
+			await HealthTutorialAsync(token);
+			
+			await ComboTutorialAsync(token);
+			
 			bool tapSuccess = await TapTutorialAsync(token);
 			if (!tapSuccess)
+			{
+				await PlayVideoAsync(m_TapVideoClip, token);
 				await TapTutorialAsync(token);
+			}
 			
 			bool doubleSuccess = await DoubleTutorialAsync(token);
 			if (!doubleSuccess)
+			{
+				await PlayVideoAsync(m_DoubleVideoClip, token);
 				await DoubleTutorialAsync(token);
+			}
 			
 			bool holdSuccess = await HoldTutorialAsync(token);
 			if (!holdSuccess)
+			{
+				await PlayVideoAsync(m_HoldVideoClip, token);
 				await HoldTutorialAsync(token);
+			}
 			
 			bool bendSuccess = await BendTutorialAsync(token);
 			if (!bendSuccess)
+			{
+				await PlayVideoAsync(m_BendVideoClip, token);
 				await BendTutorialAsync(token);
+			}
+			
+			await CompleteTutorialAsync(token);
 		}
 		catch (TaskCanceledException)
 		{
@@ -127,13 +170,56 @@ public class TutorialPlayer : ASFPlayer
 		m_ColorTrack.Clear();
 	}
 
-	async Task<bool> TapTutorialAsync(CancellationToken _Token = default)
+	async Task HealthTutorialAsync(CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			throw new TaskCanceledException("Heath tutorial canceled.");
+		
+		await m_InputOverlay.ShowAsync(_Token);
+		
+		m_HealthLabel.Show();
+		
+		await Task.Delay(3000, _Token);
+		
+		m_HealthLabel.Hide();
+		
+		await m_InputOverlay.HideAsync(_Token);
+	}
+
+	async Task ComboTutorialAsync(CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			throw new TaskCanceledException("Combo tutorial canceled.");
+		
+		await m_ComboOverlay.ShowAsync(_Token);
+		
+		m_ComboLabel.Show();
+		
+		await Task.Delay(3000, _Token);
+		
+		m_ComboLabel.Hide();
+		
+		await m_ComboOverlay.HideAsync(_Token);
+	}
+
+	async Task CompleteTutorialAsync(CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			throw new TaskCanceledException("Complete tutorial canceled.");
+		
+		m_CompleteLabel.Show();
+		
+		await Task.Delay(4000, _Token);
+	}
+
+	Task<bool> TapTutorialAsync(CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
 			throw new TaskCanceledException("Tap tutorial canceled.");
 		
-		AddClips(
-			new ASFTapClip(0, GetPosition(4)),   // 1
+		ASFTapClip[] clips =
+		{
+			new ASFTapClip(0, GetPosition(3)),   // 1
 			new ASFTapClip(1.5, GetPosition(4)), // 2
 			new ASFTapClip(3, GetPosition(3)),   // 3
 			new ASFTapClip(4.5, GetPosition(2)), // 4
@@ -141,50 +227,34 @@ public class TutorialPlayer : ASFPlayer
 			new ASFTapClip(7.5, GetPosition(2)), // 6
 			new ASFTapClip(9, GetPosition(3)),   // 7
 			new ASFTapClip(10.5, GetPosition(4)) // 8
+		};
+		
+		ASFColorClip color = new ASFColorClip(
+			0,
+			new Color(0, 1, 0.87f),
+			new Color(1, 0.25f, 0.5f),
+			new Color(1, 1, 1, 0.75f),
+			new Color(1, 0.25f, 0.5f)
 		);
 		
-		AddTapColors(10.5f);
-		
-		int success = 0;
-		
-		void ComboChanged(int _Combo, ScoreGrade _Grade)
-		{
-			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
-				success++;
-		}
-		
-		m_Input = false;
-		
-		m_ScoreManager.OnComboChanged += ComboChanged;
-		
-		await SampleAsync(Duration, _Token);
-		
-		await m_InputOverlay.ShowAsync(_Token);
-		
-		m_TapLabel.Show();
-		
-		await InputAsync(_Token);
-		
-		m_TapLabel.Hide();
-		
-		await Task.WhenAll(
-			m_InputOverlay.HideAsync(_Token),
-			SampleAsync(10.5f + Duration, _Token)
+		return TutorialAsync(
+			clips,
+			color,
+			m_TapLabel,
+			UITutorialFingers.Gesture.Tap,
+			m_ConfigProcessor.TutorialTapThreshold,
+			m_TapSound,
+			_Token
 		);
-		
-		m_ScoreManager.OnComboChanged -= ComboChanged;
-		
-		m_Input = false;
-		
-		return success >= 6;
 	}
 
-	async Task<bool> DoubleTutorialAsync(CancellationToken _Token = default)
+	Task<bool> DoubleTutorialAsync(CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
 			throw new TaskCanceledException("Double tutorial canceled.");
 		
-		AddClips(
+		ASFDoubleClip[] clips =
+		{
 			new ASFDoubleClip(0),  // 1
 			new ASFDoubleClip(2),  // 2
 			new ASFDoubleClip(4),  // 3
@@ -193,116 +263,151 @@ public class TutorialPlayer : ASFPlayer
 			new ASFDoubleClip(10), // 6
 			new ASFDoubleClip(12), // 7
 			new ASFDoubleClip(14)  // 8
+		};
+		
+		ASFColorClip color = new ASFColorClip(
+			0,
+			new Color(1, 0.5f, 0),
+			new Color(1, 0, 0.15f),
+			new Color(1, 1, 1, 0.75f),
+			new Color(1, 0, 0.15f)
 		);
 		
-		AddDoubleColors(14);
-		
-		int success = 0;
-		
-		void ComboChanged(int _Combo, ScoreGrade _Grade)
-		{
-			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
-				success++;
-		}
-		
-		m_Input = false;
-		
-		m_ScoreManager.OnComboChanged += ComboChanged;
-		
-		await SampleAsync(Duration, _Token);
-		
-		await m_InputOverlay.ShowAsync(_Token);
-		
-		m_DoubleLabel.Show();
-		
-		await InputAsync(_Token);
-		
-		m_DoubleLabel.Hide();
-		
-		await Task.WhenAll(
-			m_InputOverlay.HideAsync(_Token),
-			SampleAsync(14 + Duration, _Token)
+		return TutorialAsync(
+			clips,
+			color,
+			m_DoubleLabel,
+			UITutorialFingers.Gesture.Double,
+			m_ConfigProcessor.TutorialDoubleThreshold,
+			m_DoubleSound,
+			_Token
 		);
-		
-		m_ScoreManager.OnComboChanged -= ComboChanged;
-		
-		m_Input = false;
-		
-		return success >= 6;
 	}
 
-	async Task<bool> HoldTutorialAsync(CancellationToken _Token = default)
+	Task<bool> HoldTutorialAsync(CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
 			throw new TaskCanceledException("Hold tutorial canceled.");
 		
-		AddClips(
-			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(4))), // 1
+		ASFHoldClip[] clips =
+		{
+			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(3))), // 1
 			new ASFHoldClip(3,   5, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(4))), // 2
 			new ASFHoldClip(6,   8, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(3))), // 3
 			new ASFHoldClip(9,  11, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(2))), // 4
 			new ASFHoldClip(12, 14, new ASFHoldClip.Key(0, GetPosition(1)), new ASFHoldClip.Key(2, GetPosition(1)))  // 5
+		};
+		
+		ASFColorClip color = new ASFColorClip(
+			0,
+			new Color(0, 1, 0.3f),
+			new Color(0, 0.6f, 1),
+			new Color(1, 1, 1, 0.75f),
+			new Color(0, 0.6f, 1)
 		);
 		
-		AddHoldColors(14);
-		
-		int success = 0;
-		
-		void ComboChanged(int _Combo, ScoreGrade _Grade)
-		{
-			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
-				success++;
-		}
-		
-		m_Input = false;
-		
-		m_ScoreManager.OnComboChanged += ComboChanged;
-		
-		await SampleAsync(Duration, _Token);
-		
-		await m_InputOverlay.ShowAsync(_Token);
-		
-		m_HoldLabel.Show();
-		
-		await InputAsync(_Token);
-		
-		m_HoldLabel.Hide();
-		
-		await Task.WhenAll(
-			m_InputOverlay.HideAsync(_Token),
-			SampleAsync(14 + Duration, _Token)
+		return TutorialAsync(
+			clips,
+			color,
+			m_HoldLabel,
+			UITutorialFingers.Gesture.Hold,
+			m_ConfigProcessor.TutorialHoldThreshold,
+			m_HoldSound,
+			_Token
 		);
-		
-		m_ScoreManager.OnComboChanged -= ComboChanged;
-		
-		m_Input = false;
-		
-		return success >= 3;
 	}
 
-	async Task<bool> BendTutorialAsync(CancellationToken _Token = default)
+	Task<bool> BendTutorialAsync(CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
 			throw new TaskCanceledException("Bend tutorial canceled.");
 		
-		AddClips(
-			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(3))), // 1
+		ASFHoldClip[] clips =
+		{
+			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(2))), // 1
 			new ASFHoldClip(3,   5, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(3))), // 2
 			new ASFHoldClip(6,   8, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(2))), // 3
 			new ASFHoldClip(9,  11, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(1))), // 4
 			new ASFHoldClip(12, 14, new ASFHoldClip.Key(0, GetPosition(1)), new ASFHoldClip.Key(2, GetPosition(2))), // 5
 			new ASFHoldClip(15, 17, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(3))), // 6
 			new ASFHoldClip(18, 20, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(4)))  // 7
+		};
+		
+		ASFColorClip color = new ASFColorClip(
+			0,
+			new Color(0.65f, 0, 1),
+			new Color(0, 0.45f, 1),
+			new Color(1, 1, 1, 0.75f),
+			new Color(0, 0.45f, 1)
 		);
 		
-		AddBendColors(20);
+		return TutorialAsync(
+			clips,
+			color,
+			m_BendLabel,
+			UITutorialFingers.Gesture.Bend,
+			m_ConfigProcessor.TutorialBendThreshold,
+			m_BendSound,
+			_Token
+		);
+	}
+
+	async Task<bool> TutorialAsync<TClip>(
+		TClip[]                   _Clips,
+		ASFColorClip              _Color,
+		UITutorialLabel           _Label,
+		UITutorialFingers.Gesture _Gesture,
+		float                     _Threshold,
+		string                    _Sound,
+		CancellationToken         _Token = default
+	) where TClip : ASFClip
+	{
+		if (_Clips == null || _Clips.Length == 0)
+			return true;
 		
-		int success = 0;
+		float minTime = (float)_Clips[0].MinTime;
+		float maxTime = (float)_Clips[^1].MaxTime;
+		
+		AddClips(_Clips);
+		
+		ASFColorTrack track = GetTrack<ASFColorTrack>();
+		ASFColorClip  color = track?.Clips.LastOrDefault();
+		
+		if (color != null && color.Clone() is ASFColorClip startColor)
+		{
+			startColor.Time = minTime;
+			AddClips(startColor);
+		}
+		
+		if (_Color != null)
+		{
+			if (_Color.Clone() is ASFColorClip sourceColor)
+			{
+				sourceColor.Time = minTime + 0.05f;
+				AddClips(sourceColor);
+			}
+			
+			if (_Color.Clone() is ASFColorClip targetColor)
+			{
+				targetColor.Time = maxTime;
+				AddClips(targetColor);
+			}
+		}
+		
+		int progress  = 0;
+		int threshold = (int)(_Clips.Length * _Threshold);
+		
+		AudioClip sound = m_SoundProcessor.GetSound(_Sound);
 		
 		void ComboChanged(int _Combo, ScoreGrade _Grade)
 		{
 			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
-				success++;
+			{
+				AudioSource.PlayOneShot(sound);
+				progress++;
+			}
+			
+			ProcessSamplers(progress, threshold);
 		}
 		
 		m_Input = false;
@@ -313,22 +418,50 @@ public class TutorialPlayer : ASFPlayer
 		
 		await m_InputOverlay.ShowAsync(_Token);
 		
-		m_BendLabel.Show();
+		_Label.Show();
+		
+		m_Fingers.Show(_Gesture);
 		
 		await InputAsync(_Token);
 		
-		m_BendLabel.Hide();
+		_Label.Hide();
+		
+		m_Fingers.Hide();
 		
 		await Task.WhenAll(
 			m_InputOverlay.HideAsync(_Token),
-			SampleAsync(20 + Duration, _Token)
+			SampleAsync(maxTime + Duration, _Token)
 		);
 		
 		m_ScoreManager.OnComboChanged -= ComboChanged;
 		
 		m_Input = false;
 		
-		return success >= 3;
+		ProcessSamplers(0, threshold);
+		
+		return progress >= threshold;
+	}
+
+	async Task PlayVideoAsync(string _VideoClip, CancellationToken _Token = default)
+	{
+		if (string.IsNullOrEmpty(_VideoClip))
+			return;
+		
+		VideoClip clip = await ResourceManager.LoadAsync<VideoClip>(_VideoClip, _Token);
+		
+		if (clip == null)
+			return;
+		
+		UIVideoMenu videoMenu = m_MenuProcessor.GetMenu<UIVideoMenu>();
+		
+		if (videoMenu == null)
+			return;
+		
+		videoMenu.Setup(clip);
+		
+		await m_MenuProcessor.Show(MenuType.VideoMenu);
+		
+		await videoMenu.ProcessAsync();
 	}
 
 	static float GetPosition(int _Position)
@@ -351,86 +484,6 @@ public class TutorialPlayer : ASFPlayer
 		}
 		
 		Sample();
-	}
-
-	void AddTapColors(float _Duration)
-	{
-		AddClips(
-			new ASFColorClip(
-				0,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			),
-			new ASFColorClip(
-				_Duration,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			)
-		);
-	}
-
-	void AddDoubleColors(float _Duration)
-	{
-		AddClips(
-			new ASFColorClip(
-				0,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			),
-			new ASFColorClip(
-				_Duration,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			)
-		);
-	}
-
-	void AddHoldColors(float _Duration)
-	{
-		AddClips(
-			new ASFColorClip(
-				0,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			),
-			new ASFColorClip(
-				_Duration,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			)
-		);
-	}
-
-	void AddBendColors(float _Duration)
-	{
-		AddClips(
-			new ASFColorClip(
-				0,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			),
-			new ASFColorClip(
-				_Duration,
-				new Color(0, 1, 0.87f),
-				new Color(1, 0.25f, 0.5f),
-				new Color(1, 1, 1, 0.75f),
-				new Color(1, 0.25f, 0.5f)
-			)
-		);
 	}
 
 	Task SampleAsync(float _Duration, CancellationToken _Token = default)
@@ -473,5 +526,11 @@ public class TutorialPlayer : ASFPlayer
 			},
 			_Token
 		);
+	}
+
+	void ProcessSamplers(int _Progress, int _Threshold)
+	{
+		foreach (IASFSampler sampler in Samplers)
+			sampler.Sample(_Progress, _Threshold);
 	}
 }

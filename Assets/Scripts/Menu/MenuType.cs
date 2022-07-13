@@ -22,4 +22,5 @@ public enum MenuType
 	SetupMenu      = 19,
 	ConfirmMenu    = 20,
 	TutorialMenu   = 21,
+	VideoMenu      = 22,
 }

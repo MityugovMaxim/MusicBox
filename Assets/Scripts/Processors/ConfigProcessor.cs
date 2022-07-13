@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.RemoteConfig;
 using UnityEngine.Scripting;
 
@@ -37,16 +38,16 @@ public class ConfigProcessor
 	const string SCORE_GREAT_THRESHOLD   = "score_great_threshold";
 	const string SCORE_GOOD_THRESHOLD    = "score_good_threshold";
 
-	const string ADS_COOLDOWN           = "ads_cooldown";
-	const string SONG_RESTART_ADS_COUNT = "song_restart_ads_count";
-	const string SONG_LEAVE_ADS_COUNT   = "song_leave_ads_count";
-	const string SONG_NEXT_ADS_COUNT    = "song_next_ads_count";
-	const string SONG_PLAY_ADS_COUNT    = "song_play_ads_count";
+	const string ADS_COOLDOWN = "ads_cooldown";
 
 	const string INPUT_EXTEND = "input_extend";
 	const string INPUT_OFFSET = "input_offset";
 
-	const string REVIEW_REQUEST_COUNT    = "review_request_count";
+	const string TUTORIAL_TAP_THRESHOLD    = "tutorial_tap_threshold";
+	const string TUTORIAL_DOUBLE_THRESHOLD = "tutorial_double_threshold";
+	const string TUTORIAL_HOLD_THRESHOLD   = "tutorial_hold_threshold";
+	const string TUTORIAL_BEND_THRESHOLD   = "tutorial_bend_threshold";
+
 	const string SONG_LIBRARY_GROUP_SIZE = "song_library_group_size";
 
 	public int   ComboX2                 => GetInt(COMBO_X2);
@@ -71,63 +72,63 @@ public class ConfigProcessor
 	public float ScoreGreatThreshold     => GetFloat(SCORE_GREAT_THRESHOLD);
 	public float ScoreGoodThreshold      => GetFloat(SCORE_GOOD_THRESHOLD);
 	public float AdsCooldown             => GetFloat(ADS_COOLDOWN);
-	public int   SongRestartAdsCount     => GetInt(SONG_RESTART_ADS_COUNT);
-	public int   SongLeaveAdsCount       => GetInt(SONG_LEAVE_ADS_COUNT);
-	public int   SongNextAdsCount        => GetInt(SONG_NEXT_ADS_COUNT);
-	public int   SongPlayAdsCount        => GetInt(SONG_PLAY_ADS_COUNT);
 	public float InputExtend             => GetFloat(INPUT_EXTEND);
 	public float InputOffset             => GetFloat(INPUT_OFFSET);
-	public int   ReviewRequestCount      => GetInt(REVIEW_REQUEST_COUNT);
+	public float TutorialTapThreshold    => GetFloat(TUTORIAL_TAP_THRESHOLD);
+	public float TutorialDoubleThreshold => GetFloat(TUTORIAL_DOUBLE_THRESHOLD);
+	public float TutorialHoldThreshold   => GetFloat(TUTORIAL_HOLD_THRESHOLD);
+	public float TutorialBendThreshold   => GetFloat(TUTORIAL_BEND_THRESHOLD);
 	public int   SongLibraryGroupSize    => GetInt(SONG_LIBRARY_GROUP_SIZE);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
+		// Ads
+		{ ADS_COOLDOWN, 40 },
+		
 		// Combo
 		{ COMBO_X2, 10 },
-		{ COMBO_X4, 30 },
-		{ COMBO_X6, 60 },
-		{ COMBO_X8, 120 },
+		{ COMBO_X4, 25 },
+		{ COMBO_X6, 45 },
+		{ COMBO_X8, 70 },
 		
 		// Game
 		{ SONG_RATIO, 0.75f },
-		{ SONG_IFRAMES, 0.75f },
-		
-		// Tap
-		{ TAP_BAD_MULTIPLIER, 100 },
-		{ TAP_GOOD_MULTIPLIER, 200 },
-		{ TAP_GREAT_MULTIPLIER, 300 },
-		{ TAP_PERFECT_MULTIPLIER, 400 },
-		
-		// Double
-		{ DOUBLE_BAD_MULTIPLIER, 100 },
-		{ DOUBLE_GOOD_MULTIPLIER, 500 },
-		{ DOUBLE_GREAT_MULTIPLIER, 750 },
-		{ DOUBLE_PERFECT_MULTIPLIER, 1000 },
-		
-		// Hold
-		{ HOLD_BAD_MULTIPLIER, 100 },
-		{ HOLD_GOOD_MULTIPLIER, 800 },
-		{ HOLD_GREAT_MULTIPLIER, 1200 },
-		{ HOLD_PERFECT_MULTIPLIER, 1600 },
+		{ SONG_IFRAMES, 0.8f },
 		
 		// Score
-		{ SCORE_GOOD_THRESHOLD, 0.5 },
-		{ SCORE_GREAT_THRESHOLD, 0.7f },
-		{ SCORE_PERFECT_THRESHOLD, 0.85f },
-		
-		// Ads
-		{ ADS_COOLDOWN, 40 },
-		{ SONG_RESTART_ADS_COUNT, 2 },
-		{ SONG_LEAVE_ADS_COUNT, 3 },
-		{ SONG_NEXT_ADS_COUNT, 2 },
-		{ SONG_PLAY_ADS_COUNT, 4 },
+		{ SCORE_GOOD_THRESHOLD, 0.4f },
+		{ SCORE_GREAT_THRESHOLD, 0.6f },
+		{ SCORE_PERFECT_THRESHOLD, 0.8f },
 		
 		// Input
 		{ INPUT_EXTEND, 30 },
-		{ INPUT_OFFSET, 10 },
+		{ INPUT_OFFSET, 5 },
 		
-		// Other
-		{ REVIEW_REQUEST_COUNT, 2 },
+		// Tap
+		{ TAP_BAD_MULTIPLIER, 80 },
+		{ TAP_GOOD_MULTIPLIER, 180 },
+		{ TAP_GREAT_MULTIPLIER, 250 },
+		{ TAP_PERFECT_MULTIPLIER, 300 },
+		
+		// Double
+		{ DOUBLE_BAD_MULTIPLIER, 250 },
+		{ DOUBLE_GOOD_MULTIPLIER, 600 },
+		{ DOUBLE_GREAT_MULTIPLIER, 850 },
+		{ DOUBLE_PERFECT_MULTIPLIER, 1000 },
+		
+		// Hold
+		{ HOLD_BAD_MULTIPLIER, 200 },
+		{ HOLD_GOOD_MULTIPLIER, 550 },
+		{ HOLD_GREAT_MULTIPLIER, 700 },
+		{ HOLD_PERFECT_MULTIPLIER, 800 },
+		
+		// Tutorial
+		{ TUTORIAL_TAP_THRESHOLD, 0.6f },
+		{ TUTORIAL_DOUBLE_THRESHOLD, 0.6f },
+		{ TUTORIAL_HOLD_THRESHOLD, 0.6f },
+		{ TUTORIAL_BEND_THRESHOLD, 0.6f },
+		
+		// Menu
 		{ SONG_LIBRARY_GROUP_SIZE, 4 },
 	};
 
@@ -138,7 +139,14 @@ public class ConfigProcessor
 		
 		await FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(m_DefaultValues);
 		
-		await FirebaseRemoteConfig.DefaultInstance.FetchAsync(TimeSpan.Zero);
+		try
+		{
+			await FirebaseRemoteConfig.DefaultInstance.FetchAsync(TimeSpan.Zero);
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		await FirebaseRemoteConfig.DefaultInstance.ActivateAsync();
 	}

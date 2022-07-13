@@ -8,7 +8,7 @@ using Zenject;
 public class TutorialController
 {
 	const string TUTORIAL_PATH  = "tutorial";
-	const float  TUTORIAL_SPEED = 800;
+	const float  TUTORIAL_SPEED = 600;
 
 	[Inject] ConfigProcessor        m_ConfigProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
