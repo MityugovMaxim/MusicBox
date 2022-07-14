@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
-using AppLovinMax.ThirdParty.MiniJson;
 #if UNITY_ANDROID
 using Unity.Notifications.Android;
 #elif UNITY_IOS
@@ -89,11 +88,12 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 
 	protected abstract void ClearBadges();
 
-	public void Schedule(string _Title, string _Message, string _URL, TimeSpan _Span)
+	public void Schedule(string _Name, string _Title, string _Message, string _URL, TimeSpan _Span)
 	{
 		long timestamp = DateTimeOffset.Now.Add(_Span).ToUnixTimeMilliseconds();
 		
 		Schedule(
+			_Name,
 			_Title,
 			_Message,
 			_URL,
@@ -102,6 +102,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 	}
 
 	public abstract void Schedule(
+		string _Name,
 		string _Title,
 		string _Message,
 		string _URL,
@@ -127,30 +128,65 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 public class AndroidMessageProcessor : MessageProcessor
 {
 	public override void Schedule(
+		string _Name,
 		string _Title,
 		string _Message,
 		string _URL,
 		long   _Timestamp
 	)
 	{
-		DateTimeOffset date = DateTimeOffset
-			.FromUnixTimeMilliseconds(_Timestamp)
-			.ToLocalTime();
-		
 		AndroidNotification notification = new AndroidNotification()
 		{
 			Title      = _Title,
 			Text       = _Message,
 			IntentData = _URL,
-			FireTime   = date.DateTime,
+			FireTime   = TimeUtility.GetLocalTime(_Timestamp),
 		};
 		
-		AndroidNotificationCenter.SendNotification(notification, string.Empty);
+		CancelNotification(_Name);
+		
+		ScheduleNotification(_Name, notification);
 	}
 
 	protected override void ClearBadges()
 	{
-		AndroidNotificationCenter.CancelAllScheduledNotifications();
+		AndroidNotificationCenter.CancelAllDisplayedNotifications();
+	}
+
+	static string GetNotificationKey(string _Name) => $"NOTIFICATION_{_Name}";
+
+	static void CancelNotification(string _Name)
+	{
+		if (string.IsNullOrEmpty(_Name))
+			return;
+		
+		string key = GetNotificationKey(_Name);
+		
+		if (!PlayerPrefs.HasKey(key))
+			return;
+		
+		int notificationID = PlayerPrefs.GetInt(key);
+		
+		NotificationStatus status = AndroidNotificationCenter.CheckScheduledNotificationStatus(notificationID);
+		
+		if (status != NotificationStatus.Scheduled)
+			return;
+		
+		AndroidNotificationCenter.CancelScheduledNotification(notificationID);
+		
+		PlayerPrefs.DeleteKey(key);
+	}
+
+	static void ScheduleNotification(string _Name, AndroidNotification _Notification)
+	{
+		if (string.IsNullOrEmpty(_Name))
+			return;
+		
+		string key = GetNotificationKey(_Name);
+		
+		int notificationID = AndroidNotificationCenter.SendNotification(_Notification, string.Empty);
+		
+		PlayerPrefs.SetInt(key, notificationID);
 	}
 }
 #endif
@@ -160,6 +196,7 @@ public class AndroidMessageProcessor : MessageProcessor
 public class iOSMessageProcessor : MessageProcessor
 {
 	public override void Schedule(
+		string _Name,
 		string _Title,
 		string _Message,
 		string _URL,
@@ -172,6 +209,7 @@ public class iOSMessageProcessor : MessageProcessor
 		
 		iOSNotification notification = new iOSNotification()
 		{
+			Identifier = _Name,
 			Title = _Title,
 			Body  = _Message,
 			Badge = 1,
@@ -196,13 +234,13 @@ public class iOSMessageProcessor : MessageProcessor
 		
 		notification.Data = Json.Serialize(data);
 		
+		iOSNotificationCenter.RemoveScheduledNotification(_Name);
+		
 		iOSNotificationCenter.ScheduleNotification(notification);
 	}
 
 	protected override void ClearBadges()
 	{
-		iOSNotificationCenter.RemoveAllScheduledNotifications();
-		
 		iOSNotificationCenter.ApplicationBadge = 0;
 	}
 }

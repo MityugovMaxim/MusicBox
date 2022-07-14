@@ -13,7 +13,9 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	[SerializeField] UILayout m_Content;
 
 	[Inject] SignalBus             m_SignalBus;
+	[Inject] DailyManager          m_DailyManager;
 	[Inject] ProductsManager       m_ProductsManager;
+	[Inject] UIDailyElement.Pool   m_DailyPool;
 	[Inject] UIProductSpecial.Pool m_SpecialPool;
 	[Inject] UIProductPromo.Pool   m_PromoPool;
 	[Inject] UIProductItem.Pool    m_ItemPool;
@@ -42,9 +44,27 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		CreatePromo();
 		
+		CreateDaily();
+		
 		CreateItems();
 		
 		m_Content.Reposition();
+	}
+
+	void CreateDaily()
+	{
+		List<string> dailyIDs = m_DailyManager.GetDailyIDs();
+		
+		if (dailyIDs == null || dailyIDs.Count == 0)
+			return;
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(new DailyElementEntity(m_DailyPool));
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateSpecial()
@@ -58,6 +78,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		foreach (string productID in productIDs)
 			m_Content.Add(new ProductSpecialEntity(productID, m_SpecialPool));
+		
+		VerticalStackLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
 	}
@@ -74,6 +96,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		foreach (string productID in productIDs)
 			m_Content.Add(new ProductPromoEntity(productID, m_PromoPool));
 		
+		VerticalStackLayout.End(m_Content);
+		
 		m_Content.Space(LIST_SPACING);
 	}
 
@@ -88,6 +112,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		foreach (string productID in productIDs)
 			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));
+		
+		VerticalStackLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
 	}

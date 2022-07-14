@@ -47,8 +47,8 @@ public class ProfileTimer
 	public ProfileTimer(DataSnapshot _Data)
 	{
 		ID             = _Data.Key;
-		StartTimestamp = _Data.GetLong("start_timestamp");
-		EndTimestamp   = _Data.GetLong("end_timestamp");
+		StartTimestamp = _Data.GetLong("start_time");
+		EndTimestamp   = _Data.GetLong("end_time");
 		m_Payload      = _Data.Child("payload").GetValue(true) as Dictionary<string, object>;
 	}
 
@@ -89,7 +89,9 @@ public class ProfileProcessor : IInitializable, IDisposable
 	public int  Discs => m_Snapshot?.Discs ?? 0;
 	public int  Level => m_Snapshot?.Level ?? 1;
 
-	bool Loaded { get; set; }
+	bool Loaded  { get; set; }
+	bool Locked  { get; set; }
+	bool Pending { get; set; }
 
 	[Inject] SignalBus         m_SignalBus;
 	[Inject] SocialProcessor   m_SocialProcessor;
@@ -118,19 +120,38 @@ public class ProfileProcessor : IInitializable, IDisposable
 			Debug.LogFormat("[ProfileProcessor] Change user. From: {0} To: {1}.", m_ProfileData.Key, m_SocialProcessor.UserID);
 			
 			Loaded                     =  false;
-			m_ProfileData.ValueChanged -= OnProfileUpdate;
+			m_ProfileData.ValueChanged -= OnUpdate;
 			m_ProfileData              =  null;
 		}
 		
 		if (m_ProfileData == null)
 		{
 			m_ProfileData              =  FirebaseDatabase.DefaultInstance.RootReference.Child("profiles").Child(m_SocialProcessor.UserID);
-			m_ProfileData.ValueChanged += OnProfileUpdate;
+			m_ProfileData.ValueChanged += OnUpdate;
 		}
 		
-		await FetchProfile();
+		await Fetch();
 		
 		Loaded = true;
+	}
+
+	public void Lock()
+	{
+		Locked = true;
+	}
+
+	public void Unlock()
+	{
+		Locked = false;
+		
+		if (!Pending)
+			return;
+		
+		Debug.LogError("---> RELEASE!!!");
+		
+		Pending = false;
+		
+		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 
 	public bool HasSong(string _SongID)
@@ -200,21 +221,30 @@ public class ProfileProcessor : IInitializable, IDisposable
 		return false;
 	}
 
-	async void OnProfileUpdate(object _Sender, EventArgs _Args)
+	async void OnUpdate(object _Sender, ValueChangedEventArgs _EventArgs)
 	{
 		if (!Loaded || m_ProfileData.Key != m_SocialProcessor.UserID)
 			return;
 		
 		Debug.Log("[ProfileProcessor] Updating profile data...");
 		
-		await FetchProfile();
+		await Fetch();
 		
 		Debug.Log("[ProfileProcessor] Update profile data complete.");
+		
+		if (Locked)
+		{
+			Pending = true;
+			
+			Debug.LogError("---> PENDING!!!");
+			
+			return;
+		}
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 
-	async Task FetchProfile()
+	async Task Fetch()
 	{
 		DataSnapshot profileSnapshot = await m_ProfileData.GetValueAsync(15000, 4);
 		
@@ -233,7 +263,7 @@ public class ProfileProcessor : IInitializable, IDisposable
 		
 		await request.SendAsync();
 		
-		await FetchProfile();
+		await Fetch();
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}

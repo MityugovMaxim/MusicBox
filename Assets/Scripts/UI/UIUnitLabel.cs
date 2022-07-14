@@ -58,6 +58,9 @@ public class UIUnitLabel : UIEntity
 	{
 		base.OnValidate();
 		
+		if (!IsInstanced || Application.isPlaying || m_Label == null)
+			return;
+		
 		ProcessValue();
 	}
 	#endif

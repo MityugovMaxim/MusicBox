@@ -19,6 +19,7 @@ public class UIMainMenuControl : UIEntity
 	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] NewsProcessor   m_NewsProcessor;
 	[Inject] ProductsManager m_ProductsManager;
+	[Inject] DailyManager    m_DailyManager;
 
 	readonly HashSet<string> m_NewsIDs    = new HashSet<string>();
 	readonly HashSet<string> m_OfferIDs   = new HashSet<string>();
@@ -33,10 +34,13 @@ public class UIMainMenuControl : UIEntity
 		if (m_SignalBus == null)
 			return;
 		
+		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Read);
+		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Subscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
 		m_SignalBus.Subscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
+		m_SignalBus.Subscribe<DailyDataUpdateSignal>(ProcessStoreBadge);
 	}
 
 	protected override void OnDisable()
@@ -46,15 +50,21 @@ public class UIMainMenuControl : UIEntity
 		if (m_SignalBus == null)
 			return;
 		
+		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Read);
+		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
 		m_SignalBus.Unsubscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
+		m_SignalBus.Unsubscribe<DailyDataUpdateSignal>(ProcessStoreBadge);
+		
 	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
 		m_PageType = _PageType;
+		
+		Process();
 		
 		Read();
 		
@@ -130,9 +140,12 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		List<string> productIDs = m_ProductsManager.GetProductIDs();
+		int count = GetUnreadCount(STORE_KEY, m_ProductsManager.GetProductIDs(), m_ProductIDs);
 		
-		m_StoreBadge.Value = GetUnreadCount(STORE_KEY, productIDs, m_ProductIDs);
+		if (m_DailyManager.HasDailyAvailable())
+			count += 1;
+		
+		m_StoreBadge.Value = count;
 	}
 
 	void ReadOffers()
@@ -153,7 +166,7 @@ public class UIMainMenuControl : UIEntity
 	{
 		Read(STORE_KEY, m_ProductsManager.GetProductIDs(), m_ProductIDs);
 		
-		m_StoreBadge.Value = 0;
+		m_StoreBadge.Value = m_DailyManager.HasDailyAvailable() ? 1 : 0;
 	}
 
 	int GetUnreadCount(string _Key, IEnumerable<string> _IDs, HashSet<string> _CachedIDs)

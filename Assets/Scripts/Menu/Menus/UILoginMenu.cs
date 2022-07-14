@@ -31,6 +31,7 @@ public class UILoginMenu : UIMenu
 	[Inject] StatisticProcessor    m_StatisticProcessor;
 	[Inject] UrlProcessor          m_UrlProcessor;
 	[Inject] SongsManager          m_SongsManager;
+	[Inject] DailyProcessor        m_DailyProcessor;
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	public async Task Login()
@@ -146,7 +147,8 @@ public class UILoginMenu : UIMenu
 			m_ScoresProcessor.Load(),
 			m_RevivesProcessor.Load(),
 			m_ProfileProcessor.Load(),
-			m_BannersProcessor.Load()
+			m_BannersProcessor.Load(),
+			m_DailyProcessor.Load()
 		);
 	}
 
@@ -177,8 +179,9 @@ public class UILoginMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 		
 		m_MessageProcessor.Schedule(
-			"Audio Box",
-			"Which song you will play for today?",
+			"launch",
+			Application.productName,
+			"Which song you will play for today?", // TODO: Localize
 			"audiobox://play",
 			TimeSpan.FromHours(24)
 		);

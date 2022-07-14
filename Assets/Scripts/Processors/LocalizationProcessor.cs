@@ -78,13 +78,13 @@ public class LocalizationProcessor : IInitializable
 	public string Format(string _Key, object _Arg)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return $"[{m_Language}] FORMAT: INVALID";
+			return $"[{m_Language}] INVALID";
 		
 		if (!m_Localization.TryGetValue(_Key, out string format))
-			return $"[{m_Language}] FORMAT: MISSING {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
-			return $"[{m_Language}] FORMAT: NULL {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		try
 		{
@@ -95,19 +95,19 @@ public class LocalizationProcessor : IInitializable
 			Debug.LogException(exception);
 		}
 		
-		return $"[{m_Language}] FORMAT: ERROR {_Key}";
+		return $"[{m_Language}] ERROR {_Key}";
 	}
 
 	public string Format(string _Key, object _Arg0, object _Arg1)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return $"[{m_Language}] FORMAT: INVALID";
+			return $"[{m_Language}] INVALID";
 		
 		if (!m_Localization.TryGetValue(_Key, out string format))
-			return $"[{m_Language}] FORMAT: MISSING {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
-			return $"[{m_Language}] FORMAT: NULL {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		try
 		{
@@ -118,19 +118,19 @@ public class LocalizationProcessor : IInitializable
 			Debug.LogException(exception);
 		}
 		
-		return $"[{m_Language}] FORMAT: ERROR {_Key}";
+		return $"[{m_Language}] ERROR {_Key}";
 	}
 
 	public string Format(string _Key, object _Arg0, object _Arg1, object _Arg2)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return $"[{m_Language}] FORMAT: INVALID";
+			return $"[{m_Language}] INVALID";
 		
 		if (!m_Localization.TryGetValue(_Key, out string format))
-			return $"[{m_Language}] FORMAT: MISSING {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
-			return $"[{m_Language}] FORMAT: NULL {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		try
 		{
@@ -141,19 +141,19 @@ public class LocalizationProcessor : IInitializable
 			Debug.LogException(exception);
 		}
 		
-		return $"[{m_Language}] FORMAT: ERROR {_Key}";
+		return $"[{m_Language}] ERROR {_Key}";
 	}
 
 	public string Format(string _Key, params object[] _Args)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return $"[{m_Language}] FORMAT: INVALID";
+			return $"[{m_Language}] INVALID";
 		
 		if (!m_Localization.TryGetValue(_Key, out string format))
-			return $"[{m_Language}] FORMAT: MISSING {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
-			return $"[{m_Language}] FORMAT: NULL {_Key}";
+			return $"[{m_Language}] {_Key}";
 		
 		try
 		{
@@ -164,24 +164,24 @@ public class LocalizationProcessor : IInitializable
 			Debug.LogException(exception);
 		}
 		
-		return $"[{m_Language}] FORMAT: ERROR {_Key}";
+		return $"[{m_Language}] ERROR {_Key}";
 	}
 
 	public string Get(string _Key, string _Default = null)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return _Default ?? $"[{m_Language}] GET: INVALID";
+			return _Default ?? $"[{m_Language}] INVALID";
 		
 		if (m_Localization.TryGetValue(_Key, out string value))
-			return value ?? $"[{m_Language}] GET: NULL";
+			return value ?? $"[{m_Language}] NULL";
 		
-		return _Default ?? (string.IsNullOrEmpty(_Key) ? $"[{m_Language}] GET: MISSING NULL" : $"[{m_Language}] GET: MISSING {_Key}");
+		return _Default ?? (string.IsNullOrEmpty(_Key) ? $"[{m_Language}] NULL" : $"[{m_Language}] {_Key}");
 	}
 
 	public string GetBuiltIn(string _Key, string _Default = null)
 	{
 		if (string.IsNullOrEmpty(_Key))
-			return _Default ?? $"BUILT-IN: INVALID KEY";
+			return _Default ?? "BUILT-IN: INVALID";
 		
 		if (m_BuiltIn.TryGetValue(_Key, out string value))
 			return value ?? _Default;

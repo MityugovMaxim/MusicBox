@@ -14,6 +14,8 @@ public class GameInstaller : MonoInstaller
 
 	[SerializeField] UISocialElement m_SocialElement;
 
+	[SerializeField] UIDailyElement m_DailyElement;
+
 	[SerializeField] UISongHeader  m_SongHeader;
 	[SerializeField] UISongItem    m_SongItem;
 	[SerializeField] UISongElement m_SongElement;
@@ -62,6 +64,8 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticAppMetrica>().FromNew().AsSingle();
 		
 		InstallPool<UISocialElement, UISocialElement.Pool>(m_SocialElement, 1);
+		
+		InstallPool<UIDailyElement, UIDailyElement.Pool>(m_DailyElement, 1);
 		
 		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
 		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
@@ -163,6 +167,7 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<ProgressProcessor>();
 		InstallProcessor<ScoresProcessor>();
 		InstallProcessor<RevivesProcessor>();
+		InstallProcessor<DailyProcessor>();
 		
 		InstallProcessor<NewsDescriptor>();
 		InstallProcessor<OffersDescriptor>();
@@ -185,6 +190,7 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<OffersManager>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProductsManager>().FromNew().AsSingle();
+		Container.BindInterfacesAndSelfTo<DailyManager>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
@@ -205,6 +211,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<RevivesDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<DailyDataUpdateSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();
 	}
