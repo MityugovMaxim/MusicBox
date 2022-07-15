@@ -134,9 +134,6 @@ public class UIDailyElement : UIOverlayButton
 
 	Task ShiftAsync()
 	{
-		m_SoundProcessor.Play(m_Sound);
-		m_HapticProcessor.Process(Haptic.Type.ImpactRigid);
-		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = ShiftRoutine(() => completionSource.TrySetResult(true));
@@ -253,6 +250,8 @@ public class UIDailyElement : UIOverlayButton
 		await m_LoaderGroup.HideAsync();
 		
 		m_CenterItem.Collect();
+		m_SoundProcessor.Play(m_Sound);
+		m_HapticProcessor.Process(Haptic.Type.ImpactRigid);
 		
 		await Task.Delay(500);
 		
