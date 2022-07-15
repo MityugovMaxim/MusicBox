@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Messaging;
+using UnityEngine.Purchasing.MiniJSON;
 #if UNITY_ANDROID
 using Unity.Notifications.Android;
 #elif UNITY_IOS
@@ -57,7 +58,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		FirebaseMessaging.TokenReceived   += OnTokenReceived;
 		FirebaseMessaging.MessageReceived += OnMessageReceived;
 		
-		ClearBadges();
+		LoadNotifications();
 		
 		if (string.IsNullOrEmpty(_URL))
 			return;
@@ -86,7 +87,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		Debug.Log("[MessageProcessor] Process topics complete.");
 	}
 
-	protected abstract void ClearBadges();
+	protected abstract void LoadNotifications();
 
 	public void Schedule(string _Name, string _Title, string _Message, string _URL, TimeSpan _Span)
 	{
@@ -114,12 +115,20 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		Debug.LogFormat("[MessageProcessor] Received token: '{0}'.", _Args.Token);
 	}
 
-	async void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
+	void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
 	{
 		Debug.LogFormat("[MessageProcessor] Received message: '{0}'.", _Args.Message.MessageType);
 		
-		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url) && !string.IsNullOrEmpty(url))
-			await m_UrlProcessor.ProcessURL(url);
+		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url))
+			OpenURL(url);
+	}
+
+	protected async void OpenURL(string _URL)
+	{
+		if (string.IsNullOrEmpty(_URL))
+			return;
+		
+		await m_UrlProcessor.ProcessURL(_URL);
 	}
 }
 
@@ -127,6 +136,8 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 [Preserve]
 public class AndroidMessageProcessor : MessageProcessor
 {
+	const string COMMON_CHANNEL_ID = "common";
+
 	public override void Schedule(
 		string _Name,
 		string _Title,
@@ -135,11 +146,15 @@ public class AndroidMessageProcessor : MessageProcessor
 		long   _Timestamp
 	)
 	{
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		data["url"] = _URL;
+		
 		AndroidNotification notification = new AndroidNotification()
 		{
 			Title      = _Title,
 			Text       = _Message,
-			IntentData = _URL,
+			IntentData = Json.Serialize(data),
 			FireTime   = TimeUtility.GetLocalTime(_Timestamp),
 		};
 		
@@ -148,9 +163,40 @@ public class AndroidMessageProcessor : MessageProcessor
 		ScheduleNotification(_Name, notification);
 	}
 
-	protected override void ClearBadges()
+	protected override void LoadNotifications()
 	{
+		AndroidNotificationChannel channel = new AndroidNotificationChannel()
+		{
+			Id          = COMMON_CHANNEL_ID,
+			Name        = "Common Channel",
+			Importance  = Importance.Default,
+			Description = "Common notifications"
+		};
+		
+		AndroidNotificationCenter.RegisterNotificationChannel(channel);
+		
+		ProcessNotification();
+		
 		AndroidNotificationCenter.CancelAllDisplayedNotifications();
+	}
+
+	void ProcessNotification()
+	{
+		AndroidNotificationIntentData intent = AndroidNotificationCenter.GetLastNotificationIntent();
+		if (intent == null)
+			return;
+		
+		AndroidNotification notification = intent.Notification;
+		
+		Dictionary<string, object> data = Json.Deserialize(notification.IntentData) as Dictionary<string, object>;
+		if (data == null)
+			return;
+		
+		string url = data.GetString("url");
+		if (string.IsNullOrEmpty(url))
+			return;
+		
+		OpenURL(url);
 	}
 
 	static string GetNotificationKey(string _Name) => $"NOTIFICATION_{_Name}";
@@ -184,7 +230,7 @@ public class AndroidMessageProcessor : MessageProcessor
 		
 		string key = GetNotificationKey(_Name);
 		
-		int notificationID = AndroidNotificationCenter.SendNotification(_Notification, string.Empty);
+		int notificationID = AndroidNotificationCenter.SendNotification(_Notification, COMMON_CHANNEL_ID);
 		
 		PlayerPrefs.SetInt(key, notificationID);
 	}
@@ -239,9 +285,30 @@ public class iOSMessageProcessor : MessageProcessor
 		iOSNotificationCenter.ScheduleNotification(notification);
 	}
 
-	protected override void ClearBadges()
+	protected override void LoadNotifications()
 	{
+		ProcessNotification();
+		
 		iOSNotificationCenter.ApplicationBadge = 0;
+		
+		iOSNotificationCenter.RemoveAllDeliveredNotifications();
+	}
+
+	void ProcessNotification()
+	{
+		iOSNotification notification = iOSNotificationCenter.GetLastRespondedNotification();
+		if (notification == null)
+			return;
+		
+		Dictionary<string, object> data = Json.Deserialize(notification.Data) as Dictionary<string, object>;
+		if (data == null)
+			return;
+		
+		string url = data.GetString("url");
+		if (string.IsNullOrEmpty(url))
+			return;
+		
+		OpenURL(url);
 	}
 }
 #endif
