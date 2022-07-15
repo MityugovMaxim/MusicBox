@@ -147,8 +147,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 		if (!Pending)
 			return;
 		
-		Debug.LogError("---> RELEASE!!!");
-		
 		Pending = false;
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
@@ -235,8 +233,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 		if (Locked)
 		{
 			Pending = true;
-			
-			Debug.LogError("---> PENDING!!!");
 			
 			return;
 		}
