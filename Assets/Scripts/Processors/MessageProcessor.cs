@@ -156,6 +156,7 @@ public class AndroidMessageProcessor : MessageProcessor
 			Text       = _Message,
 			IntentData = Json.Serialize(data),
 			FireTime   = TimeUtility.GetLocalTime(_Timestamp),
+			Number     = 1,
 		};
 		
 		CancelNotification(_Name);
@@ -167,17 +168,34 @@ public class AndroidMessageProcessor : MessageProcessor
 	{
 		AndroidNotificationChannel channel = new AndroidNotificationChannel()
 		{
-			Id          = COMMON_CHANNEL_ID,
-			Name        = "Common Channel",
-			Importance  = Importance.Default,
-			Description = "Common notifications"
+			Id                   = COMMON_CHANNEL_ID,
+			Name                 = "Common Channel",
+			Importance           = Importance.High,
+			Description          = "Common notifications",
+			CanShowBadge         = true,
+			LockScreenVisibility = LockScreenVisibility.Public,
+			CanBypassDnd         = false,
+			EnableLights         = true,
+			EnableVibration      = true
 		};
+		
+		AndroidNotificationCenter.Initialize();
 		
 		AndroidNotificationCenter.RegisterNotificationChannel(channel);
 		
 		ProcessNotification();
 		
 		AndroidNotificationCenter.CancelAllDisplayedNotifications();
+		
+		AndroidNotificationCenter.OnNotificationReceived += _Intent =>
+		{
+			if (_Intent == null)
+				return;
+			
+			int notificationID = _Intent.Id;
+			
+			AndroidNotificationCenter.CancelDisplayedNotification(notificationID);
+		};
 	}
 
 	void ProcessNotification()
@@ -199,28 +217,19 @@ public class AndroidMessageProcessor : MessageProcessor
 		OpenURL(url);
 	}
 
-	static string GetNotificationKey(string _Name) => $"NOTIFICATION_{_Name}";
-
 	static void CancelNotification(string _Name)
 	{
 		if (string.IsNullOrEmpty(_Name))
 			return;
 		
-		string key = GetNotificationKey(_Name);
-		
-		if (!PlayerPrefs.HasKey(key))
-			return;
-		
-		int notificationID = PlayerPrefs.GetInt(key);
+		int notificationID = _Name.GetHashCode();
 		
 		NotificationStatus status = AndroidNotificationCenter.CheckScheduledNotificationStatus(notificationID);
 		
-		if (status != NotificationStatus.Scheduled)
+		if (status != NotificationStatus.Scheduled && status != NotificationStatus.Delivered)
 			return;
 		
 		AndroidNotificationCenter.CancelScheduledNotification(notificationID);
-		
-		PlayerPrefs.DeleteKey(key);
 	}
 
 	static void ScheduleNotification(string _Name, AndroidNotification _Notification)
@@ -228,11 +237,14 @@ public class AndroidMessageProcessor : MessageProcessor
 		if (string.IsNullOrEmpty(_Name))
 			return;
 		
-		string key = GetNotificationKey(_Name);
+		int notificationID = _Name.GetHashCode();
 		
-		int notificationID = AndroidNotificationCenter.SendNotification(_Notification, COMMON_CHANNEL_ID);
+		NotificationStatus status = AndroidNotificationCenter.CheckScheduledNotificationStatus(notificationID);
 		
-		PlayerPrefs.SetInt(key, notificationID);
+		if (status == NotificationStatus.Scheduled)
+			AndroidNotificationCenter.UpdateScheduledNotification(notificationID, _Notification, COMMON_CHANNEL_ID);
+		else
+			AndroidNotificationCenter.SendNotificationWithExplicitID(_Notification, COMMON_CHANNEL_ID, notificationID);
 	}
 }
 #endif
