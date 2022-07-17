@@ -11,19 +11,25 @@ using Zenject;
 [Menu(MenuType.SnapshotMenu)]
 public class UISnapshotMenu : UIMenu
 {
-	[SerializeField] RectTransform m_Container;
-	[SerializeField] Button        m_BackButton;
-	[SerializeField] Button        m_RestoreButton;
-	[SerializeField] Button        m_UploadButton;
+	[SerializeField] RectTransform    m_Container;
+	[SerializeField] UISnapshotHeader m_Header;
+	[SerializeField] Button           m_BackButton;
+	[SerializeField] Button           m_RestoreButton;
+	[SerializeField] Button           m_UploadButton;
 
-	[Inject] UIField.Factory m_Factory;
-	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] UIField.Factory   m_Factory;
+	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] LanguageProcessor m_LanguageProcessor;
 
 	readonly List<UIField> m_Items = new List<UIField>();
 
 	string   m_Path;
+	string   m_Descriptors;
 	string   m_SnapshotID;
 	Snapshot m_Snapshot;
+
+	readonly List<UISnapshotHeader>         m_Headers             = new List<UISnapshotHeader>();
+	readonly Dictionary<string, Descriptor> m_DescriptorsRegistry = new Dictionary<string, Descriptor>();
 
 	protected override void Awake()
 	{
@@ -43,11 +49,12 @@ public class UISnapshotMenu : UIMenu
 		m_UploadButton.onClick.RemoveListener(Upload);
 	}
 
-	public void Setup(string _Path, Snapshot _Snapshot)
+	public void Setup(string _Path, string _Descriptors, Snapshot _Snapshot)
 	{
-		m_Path       = _Path;
-		m_Snapshot   = _Snapshot;
-		m_SnapshotID = _Snapshot.ID;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
+		m_Snapshot    = _Snapshot;
+		m_SnapshotID  = _Snapshot.ID;
 	}
 
 	void Back()
@@ -73,24 +80,13 @@ public class UISnapshotMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
-			.Child(m_Path)
-			.Child(snapshotID);
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		
-		m_Snapshot.Serialize(data);
-		
 		try
 		{
-			if (m_SnapshotID != snapshotID)
-			{
-				await DeleteAsync(m_SnapshotID);
-				
-				m_SnapshotID = snapshotID;
-			}
+			await DeleteAsync();
 			
-			await reference.SetValueAsync(data);
+			await UploadSnapshot();
+			
+			await UploadDescriptors();
 		}
 		catch (Exception exception)
 		{
@@ -100,6 +96,49 @@ public class UISnapshotMenu : UIMenu
 		Refresh();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	async Task UploadSnapshot()
+	{
+		if (string.IsNullOrEmpty(m_Path) || m_Snapshot == null || string.IsNullOrEmpty(m_Snapshot.ID))
+			return;
+		
+		DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
+			.Child(m_Path)
+			.Child(m_Snapshot.ID);
+		
+		Dictionary<string, object> data = new Dictionary<string, object>();
+		
+		m_Snapshot.Serialize(data);
+		
+		await reference.SetValueAsync(data);
+	}
+
+	async Task UploadDescriptors()
+	{
+		if (string.IsNullOrEmpty(m_Descriptors))
+			return;
+		
+		List<string> languages = m_LanguageProcessor.GetAllLanguages();
+		foreach (string language in languages)
+		{
+			if (string.IsNullOrEmpty(language))
+				continue;
+			
+			if (!m_DescriptorsRegistry.TryGetValue(language, out Descriptor descriptor) || descriptor == null)
+				continue;
+			
+			DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
+				.Child(m_Descriptors)
+				.Child(language)
+				.Child(m_SnapshotID);
+			
+			Dictionary<string, object> data = new Dictionary<string, object>();
+			
+			descriptor.Serialize(data);
+			
+			await reference.SetValueAsync(data);
+		}
 	}
 
 	async void Restore()
@@ -117,16 +156,40 @@ public class UISnapshotMenu : UIMenu
 			item.Restore();
 	}
 
-	Task DeleteAsync(string _SnapshotID)
+	async Task DeleteAsync()
 	{
-		if (string.IsNullOrEmpty(_SnapshotID))
-			return Task.CompletedTask;
+		if (string.IsNullOrEmpty(m_SnapshotID) || m_SnapshotID == m_Snapshot.ID)
+			return;
 		
-		DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
-			.Child(m_Path)
-			.Child(_SnapshotID);
+		string snapshotID = m_SnapshotID;
 		
-		return reference.SetValueAsync(null);
+		m_SnapshotID = m_Snapshot.ID;
+		
+		if (!string.IsNullOrEmpty(m_Path))
+		{
+			DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
+				.Child(m_Path)
+				.Child(snapshotID);
+			
+			await reference.SetValueAsync(null);
+		}
+		
+		if (!string.IsNullOrEmpty(m_Descriptors))
+		{
+			List<string> languages = m_LanguageProcessor.GetAllLanguages();
+			foreach (string language in languages)
+			{
+				if (string.IsNullOrEmpty(language))
+					continue;
+				
+				DatabaseReference descriptorReference = FirebaseDatabase.DefaultInstance.RootReference
+					.Child(m_Descriptors)
+					.Child(language)
+					.Child(snapshotID);
+				
+				await descriptorReference.SetValueAsync(null);
+			}
+		}
 	}
 
 	protected override void OnShowStarted()
@@ -148,13 +211,86 @@ public class UISnapshotMenu : UIMenu
 		foreach (UIField item in m_Items)
 			Destroy(item.gameObject);
 		m_Items.Clear();
+		
+		foreach (UISnapshotHeader item in m_Headers)
+			Destroy(item.gameObject);
+		m_Headers.Clear();
 	}
 
 	void Refresh()
 	{
 		Clear();
 		
-		Type type = m_Snapshot.GetType();
+		CreateSnapshot(
+			m_Snapshot,
+			nameof(m_Snapshot.Order)
+		);
+		
+		CreateDescriptors();
+	}
+
+	void CreateSnapshot(Snapshot _Snapshot, params string[] _Exclude)
+	{
+		if (_Snapshot == null)
+			return;
+		
+		PropertyInfo[] propertyInfos = GetProperties(_Snapshot, _Exclude);
+		
+		if (propertyInfos == null || propertyInfos.Length == 0)
+			return;
+		
+		foreach (PropertyInfo propertyInfo in propertyInfos)
+		{
+			UIField item = m_Factory.Create(_Snapshot, propertyInfo, m_Container);
+			
+			if (item == null)
+				continue;
+			
+			m_Items.Add(item);
+		}
+	}
+
+	async void CreateDescriptors()
+	{
+		m_DescriptorsRegistry.Clear();
+		
+		if (string.IsNullOrEmpty(m_Descriptors))
+			return;
+		
+		DataSnapshot data = await FirebaseDatabase.DefaultInstance.RootReference
+			.Child(m_Descriptors)
+			.GetValueAsync();
+		
+		List<string> languages = m_LanguageProcessor.GetAllLanguages();
+		foreach (string language in languages)
+		{
+			if (string.IsNullOrEmpty(language))
+				continue;
+			
+			DataSnapshot snapshot = data.Child(language).Child(m_SnapshotID);
+			
+			Descriptor descriptor = snapshot != null && snapshot.Exists
+				? Activator.CreateInstance(typeof(Descriptor), data) as Descriptor
+				: new Descriptor(m_SnapshotID);
+			
+			m_DescriptorsRegistry[language] = descriptor;
+			
+			CreateHeader(language.ToUpperInvariant());
+			
+			CreateSnapshot(
+				descriptor,
+				nameof(descriptor.ID),
+				nameof(descriptor.Order)
+			);
+		}
+	}
+
+	static PropertyInfo[] GetProperties(Snapshot _Snapshot, params string[] _Exclude)
+	{
+		if (_Snapshot == null)
+			return null;
+		
+		Type type = _Snapshot.GetType();
 		
 		PropertyInfo[] propertyInfos = type.GetProperties(
 			BindingFlags.Public |
@@ -166,28 +302,25 @@ public class UISnapshotMenu : UIMenu
 			BindingFlags.FlattenHierarchy
 		);
 		
-		PropertyInfo[] basePropertyInfos = type.GetProperties()
+		return type.GetProperties()
 			.Except(propertyInfos)
+			.Union(propertyInfos)
+			.Where(_PropertyInfo => _Exclude == null || !_Exclude.Contains(_PropertyInfo.Name))
 			.ToArray();
+	}
+
+	void CreateHeader(string _Title)
+	{
+		if (string.IsNullOrEmpty(_Title) || m_Header == null)
+			return;
 		
-		foreach (PropertyInfo propertyInfo in basePropertyInfos)
-		{
-			UIField item = m_Factory.Create(m_Snapshot, propertyInfo, m_Container);
-			
-			if (item == null)
-				continue;
-			
-			m_Items.Add(item);
-		}
+		UISnapshotHeader header = Instantiate(m_Header, m_Container, false);
 		
-		foreach (PropertyInfo propertyInfo in propertyInfos)
-		{
-			UIField item = m_Factory.Create(m_Snapshot, propertyInfo, m_Container);
-			
-			if (item == null)
-				continue;
-			
-			m_Items.Add(item);
-		}
+		if (header == null)
+			return;
+		
+		header.Setup(_Title);
+		
+		m_Headers.Add(header);
 	}
 }

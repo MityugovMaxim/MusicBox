@@ -77,7 +77,7 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 		Loaded = false;
 	}
 
-	void OnUpdate(object _Sender, ValueChangedEventArgs _EventArgs)
+	async void OnUpdate(object _Sender, ValueChangedEventArgs _EventArgs)
 	{
 		if (!Loaded)
 			return;
@@ -96,7 +96,9 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 			return;
 		
 		m_Snapshots.AddRange(_EventArgs.Snapshot.Children.Select(Create));
-
+		
+		await OnUpdate();
+		
 		FireSignal();
 	}
 
@@ -116,6 +118,8 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 	}
 
 	protected virtual Task OnFetch() => Task.CompletedTask;
+
+	protected virtual Task OnUpdate() => Task.CompletedTask;
 
 	protected virtual Query Filter(DatabaseReference _Data)
 	{

@@ -14,12 +14,14 @@ public class UIAdminElement : UIOverlayButton
 	[Inject] MenuProcessor m_MenuProcessor;
 
 	string m_Path;
+	string m_Descriptors;
 	Type   m_Type;
 
-	public void Setup(string _Title, string _Path, Type _Type)
+	public void Setup(string _Title, string _Path, string _Descriptors, Type _Type)
 	{
-		m_Path = _Path;
-		m_Type = _Type;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
+		m_Type        = _Type;
 		
 		m_Title.text = _Title;
 	}
@@ -38,7 +40,7 @@ public class UIAdminElement : UIOverlayButton
 		if (snapshotsMenu == null)
 			return;
 		
-		snapshotsMenu.Setup(m_Path, m_Type);
+		snapshotsMenu.Setup(m_Path, m_Descriptors, m_Type);
 		
 		snapshotsMenu.Show();
 	}

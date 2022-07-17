@@ -59,6 +59,7 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 		AdminElementEntity offers = new AdminElementEntity(
 			"Edit offers",
 			"offers",
+			"offers_descriptors",
 			typeof(OfferSnapshot),
 			m_AdminPool
 		);

@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Firebase.Auth;
 using Firebase.Database;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -35,7 +38,7 @@ public class RoleSnapshot : Snapshot
 		Daily     = false;
 	}
 
-	protected RoleSnapshot(DataSnapshot _Data) : base(_Data)
+	public RoleSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Name      = _Data.GetString("name");
 		Roles     = _Data.GetBool("permissions/roles");
@@ -77,9 +80,14 @@ public class RolesDataUpdateSignal { }
 [Preserve]
 public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 {
-	protected override string Path => $"roles";
+	protected override string Path => "roles";
 
 	[Inject] SocialProcessor m_SocialProcessor;
+
+	protected override Task OnFetch()
+	{
+		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
+	}
 
 	public string GetName() => GetName(m_SocialProcessor.UserID);
 
@@ -112,6 +120,8 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 
 	public bool HasLanguagesPermission(string _RoleID)
 	{
+		return true;
+		
 		RoleSnapshot snapshot = GetSnapshot(_RoleID);
 		
 		return snapshot?.Languages ?? false;

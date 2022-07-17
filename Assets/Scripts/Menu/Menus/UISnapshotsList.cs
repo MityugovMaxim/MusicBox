@@ -14,6 +14,7 @@ public class UISnapshotsList : UIEntity
 	[Inject] UISnapshotElement.Pool m_Pool;
 
 	string         m_Path;
+	string         m_Descriptors;
 	List<Snapshot> m_Snapshots;
 
 	protected override void Awake()
@@ -30,10 +31,11 @@ public class UISnapshotsList : UIEntity
 		m_AddButton.onClick.RemoveListener(Add);
 	}
 
-	public void Setup(string _Path, List<Snapshot> _Snapshots)
+	public void Setup(string _Path, string _Descriptors, List<Snapshot> _Snapshots)
 	{
-		m_Path      = _Path;
-		m_Snapshots = _Snapshots;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
+		m_Snapshots   = _Snapshots;
 		
 		Refresh();
 	}
@@ -48,7 +50,7 @@ public class UISnapshotsList : UIEntity
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (Snapshot snapshot in m_Snapshots)
-			m_Content.Add(new SnapshotElementEntity(m_Path, snapshot, Remove, m_Pool));
+			m_Content.Add(new SnapshotElementEntity(m_Path, m_Descriptors, snapshot, Remove, m_Pool));
 		
 		VerticalStackLayout.End(m_Content);
 		

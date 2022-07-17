@@ -1,27 +1,36 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class LanguageSnapshot
+[Preserve]
+public class LanguageSnapshot : Snapshot
 {
-	public string ID     { get; }
-	public string Name   { get; }
 	public bool   Active { get; }
-	public int    Order  { get; }
+	public string Name   { get; }
 
-	public LanguageSnapshot(DataSnapshot _Data)
+	public LanguageSnapshot() : base("language_code", 0)
 	{
-		ID    = _Data.Key;
+		Active = false;
+		Name   = "language_name";
+	}
+
+	public LanguageSnapshot(DataSnapshot _Data) : base(_Data)
+	{
 		Active = _Data.GetBool("active");
-		Name  = _Data.GetString("name");
-		Order = _Data.GetInt("order");
+		Name   = _Data.GetString("name");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"] = Active;
+		_Data["name"]   = Name;
 	}
 }
 
@@ -32,41 +41,44 @@ public class LanguageDataUpdateSignal { }
 public class LanguageSelectSignal { }
 
 [Preserve]
-public class LanguageProcessor
+public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpdateSignal>
 {
-	public string Language { get; private set; }
-
 	const string LANGUAGE_KEY = "LANGUAGE";
 
-	bool Loaded { get; set; }
+	public string Language { get; private set; }
 
-	[Inject] SignalBus             m_SignalBus;
+	protected override string Path => "languages";
+
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
-	readonly List<LanguageSnapshot> m_Snapshots = new List<LanguageSnapshot>();
-
-	DatabaseReference m_Data;
-
-	public async Task Load()
+	protected override Task OnFetch()
 	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("languages");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
 		Language = Determine();
 		
-		await m_LocalizationProcessor.Load(Language);
+		return m_LocalizationProcessor.Load(Language);
+	}
+
+	protected override Task OnUpdate()
+	{
+		string language = Determine();
 		
-		Loaded = true;
+		if (Language == language)
+			return Task.CompletedTask;
+		
+		return Select(language);
+	}
+
+	public List<string> GetAllLanguages()
+	{
+		return Snapshots
+			.Where(_Snapshot => _Snapshot != null)
+			.Select(_Snapshot => _Snapshot.ID)
+			.ToList();
 	}
 
 	public List<string> GetLanguages()
 	{
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
@@ -96,61 +108,9 @@ public class LanguageProcessor
 		
 		await m_LocalizationProcessor.Load(Language);
 		
-		m_SignalBus.Fire<LanguageSelectSignal>();
+		FireSignal();
 		
 		return true;
-	}
-
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating languages data...");
-		
-		await Fetch();
-		
-		string language = Determine();
-		
-		await Select(language);
-		
-		Log.Info(this, "Update languages data complete.");
-		
-		m_SignalBus.Fire<LanguageDataUpdateSignal>();
-		
-		Determine();
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 4);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Info(this, "Fetch languages failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new LanguageSnapshot(_Data)));
 	}
 
 	string Determine()
@@ -167,31 +127,12 @@ public class LanguageProcessor
 		if (fallback != null)
 			return fallback.ID;
 		
-		LanguageSnapshot supported = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot != null);
+		LanguageSnapshot supported = Snapshots.FirstOrDefault(_Snapshot => _Snapshot != null);
 		if (supported != null)
 			return supported.ID;
 		
 		Log.Error(this, "Determine language failed.");
 		
 		return null;
-	}
-
-	LanguageSnapshot GetSnapshot(string _Language)
-	{
-		if (m_Snapshots.Count == 0)
-			return null;
-		
-		if (string.IsNullOrEmpty(_Language))
-		{
-			Log.Error(this, "Get snapshot failed. Language is null or empty.");
-			return null;
-		}
-		
-		LanguageSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _Language);
-		
-		if (snapshot == null)
-			Log.Error(this, "Get snapshot failed. Snapshot with language '{0}' is null.", _Language);
-		
-		return snapshot;
 	}
 }

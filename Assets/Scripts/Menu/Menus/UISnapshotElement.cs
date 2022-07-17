@@ -17,6 +17,7 @@ public class UISnapshotElement : UIOverlayButton
 	[Inject] MenuProcessor m_MenuProcessor;
 
 	string           m_Path;
+	string           m_Descriptors;
 	Snapshot         m_Snapshot;
 	Action<Snapshot> m_Remove;
 
@@ -34,11 +35,12 @@ public class UISnapshotElement : UIOverlayButton
 		m_RemoveButton.onClick.RemoveListener(Remove);
 	}
 
-	public void Setup(string _Path, Snapshot _Snapshot, Action<Snapshot> _Remove)
+	public void Setup(string _Path, string _Descriptors, Snapshot _Snapshot, Action<Snapshot> _Remove)
 	{
-		m_Path     = _Path;
-		m_Snapshot = _Snapshot;
-		m_Remove   = _Remove;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
+		m_Snapshot    = _Snapshot;
+		m_Remove      = _Remove;
 		
 		m_Order.text = m_Snapshot.Order.ToString();
 		m_ID.text    = m_Snapshot.ID;
@@ -61,7 +63,7 @@ public class UISnapshotElement : UIOverlayButton
 		if (snapshotMenu == null)
 			return;
 		
-		snapshotMenu.Setup(m_Path, m_Snapshot);
+		snapshotMenu.Setup(m_Path, m_Descriptors, m_Snapshot);
 		
 		await m_MenuProcessor.Show(MenuType.SnapshotMenu);
 	}

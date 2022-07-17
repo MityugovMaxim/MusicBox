@@ -19,6 +19,7 @@ public class UISnapshotsMenu : UIMenu
 	[Inject] MenuProcessor m_MenuProcessor;
 
 	string            m_Path;
+	string            m_Descriptors;
 	Type              m_Type;
 	DatabaseReference m_Data;
 
@@ -44,10 +45,11 @@ public class UISnapshotsMenu : UIMenu
 		m_AddButton.onClick.RemoveListener(Add);
 	}
 
-	public void Setup(string _Path, Type _Type)
+	public void Setup(string _Path, string _Descriptors, Type _Type)
 	{
-		m_Path = _Path;
-		m_Type = _Type;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
+		m_Type        = _Type;
 		
 		if (m_Data != null)
 		{
@@ -66,7 +68,7 @@ public class UISnapshotsMenu : UIMenu
 		
 		m_Snapshots.Clear();
 		
-		m_List.Setup(null, null);
+		m_List.Setup(null, null, null);
 		
 		if (m_Data == null)
 			return;
@@ -79,7 +81,7 @@ public class UISnapshotsMenu : UIMenu
 	{
 		m_Snapshots.Clear();
 		
-		m_List.Setup(null, null);
+		m_List.Setup(null, null, null);
 		
 		if (_EventArgs.DatabaseError != null)
 		{
@@ -91,7 +93,7 @@ public class UISnapshotsMenu : UIMenu
 		
 		m_Snapshots.Sort((_A, _B) => _A.Order.CompareTo(_B.Order));
 		
-		m_List.Setup(m_Path, m_Snapshots);
+		m_List.Setup(m_Path, m_Descriptors, m_Snapshots);
 	}
 
 	void Back()
@@ -153,7 +155,7 @@ public class UISnapshotsMenu : UIMenu
 		
 		m_Snapshots.Clear();
 		
-		m_List.Setup(null, null);
+		m_List.Setup(null, null, null);
 		
 		try
 		{
@@ -163,7 +165,7 @@ public class UISnapshotsMenu : UIMenu
 			
 			m_Snapshots.Sort((_A, _B) => _A.Order.CompareTo(_B.Order));
 			
-			m_List.Setup(m_Path, m_Snapshots);
+			m_List.Setup(m_Path, m_Descriptors, m_Snapshots);
 		}
 		catch (Exception exception)
 		{
@@ -179,6 +181,6 @@ public class UISnapshotsMenu : UIMenu
 		
 		m_Snapshots.Sort((_A, _B) => _A.Order.CompareTo(_B.Order));
 		
-		m_List.Setup(m_Path, m_Snapshots);
+		m_List.Setup(m_Path, m_Descriptors, m_Snapshots);
 	}
 }

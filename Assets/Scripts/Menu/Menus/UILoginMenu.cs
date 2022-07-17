@@ -10,6 +10,7 @@ public class UILoginMenu : UIMenu
 {
 	const int LOGIN_ATTEMPT_LIMIT = 2;
 
+	[Inject] RolesProcessor        m_RolesProcessor;
 	[Inject] SocialProcessor       m_SocialProcessor;
 	[Inject] ConfigProcessor       m_ConfigProcessor;
 	[Inject] ApplicationProcessor  m_ApplicationProcessor;
@@ -111,6 +112,7 @@ public class UILoginMenu : UIMenu
 	Task LoadApplication()
 	{
 		return Task.WhenAll(
+			m_RolesProcessor.Load(),
 			m_ConfigProcessor.Load(),
 			m_ApplicationProcessor.Load()
 		);

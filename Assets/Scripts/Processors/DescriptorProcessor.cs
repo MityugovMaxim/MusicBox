@@ -5,20 +5,33 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Auth;
 using Firebase.Database;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class Descriptor
+public class Descriptor : Snapshot
 {
-	public string ID          { get; }
 	public string Title       { get; }
 	public string Description { get; }
 
-	public Descriptor(DataSnapshot _Data)
+	public Descriptor(string _ID) : base(_ID, 0)
 	{
-		ID          = _Data.Key;
+		Title       = string.Empty;
+		Description = string.Empty;
+	}
+
+	public Descriptor(DataSnapshot _Data) : base(_Data)
+	{
 		Title       = _Data.GetString("title");
 		Description = _Data.GetString("description");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["title"]       = Title;
+		_Data["description"] = Description;
 	}
 }
 

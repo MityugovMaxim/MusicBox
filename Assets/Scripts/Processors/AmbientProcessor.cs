@@ -10,16 +10,23 @@ using UnityEngine;
 using Zenject;
 using Random = UnityEngine.Random;
 
-public class AmbientSnapshot
+public class AmbientSnapshot : Snapshot
 {
-	public string ID     { get; }
 	public bool   Active { get; }
+	public string Sound  { get; }
 	public float  Volume { get; }
 
-	public AmbientSnapshot(DataSnapshot _Data)
+	public AmbientSnapshot() : base("new_ambient", 0)
 	{
-		ID     = _Data.Key;
+		Active = false;
+		Sound  = "Ambient/new_ambient.ogg";
+		Volume = 0.5f;
+	}
+
+	public AmbientSnapshot(DataSnapshot _Data) : base(_Data)
+	{
 		Active = _Data.GetBool("active");
+		Sound  = _Data.GetString("sound", $"Ambient/{ID}.ogg");
 		Volume = _Data.GetFloat("volume");
 	}
 }

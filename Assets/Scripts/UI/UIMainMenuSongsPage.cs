@@ -61,7 +61,11 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateAdminProgress();
 		
+		CreateAdminAmbient();
+		
 		CreateAdminRevives();
+		
+		CreateAdminLanguages();
 		
 		CreateLibrary();
 		
@@ -115,6 +119,21 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		CreateAdmin(progress);
 	}
 
+	void CreateAdminAmbient()
+	{
+		if (!m_RolesProcessor.HasAmbientPermission())
+			return;
+		
+		AdminElementEntity ambient = new AdminElementEntity(
+			"Edit ambient",
+			"ambient",
+			typeof(AmbientSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(ambient);
+	}
+
 	void CreateAdminRevives()
 	{
 		if (!m_RolesProcessor.HasRevivesPermission())
@@ -128,6 +147,21 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		);
 		
 		CreateAdmin(revives);
+	}
+
+	void CreateAdminLanguages()
+	{
+		if (!m_RolesProcessor.HasLanguagesPermission())
+			return;
+		
+		AdminElementEntity languages = new AdminElementEntity(
+			"Edit languages",
+			"languages",
+			typeof(LanguageSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(languages);
 	}
 
 	void CreateAdmin(AdminElementEntity _AdminElement)

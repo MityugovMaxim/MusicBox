@@ -49,6 +49,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		AdminElementEntity news = new AdminElementEntity(
 			"Edit news",
 			"news",
+			"news_descriptors",
 			typeof(NewsSnapshot),
 			m_AdminPool
 		);

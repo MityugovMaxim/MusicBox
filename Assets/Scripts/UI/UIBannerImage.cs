@@ -1,8 +1,11 @@
 using UnityEngine;
+using Zenject;
 
 public class UIBannerImage : UIEntity
 {
 	[SerializeField] WebImage m_Image;
+
+	[Inject] BannersProcessor m_BannersProcessor;
 
 	string m_BannerID;
 
@@ -10,6 +13,6 @@ public class UIBannerImage : UIEntity
 	{
 		m_BannerID = _BannerID;
 		
-		m_Image.Path = $"Thumbnails/Banners/{m_BannerID}.jpg";
+		m_Image.Path = m_BannersProcessor.GetImage(_BannerID);
 	}
 }

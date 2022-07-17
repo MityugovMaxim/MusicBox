@@ -10,6 +10,7 @@ using Zenject;
 public class BannerSnapshot : Snapshot
 {
 	public bool   Active    { get; }
+	public string Image     { get; }
 	public string Language  { get; }
 	public bool   Permanent { get; }
 	public string URL       { get; }
@@ -17,6 +18,7 @@ public class BannerSnapshot : Snapshot
 	public BannerSnapshot() : base("new_banner", 0)
 	{
 		Active    = false;
+		Image     = "Thumbnails/Banners/new_banner.jpg";
 		Language  = "en";
 		Permanent = false;
 		URL       = "audiobox://";
@@ -25,6 +27,7 @@ public class BannerSnapshot : Snapshot
 	public BannerSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active    = _Data.GetBool("active");
+		Image     = _Data.GetString("image", $"Thumbnails/Banners/{ID}.jpg");
 		Language  = _Data.GetString("language");
 		Permanent = _Data.GetBool("permanent");
 		URL       = _Data.GetString("url");
@@ -68,6 +71,13 @@ public class BannersProcessor : DataProcessor<BannerSnapshot, BannersDataUpdateS
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
+	}
+
+	public string GetImage(string _BannerID)
+	{
+		BannerSnapshot snapshot = GetSnapshot(_BannerID);
+		
+		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetURL(string _BannerID)
