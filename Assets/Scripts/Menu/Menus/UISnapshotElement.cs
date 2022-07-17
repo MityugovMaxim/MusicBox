@@ -43,7 +43,7 @@ public class UISnapshotElement : UIOverlayButton
 		m_Remove      = _Remove;
 		
 		m_Order.text = m_Snapshot.Order.ToString();
-		m_ID.text    = m_Snapshot.ID;
+		m_ID.text    = m_Snapshot.ToString();
 		
 		m_RemoveButton.onClick.RemoveAllListeners();
 		m_RemoveButton.onClick.AddListener(Remove);

@@ -275,7 +275,7 @@ public class UISnapshotMenu : UIMenu
 			
 			m_DescriptorsRegistry[language] = descriptor;
 			
-			CreateHeader(language.ToUpperInvariant());
+			CreateHeader(m_LanguageProcessor.GetName(language));
 			
 			CreateSnapshot(
 				descriptor,

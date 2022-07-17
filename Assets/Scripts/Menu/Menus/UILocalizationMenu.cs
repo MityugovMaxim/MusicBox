@@ -22,6 +22,7 @@ public class UILocalizationMenu : UIMenu
 
 	[Inject] StorageProcessor           m_StorageProcessor;
 	[Inject] MenuProcessor              m_MenuProcessor;
+	[Inject] LanguageProcessor          m_LanguageProcessor;
 	[Inject] UILocalizationElement.Pool m_Pool;
 
 	LocalizationData m_Localization;
@@ -216,5 +217,7 @@ public class UILocalizationMenu : UIMenu
 		byte[] encode = Compression.Compress(bytes);
 		
 		await reference.PutBytesAsync(encode);
+		
+		await m_LanguageProcessor.Reload();
 	}
 }

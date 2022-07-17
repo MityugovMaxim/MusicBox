@@ -32,6 +32,8 @@ public class LanguageSnapshot : Snapshot
 		_Data["active"] = Active;
 		_Data["name"]   = Name;
 	}
+
+	public override string ToString() => Name;
 }
 
 [Preserve]
@@ -111,6 +113,13 @@ public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpd
 		FireSignal();
 		
 		return true;
+	}
+
+	public async Task Reload()
+	{
+		await m_LocalizationProcessor.Load(Language);
+		
+		FireSignal();
 	}
 
 	string Determine()

@@ -77,6 +77,8 @@ public class RoleSnapshot : Snapshot
 			{ "daily", Daily },
 		};
 	}
+
+	public override string ToString() => Name;
 }
 
 [Preserve]
@@ -90,6 +92,11 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 	[Inject] SocialProcessor m_SocialProcessor;
 
 	protected override Task OnFetch()
+	{
+		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
+	}
+
+	protected override Task OnUpdate()
 	{
 		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
 	}

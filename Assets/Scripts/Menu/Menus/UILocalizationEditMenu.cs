@@ -20,8 +20,9 @@ public class UILocalizationEditMenu : UIMenu
 	[SerializeField] Button         m_RestoreButton;
 	[SerializeField] Button         m_UploadButton;
 
-	[Inject] StorageProcessor m_StorageProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] StorageProcessor  m_StorageProcessor;
+	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
 
 	string           m_Key;
 	LocalizationData m_Localization;
@@ -181,6 +182,8 @@ public class UILocalizationEditMenu : UIMenu
 		byte[] encode = Compression.Compress(bytes);
 		
 		await reference.PutBytesAsync(encode);
+		
+		await m_LanguageProcessor.Reload();
 	}
 
 	void SubmitKey(string _Key)

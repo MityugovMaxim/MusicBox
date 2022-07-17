@@ -29,6 +29,8 @@ public class Snapshot
 	{
 		_Data["order"] = Order;
 	}
+
+	public override string ToString() => ID;
 }
 
 [Preserve]

@@ -219,5 +219,7 @@ public class UILanguagesMenu : UIMenu
 			
 			await reference.PutBytesAsync(encode);
 		}
+		
+		await m_LanguageProcessor.Reload();
 	}
 }
