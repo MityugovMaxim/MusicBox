@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 

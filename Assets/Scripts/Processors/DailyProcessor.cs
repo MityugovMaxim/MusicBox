@@ -76,7 +76,6 @@ public class DailyManager
 {
 	[Inject] ProfileProcessor m_ProfileProcessor;
 	[Inject] DailyProcessor   m_DailyProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
 
 	public string GetDailyID()
 	{

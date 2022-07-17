@@ -5,8 +5,6 @@ using Random = UnityEngine.Random;
 [RequireComponent(typeof(Animator))]
 public class UIMultiplierLabel : UIOrder
 {
-	const string PLAY_STATE = "play";
-
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 

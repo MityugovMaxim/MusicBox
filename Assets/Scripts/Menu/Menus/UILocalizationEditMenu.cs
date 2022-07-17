@@ -174,7 +174,7 @@ public class UILocalizationEditMenu : UIMenu
 			.Child("Localization")
 			.Child($"{language}.lang");
 		
-		string json = Json.Serialize(localization.Localization);
+		string json = localization.Serialize();
 		
 		byte[] bytes = Encoding.Unicode.GetBytes(json);
 		

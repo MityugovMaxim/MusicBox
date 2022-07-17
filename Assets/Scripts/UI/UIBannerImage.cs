@@ -13,6 +13,6 @@ public class UIBannerImage : UIEntity
 	{
 		m_BannerID = _BannerID;
 		
-		m_Image.Path = m_BannersProcessor.GetImage(_BannerID);
+		m_Image.Path = m_BannersProcessor.GetImage(m_BannerID);
 	}
 }
