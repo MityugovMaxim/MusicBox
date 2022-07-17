@@ -7,6 +7,7 @@ public static class StringExtension
 {
 	static readonly string[] m_Words =
 	{
+		"iOS",
 		"IDs",
 		"ID",
 		"BPM",

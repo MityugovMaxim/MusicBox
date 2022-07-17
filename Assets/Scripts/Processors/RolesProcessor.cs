@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Auth;
 using Firebase.Database;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -14,6 +13,7 @@ public class RoleSnapshot : Snapshot
 	public bool   Ambient   { get; }
 	public bool   Languages { get; }
 	public bool   Banners   { get; }
+	public bool   Ads       { get; }
 	public bool   Songs     { get; }
 	public bool   Progress  { get; }
 	public bool   Revives   { get; }
@@ -30,6 +30,7 @@ public class RoleSnapshot : Snapshot
 		Languages = false;
 		Banners   = false;
 		Songs     = false;
+		Ads       = false;
 		Progress  = false;
 		Revives   = false;
 		Offers    = false;
@@ -46,6 +47,7 @@ public class RoleSnapshot : Snapshot
 		Progress  = _Data.GetBool("permissions/progress");
 		Revives   = _Data.GetBool("permissions/revives");
 		Offers    = _Data.GetBool("permissions/offers");
+		Ads       = _Data.GetBool("permissions/ads");
 		News      = _Data.GetBool("permissions/news");
 		Ambient   = _Data.GetBool("permissions/ambient");
 		Languages = _Data.GetBool("permissions/languages");
@@ -56,6 +58,8 @@ public class RoleSnapshot : Snapshot
 
 	public override void Serialize(Dictionary<string, object> _Data)
 	{
+		base.Serialize(_Data);
+		
 		_Data["name"] = Name;
 		_Data["permissions"] = new Dictionary<string, bool>()
 		{
@@ -65,6 +69,7 @@ public class RoleSnapshot : Snapshot
 			{ "revives", Revives },
 			{ "offers", Offers },
 			{ "news", News },
+			{ "ads", Ads },
 			{ "ambient", Ambient },
 			{ "languages", Languages },
 			{ "banners", Banners },
@@ -120,11 +125,18 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 
 	public bool HasLanguagesPermission(string _RoleID)
 	{
-		return true;
-		
 		RoleSnapshot snapshot = GetSnapshot(_RoleID);
 		
 		return snapshot?.Languages ?? false;
+	}
+
+	public bool HasAdsPermission() => HasAdsPermission(m_SocialProcessor.UserID);
+
+	public bool HasAdsPermission(string _RoleID)
+	{
+		RoleSnapshot snapshot = GetSnapshot(_RoleID);
+		
+		return snapshot?.Ads ?? false;
 	}
 
 	public bool HasBannersPermission() => HasBannersPermission(m_SocialProcessor.UserID);

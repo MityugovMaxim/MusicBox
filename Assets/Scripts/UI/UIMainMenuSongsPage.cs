@@ -21,6 +21,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] ProductsManager m_ProductsManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] SocialProcessor m_SocialProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
 
 	[Inject] UIAdminElement.Pool  m_AdminPool;
 	[Inject] UISocialElement.Pool m_SocialPool;
@@ -66,6 +67,8 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		CreateAdminRevives();
 		
 		CreateAdminLanguages();
+		
+		CreateAdminLocalizations();
 		
 		CreateLibrary();
 		
@@ -162,6 +165,28 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		);
 		
 		CreateAdmin(languages);
+	}
+
+	void CreateAdminLocalizations()
+	{
+		if (!m_RolesProcessor.HasLanguagesPermission())
+			return;
+		
+		AdminElementEntity localizations = new AdminElementEntity(
+			"Edit localizations",
+			m_AdminPool,
+			() =>
+			{
+				UILanguagesMenu languagesMenu = m_MenuProcessor.GetMenu<UILanguagesMenu>();
+				
+				if (languagesMenu == null)
+					return;
+				
+				languagesMenu.Show();
+			}
+		);
+		
+		CreateAdmin(localizations);
 	}
 
 	void CreateAdmin(AdminElementEntity _AdminElement)

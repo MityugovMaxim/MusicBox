@@ -16,12 +16,20 @@ public class UIAdminElement : UIOverlayButton
 	string m_Path;
 	string m_Descriptors;
 	Type   m_Type;
+	Action m_Action;
 
-	public void Setup(string _Title, string _Path, string _Descriptors, Type _Type)
+	public void Setup(
+		string _Title,
+		string _Path,
+		string _Descriptors,
+		Type   _Type,
+		Action _Action = null
+	)
 	{
 		m_Path        = _Path;
 		m_Descriptors = _Descriptors;
 		m_Type        = _Type;
+		m_Action      = _Action;
 		
 		m_Title.text = _Title;
 	}
@@ -35,6 +43,12 @@ public class UIAdminElement : UIOverlayButton
 
 	void Open()
 	{
+		if (m_Action != null)
+		{
+			m_Action();
+			return;
+		}
+		
 		UISnapshotsMenu snapshotsMenu = m_MenuProcessor.GetMenu<UISnapshotsMenu>();
 		
 		if (snapshotsMenu == null)

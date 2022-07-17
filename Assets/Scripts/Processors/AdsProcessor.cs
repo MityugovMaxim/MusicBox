@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
+using Firebase.Extensions;
 using MAXHelper;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -40,7 +39,15 @@ public class AdsProviderMadPixel : IAdsProvider
 		m_InterstitialID = _InterstitialID;
 		m_RewardedID     = _RewardedID;
 		
-		return Task.FromResult(true);
+		return UnityTask.Until(MaxSdk.IsInitialized)
+			.ContinueWithOnMainThread(
+				_Task =>
+				{
+					AdsManager.Instance.InitializeInterstitial(_InterstitialID);
+					AdsManager.Instance.InitializeRewarded(_RewardedID);
+					return true;
+				}
+			);
 	}
 
 	public Task<bool> Interstitial()
@@ -130,54 +137,51 @@ public class AdsProviderMadPixel : IAdsProvider
 }
 
 [Preserve]
-public class AdsProviderSnapshot
+public class AdsProviderSnapshot : Snapshot
 {
-	public string ID             { get; }
-	public bool   Active         { get; }
-	public string InterstitialID { get; }
-	public string RewardedID     { get; }
+	public bool   Active                { get; }
+	public string iOSInterstitialID     { get; }
+	public string iOSRewardedID         { get; }
+	public string AndroidInterstitialID { get; }
+	public string AndroidRewardedID     { get; }
 
-	public AdsProviderSnapshot(DataSnapshot _Data)
+	public AdsProviderSnapshot() : base("new_ads_provider", 0)
 	{
-		ID       = _Data.Key;
-		Active   = _Data.GetBool("active");
-		#if UNITY_IOS
-		InterstitialID = _Data.GetString("ios_interstitial");
-		RewardedID     = _Data.GetString("ios_rewarded");
-		#elif UNITY_ANDROID
-		InterstitialID = _Data.GetString("android_interstitial");
-		RewardedID     = _Data.GetString("android_rewarded");
-		#endif
+		Active                = false;
+		iOSInterstitialID     = string.Empty;
+		iOSRewardedID         = string.Empty;
+		AndroidInterstitialID = string.Empty;
+		AndroidRewardedID     = string.Empty;
+	}
+
+	public AdsProviderSnapshot(DataSnapshot _Data) : base(_Data)
+	{
+		Active                = _Data.GetBool("active");
+		iOSInterstitialID     = _Data.GetString("ios_interstitial");
+		iOSRewardedID         = _Data.GetString("ios_rewarded");
+		AndroidInterstitialID = _Data.GetString("android_interstitial");
+		AndroidRewardedID     = _Data.GetString("android_rewarded");
 	}
 }
 
+public class AdsProvidersDataUpdateSignal { }
+
 [Preserve]
-public class AdsProcessor
+public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataUpdateSignal>
 {
-	bool Loaded { get; set; }
+	protected override string Path => "ads_providers";
 
 	[Inject] IAdsProvider[]  m_AdsProviders;
 	[Inject] AudioManager    m_AudioManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 
-	readonly List<AdsProviderSnapshot> m_Snapshots = new List<AdsProviderSnapshot>();
+	double m_Time;
 
-	DatabaseReference m_Data;
-	double            m_Time;
-
-	public async Task Load()
+	protected override Task OnFetch()
 	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("ads_providers");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
 		InitializeAdsProviders();
 		
-		Loaded = true;
+		return Task.CompletedTask;
 	}
 
 	async void InitializeAdsProviders()
@@ -206,7 +210,7 @@ public class AdsProcessor
 
 	List<string> GetAdsProviderIDs()
 	{
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
@@ -216,14 +220,26 @@ public class AdsProcessor
 	{
 		AdsProviderSnapshot snapshot = GetSnapshot(_AdsProviderID);
 		
-		return snapshot?.InterstitialID;
+		#if UNITY_IOS
+		return snapshot?.iOSInterstitialID ?? string.Empty;
+		#elif UNITY_ANDROID
+		return snapshot?.AndroidInterstitialID ?? string.Empty;
+		#else
+		return string.Empty;
+		#endif
 	}
 
 	string GetRewardedID(string _AdsProviderID)
 	{
 		AdsProviderSnapshot snapshot = GetSnapshot(_AdsProviderID);
 		
-		return snapshot?.RewardedID;
+		#if UNITY_IOS
+		return snapshot?.iOSRewardedID ?? string.Empty;
+		#elif UNITY_ANDROID
+		return snapshot?.AndroidRewardedID ?? string.Empty;
+		#else
+		return string.Empty;
+		#endif
 	}
 
 	IAdsProvider GetAdsProvider(string _AdsProviderID)
@@ -295,54 +311,5 @@ public class AdsProcessor
 		m_AudioManager.SetAudioActive(true);
 		
 		return false;
-	}
-
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating ads data...");
-		
-		await Fetch();
-		
-		Log.Info(this, "Update ads data complete.");
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Error(this, "Fetch ads data failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new AdsProviderSnapshot(_Data)));
-	}
-
-	AdsProviderSnapshot GetSnapshot(string _AdsProviderID)
-	{
-		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _AdsProviderID);
 	}
 }

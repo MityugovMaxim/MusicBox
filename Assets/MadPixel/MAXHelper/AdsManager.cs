@@ -78,6 +78,22 @@ namespace MAXHelper {
             AppLovin.onInterDismissedEvent += AppLovin_OnInterDismissed;
             AppLovin.onErrorEvent += AppLovin_OnError;
         }
+
+        public void InitializeInterstitial(string _PlacementID)
+        {
+            if (string.IsNullOrEmpty(_PlacementID))
+                return;
+            
+            AppLovin.InitializeInterstitial(_PlacementID);
+        }
+
+        public void InitializeRewarded(string _PlacementID)
+        {
+            if (string.IsNullOrEmpty(_PlacementID))
+                return;
+            
+            AppLovin.InitializeRewarded(_PlacementID);
+        }
         #endregion
 
         #region Event Catchers

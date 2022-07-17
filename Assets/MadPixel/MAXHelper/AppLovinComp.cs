@@ -174,6 +174,24 @@ namespace MAXHelper {
         }
         #endregion
 
+        public void InitializeInterstitial(string _PlacementID)
+        {
+            Settings.bUseInters         = true;
+            Settings.InterstitialID     = _PlacementID;
+            Settings.InterstitialID_IOS = _PlacementID;
+            
+            InitializeInterstitialAds();
+        }
+
+        public void InitializeRewarded(string _PlacementID)
+        {
+            Settings.bUseRewardeds  = true;
+            Settings.RewardedID     = _PlacementID;
+            Settings.RewardedID_IOS = _PlacementID;
+            
+            InitializeRewardedAds();
+        }
+
         #region Rewarded
         public void InitializeRewardedAds() {
             // Attach callback

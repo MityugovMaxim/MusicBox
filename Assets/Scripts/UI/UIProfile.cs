@@ -71,6 +71,8 @@ public class UIProfile : UIEntity
 
 	public void Open()
 	{
+		GUIUtility.systemCopyBuffer = m_SocialProcessor.UserID;
+		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null && mainMenu.Shown)
 			mainMenu.Select(MainMenuPageType.Profile);

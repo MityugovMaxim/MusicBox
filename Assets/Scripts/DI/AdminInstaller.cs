@@ -4,8 +4,10 @@ using Zenject;
 
 public class AdminInstaller : MonoInstaller
 {
-	[SerializeField] UIAdminElement    m_AdminElement;
-	[SerializeField] UISnapshotElement m_SnapshotElement;
+	[SerializeField] UIAdminElement        m_AdminElement;
+	[SerializeField] UISnapshotElement     m_SnapshotElement;
+	[SerializeField] UILanguageElement     m_LanguageElement;
+	[SerializeField] UILocalizationElement m_LocalizationElement;
 
 	public override void InstallBindings()
 	{
@@ -20,6 +22,10 @@ public class AdminInstaller : MonoInstaller
 		InstallPool<UIAdminElement, UIAdminElement.Pool>(m_AdminElement, 3);
 		
 		InstallPool<UISnapshotElement, UISnapshotElement.Pool>(m_SnapshotElement, 10);
+		
+		InstallPool<UILanguageElement, UILanguageElement.Pool>(m_LanguageElement, 10);
+		
+		InstallPool<UILocalizationElement, UILocalizationElement.Pool>(m_LocalizationElement, 10);
 	}
 
 	void InstallProcessor<T>()

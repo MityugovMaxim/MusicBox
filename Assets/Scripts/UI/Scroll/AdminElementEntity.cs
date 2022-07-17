@@ -11,6 +11,7 @@ public class AdminElementEntity : LayoutEntity
 	readonly string              m_Descriptors;
 	readonly Type                m_Type;
 	readonly UIAdminElement.Pool m_Pool;
+	readonly Action              m_Action;
 
 	UIAdminElement m_Item;
 
@@ -21,6 +22,7 @@ public class AdminElementEntity : LayoutEntity
 		m_Descriptors = null;
 		m_Type        = _Type;
 		m_Pool        = _Pool;
+		m_Action      = null;
 	}
 
 	public AdminElementEntity(
@@ -36,6 +38,21 @@ public class AdminElementEntity : LayoutEntity
 		m_Descriptors = _Descriptors;
 		m_Type        = _Type;
 		m_Pool        = _Pool;
+		m_Action      = null;
+	}
+
+	public AdminElementEntity(
+		string              _Title,
+		UIAdminElement.Pool _Pool,
+		Action              _Action = null
+	)
+	{
+		m_Title       = _Title;
+		m_Path        = string.Empty;
+		m_Descriptors = string.Empty;
+		m_Type        = null;
+		m_Pool        = _Pool;
+		m_Action      = _Action;
 	}
 
 	public override void Create(RectTransform _Container)
@@ -45,7 +62,7 @@ public class AdminElementEntity : LayoutEntity
 		
 		m_Item.SetRect(Rect);
 		
-		m_Item.Setup(m_Title, m_Path, m_Descriptors, m_Type);
+		m_Item.Setup(m_Title, m_Path, m_Descriptors, m_Type, m_Action);
 	}
 
 	public override void Remove()

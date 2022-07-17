@@ -46,6 +46,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		CreateAdminDaily();
 		
+		CreateAdminAds();
+		
 		CreateSpecial();
 		
 		CreatePromo();
@@ -65,6 +67,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		AdminElementEntity products = new AdminElementEntity(
 			"Edit products",
 			"products",
+			"products_descriptors",
 			typeof(ProductSnapshot),
 			m_AdminPool
 		);
@@ -85,6 +88,21 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		);
 		
 		CreateAdmin(daily);
+	}
+
+	void CreateAdminAds()
+	{
+		if (!m_RolesProcessor.HasAdsPermission())
+			return;
+		
+		AdminElementEntity ads = new AdminElementEntity(
+			"Edit ads",
+			"ads_providers",
+			typeof(AdsProviderSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(ads);
 	}
 
 	void CreateAdmin(AdminElementEntity _AdminElement)
