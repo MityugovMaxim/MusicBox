@@ -5,6 +5,80 @@ using System.Text;
 
 public static class StringExtension
 {
+	static readonly string[] m_Words =
+	{
+		"IDs",
+		"ID",
+		"BPM",
+		"ASF",
+		"URL",
+	};
+
+	public static string ToDisplayName(this string _String)
+	{
+		if (string.IsNullOrEmpty(_String))
+			return _String;
+		
+		string[] data = _String.Split(m_Words, StringSplitOptions.RemoveEmptyEntries);
+		
+		string result = _String;
+		
+		foreach (string entry in data)
+		{
+			string target = entry.SplitWords();
+			
+			result = result.Replace(entry, target);
+		}
+		
+		return result.Trim();
+	}
+
+	static string SplitWords(this string _String)
+	{
+		if (string.IsNullOrEmpty(_String))
+			return _String;
+		
+		StringBuilder builder = new StringBuilder();
+		List<string>  words   = new List<string>();
+		
+		builder.Append(' ');
+		
+		for (int i = 1; i < _String.Length; i++)
+		{
+			char source = _String[i - 1];
+			char target = _String[i];
+			
+			if (!char.IsLetterOrDigit(source))
+				continue;
+			
+			builder.Append(source);
+			
+			if (char.IsLetter(source) ^ char.IsLetter(target))
+			{
+				words.Add(builder.ToString());
+				builder.Clear();
+			}
+			else if (char.IsLower(source) && char.IsUpper(target))
+			{
+				words.Add(builder.ToString());
+				builder.Clear();
+			}
+		}
+		builder.Append(_String[^1]);
+		words.Add(builder.ToString());
+		builder.Clear();
+		
+		for (int i = 0; i < words.Count - 1; i++)
+		{
+			builder.Append(words[i]);
+			builder.Append(' ');
+		}
+		builder.Append(words[^1]);
+		builder.Append(' ');
+		
+		return builder.ToString();
+	}
+
 	public static string ToAllCapital(this string _String)
 	{
 		if (string.IsNullOrEmpty(_String))

@@ -50,7 +50,12 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		foreach (string productID in productIDs)
 		{
 			Log.Info(this, "Initialize product with ID '{0}'.", productID);
-			config.AddProduct(productID, m_ProductsProcessor.GetType(productID));
+			
+			config.AddProduct(
+				productID,
+				m_ProductsProcessor.GetType(productID),
+				m_ProductsProcessor.GetStoreIDs(productID)
+			);
 		}
 		
 		m_CompletionSource = completionSource;

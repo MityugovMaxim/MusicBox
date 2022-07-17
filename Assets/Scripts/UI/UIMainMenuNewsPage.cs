@@ -10,9 +10,11 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 
 	[SerializeField] UILayout m_Content;
 
-	[Inject] SignalBus       m_SignalBus;
-	[Inject] NewsProcessor   m_NewsProcessor;
-	[Inject] UINewsItem.Pool m_ItemPool;
+	[Inject] SignalBus           m_SignalBus;
+	[Inject] RolesProcessor      m_RolesProcessor;
+	[Inject] NewsProcessor       m_NewsProcessor;
+	[Inject] UIAdminElement.Pool m_AdminPool;
+	[Inject] UINewsItem.Pool     m_ItemPool;
 
 	protected override void OnShowStarted()
 	{
@@ -30,6 +32,58 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
+		CreateAdminNews();
+		
+		CreateAdminBanners();
+		
+		CreateNews();
+		
+		m_Content.Reposition();
+	}
+
+	void CreateAdminNews()
+	{
+		if (!m_RolesProcessor.HasNewsPermission())
+			return;
+		
+		AdminElementEntity news = new AdminElementEntity(
+			"Edit news",
+			"news",
+			typeof(NewsSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(news);
+	}
+
+	void CreateAdminBanners()
+	{
+		if (!m_RolesProcessor.HasBannersPermission())
+			return;
+		
+		AdminElementEntity banners = new AdminElementEntity(
+			"Edit banners",
+			"banners",
+			typeof(BannerSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(banners);
+	}
+
+	void CreateAdmin(AdminElementEntity _AdminElement)
+	{
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(_AdminElement);
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
+	}
+
+	void CreateNews()
+	{
 		List<string> newsIDs = m_NewsProcessor.GetNewsIDs();
 		
 		if (newsIDs == null || newsIDs.Count == 0)
@@ -40,8 +94,8 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		foreach (string newsID in newsIDs)
 			m_Content.Add(new NewsItemEntity(newsID, m_ItemPool));
 		
-		m_Content.Space(LIST_SPACING);
+		VerticalStackLayout.End(m_Content);
 		
-		m_Content.Reposition();
+		m_Content.Space(LIST_SPACING);
 	}
 }

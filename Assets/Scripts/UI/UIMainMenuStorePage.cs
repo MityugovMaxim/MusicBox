@@ -15,6 +15,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	[Inject] SignalBus             m_SignalBus;
 	[Inject] DailyManager          m_DailyManager;
 	[Inject] ProductsManager       m_ProductsManager;
+	[Inject] RolesProcessor        m_RolesProcessor;
+	[Inject] UIAdminElement.Pool   m_AdminPool;
 	[Inject] UIDailyElement.Pool   m_DailyPool;
 	[Inject] UIProductSpecial.Pool m_SpecialPool;
 	[Inject] UIProductPromo.Pool   m_PromoPool;
@@ -40,6 +42,10 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		m_Content.Clear();
 		
+		CreateAdminProducts();
+		
+		CreateAdminDaily();
+		
 		CreateSpecial();
 		
 		CreatePromo();
@@ -49,6 +55,47 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		CreateItems();
 		
 		m_Content.Reposition();
+	}
+
+	void CreateAdminProducts()
+	{
+		if (!m_RolesProcessor.HasProductsPermission())
+			return;
+		
+		AdminElementEntity products = new AdminElementEntity(
+			"Edit products",
+			"products",
+			typeof(ProductSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(products);
+	}
+
+	void CreateAdminDaily()
+	{
+		if (!m_RolesProcessor.HasDailyPermission())
+			return;
+		
+		AdminElementEntity daily = new AdminElementEntity(
+			"Edit daily",
+			"daily",
+			typeof(DailySnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(daily);
+	}
+
+	void CreateAdmin(AdminElementEntity _AdminElement)
+	{
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(_AdminElement);
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateDaily()

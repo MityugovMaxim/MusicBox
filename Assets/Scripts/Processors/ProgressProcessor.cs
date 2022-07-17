@@ -14,6 +14,15 @@ public class ProgressSnapshot : Snapshot
 	public long         Coins   { get; }
 	public List<string> SongIDs { get; }
 
+	public ProgressSnapshot() : base("new_progress", 0)
+	{
+		Active  = false;
+		Level   = 1;
+		Discs   = 0;
+		Coins   = 0;
+		SongIDs = new List<string>();
+	}
+
 	public ProgressSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active  = _Data.GetBool("active");
@@ -21,6 +30,17 @@ public class ProgressSnapshot : Snapshot
 		Discs   = _Data.GetInt("discs");
 		Coins   = _Data.GetLong("coins");
 		SongIDs = _Data.GetChildKeys("song_ids");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]   = Active;
+		_Data["level"]    = Level;
+		_Data["discs"]    = Discs;
+		_Data["coins"]    = Coins;
+		_Data["song_ids"] = SongIDs;
 	}
 }
 

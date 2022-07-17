@@ -415,7 +415,7 @@ public class SongController
 
 	Task<AudioClip> LoadMusicAsync(string _SongID, CancellationToken _Token = default)
 	{
-		string path = $"Songs/{_SongID}.ogg";
+		string path = m_SongsProcessor.GetMusic(_SongID);
 		
 		return m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress, _Token);
 	}

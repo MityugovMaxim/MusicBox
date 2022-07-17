@@ -1,32 +1,51 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class OfferSnapshot
+[Preserve]
+public class OfferSnapshot : Snapshot
 {
-	public string ID          { get; }
-	public bool   Active      { get; }
-	public string SongID      { get; }
-	public long   Coins       { get; }
-	public int    AdsCount    { get; }
-	public long   Timestamp   { get; }
-	public int    Order       { get; }
+	public bool   Active    { get; }
+	public string Image     { get; }
+	public string SongID    { get; }
+	public long   Coins     { get; }
+	public int    AdsCount  { get; }
+	public long   Timestamp { get; }
 
-	public OfferSnapshot(DataSnapshot _Data)
+	public OfferSnapshot() : base("new_offer", 0)
 	{
-		ID        = _Data.Key;
+		Active    = false;
+		Image     = "Thumbnails/Offers/new_offer.jpg";
+		SongID    = string.Empty;
+		Coins     = 0;
+		AdsCount  = 0;
+		Timestamp = 0;
+	}
+
+	public OfferSnapshot(DataSnapshot _Data) : base(_Data)
+	{
 		Active    = _Data.GetBool("active");
+		Image     = _Data.GetString("image", $"Thumbnails/Offers/{ID}.jpg");
 		SongID    = _Data.GetString("song_id");
 		Coins     = _Data.GetLong("coins");
 		AdsCount  = _Data.GetInt("ads_count");
 		Timestamp = _Data.GetLong("timestamp");
-		Order     = _Data.GetInt("order");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]    = Active;
+		_Data["image"]     = Image;
+		_Data["song_id"]   = SongID;
+		_Data["coins"]     = Coins;
+		_Data["ads_count"] = AdsCount;
+		_Data["timestamp"] = Timestamp;
 	}
 }
 
@@ -40,41 +59,30 @@ public class OffersDescriptor : DescriptorProcessor<OffersDataUpdateSignal>
 }
 
 [Preserve]
-public class OffersProcessor
+public class OffersProcessor : DataProcessor<OfferSnapshot, OffersDataUpdateSignal>
 {
-	bool Loaded { get; set; }
+	protected override string Path => "offers";
 
-	[Inject] SignalBus        m_SignalBus;
 	[Inject] OffersDescriptor m_OffersDescriptor;
 
-	readonly List<OfferSnapshot> m_Snapshots = new List<OfferSnapshot>();
-
-	DatabaseReference m_Data;
-
-	public async Task Load()
-	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child($"offers");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
-		await m_OffersDescriptor.Load();
-		
-		Loaded = true;
-	}
+	protected override Task OnFetch() => m_OffersDescriptor.Load();
 
 	public List<string> GetOfferIDs()
 	{
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.OrderBy(_Snapshot => _Snapshot.Order)
 			.ThenByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
+	}
+
+	public string GetImage(string _OfferID)
+	{
+		OfferSnapshot snapshot = GetSnapshot(_OfferID);
+		
+		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetTitle(string _OfferID) => m_OffersDescriptor.GetTitle(_OfferID);
@@ -106,70 +114,5 @@ public class OffersProcessor
 		}
 		
 		return snapshot.AdsCount;
-	}
-
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating offers data...");
-		
-		await Fetch();
-		
-		Log.Info(this, "Update offers data complete.");
-		
-		m_SignalBus.Fire<OffersDataUpdateSignal>();
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Error(this, "Fetch offers failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new OfferSnapshot(_Data)));
-	}
-
-	OfferSnapshot GetSnapshot(string _OfferID)
-	{
-		if (m_Snapshots.Count == 0)
-			return null;
-		
-		if (string.IsNullOrEmpty(_OfferID))
-		{
-			Log.Error(this, "Get snapshot failed. Offer ID is null or empty.");
-			return null;
-		}
-		
-		OfferSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _OfferID);
-		
-		if (snapshot == null)
-			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _OfferID);
-		
-		return snapshot;
 	}
 }

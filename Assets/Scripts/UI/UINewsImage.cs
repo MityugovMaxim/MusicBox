@@ -1,8 +1,11 @@
 using UnityEngine;
+using Zenject;
 
 public class UINewsImage : UIEntity
 {
 	[SerializeField] WebImage m_Image;
+
+	[Inject] NewsProcessor m_NewsProcessor;
 
 	string m_NewsID;
 
@@ -10,6 +13,6 @@ public class UINewsImage : UIEntity
 	{
 		m_NewsID = _NewsID;
 		
-		m_Image.Path = $"Thumbnails/News/{m_NewsID}.jpg";
+		m_Image.Path = m_NewsProcessor.GetImage(m_NewsID);
 	}
 }

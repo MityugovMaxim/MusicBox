@@ -8,35 +8,71 @@ using Zenject;
 [Preserve]
 public class SongSnapshot : Snapshot
 {
-	public bool                                Active            { get; }
-	public string                              Title             { get; }
-	public string                              Artist            { get; }
-	public SongMode                            Mode              { get; }
-	public SongBadge                           Badge             { get; }
-	public bool                                Promo             { get; }
-	public float                               BPM               { get; }
-	public float                               Speed             { get; }
-	public long                                DefaultPayout     { get; }
-	public long                                BronzePayout      { get; }
-	public long                                SilverPayout      { get; }
-	public long                                GoldPayout        { get; }
-	public long                                PlatinumPayout    { get; }
-	public long                                Price             { get; }
-	public string                              Skin              { get; }
-	public int                                 BronzeThreshold   { get; }
-	public int                                 SilverThreshold   { get; }
-	public int                                 GoldThreshold     { get; }
-	public int                                 PlatinumThreshold { get; }
-	public IReadOnlyDictionary<string, string> Platforms         { get; }
+	public bool      Active            { get; }
+	public string    Title             { get; }
+	public string    Artist            { get; }
+	public string    Image             { get; }
+	public string    Preview           { get; }
+	public string    Music             { get; }
+	public SongMode  Mode              { get; }
+	public SongBadge Badge             { get; }
+	public float     BPM               { get; }
+	public float     Speed             { get; }
+	public long      DefaultPayout     { get; }
+	public long      BronzePayout      { get; }
+	public long      SilverPayout      { get; }
+	public long      GoldPayout        { get; }
+	public long      PlatinumPayout    { get; }
+	public long      Price             { get; }
+	public string    Skin              { get; }
+	public int       BronzeThreshold   { get; }
+	public int       SilverThreshold   { get; }
+	public int       GoldThreshold     { get; }
+	public int       PlatinumThreshold { get; }
+	public string    SpotifyURL        { get; }
+	public string    AppleMusicURL     { get; }
+	public string    EpidemicSoundURL  { get; }
+	public string    DeezerURL         { get; }
+
+	public SongSnapshot() : base("new_song_id", 0)
+	{
+		Active            = false;
+		Title             = string.Empty;
+		Artist            = string.Empty;
+		Image             = "Thumbnails/Songs/new_song_id.jpg";
+		Preview           = "Previews/new_song_id.ogg";
+		Music             = "Songs/new_song_id.ogg";
+		Mode              = SongMode.Free;
+		Badge             = SongBadge.New;
+		BPM               = 120;
+		Speed             = 850;
+		DefaultPayout     = 5;
+		BronzePayout      = 10;
+		SilverPayout      = 20;
+		GoldPayout        = 50;
+		PlatinumPayout    = 100;
+		Price             = 0;
+		Skin              = "default";
+		BronzeThreshold   = 5;
+		SilverThreshold   = 40;
+		GoldThreshold     = 60;
+		PlatinumThreshold = 80;
+		SpotifyURL        = string.Empty;
+		AppleMusicURL     = string.Empty;
+		EpidemicSoundURL  = string.Empty;
+		DeezerURL         = string.Empty;
+	}
 
 	public SongSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active            = _Data.GetBool("active");
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
+		Image             = _Data.GetString("image", $"Thumbnails/Songs/{ID}.jpg");
+		Preview           = _Data.GetString("preview", $"Previews/{ID}.ogg");
+		Music             = _Data.GetString("music", $"Songs/{ID}.ogg");
 		Mode              = _Data.GetEnum<SongMode>("mode");
 		Badge             = _Data.GetEnum<SongBadge>("badge");
-		Promo             = _Data.GetBool("promo");
 		BPM               = _Data.GetFloat("bpm");
 		Speed             = _Data.GetFloat("speed");
 		DefaultPayout     = _Data.GetLong("default_payout");
@@ -45,12 +81,45 @@ public class SongSnapshot : Snapshot
 		GoldPayout        = _Data.GetLong("gold_payout");
 		PlatinumPayout    = _Data.GetLong("platinum_payout");
 		Price             = _Data.GetLong("price");
-		Platforms         = _Data.GetStringDictionary("platforms");
 		Skin              = _Data.GetString("skin", "default");
 		BronzeThreshold   = _Data.GetInt("bronze_threshold");
 		SilverThreshold   = _Data.GetInt("silver_threshold");
 		GoldThreshold     = _Data.GetInt("gold_threshold");
 		PlatinumThreshold = _Data.GetInt("platinum_threshold");
+		SpotifyURL        = _Data.GetString("spotify_url");
+		AppleMusicURL     = _Data.GetString("apple_music_url");
+		EpidemicSoundURL  = _Data.GetString("epidemic_sound_url");
+		DeezerURL         = _Data.GetString("deezer_url");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]             = Active;
+		_Data["title"]              = Title;
+		_Data["image"]              = Image;
+		_Data["preview"]            = Preview;
+		_Data["music"]              = Music;
+		_Data["mode"]               = (int)Mode;
+		_Data["badge"]              = (int)Badge;
+		_Data["bpm"]                = BPM;
+		_Data["speed"]              = Speed;
+		_Data["default_payout"]     = DefaultPayout;
+		_Data["bronze_payout"]      = BronzePayout;
+		_Data["silver_payout"]      = SilverPayout;
+		_Data["gold_payout"]        = GoldPayout;
+		_Data["platinum_payout"]    = PlatinumPayout;
+		_Data["price"]              = Price;
+		_Data["skin"]               = Skin;
+		_Data["bronze_threshold"]   = BronzeThreshold;
+		_Data["silver_threshold"]   = SilverThreshold;
+		_Data["gold_threshold"]     = GoldThreshold;
+		_Data["platinum_threshold"] = PlatinumThreshold;
+		_Data["spotify_url"]        = SpotifyURL;
+		_Data["apple_music_url"]    = AppleMusicURL;
+		_Data["epidemic_sound_url"] = EpidemicSoundURL;
+		_Data["deezer_url"]         = DeezerURL;
 	}
 }
 
@@ -123,6 +192,27 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return snapshot?.Title ?? string.Empty;
 	}
 
+	public string GetImage(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Image ?? string.Empty;
+	}
+
+	public string GetPreview(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Image ?? string.Empty;
+	}
+
+	public string GetMusic(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Image ?? string.Empty;
+	}
+
 	public long GetPayout(string _SongID, ScoreRank _Rank)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
@@ -149,43 +239,30 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 
 	public string GetAppleMusicURL(string _SongID)
 	{
-		const string platformID = "apple_music";
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return GetPlatformURL(_SongID, platformID);
+		return snapshot?.AppleMusicURL;
 	}
 
 	public string GetSpotifyURL(string _SongID)
 	{
-		const string platformID = "spotify";
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return GetPlatformURL(_SongID, platformID);
+		return snapshot?.SpotifyURL;
 	}
 
 	public string GetDeezerURL(string _SongID)
 	{
-		const string platformID = "deezer";
-		
-		return GetPlatformURL(_SongID, platformID);
-	}
-
-	bool ContainsPlatformURL(string _SongID, string _PlatformID)
-	{
-		if (string.IsNullOrEmpty(_PlatformID))
-			return false;
-		
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot != null && snapshot.Platforms != null && snapshot.Platforms.ContainsKey(_PlatformID);
+		return snapshot?.DeezerURL;
 	}
 
-	string GetPlatformURL(string _SongID, string _PlatformID)
+	public string GetEpidemicSoundURL(string _SongID)
 	{
-		if (!ContainsPlatformURL(_SongID, _PlatformID))
-			return string.Empty;
-		
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot.Platforms[_PlatformID];
+		return snapshot?.EpidemicSoundURL;
 	}
 
 	public float GetBPM(string _SongID)

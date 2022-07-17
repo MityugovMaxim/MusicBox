@@ -36,6 +36,21 @@ public class MenuProcessor : IInitializable
 		await Show(MenuType.SplashMenu, true);
 	}
 
+	public Task ExceptionAsync(Exception _Exception)
+	{
+		if (_Exception == null)
+			return Task.CompletedTask;
+		
+		Exception exception = _Exception.GetBaseException();
+		
+		return ErrorAsync(
+			"exception",
+			"application",
+			"ERROR",
+			exception.Message
+		);
+	}
+
 	public async void ErrorLocalized(string _ID, string _Place, string _TitleKey, string _MessageKey)
 	{
 		await ErrorLocalizedAsync(_ID, _Place, _TitleKey, _MessageKey);

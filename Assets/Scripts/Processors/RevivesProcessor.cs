@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Firebase.Database;
 using UnityEngine;
@@ -10,11 +11,27 @@ public class ReviveSnapshot : Snapshot
 	public int    Count  { get; }
 	public long   Coins  { get; }
 
+	public ReviveSnapshot() : base("new_revive", 0)
+	{
+		Active = false;
+		Count  = 0;
+		Coins  = 0;
+	}
+
 	public ReviveSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active = _Data.GetBool("active");
 		Count  = _Data.GetInt("count");
 		Coins  = _Data.GetLong("coins");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"] = Active;
+		_Data["count"]  = Count;
+		_Data["coins"]  = Coins;
 	}
 }
 

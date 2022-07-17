@@ -17,10 +17,12 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	[Inject] SignalBus       m_SignalBus;
 	[Inject] SongsManager    m_SongsManager;
+	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ProductsManager m_ProductsManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] SocialProcessor m_SocialProcessor;
 
+	[Inject] UIAdminElement.Pool  m_AdminPool;
 	[Inject] UISocialElement.Pool m_SocialPool;
 	[Inject] UISongHeader.Pool    m_HeaderPool;
 	[Inject] UIProductItem.Pool   m_ProductPool;
@@ -53,11 +55,90 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
+		CreateAdminRoles();
+		
+		CreateAdminSongs();
+		
+		CreateAdminProgress();
+		
+		CreateAdminRevives();
+		
 		CreateLibrary();
 		
 		CreateLevelLocked();
 		
 		m_Content.Reposition();
+	}
+
+	void CreateAdminRoles()
+	{
+		if (!m_RolesProcessor.HasRolesPermission())
+			return;
+		
+		AdminElementEntity roles = new AdminElementEntity(
+			"Edit roles",
+			"roles",
+			typeof(RoleSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(roles);
+	}
+
+	void CreateAdminSongs()
+	{
+		if (!m_RolesProcessor.HasSongsPermission())
+			return;
+		
+		AdminElementEntity songs = new AdminElementEntity(
+			"Edit songs",
+			"songs",
+			typeof(SongSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(songs);
+	}
+
+	void CreateAdminProgress()
+	{
+		if (!m_RolesProcessor.HasProgressPermission())
+			return;
+		
+		AdminElementEntity progress = new AdminElementEntity(
+			"Edit progress",
+			"progress",
+			typeof(ProgressSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(progress);
+	}
+
+	void CreateAdminRevives()
+	{
+		if (!m_RolesProcessor.HasRevivesPermission())
+			return;
+		
+		AdminElementEntity revives = new AdminElementEntity(
+			"Edit revives",
+			"revives",
+			typeof(ReviveSnapshot),
+			m_AdminPool
+		);
+		
+		CreateAdmin(revives);
+	}
+
+	void CreateAdmin(AdminElementEntity _AdminElement)
+	{
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(_AdminElement);
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateLibrary()

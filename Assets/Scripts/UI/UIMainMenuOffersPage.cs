@@ -13,12 +13,14 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 
 	[SerializeField, Sound] string m_CollectSound;
 
-	[Inject] SignalBus        m_SignalBus;
-	[Inject] OffersManager    m_OffersManager;
-	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] HapticProcessor  m_HapticProcessor;
-	[Inject] SoundProcessor   m_SoundProcessor;
-	[Inject] UIOfferItem.Pool m_ItemPool;
+	[Inject] SignalBus           m_SignalBus;
+	[Inject] OffersManager       m_OffersManager;
+	[Inject] RolesProcessor      m_RolesProcessor;
+	[Inject] MenuProcessor       m_MenuProcessor;
+	[Inject] HapticProcessor     m_HapticProcessor;
+	[Inject] SoundProcessor      m_SoundProcessor;
+	[Inject] UIAdminElement.Pool m_AdminPool;
+	[Inject] UIOfferItem.Pool    m_ItemPool;
 
 	bool m_Processing;
 
@@ -40,11 +42,34 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
+		CreateAdmin();
+		
 		CreateAvailable();
 		
 		CreateCollected();
 		
 		m_Content.Reposition();
+	}
+
+	void CreateAdmin()
+	{
+		if (!m_RolesProcessor.HasOffersPermission())
+			return;
+		
+		AdminElementEntity offers = new AdminElementEntity(
+			"Edit offers",
+			"offers",
+			typeof(OfferSnapshot),
+			m_AdminPool
+		);
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(offers);
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateAvailable()

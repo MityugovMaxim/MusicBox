@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firebase.Database;
-using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 public class DailySnapshot : Snapshot
@@ -12,6 +12,14 @@ public class DailySnapshot : Snapshot
 	public long Coins    { get; }
 	public bool Ads      { get; }
 
+	public DailySnapshot() : base("new_daily", 0)
+	{
+		Active   = false;
+		Cooldown = 60000;
+		Coins    = 0;
+		Ads      = false;
+	}
+
 	public DailySnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active   = _Data.GetBool("active");
@@ -19,10 +27,22 @@ public class DailySnapshot : Snapshot
 		Coins    = _Data.GetLong("coins");
 		Ads      = _Data.GetBool("ads");
 	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]   = Active;
+		_Data["cooldown"] = Cooldown;
+		_Data["coins"]    = Coins;
+		_Data["ads"]      = Ads;
+	}
 }
 
+[Preserve]
 public class DailyDataUpdateSignal { }
 
+[Preserve]
 public class DailyProcessor : DataProcessor<DailySnapshot, DailyDataUpdateSignal>
 {
 	protected override string Path => "daily";
@@ -34,13 +54,6 @@ public class DailyProcessor : DataProcessor<DailySnapshot, DailyDataUpdateSignal
 			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
-	}
-
-	public long GetCooldown(string _DailyID)
-	{
-		DailySnapshot snapshot = GetSnapshot(_DailyID);
-		
-		return snapshot?.Cooldown ?? 0;
 	}
 
 	public long GetCoins(string _DailyID)
@@ -58,6 +71,7 @@ public class DailyProcessor : DataProcessor<DailySnapshot, DailyDataUpdateSignal
 	}
 }
 
+[Preserve]
 public class DailyManager
 {
 	[Inject] ProfileProcessor m_ProfileProcessor;

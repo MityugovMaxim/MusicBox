@@ -112,6 +112,21 @@ public class UILayout : UIEntity
 		MaxIndex = maxIndex;
 	}
 
+	public (int index, Rect rect) FindEntity(Vector2 _Position)
+	{
+		if (m_Items == null || m_Items.Count == 0)
+			return (-1, Rect.zero);
+		
+		(int minIndex, int maxIndex) = GetRange(_Position.y, _Position.y);
+		
+		int index = (minIndex + maxIndex) / 2;
+		
+		if (index < 0)
+			return (-1, Rect.zero);
+		
+		return (index, m_Items[index].Rect);
+	}
+
 	(int minIndex, int maxIndex) GetRange(float _Min, float _Max)
 	{
 		int anchor = FindAnchor(_Min, _Max);

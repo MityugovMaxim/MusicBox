@@ -1,8 +1,11 @@
 using UnityEngine;
+using Zenject;
 
 public class UIProductImage : UIEntity
 {
 	[SerializeField] WebImage m_Image;
+
+	[Inject] ProductsProcessor m_ProductsProcessor;
 
 	string m_ProductID;
 
@@ -10,6 +13,6 @@ public class UIProductImage : UIEntity
 	{
 		m_ProductID = _ProductID;
 		
-		m_Image.Path = $"Thumbnails/Products/{m_ProductID}.jpg";
+		m_Image.Path = m_ProductsProcessor.GetImage(m_ProductID);
 	}
 }

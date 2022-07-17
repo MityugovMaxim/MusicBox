@@ -7,7 +7,8 @@ public class UISongImage : UIEntity
 	[SerializeField] UIGrayscale m_Album;
 	[SerializeField] bool        m_Grayscale;
 
-	[Inject] SongsManager m_SongsManager;
+	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] SongsManager   m_SongsManager;
 
 	string m_SongID;
 
@@ -15,9 +16,7 @@ public class UISongImage : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		m_Image.Path = !string.IsNullOrEmpty(m_SongID)
-			? $"Thumbnails/Songs/{m_SongID}.jpg"
-			: string.Empty;
+		m_Image.Path = m_SongsProcessor.GetImage(m_SongID);
 		
 		if (m_Grayscale)
 			m_Album.Grayscale = m_SongsManager.IsSongLockedByLevel(m_SongID) ? 0.8f : 0;

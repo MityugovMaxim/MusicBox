@@ -23,4 +23,6 @@ public enum MenuType
 	ConfirmMenu    = 20,
 	TutorialMenu   = 21,
 	VideoMenu      = 22,
+	SnapshotsMenu  = 23,
+	SnapshotMenu   = 24,
 }

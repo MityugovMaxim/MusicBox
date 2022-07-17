@@ -13,9 +13,27 @@ public class RoleSnapshot : Snapshot
 	public bool   Banners   { get; }
 	public bool   Songs     { get; }
 	public bool   Progress  { get; }
+	public bool   Revives   { get; }
 	public bool   Offers    { get; }
 	public bool   News      { get; }
 	public bool   Products  { get; }
+	public bool   Daily     { get; }
+
+	public RoleSnapshot() : base("new_role_user", 0)
+	{
+		Name      = string.Empty;
+		Roles     = false;
+		Ambient   = false;
+		Languages = false;
+		Banners   = false;
+		Songs     = false;
+		Progress  = false;
+		Revives   = false;
+		Offers    = false;
+		News      = false;
+		Products  = false;
+		Daily     = false;
+	}
 
 	protected RoleSnapshot(DataSnapshot _Data) : base(_Data)
 	{
@@ -23,12 +41,14 @@ public class RoleSnapshot : Snapshot
 		Roles     = _Data.GetBool("permissions/roles");
 		Songs     = _Data.GetBool("permissions/songs");
 		Progress  = _Data.GetBool("permissions/progress");
+		Revives   = _Data.GetBool("permissions/revives");
 		Offers    = _Data.GetBool("permissions/offers");
 		News      = _Data.GetBool("permissions/news");
 		Ambient   = _Data.GetBool("permissions/ambient");
 		Languages = _Data.GetBool("permissions/languages");
 		Banners   = _Data.GetBool("permissions/banners");
 		Products  = _Data.GetBool("permissions/products");
+		Daily     = _Data.GetBool("permissions/daily");
 	}
 
 	public override void Serialize(Dictionary<string, object> _Data)
@@ -39,12 +59,14 @@ public class RoleSnapshot : Snapshot
 			{ "roles", Roles },
 			{ "songs", Songs },
 			{ "progress", Progress },
+			{ "revives", Revives },
 			{ "offers", Offers },
 			{ "news", News },
 			{ "ambient", Ambient },
 			{ "languages", Languages },
 			{ "banners", Banners },
 			{ "products", Products },
+			{ "daily", Daily },
 		};
 	}
 }
@@ -115,11 +137,21 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 
 	public bool HasProgressPermission() => HasProgressPermission(m_SocialProcessor.UserID);
 
+
 	public bool HasProgressPermission(string _RoleID)
 	{
 		RoleSnapshot snapshot = GetSnapshot(_RoleID);
 		
 		return snapshot?.Progress ?? false;
+	}
+
+	public bool HasRevivesPermission() => HasRevivesPermission(m_SocialProcessor.UserID);
+
+	public bool HasRevivesPermission(string _RoleID)
+	{
+		RoleSnapshot snapshot = GetSnapshot(_RoleID);
+		
+		return snapshot?.Revives ?? false;
 	}
 
 	public bool HasOffersPermission() => HasOffersPermission(m_SocialProcessor.UserID);
@@ -147,5 +179,14 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 		RoleSnapshot snapshot = GetSnapshot(_RoleID);
 		
 		return snapshot?.Products ?? false;
+	}
+
+	public bool HasDailyPermission() => HasDailyPermission(m_SocialProcessor.UserID);
+
+	public bool HasDailyPermission(string _RoleID)
+	{
+		RoleSnapshot snapshot = GetSnapshot(_RoleID);
+		
+		return snapshot?.Daily ?? false;
 	}
 }

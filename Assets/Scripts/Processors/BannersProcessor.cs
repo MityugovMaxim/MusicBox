@@ -14,12 +14,30 @@ public class BannerSnapshot : Snapshot
 	public bool   Permanent { get; }
 	public string URL       { get; }
 
+	public BannerSnapshot() : base("new_banner", 0)
+	{
+		Active    = false;
+		Language  = "en";
+		Permanent = false;
+		URL       = "audiobox://";
+	}
+
 	public BannerSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active    = _Data.GetBool("active");
 		Language  = _Data.GetString("language");
 		Permanent = _Data.GetBool("permanent");
 		URL       = _Data.GetString("url");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]    = Active;
+		_Data["language"]  = Language;
+		_Data["permanent"] = Permanent;
+		_Data["url"]       = URL;
 	}
 }
 

@@ -2,27 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AudioBox.Logging;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class NewsSnapshot
+public class NewsSnapshot : Snapshot
 {
-	public string ID        { get; }
 	public bool   Active    { get; }
+	public string Image     { get; }
 	public long   Timestamp { get; }
 	public string URL       { get; }
-	public int    Order     { get; }
 
-	public NewsSnapshot(DataSnapshot _Data)
+	public NewsSnapshot() : base("new_news", 0)
 	{
-		ID        = _Data.Key;
+		Active    = false;
+		Image     = "Thumbnails/News/new_news.jpg";
+		Timestamp = TimeUtility.GetTimestamp();
+		URL       = "audiobox://";
+	}
+
+	public NewsSnapshot(DataSnapshot _Data) : base(_Data)
+	{
 		Active    = _Data.GetBool("active");
+		Image     = _Data.GetString("image", $"Thumbnails/News/{ID}.jpg");
 		Timestamp = _Data.GetLong("timestamp");
 		URL       = _Data.GetString("url");
-		Order     = _Data.GetInt("order");
+	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"]    = Active;
+		_Data["image"]     = Image;
+		_Data["timestamp"] = Timestamp;
+		_Data["url"]       = URL;
 	}
 }
 
@@ -36,40 +50,29 @@ public class NewsDescriptor : DescriptorProcessor<NewsDataUpdateSignal>
 }
 
 [Preserve]
-public class NewsProcessor
+public class NewsProcessor : DataProcessor<NewsSnapshot, NewsDataUpdateSignal>
 {
-	bool Loaded { get; set; }
+	protected override string Path => "news";
 
-	[Inject] SignalBus      m_SignalBus;
 	[Inject] NewsDescriptor m_NewsDescriptor;
 
-	readonly List<NewsSnapshot> m_Snapshots = new List<NewsSnapshot>();
-
-	DatabaseReference m_Data;
-
-	public async Task Load()
-	{
-		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("news");
-			m_Data.ValueChanged += OnUpdate;
-		}
-		
-		await Fetch();
-		
-		await m_NewsDescriptor.Load();
-		
-		Loaded = true;
-	}
+	protected override Task OnFetch() => m_NewsDescriptor.Load();
 
 	public List<string> GetNewsIDs()
 	{
-		return m_Snapshots
+		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
 			.OrderByDescending(_Snapshot => _Snapshot.Timestamp)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
+	}
+
+	public string GetImage(string _NewsID)
+	{
+		NewsSnapshot snapshot = GetSnapshot(_NewsID);
+		
+		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetTitle(string _NewsID) => m_NewsDescriptor.GetTitle(_NewsID);
@@ -93,70 +96,5 @@ public class NewsProcessor
 		NewsSnapshot snapshot = GetSnapshot(_NewsID);
 		
 		return snapshot?.URL ?? string.Empty;
-	}
-
-	void Unload()
-	{
-		if (m_Data != null)
-		{
-			m_Data.ValueChanged -= OnUpdate;
-			m_Data              =  null;
-		}
-		
-		Loaded = false;
-	}
-
-	async void OnUpdate(object _Sender, EventArgs _Args)
-	{
-		if (!Loaded)
-			return;
-		
-		if (FirebaseAuth.DefaultInstance.CurrentUser == null)
-		{
-			Unload();
-			return;
-		}
-		
-		Log.Info(this, "Updating news data...");
-		
-		await Fetch();
-		
-		Log.Info(this, "Update news data complete.");
-		
-		m_SignalBus.Fire<NewsDataUpdateSignal>();
-	}
-
-	async Task Fetch()
-	{
-		m_Snapshots.Clear();
-		
-		DataSnapshot dataSnapshot = await m_Data.OrderByChild("order").GetValueAsync(15000, 2);
-		
-		if (dataSnapshot == null)
-		{
-			Log.Error(this, "Fetch news failed.");
-			return;
-		}
-		
-		m_Snapshots.AddRange(dataSnapshot.Children.Select(_Data => new NewsSnapshot(_Data)));
-	}
-
-	NewsSnapshot GetSnapshot(string _NewsID)
-	{
-		if (m_Snapshots.Count == 0)
-			return null;
-		
-		if (string.IsNullOrEmpty(_NewsID))
-		{
-			Log.Error(this, "Get snapshot failed. News ID is null or empty.");
-			return null;
-		}
-		
-		NewsSnapshot snapshot = m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _NewsID);
-		
-		if (snapshot == null)
-			Log.Error(this, "Get snapshot failed. Snapshot with ID '{0}' is null.", _NewsID);
-		
-		return snapshot;
 	}
 }

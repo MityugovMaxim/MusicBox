@@ -176,7 +176,7 @@ public class StorageProcessor
 
 	public Task<Texture2D> LoadTextureAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
 	{
-		return LoadAsync(_RemotePath, false, _Progress, m_Textures, WebRequest.LoadTextureFile, _Token);
+		return LoadAsync(_RemotePath, true, _Progress, m_Textures, WebRequest.LoadTextureFile, _Token);
 	}
 
 	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)

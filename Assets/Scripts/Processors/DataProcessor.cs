@@ -11,11 +11,13 @@ using Zenject;
 public class Snapshot
 {
 	public string ID    { get; }
-	#if ADMIN
 	public int    Order { get; set; }
-	#else
-	public int    Order { get; }
-	#endif
+
+	protected Snapshot(string _ID, int _Order)
+	{
+		ID    = _ID;
+		Order = _Order;
+	}
 
 	protected Snapshot(DataSnapshot _Data)
 	{
@@ -125,93 +127,10 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 		return Activator.CreateInstance(typeof(TSnapshot), _Data) as TSnapshot;
 	}
 
-	#if ADMIN
-	public Task DeleteAsync(string _ID)
-	{
-		m_Snapshots.RemoveAll(_Snapshot => _Snapshot.ID == _ID);
-		
-		return m_Data.Child(_ID).SetValueAsync(null);
-	}
-
-	public Task UploadAsync(string _ID)
-	{
-		TSnapshot snapshot = GetSnapshot(_ID);
-		
-		if (snapshot == null)
-			return Task.CompletedTask;
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		
-		snapshot.Serialize(data);
-		
-		return m_Data.Child(_ID).SetValueAsync(data);
-	}
-
-	public Task UploadAsync()
-	{
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		
-		foreach (TSnapshot snapshot in Snapshots)
-		{
-			if (snapshot == null)
-				continue;
-			
-			Dictionary<string, object> child = new Dictionary<string, object>();
-			
-			snapshot.Serialize(child);
-			
-			data[snapshot.ID] = child;
-		}
-		
-		return m_Data.SetValueAsync(data);
-	}
-
-	public void MoveUp(string _ID)
-	{
-		int source = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _ID);
-		
-		if (source < 0)
-			return;
-		
-		int target = UnityEngine.Mathf.Clamp(source - 1, 0, m_Snapshots.Count - 1);
-		
-		if (source == target)
-			return;
-		
-		(m_Snapshots[source], m_Snapshots[target]) = (m_Snapshots[target], m_Snapshots[source]);
-		
-		Reorder();
-	}
-
-	public void MoveDown(string _ID)
-	{
-		int source = m_Snapshots.FindIndex(_Snapshot => _Snapshot.ID == _ID);
-		
-		if (source < 0)
-			return;
-		
-		int target = UnityEngine.Mathf.Clamp(source + 1, 0, m_Snapshots.Count - 1);
-		
-		if (source == target)
-			return;
-		
-		(m_Snapshots[source], m_Snapshots[target]) = (m_Snapshots[target], m_Snapshots[source]);
-		
-		Reorder();
-	}
-
-	public void Reorder()
-	{
-		int order = 0;
-		foreach (TSnapshot snapshot in Snapshots)
-			snapshot.Order = order++;
-	}
-	#else
-	public TSnapshot GetSnapshot(string _ID)
+	protected TSnapshot GetSnapshot(string _ID)
 	{
 		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ID);
 	}
-	#endif
 
 	protected abstract void FireSignal();
 

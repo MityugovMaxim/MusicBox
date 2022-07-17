@@ -371,10 +371,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scriptableObjectInstallers:
-  - {fileID: 11400000, guid: 83d74a5ca5b0144dd874c36750e7e3a1, type: 2}
+  - {fileID: 11400000, guid: 8c0e1457dd9864344a5f5d9987fe3290, type: 2}
   - {fileID: 11400000, guid: d3732061e5bca41bfb09e737a10a8fa1, type: 2}
   _monoInstallers:
   - {fileID: 1677776599}
+  - {fileID: 1719845986}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -405,6 +406,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1677776600}
+  - {fileID: 1719845987}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -713,6 +715,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 329103449}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1719845985
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1719845987}
+  - component: {fileID: 1719845986}
+  m_Layer: 0
+  m_Name: AdminInstaller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1719845986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719845985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81d9c20e9a8640ca8ecb9191177432d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AdminElement: {fileID: 4856706673260723195, guid: c638d732ff3a24fdfadf6dbaf4f75753,
+    type: 3}
+  m_SnapshotElement: {fileID: 6547472801874171894, guid: ee755af5b40ea4c51b26cf3bfb47837d,
+    type: 3}
+--- !u!4 &1719845987
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719845985}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 329103449}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1954883304
 GameObject:

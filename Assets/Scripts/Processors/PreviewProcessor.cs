@@ -10,6 +10,7 @@ public class PreviewProcessor : MonoBehaviour
 	const float PLAY_FADE_DURATION = 0.5f;
 	const float STOP_FADE_DURATION = 0.5f;
 
+	[Inject] SongsProcessor   m_SongsProcessor;
 	[Inject] StorageProcessor m_StorageProcessor;
 
 	AudioSource m_AudioSource;
@@ -56,7 +57,7 @@ public class PreviewProcessor : MonoBehaviour
 		if (string.IsNullOrEmpty(m_SongID))
 			return;
 		
-		string path = $"Previews/{m_SongID}.ogg";
+		string path = m_SongsProcessor.GetPreview(m_SongID);
 		
 		m_TokenSource = new CancellationTokenSource();
 		
