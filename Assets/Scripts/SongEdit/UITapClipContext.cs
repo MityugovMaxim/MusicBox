@@ -35,10 +35,16 @@ public class UITapClipContext : ASFClipContext<ASFTapClip>, IDragHandler, IEndDr
 	float Padding => Container.rect.width / 8;
 
 	[SerializeField] GameObject m_Selection;
+	[SerializeField] GameObject m_Highlight;
 
 	[Inject] UIBeat            m_Beat;
 	[Inject] UIPlayer          m_Player;
 	[Inject] UICreateTapHandle m_CreateTapHandle;
+
+	public void Process()
+	{
+		m_Highlight.SetActive(m_Player.Time >= Clip.Time);
+	}
 
 	void Select(bool _Value)
 	{

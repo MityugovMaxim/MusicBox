@@ -26,8 +26,6 @@ public class TutorialPlayer : ASFPlayer
 	[SerializeField] UITutorialOverlay m_ComboOverlay;
 	[SerializeField] UITutorialLabel   m_HealthLabel;
 	[SerializeField] UITutorialLabel   m_ComboLabel;
-	[SerializeField] UITutorialLabel   m_TapLabel;
-	[SerializeField] UITutorialLabel   m_DoubleLabel;
 	[SerializeField] UITutorialLabel   m_HoldLabel;
 	[SerializeField] UITutorialLabel   m_BendLabel;
 	[SerializeField] UITutorialLabel   m_CompleteLabel;
@@ -240,7 +238,7 @@ public class TutorialPlayer : ASFPlayer
 		return TutorialAsync(
 			clips,
 			color,
-			m_TapLabel,
+			null,
 			UITutorialFingers.Gesture.Tap,
 			m_ConfigProcessor.TutorialTapThreshold,
 			m_TapSound,
@@ -276,7 +274,7 @@ public class TutorialPlayer : ASFPlayer
 		return TutorialAsync(
 			clips,
 			color,
-			m_DoubleLabel,
+			null,
 			UITutorialFingers.Gesture.Double,
 			m_ConfigProcessor.TutorialDoubleThreshold,
 			m_DoubleSound,
@@ -418,13 +416,15 @@ public class TutorialPlayer : ASFPlayer
 		
 		await m_InputOverlay.ShowAsync(_Token);
 		
-		_Label.Show();
+		if (_Label != null)
+			_Label.Show();
 		
 		m_Fingers.Show(_Gesture);
 		
 		await InputAsync(_Token);
 		
-		_Label.Hide();
+		if (_Label != null)
+			_Label.Hide();
 		
 		m_Fingers.Hide();
 		

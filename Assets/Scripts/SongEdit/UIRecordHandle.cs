@@ -68,7 +68,7 @@ public class UIRecordHandle : UIEntity, IPointerDownHandler, IPointerUpHandler
 		
 		double length = data.MaxTime - data.MinTime;
 		
-		if (length < m_Beat.Step)
+		if (length < m_Beat.Step * 2)
 		{
 			ASFTapTrack tapTrack = m_Player.GetTrack<ASFTapTrack>();
 			
@@ -93,8 +93,8 @@ public class UIRecordHandle : UIEntity, IPointerDownHandler, IPointerUpHandler
 			ASFHoldClip holdClip = new ASFHoldClip(
 				holdMinTime,
 				holdMaxTime,
-				new ASFHoldClip.Key(0, holdMinPosition),
-				new ASFHoldClip.Key(holdLength, holdMaxPosition)
+				new ASFHoldKey(0, holdMinPosition),
+				new ASFHoldKey(holdLength, holdMaxPosition)
 			);
 			
 			holdTrack.AddClip(holdClip);

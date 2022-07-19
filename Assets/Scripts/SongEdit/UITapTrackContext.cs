@@ -14,6 +14,8 @@ public class UITapTrackContext : ASFTrackContext<ASFTapClip>
 	{
 		UITapClipContext item = m_ItemPool.Spawn(RectTransform, _Clip, _ClipRect, _ViewRect);
 		
+		item.Process();
+		
 		AddView(_Clip, item);
 	}
 
@@ -21,9 +23,11 @@ public class UITapTrackContext : ASFTrackContext<ASFTapClip>
 	{
 		UITapClipContext item = GetView(_Clip);
 		
-		m_ItemPool.Despawn(item);
+		item.Process();
 		
 		RemoveView(_Clip);
+		
+		m_ItemPool.Despawn(item);
 	}
 
 	public override void ProcessClip(ASFTapClip _Clip, Rect _ClipRect, Rect _ViewRect)
@@ -35,6 +39,8 @@ public class UITapTrackContext : ASFTrackContext<ASFTapClip>
 		
 		item.ClipRect = _ClipRect;
 		item.ViewRect = _ViewRect;
+		
+		item.Process();
 	}
 
 	public override void Clear()

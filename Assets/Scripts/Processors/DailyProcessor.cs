@@ -80,13 +80,13 @@ public class DailyManager
 	public string GetDailyID()
 	{
 		List<string> dailyIDs = m_DailyProcessor.GetDailyIDs();
-		string       dailyID  = dailyIDs.LastOrDefault();
+		string       dailyID  = dailyIDs.FirstOrDefault();
 		for (int i = dailyIDs.Count - 1; i >= 0; i--)
 		{
 			if (!IsDailyAvailable(dailyIDs[i]))
-				break;
+				continue;
 			
-			dailyID = dailyIDs[i];
+			return dailyIDs[i];
 		}
 		return dailyID;
 	}

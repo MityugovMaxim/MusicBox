@@ -59,7 +59,7 @@ public class UIBeatKey : UIEntity
 	{
 		int minutes      = (int)m_Time / 60;
 		int seconds      = (int)m_Time % 60;
-		int milliseconds = (int)(m_Time * 1000) % 1000;
+		int milliseconds = (int)Math.Round(m_Time * 1000) % 1000;
 		
 		m_TimeLabel.text = $"{minutes:00}:{seconds:00}.{milliseconds:000}";
 	}

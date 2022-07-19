@@ -45,7 +45,7 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 
 	readonly ClickCounter m_EditColor = new ClickCounter(2);
 
-	protected override void Setup(RectTransform _Container, ASFColorClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	public override void Setup(RectTransform _Container, ASFColorClip _Clip, Rect _ClipRect, Rect _ViewRect)
 	{
 		base.Setup(_Container, _Clip, _ClipRect, _ViewRect);
 		

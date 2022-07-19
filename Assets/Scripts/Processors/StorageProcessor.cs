@@ -179,14 +179,37 @@ public class StorageProcessor
 		return LoadAsync(_RemotePath, false, _Progress, m_Textures, WebRequest.LoadTextureFile, _Token);
 	}
 
+	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, CancellationToken _Token = default)
+	{
+		return LoadAudioClipAsync(_RemotePath, null, _Token);
+	}
+
 	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
 	{
 		return LoadAsync(_RemotePath, false, _Progress, m_AudioClips, WebRequest.LoadAudioClipFile, _Token);
 	}
 
+	public Task<string> LoadJson(string _RemotePath, bool _Force, CancellationToken _Token = default)
+	{
+		return LoadJson(_RemotePath, _Force, null, _Token);
+	}
+
 	public Task<string> LoadJson(string _RemotePath, bool _Force, Action<float> _Progress, CancellationToken _Token = default)
 	{
 		return LoadJson(_RemotePath, _Force, Encoding.UTF8, _Progress, _Token);
+	}
+
+	public Task UploadJson(string _RemotePath, string _Json, Encoding _Encoding, CancellationToken _Token = default)
+	{
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		
+		_Encoding ??= Encoding.UTF8;
+		
+		byte[] bytes = _Encoding.GetBytes(_Json);
+		
+		byte[] encode = Compression.Compress(bytes);
+		
+		return reference.PutBytesAsync(encode, null, null, _Token);
 	}
 
 	public Task<string> LoadJson(string _RemotePath, bool _Force, Encoding _Encoding, Action<float> _Progress, CancellationToken _Token = default)

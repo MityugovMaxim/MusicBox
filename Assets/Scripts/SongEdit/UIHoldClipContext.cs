@@ -58,7 +58,7 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 		return distance <= 50;
 	}
 
-	protected override void Setup(RectTransform _Container, ASFHoldClip _Clip, Rect _ClipRect, Rect _ViewRect)
+	public override void Setup(RectTransform _Container, ASFHoldClip _Clip, Rect _ClipRect, Rect _ViewRect)
 	{
 		base.Setup(_Container, _Clip, _ClipRect, _ViewRect);
 		
@@ -71,6 +71,12 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 		ProcessHandles();
 		
 		m_Spline.Rebuild();
+	}
+
+	public void Process()
+	{
+		foreach (UIHoldKey item in m_Items)
+			item.Process();
 	}
 
 	void RemapKeys()
@@ -98,7 +104,7 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 		Clip.MinTime += minDelta;
 		Clip.MaxTime += maxDelta;
 		
-		foreach (ASFHoldClip.Key key in Clip.Keys)
+		foreach (ASFHoldKey key in Clip.Keys)
 		{
 			key.Time -= minDelta;
 		}
@@ -108,7 +114,7 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 	{
 		Clip.Keys.Sort((_A, _B) => _A.Time.CompareTo(_B.Time));
 		
-		foreach (ASFHoldClip.Key key in Clip.Keys)
+		foreach (ASFHoldKey key in Clip.Keys)
 		{
 			Vector2 position = GetKeyPosition(key.Time, key.Position);
 			UISpline.Key spline = new UISpline.Key();
@@ -157,9 +163,9 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 		
 		for (int i = 0; i < Clip.Keys.Count; i++)
 		{
-			ASFHoldClip.Key key      = Clip.Keys[i];
-			Vector2         position = GetKeyPosition(key.Time, key.Position);
-			float           size     = i == 0 || i == Clip.Keys.Count - 1 ? Padding * 2 : Padding * 1.5f;
+			ASFHoldKey key      = Clip.Keys[i];
+			Vector2    position = GetKeyPosition(key.Time, key.Position);
+			float      size     = i == 0 || i == Clip.Keys.Count - 1 ? Padding * 2 : Padding * 1.5f;
 			
 			UIHoldKey item = m_ItemPool.Spawn(RectTransform, position, size);
 			item.Setup(key, Clip, ClipRect, Reposition, Rebuild);
@@ -212,7 +218,7 @@ public class UIHoldClipContext : ASFClipContext<ASFHoldClip>, IPointerClickHandl
 		double time     = ASFMath.PositionToTime(point.y, rect.yMin, rect.yMax, 0, Clip.Length);
 		float  position = ASFMath.PositionToPhase(point.x, rect.xMin, rect.xMax);
 		
-		Clip.Keys.Add(new ASFHoldClip.Key(time, position));
+		Clip.Keys.Add(new ASFHoldKey(time, position));
 		
 		Rebuild();
 	}

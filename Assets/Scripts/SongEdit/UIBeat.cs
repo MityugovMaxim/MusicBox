@@ -6,8 +6,6 @@ using Zenject;
 
 public class UIBeat : UIEntity
 {
-	const double BPM_STEP = 4d;
-
 	public double Time
 	{
 		get => m_Time;
@@ -36,7 +34,7 @@ public class UIBeat : UIEntity
 		}
 	}
 
-	public double Step => 60d / BPM / BPM_STEP;
+	public double Step => 60.0 / BPM / Bar;
 
 	public float BPM
 	{
@@ -47,6 +45,20 @@ public class UIBeat : UIEntity
 				return;
 			
 			m_BPM = value;
+			
+			ProcessTime();
+		}
+	}
+
+	public int Bar
+	{
+		get => m_Bar;
+		set
+		{
+			if (m_Bar == value)
+				return;
+			
+			m_Bar = value;
 			
 			ProcessTime();
 		}
@@ -93,6 +105,7 @@ public class UIBeat : UIEntity
 	[SerializeField] float  m_Duration;
 	[SerializeField] float  m_Ratio;
 	[SerializeField] float  m_BPM;
+	[SerializeField] int    m_Bar;
 
 	[Inject] UIBeatKey.Pool m_ItemPool;
 
@@ -149,7 +162,7 @@ public class UIBeat : UIEntity
 	{
 		m_Keys.Clear();
 		
-		if (Math.Abs(MaxTime - MinTime) < double.Epsilon * 2)
+		if (MathUtility.Approximately(MinTime, MaxTime) || MathUtility.Approximately(BPM, 0) || Bar == 0)
 			return;
 		
 		Rect rect = GetLocalRect();
@@ -157,7 +170,7 @@ public class UIBeat : UIEntity
 		double minTime = Origin + Time + MinTime;
 		double maxTime = Origin + Time + MaxTime;
 		
-		double step = 60d / m_BPM / BPM_STEP;
+		double step = Step;
 		
 		double time = Math.Ceiling(minTime / step) * step - step;
 		while (time <= maxTime + step)

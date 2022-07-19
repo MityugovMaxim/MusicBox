@@ -9,8 +9,8 @@ public class UICreateHoldHandle : UICreateClipHandle<ASFHoldTrack, ASFHoldClip>
 		return new ASFHoldClip(
 			_Time,
 			_Time + length,
-			new ASFHoldClip.Key(0, _Position),
-			new ASFHoldClip.Key(length, _Position)
+			new ASFHoldKey(0, _Position),
+			new ASFHoldKey(length, _Position)
 		);
 	}
 }

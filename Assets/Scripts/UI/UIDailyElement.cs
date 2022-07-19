@@ -80,22 +80,22 @@ public class UIDailyElement : UIOverlayButton
 		
 		string dailyID = m_DailyManager.GetDailyID();
 		
-		if (m_DailyID == dailyID)
-			return;
-		
 		Processing = true;
-		
-		m_DailyID = dailyID;
 		
 		await m_TimerGroup.HideAsync();
 		
-		await m_ItemsGroup.HideAsync();
-		
-		ProcessDaily();
-		
-		await Task.Delay(250);
-		
-		await m_ItemsGroup.ShowAsync();
+		if (m_DailyID != dailyID)
+		{
+			m_DailyID = dailyID;
+			
+			await m_ItemsGroup.HideAsync();
+			
+			ProcessDaily();
+			
+			await Task.Delay(250);
+			
+			await m_ItemsGroup.ShowAsync();
+		}
 		
 		Processing = false;
 	}
@@ -283,7 +283,16 @@ public class UIDailyElement : UIOverlayButton
 			m_Timer.Setup(startTimestamp, endTimestamp, OnTimer);
 			
 			await m_ItemsGroup.HideAsync();
+			
 			await m_TimerGroup.ShowAsync();
+			
+			m_DailyID = m_DailyManager.GetDailyID();
+			
+			ProcessDaily();
+			
+			await Task.Delay(250);
+			
+			await m_ItemsGroup.ShowAsync();
 		}
 		
 		Processing = false;

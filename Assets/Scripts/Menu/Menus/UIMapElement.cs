@@ -30,15 +30,25 @@ public class UIMapElement : UIOverlayButton
 		Open();
 	}
 
-	void Open()
+	async void Open()
 	{
-		UIMapEditMenu mapEditMenu = m_MenuProcessor.GetMenu<UIMapEditMenu>();
+		UISongEditMenu songEditMenu = m_MenuProcessor.GetMenu<UISongEditMenu>();
 		
-		if (mapEditMenu == null)
+		if (songEditMenu == null)
 			return;
 		
-		mapEditMenu.Setup(m_SongID);
+		songEditMenu.Setup(m_SongID);
 		
-		mapEditMenu.Show();
+		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
+		
+		loadingMenu.Setup(m_SongID);
+		
+		await loadingMenu.ShowAsync();
+		
+		await songEditMenu.Load();
+		
+		songEditMenu.Show(true);
+		
+		await loadingMenu.HideAsync();
 	}
 }

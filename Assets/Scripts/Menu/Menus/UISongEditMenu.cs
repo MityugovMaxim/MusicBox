@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AudioBox.ASF;
-using AudioBox.Logging;
 using UnityEngine.Purchasing.MiniJSON;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
@@ -79,8 +78,8 @@ public static class ASFMidiParser
 				new ASFHoldClip(
 					minTime,
 					maxTime,
-					new ASFHoldClip.Key(0, position),
-					new ASFHoldClip.Key(length, position)
+					new ASFHoldKey(0, position),
+					new ASFHoldKey(length, position)
 				)
 			);
 		}
@@ -116,13 +115,13 @@ public static class ASFMidiParser
 			
 			List<BendData> bends = GetBends(note, slides, tempoMap);
 			
-			List<ASFHoldClip.Key> keys = new List<ASFHoldClip.Key>();
+			List<ASFHoldKey> keys = new List<ASFHoldKey>();
 			
 			foreach (BendData bend in bends)
 			{
 				double time = (double)(bend.Time - minTime) / 1000;
 				
-				keys.Add(new ASFHoldClip.Key(time, bend.Position));
+				keys.Add(new ASFHoldKey(time, bend.Position));
 			}
 			
 			clips.Add(
@@ -415,6 +414,7 @@ public class UISongEditMenu : UIMenu
 		
 		float ratio    = m_ConfigProcessor.SongRatio;
 		float bpm      = m_SongsProcessor.GetBPM(m_SongID);
+		int   bar      = m_SongsProcessor.GetBar(m_SongID);
 		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
 		float duration = RectTransform.rect.height / speed;
 		
@@ -430,6 +430,7 @@ public class UISongEditMenu : UIMenu
 		m_Beat.Duration = duration;
 		m_Beat.Ratio    = ratio;
 		m_Beat.BPM      = bpm;
+		m_Beat.Bar      = bar;
 		m_Beat.Time     = 0;
 		
 		await m_Background.RenderAsync();
@@ -439,19 +440,25 @@ public class UISongEditMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
-	public async void Back()
+	public void Back()
 	{
-		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
-		
-		songMenu.Setup(m_SongID);
-		
-		await m_MenuProcessor.Show(MenuType.SongMenu, true);
-		
-		await m_MenuProcessor.Hide(MenuType.SongEditMenu);
+		Hide();
 	}
 
 	public async void Upload()
 	{
+		string artist = m_SongsProcessor.GetArtist(m_SongID);
+		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		
+		bool confirm = await m_MenuProcessor.ConfirmAsync(
+			"upload",
+			$"UPLOAD '{artist} - {title}'",
+			"Are you sure want to upload map?"
+		);
+		
+		if (!confirm)
+			return;
+		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
 		Dictionary<string, object> data = m_Player.Serialize();
@@ -466,9 +473,7 @@ public class UISongEditMenu : UIMenu
 		}
 		catch (Exception exception)
 		{
-			Log.Exception(this, exception, "Upload ASF failed.");
-			
-			await m_MenuProcessor.ExceptionAsync("Upload failed", exception);
+			await m_MenuProcessor.ExceptionAsync(exception);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
@@ -476,13 +481,33 @@ public class UISongEditMenu : UIMenu
 
 	public async void Restore()
 	{
+		string artist = m_SongsProcessor.GetArtist(m_SongID);
+		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		
+		bool confirm = await m_MenuProcessor.ConfirmAsync(
+			"restore",
+			$"RESTORE '{artist} - {title}'",
+			"Are you sure want to restore map?"
+		);
+		
+		if (!confirm)
+			return;
+		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		string asf = await LoadASF();
+		try
+		{
+			string asf = await LoadASF();
+			
+			m_Player.Clear();
+			m_Player.Deserialize(asf);
+			m_Player.Sample();
+		}
+		catch (Exception exception)
+		{
+			await m_MenuProcessor.ExceptionAsync(exception);
+		}
 		
-		m_Player.Clear();
-		m_Player.Deserialize(asf);
-		m_Player.Sample();
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
@@ -532,9 +557,7 @@ public class UISongEditMenu : UIMenu
 		catch (TaskCanceledException) { }
 		catch (Exception exception)
 		{
-			Log.Exception(this, exception, "Select midi file failed.");
-			
-			await m_MenuProcessor.ExceptionAsync("Select midi failed", exception);
+			await m_MenuProcessor.ExceptionAsync(exception);
 		}
 		
 		if (!string.IsNullOrEmpty(path))
@@ -556,9 +579,9 @@ public class UISongEditMenu : UIMenu
 
 	Task<AudioClip> LoadMusic()
 	{
-		string path = $"Songs/{m_SongID}.ogg";
+		string music = m_SongsProcessor.GetMusic(m_SongID);
 		
-		return m_StorageProcessor.LoadAudioClipAsync(path);
+		return m_StorageProcessor.LoadAudioClipAsync(music);
 	}
 
 	Task<string> LoadASF()

@@ -29,26 +29,35 @@ public class UIHoldKey : UIEntity, IPointerClickHandler, IDragHandler, IEndDragH
 
 	float Padding => Container.rect.width / 8;
 
+	[SerializeField] GameObject m_Highlight;
+
 	[Inject] UIBeat             m_Beat;
 	[Inject] UIPlayer           m_Player;
 	[Inject] UICreateHoldHandle m_CreateHoldHandle;
 
-	ASFHoldClip.Key m_Key;
-	ASFHoldClip     m_Clip;
-	Rect            m_ClipRect;
-	Action          m_Reposition;
-	Action          m_Rebuild;
-	bool            m_Drag;
+	ASFHoldKey  m_Key;
+	ASFHoldClip m_Clip;
+	Rect        m_ClipRect;
+	Action      m_Reposition;
+	Action      m_Rebuild;
+	bool        m_Drag;
 
 	readonly ClickCounter m_RemoveKey = new ClickCounter(2);
 
-	public void Setup(ASFHoldClip.Key _Key, ASFHoldClip _Clip, Rect _ClipRect, Action _Reposition, Action _Rebuild)
+	public void Setup(ASFHoldKey _Key, ASFHoldClip _Clip, Rect _ClipRect, Action _Reposition, Action _Rebuild)
 	{
 		m_Key        = _Key;
 		m_Clip       = _Clip;
 		m_ClipRect   = _ClipRect;
 		m_Reposition = _Reposition;
 		m_Rebuild    = _Rebuild;
+	}
+
+	public void Process()
+	{
+		double time = m_Clip.MinTime + m_Key.Time;
+		
+		m_Highlight.SetActive(m_Player.Time >= time);
 	}
 
 	void Reposition(Vector2 _Offset, bool _Snap)

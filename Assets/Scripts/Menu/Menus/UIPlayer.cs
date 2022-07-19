@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class UIPlayer : ASFPlayer
 {
+	public override double Length => m_Length;
+
 	[SerializeField] UIAudioWave          m_Background;
 	[SerializeField] UIBeat               m_Beat;
 	[SerializeField] RectTransform        m_InputArea;
@@ -13,6 +15,8 @@ public class UIPlayer : ASFPlayer
 	[SerializeField] UITapTrackContext    m_TapTrack;
 	[SerializeField] UIDoubleTrackContext m_DoubleTrack;
 	[SerializeField] UIHoldTrackContext   m_HoldTrack;
+
+	float m_Length;
 
 	public void Setup(float _Ratio, float _Duration, AudioClip _Music, string _ASF)
 	{
@@ -22,6 +26,8 @@ public class UIPlayer : ASFPlayer
 		Ratio    = _Ratio;
 		Duration = _Duration;
 		Music    = _Music;
+		
+		m_Length = Music.length;
 		
 		float position = 1.0f - Ratio;
 		
@@ -95,7 +101,7 @@ public class UIPlayer : ASFPlayer
 		if (m_Beat != null)
 			m_Beat.Time = Time;
 		
-		if (Music != null && Time >= Music.length)
+		if (Time >= m_Length)
 			Stop();
 	}
 }
