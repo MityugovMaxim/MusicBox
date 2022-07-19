@@ -18,4 +18,28 @@ public static class VectorExtension
 	{
 		return new Vector2(_Vector.y, -_Vector.x);
 	}
+
+	public static Vector2 TransformPoint(this Vector2 _Vector, Transform _Source, Transform _Target)
+	{
+		Vector2 vector = _Source.TransformPoint(_Vector);
+		
+		return _Target.InverseTransformPoint(vector);
+	}
+
+	public static Vector2 TransformPoint(this Vector2 _Vector, Transform _Transform)
+	{
+		return _Transform.InverseTransformPoint(_Vector);
+	}
+
+	public static Vector2 VerticalClamp(this Vector2 _Vector, float _Min, float _Max)
+	{
+		_Vector.y = Mathf.Clamp(_Vector.y, _Min, _Max);
+		return _Vector;
+	}
+
+	public static Vector2 HorizontalClamp(this Vector2 _Vector, float _Min, float _Max)
+	{
+		_Vector.x = Mathf.Clamp(_Vector.x, _Min, _Max);
+		return _Vector;
+	}
 }

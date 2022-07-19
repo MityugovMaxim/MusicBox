@@ -76,6 +76,7 @@ public static class AndroidGoogleAuth
 		};
 	}
 
+	[Preserve]
 	static string GetEmail()
 	{
 		using (AndroidJavaClass auth = new AndroidJavaClass(CLASS_NAME))
