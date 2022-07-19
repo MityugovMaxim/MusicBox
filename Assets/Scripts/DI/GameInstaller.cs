@@ -205,6 +205,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<ApplicationDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<ProfileTimerSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SongsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoresDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProductsDataUpdateSignal>().OptionalSubscriber();

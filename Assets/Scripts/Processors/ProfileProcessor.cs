@@ -83,6 +83,9 @@ public class ProfileTransaction
 public class ProfileDataUpdateSignal { }
 
 [Preserve]
+public class ProfileTimerSignal { }
+
+[Preserve]
 public class ProfileProcessor : IInitializable, IDisposable
 {
 	public long Coins => m_Snapshot?.Coins ?? 0;
@@ -196,6 +199,11 @@ public class ProfileProcessor : IInitializable, IDisposable
 	public ProfileTimer GetTimer(string _TimerID)
 	{
 		return m_Snapshot?.Timers?.FirstOrDefault(_Timer => _Timer.ID == _TimerID);
+	}
+
+	public void ProcessTimer()
+	{
+		m_SignalBus.Fire<ProfileTimerSignal>();
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)

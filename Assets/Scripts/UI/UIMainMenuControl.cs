@@ -35,6 +35,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Read);
+		m_SignalBus.Subscribe<ProfileTimerSignal>(Read);
 		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Subscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
@@ -51,6 +52,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Read);
+		m_SignalBus.Unsubscribe<ProfileTimerSignal>(Read);
 		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Process);
 		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(ProcessOffersBadge);

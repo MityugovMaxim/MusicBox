@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -81,6 +82,8 @@ public class UIDailyElement : UIOverlayButton
 		string dailyID = m_DailyManager.GetDailyID();
 		
 		Processing = true;
+		
+		m_ProfileProcessor.ProcessTimer();
 		
 		await m_TimerGroup.HideAsync();
 		
@@ -286,7 +289,7 @@ public class UIDailyElement : UIOverlayButton
 			
 			await m_TimerGroup.ShowAsync();
 			
-			m_DailyID = m_DailyManager.GetDailyID();
+			m_DailyID = m_DailyManager.GetDailyIDs().FirstOrDefault();
 			
 			ProcessDaily();
 			
