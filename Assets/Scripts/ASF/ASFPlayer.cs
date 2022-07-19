@@ -37,13 +37,29 @@ namespace AudioBox.ASF
 		public float Duration
 		{
 			get => m_Duration;
-			protected set => m_Duration = value;
+			set
+			{
+				if (Mathf.Approximately(m_Duration, value))
+					return;
+				
+				m_Duration = value;
+				
+				Sample();
+			}
 		}
 
 		public float Ratio
 		{
 			get => m_Ratio;
-			protected set => m_Ratio = value;
+			set
+			{
+				if (Mathf.Approximately(m_Ratio, value))
+					return;
+				
+				m_Ratio = value;
+				
+				Sample();
+			}
 		}
 
 		public AudioClip Music
@@ -192,9 +208,9 @@ namespace AudioBox.ASF
 				m_Samplers.Remove(_Sampler);
 		}
 
-		protected IDictionary<string, object> Serialize()
+		protected Dictionary<string, object> Serialize()
 		{
-			IDictionary<string, object> data = new Dictionary<string, object>();
+			Dictionary<string, object> data = new Dictionary<string, object>();
 			
 			foreach (ASFTrack track in m_Tracks)
 			{

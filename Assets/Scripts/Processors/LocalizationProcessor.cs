@@ -75,6 +75,13 @@ public class LocalizationProcessor : IInitializable
 		m_TokenSource = null;
 	}
 
+	public Task Reload(string _Language)
+	{
+		m_Language = null;
+		
+		return Load(_Language);
+	}
+
 	public string Format(string _Key, object _Arg)
 	{
 		if (string.IsNullOrEmpty(_Key))

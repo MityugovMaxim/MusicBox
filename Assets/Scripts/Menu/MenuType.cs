@@ -28,4 +28,5 @@ public enum MenuType
 	LanguagesMenu        = 25,
 	LocalizationMenu     = 26,
 	LocalizationEditMenu = 27,
+	MapsMenu             = 28,
 }

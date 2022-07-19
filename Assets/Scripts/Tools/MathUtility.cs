@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -273,6 +274,11 @@ public static class MeshUtility
 
 public static class MathUtility
 {
+	public static bool Approximately(double _A, double _B)
+	{
+		return Math.Abs(_A - _B) < double.Epsilon * 2;
+	}
+
 	public static float Remap(float _Value, float _Low1, float _High1, float _Low2, float _High2)
 	{
 		return _Low2 + (_Value - _Low1) * (_High2 - _Low2) / (_High1 - _Low1);

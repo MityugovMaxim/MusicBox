@@ -291,11 +291,11 @@ public class TutorialPlayer : ASFPlayer
 		
 		ASFHoldClip[] clips =
 		{
-			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(3))), // 1
-			new ASFHoldClip(3,   5, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(4))), // 2
-			new ASFHoldClip(6,   8, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(3))), // 3
-			new ASFHoldClip(9,  11, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(2))), // 4
-			new ASFHoldClip(12, 14, new ASFHoldClip.Key(0, GetPosition(1)), new ASFHoldClip.Key(2, GetPosition(1)))  // 5
+			new ASFHoldClip(0,   2, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(3))), // 1
+			new ASFHoldClip(3,   5, new ASFHoldKey(0, GetPosition(4)), new ASFHoldKey(2, GetPosition(4))), // 2
+			new ASFHoldClip(6,   8, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(3))), // 3
+			new ASFHoldClip(9,  11, new ASFHoldKey(0, GetPosition(2)), new ASFHoldKey(2, GetPosition(2))), // 4
+			new ASFHoldClip(12, 14, new ASFHoldKey(0, GetPosition(1)), new ASFHoldKey(2, GetPosition(1)))  // 5
 		};
 		
 		ASFColorClip color = new ASFColorClip(
@@ -324,13 +324,13 @@ public class TutorialPlayer : ASFPlayer
 		
 		ASFHoldClip[] clips =
 		{
-			new ASFHoldClip(0,   2, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(2))), // 1
-			new ASFHoldClip(3,   5, new ASFHoldClip.Key(0, GetPosition(4)), new ASFHoldClip.Key(2, GetPosition(3))), // 2
-			new ASFHoldClip(6,   8, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(2))), // 3
-			new ASFHoldClip(9,  11, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(1))), // 4
-			new ASFHoldClip(12, 14, new ASFHoldClip.Key(0, GetPosition(1)), new ASFHoldClip.Key(2, GetPosition(2))), // 5
-			new ASFHoldClip(15, 17, new ASFHoldClip.Key(0, GetPosition(2)), new ASFHoldClip.Key(2, GetPosition(3))), // 6
-			new ASFHoldClip(18, 20, new ASFHoldClip.Key(0, GetPosition(3)), new ASFHoldClip.Key(2, GetPosition(4)))  // 7
+			new ASFHoldClip(0,   2, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(2))), // 1
+			new ASFHoldClip(3,   5, new ASFHoldKey(0, GetPosition(4)), new ASFHoldKey(2, GetPosition(3))), // 2
+			new ASFHoldClip(6,   8, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(2))), // 3
+			new ASFHoldClip(9,  11, new ASFHoldKey(0, GetPosition(2)), new ASFHoldKey(2, GetPosition(1))), // 4
+			new ASFHoldClip(12, 14, new ASFHoldKey(0, GetPosition(1)), new ASFHoldKey(2, GetPosition(2))), // 5
+			new ASFHoldClip(15, 17, new ASFHoldKey(0, GetPosition(2)), new ASFHoldKey(2, GetPosition(3))), // 6
+			new ASFHoldClip(18, 20, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(4)))  // 7
 		};
 		
 		ASFColorClip color = new ASFColorClip(

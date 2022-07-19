@@ -178,12 +178,12 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 			
 			await Spring(min, max, token);
 		}
-		catch (TaskCanceledException) { }
-		
-		if (token.IsCancellationRequested)
+		catch (TaskCanceledException)
+		{
 			return;
+		}
 		
-		m_TokenSource?.Dispose();
+		m_TokenSource.Dispose();
 		m_TokenSource = null;
 	}
 

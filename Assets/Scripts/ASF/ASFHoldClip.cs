@@ -6,44 +6,30 @@ namespace AudioBox.ASF
 {
 	public class ASFHoldClip : ASFClip
 	{
-		public class Key
-		{
-			public double Time     { get; set; }
-			public float  Position { get; set; }
-
-			public Key() { }
-
-			public Key(double _Time, float _Position)
-			{
-				Time     = _Time;
-				Position = _Position;
-			}
-		}
-
 		public float Phase { get; private set; }
 
-		public List<Key> Keys { get; }
+		public List<ASFHoldKey> Keys { get; }
 
 		public ASFHoldClip(double _MinTime, double _MaxTime) : base(_MinTime, _MaxTime)
 		{
-			Keys = new List<Key>()
+			Keys = new List<ASFHoldKey>()
 			{
-				new Key(_MinTime, 0.5f),
-				new Key(_MaxTime, 0.5f),
+				new ASFHoldKey(_MinTime, 0.5f),
+				new ASFHoldKey(_MaxTime, 0.5f),
 			};
 		}
 
-		public ASFHoldClip(double _MinTime, double _MaxTime, params Key[] _Keys) : base(_MinTime, _MaxTime)
+		public ASFHoldClip(double _MinTime, double _MaxTime, params ASFHoldKey[] _Keys) : base(_MinTime, _MaxTime)
 		{
-			Keys = new List<Key>(_Keys);
+			Keys = new List<ASFHoldKey>(_Keys);
 		}
 
 		public override ASFClip Clone()
 		{
-			Key[] keys = new Key[Keys.Count];
+			ASFHoldKey[] keys = new ASFHoldKey[Keys.Count];
 			
 			for (int i = 0; i < Keys.Count; i++)
-				keys[i] = new Key(Keys[i].Time, Keys[i].Position);
+				keys[i] = new ASFHoldKey(Keys[i].Time, Keys[i].Position);
 			
 			return new ASFHoldClip(MinTime, MaxTime, keys);
 		}
@@ -82,7 +68,7 @@ namespace AudioBox.ASF
 			
 			IList keysData = new List<object>();
 			
-			foreach (Key key in Keys)
+			foreach (ASFHoldKey key in Keys)
 			{
 				if (key == null)
 					continue;
@@ -118,13 +104,27 @@ namespace AudioBox.ASF
 				if (keyData == null)
 					continue;
 				
-				Key key = new Key(
+				ASFHoldKey key = new ASFHoldKey(
 					keyData.GetDouble("time"),
 					keyData.GetFloat("position")
 				);
 				
 				Keys.Add(key);
 			}
+		}
+	}
+
+	public class ASFHoldKey
+	{
+		public double Time     { get; set; }
+		public float  Position { get; set; }
+
+		public ASFHoldKey() { }
+
+		public ASFHoldKey(double _Time, float _Position)
+		{
+			Time     = _Time;
+			Position = _Position;
 		}
 	}
 }

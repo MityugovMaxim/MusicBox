@@ -8,6 +8,7 @@ public class AdminInstaller : MonoInstaller
 	[SerializeField] UISnapshotElement     m_SnapshotElement;
 	[SerializeField] UILanguageElement     m_LanguageElement;
 	[SerializeField] UILocalizationElement m_LocalizationElement;
+	[SerializeField] UIMapElement          m_MapElement;
 
 	public override void InstallBindings()
 	{
@@ -26,6 +27,8 @@ public class AdminInstaller : MonoInstaller
 		InstallPool<UILanguageElement, UILanguageElement.Pool>(m_LanguageElement, 10);
 		
 		InstallPool<UILocalizationElement, UILocalizationElement.Pool>(m_LocalizationElement, 10);
+		
+		InstallPool<UIMapElement, UIMapElement.Pool>(m_MapElement, 10);
 	}
 
 	void InstallProcessor<T>()

@@ -387,6 +387,49 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 		);
 	}
 
+	public void Fill(IEnumerable<Vector2> _Positions)
+	{
+		ClearKeys();
+		
+		foreach (Vector2 position in _Positions)
+		{
+			Key key = new Key();
+			key.Position   = position;
+			key.InTangent  = Vector2.zero;
+			key.OutTangent = Vector2.zero;
+			
+			AddKey(key);
+		}
+	}
+
+	public void Smooth(float _Weight)
+	{
+		for (int i = 1; i < m_Keys.Count; i++)
+		{
+			Key source = m_Keys[i - 1];
+			Key target = m_Keys[i];
+			
+			float tangent = Mathf.Abs(target.Position.y - source.Position.y) * _Weight;
+			
+			source.OutTangent = new Vector2(0, tangent);
+			target.InTangent  = new Vector2(0, -tangent);
+			
+			m_Keys[i - 1] = source;
+			m_Keys[i]     = target;
+		}
+		
+		SetSplineDirty();
+	}
+
+	public void Resample(float _SamplesPerUnit)
+	{
+		float length = GetLength(25);
+		
+		Samples = Mathf.CeilToInt(length * _SamplesPerUnit);
+		
+		Rebuild();
+	}
+
 	void SetSplineDirty()
 	{
 		m_SplineDirty = m_AutoRebuild;

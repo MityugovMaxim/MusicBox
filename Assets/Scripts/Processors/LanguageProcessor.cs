@@ -70,19 +70,11 @@ public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpd
 		return Select(language);
 	}
 
-	public List<string> GetAllLanguages()
+	public List<string> GetLanguages(bool _IncludeInactive = false)
 	{
 		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Select(_Snapshot => _Snapshot.ID)
-			.ToList();
-	}
-
-	public List<string> GetLanguages()
-	{
-		return Snapshots
-			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _IncludeInactive || _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
@@ -117,7 +109,7 @@ public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpd
 
 	public async Task Reload()
 	{
-		await m_LocalizationProcessor.Load(Language);
+		await m_LocalizationProcessor.Reload(Language);
 		
 		FireSignal();
 	}

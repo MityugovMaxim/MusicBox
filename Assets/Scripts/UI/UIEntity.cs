@@ -73,6 +73,11 @@ public class UIEntity : UIBehaviour
 		return RectTransform.InverseTransformPoint(_Point);
 	}
 
+	public Vector2 GetWorldPoint()
+	{
+		return RectTransform.TransformPoint(RectTransform.rect.center);
+	}
+
 	public Vector2 GetWorldPoint(Vector2 _Point)
 	{
 		return RectTransform.TransformPoint(_Point);

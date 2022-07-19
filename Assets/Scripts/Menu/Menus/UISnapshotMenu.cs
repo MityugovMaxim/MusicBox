@@ -119,7 +119,7 @@ public class UISnapshotMenu : UIMenu
 		if (string.IsNullOrEmpty(m_Descriptors))
 			return;
 		
-		List<string> languages = m_LanguageProcessor.GetAllLanguages();
+		List<string> languages = m_LanguageProcessor.GetLanguages(true);
 		foreach (string language in languages)
 		{
 			if (string.IsNullOrEmpty(language))
@@ -176,7 +176,7 @@ public class UISnapshotMenu : UIMenu
 		
 		if (!string.IsNullOrEmpty(m_Descriptors))
 		{
-			List<string> languages = m_LanguageProcessor.GetAllLanguages();
+			List<string> languages = m_LanguageProcessor.GetLanguages(true);
 			foreach (string language in languages)
 			{
 				if (string.IsNullOrEmpty(language))
@@ -261,17 +261,19 @@ public class UISnapshotMenu : UIMenu
 			.Child(m_Descriptors)
 			.GetValueAsync();
 		
-		List<string> languages = m_LanguageProcessor.GetAllLanguages();
+		List<string> languages = m_LanguageProcessor.GetLanguages(true);
 		foreach (string language in languages)
 		{
 			if (string.IsNullOrEmpty(language))
 				continue;
 			
-			DataSnapshot snapshot = data.Child(language).Child(m_SnapshotID);
+			string path = $"{language}/{m_SnapshotID}";
 			
-			Descriptor descriptor = snapshot != null && snapshot.Exists
-				? Activator.CreateInstance(typeof(Descriptor), data) as Descriptor
-				: new Descriptor(m_SnapshotID);
+			Descriptor descriptor;
+			if (data.HasChild(path))
+				descriptor = Activator.CreateInstance(typeof(Descriptor), data.Child(path)) as Descriptor;
+			else
+				descriptor = new Descriptor(m_SnapshotID);
 			
 			m_DescriptorsRegistry[language] = descriptor;
 			

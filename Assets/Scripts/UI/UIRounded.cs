@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteInEditMode]
+[RequireComponent(typeof(CanvasRenderer))]
 public class UIRounded : SpriteGraphic
 {
 	public enum Mode

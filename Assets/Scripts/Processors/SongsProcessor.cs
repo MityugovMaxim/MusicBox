@@ -17,6 +17,7 @@ public class SongSnapshot : Snapshot
 	public SongMode  Mode              { get; }
 	public SongBadge Badge             { get; }
 	public float     BPM               { get; }
+	public int       Bar               { get; }
 	public float     Speed             { get; }
 	public long      DefaultPayout     { get; }
 	public long      BronzePayout      { get; }
@@ -45,6 +46,7 @@ public class SongSnapshot : Snapshot
 		Mode              = SongMode.Free;
 		Badge             = SongBadge.New;
 		BPM               = 120;
+		Bar               = 4;
 		Speed             = 850;
 		DefaultPayout     = 5;
 		BronzePayout      = 10;
@@ -74,6 +76,7 @@ public class SongSnapshot : Snapshot
 		Mode              = _Data.GetEnum<SongMode>("mode");
 		Badge             = _Data.GetEnum<SongBadge>("badge");
 		BPM               = _Data.GetFloat("bpm");
+		Bar               = _Data.GetInt("bar", 4);
 		Speed             = _Data.GetFloat("speed");
 		DefaultPayout     = _Data.GetLong("default_payout");
 		BronzePayout      = _Data.GetLong("bronze_payout");
@@ -104,6 +107,7 @@ public class SongSnapshot : Snapshot
 		_Data["mode"]               = (int)Mode;
 		_Data["badge"]              = (int)Badge;
 		_Data["bpm"]                = BPM;
+		_Data["bar"]                = Bar;
 		_Data["speed"]              = Speed;
 		_Data["default_payout"]     = DefaultPayout;
 		_Data["bronze_payout"]      = BronzePayout;
@@ -133,11 +137,11 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 
 	[Inject] ProfileProcessor m_ProfileProcessor;
 
-	public List<string> GetSongIDs()
+	public List<string> GetSongIDs(bool _IncludeInactive = false)
 	{
 		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _IncludeInactive || _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.ToList();
 	}
@@ -203,14 +207,14 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Image ?? string.Empty;
+		return snapshot?.Preview ?? string.Empty;
 	}
 
 	public string GetMusic(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Image ?? string.Empty;
+		return snapshot?.Music ?? string.Empty;
 	}
 
 	public long GetPayout(string _SongID, ScoreRank _Rank)
@@ -270,6 +274,13 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.BPM ?? 0;
+	}
+
+	public int GetBar(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Bar ?? 0;
 	}
 
 	public float GetSpeed(string _SongID)

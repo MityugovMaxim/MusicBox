@@ -60,6 +60,8 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateAdminSongs();
 		
+		CreateAdminMaps();
+		
 		CreateAdminProgress();
 		
 		CreateAdminAmbient();
@@ -105,6 +107,28 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		);
 		
 		CreateAdmin(songs);
+	}
+
+	void CreateAdminMaps()
+	{
+		if (!m_RolesProcessor.HasSongsPermission())
+			return;
+		
+		AdminElementEntity maps = new AdminElementEntity(
+			"Edit maps",
+			m_AdminPool,
+			() =>
+			{
+				UIMapsMenu mapsMenu = m_MenuProcessor.GetMenu<UIMapsMenu>();
+				
+				if (mapsMenu == null)
+					return;
+				
+				mapsMenu.Show();
+			}
+		);
+		
+		CreateAdmin(maps);
 	}
 
 	void CreateAdminProgress()

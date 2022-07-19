@@ -26,12 +26,18 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	{
 		Refresh();
 		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 	}

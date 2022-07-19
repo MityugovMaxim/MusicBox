@@ -44,14 +44,16 @@ public class UILocalizedLabel : UIEntity
 		
 		ProcessText();
 		
-		m_SignalBus.Subscribe<LanguageSelectSignal>(ProcessText);
+		if (m_SignalBus != null)
+			m_SignalBus.Subscribe<LanguageSelectSignal>(ProcessText);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_SignalBus.Unsubscribe<LanguageSelectSignal>(ProcessText);
+		if (m_SignalBus != null)
+			m_SignalBus.Unsubscribe<LanguageSelectSignal>(ProcessText);
 	}
 
 	void ProcessText()

@@ -20,7 +20,7 @@ namespace AudioBox.ASF
 
 		protected RectTransform Container { get; private set; }
 
-		protected virtual void Setup(RectTransform _Container, TClip _Clip, Rect _ClipRect, Rect _ViewRect)
+		public virtual void Setup(RectTransform _Container, TClip _Clip, Rect _ClipRect, Rect _ViewRect)
 		{
 			Vector2 pivot = _Container.pivot;
 			RectTransform.SetParent(_Container);

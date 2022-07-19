@@ -79,7 +79,7 @@ public class ProductsDescriptor : DescriptorProcessor<ProductsDataUpdateSignal>
 [Preserve]
 public class ProductsProcessor : DataProcessor<ProductSnapshot, ProductsDataUpdateSignal>
 {
-	protected override string Path   => "products";
+	protected override string Path => "products";
 
 	[Inject] ProductsDescriptor m_ProductsDescriptor;
 

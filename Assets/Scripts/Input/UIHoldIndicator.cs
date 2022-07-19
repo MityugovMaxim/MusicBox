@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using AudioBox.ASF;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -41,44 +42,19 @@ public class UIHoldIndicator : UIIndicator
 	[SerializeField] float        m_SamplesPerUnit = 0.5f;
 	[SerializeField] float        m_Weight         = 0.25f;
 
+	ASFHoldClip m_Clip;
+
 	IEnumerator m_HighlightRoutine;
 
 	public void Build(ASFHoldClip _Clip)
 	{
-		m_Spline.ClearKeys();
+		m_Clip = _Clip;
 		
-		double length = _Clip.Length;
-		foreach (ASFHoldClip.Key key in _Clip.Keys)
-		{
-			Vector2      position = GetKeyPosition(key.Time, key.Position, length);
-			UISpline.Key spline   = new UISpline.Key();
-			spline.Position   = position;
-			spline.InTangent  = Vector2.zero;
-			spline.OutTangent = Vector2.zero;
-			
-			m_Spline.AddKey(spline);
-		}
+		m_Spline.Fill(_Clip.Keys.Select(GetKeyPosition));
 		
-		int count = m_Spline.GetKeysCount();
-		for (int i = 1; i < count; i++)
-		{
-			UISpline.Key source = m_Spline.GetKey(i - 1);
-			UISpline.Key target = m_Spline.GetKey(i);
-			
-			float tangent = Mathf.Abs(target.Position.y - source.Position.y) * m_Weight;
-			
-			source.OutTangent = new Vector2(0, tangent);
-			target.InTangent  = new Vector2(0, -tangent);
-			
-			m_Spline.SetKey(i - 1, source);
-			m_Spline.SetKey(i, target);
-		}
+		m_Spline.Smooth(m_Weight);
 		
-		float distance = m_Spline.CalcLength(25);
-		
-		// Calculate samples amount by spline length
-		m_Spline.Samples = Mathf.CeilToInt(distance * m_SamplesPerUnit);
-		m_Spline.Rebuild();
+		m_Spline.Resample(m_SamplesPerUnit);
 		
 		m_Line.Min = 0;
 		m_Line.Max = 1;
@@ -173,15 +149,15 @@ public class UIHoldIndicator : UIIndicator
 		StartCoroutine(m_HighlightRoutine);
 	}
 
-	Vector2 GetKeyPosition(double _Time, float _Position, double _Length)
+	Vector2 GetKeyPosition(ASFHoldKey _Key)
 	{
 		Rect rect = ClipRect
 			.Transform(Container, RectTransform)
 			.HorizontalPadding(Padding);
 		
 		return new Vector2(
-			ASFMath.PhaseToPosition(_Position, rect.xMin, rect.xMax),
-			ASFMath.TimeToPosition(_Time, 0, _Length, rect.yMin, rect.yMax)
+			ASFMath.PhaseToPosition(_Key.Position, rect.xMin, rect.xMax),
+			ASFMath.TimeToPosition(_Key.Time, 0, m_Clip.Length, rect.yMin, rect.yMax)
 		);
 	}
 

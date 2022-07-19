@@ -170,7 +170,7 @@ public class UILanguagesMenu : UIMenu
 		
 		m_Localizations.Clear();
 		
-		List<string> languages = m_LanguageProcessor.GetAllLanguages();
+		List<string> languages = m_LanguageProcessor.GetLanguages(true);
 		
 		foreach (string language in languages)
 		{
