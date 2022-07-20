@@ -27,6 +27,8 @@ public class UIProductBadge : UIEntity
 			return;
 		}
 		
+		gameObject.SetActive(true);
+		
 		if (badge.StartsWith(LOCALIZATION_PREFIX))
 			badge = m_LocalizationProcessor.Get(badge[LOCALIZATION_PREFIX.Length..]);
 		
