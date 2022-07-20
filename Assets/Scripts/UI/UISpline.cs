@@ -190,6 +190,9 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 	{
 		base.OnValidate();
 		
+		if (!IsInstanced || Application.isPlaying)
+			return;
+		
 		SetSplineDirty();
 	}
 	#endif
@@ -400,6 +403,8 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 			
 			AddKey(key);
 		}
+		
+		m_SplineDirty = true;
 	}
 
 	public void Smooth(float _Weight)
@@ -418,14 +423,14 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 			m_Keys[i]     = target;
 		}
 		
-		SetSplineDirty();
+		m_SplineDirty = true;
 	}
 
 	public void Resample(float _SamplesPerUnit)
 	{
-		float length = GetLength(25);
+		float length = CalcLength(25);
 		
-		Samples = Mathf.CeilToInt(length * _SamplesPerUnit);
+		Samples = Mathf.Max(4, Mathf.CeilToInt(length * _SamplesPerUnit));
 		
 		Rebuild();
 	}
@@ -438,6 +443,8 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 	[ContextMenu("Rebuild")]
 	public void Rebuild()
 	{
+		m_SplineDirty = false;
+		
 		GenerateLUT();
 		
 		if (Loop)
@@ -652,7 +659,7 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 		if (m_LUT == null || m_LUT.Count == 0)
 			return GetPosition(_Phase);
 		
-		float length = _Phase * m_LUT[m_LUT.Count - 1];
+		float length = _Phase * m_LUT[^1];
 		
 		int i = 0;
 		int j = m_LUT.Count - 1;

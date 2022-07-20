@@ -154,7 +154,7 @@ public class ProductsProcessor : DataProcessor<ProductSnapshot, ProductsDataUpda
 		
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
+		if (snapshot == null || string.IsNullOrEmpty(snapshot.Color) || !snapshot.Color.StartsWith('#'))
 			return fallback;
 		
 		return ColorUtility.TryParseHtmlString(snapshot.Color, out Color color) ? color : fallback;

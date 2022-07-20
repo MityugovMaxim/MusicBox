@@ -101,6 +101,7 @@ public class SongSnapshot : Snapshot
 		
 		_Data["active"]             = Active;
 		_Data["title"]              = Title;
+		_Data["artist"]             = Artist;
 		_Data["image"]              = Image;
 		_Data["preview"]            = Preview;
 		_Data["music"]              = Music;

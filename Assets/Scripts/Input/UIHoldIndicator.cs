@@ -50,7 +50,7 @@ public class UIHoldIndicator : UIIndicator
 	{
 		m_Clip = _Clip;
 		
-		m_Spline.Fill(_Clip.Keys.Select(GetKeyPosition));
+		m_Spline.Fill(m_Clip.Keys.Select(GetKeyPosition));
 		
 		m_Spline.Smooth(m_Weight);
 		

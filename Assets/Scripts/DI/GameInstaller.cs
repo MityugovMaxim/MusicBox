@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Advertisement.IosSupport;
 #endif
 using UnityEngine;
+using UnityEngine.iOS;
 using Zenject;
 using Object = UnityEngine.Object;
 
@@ -39,7 +40,23 @@ public class GameInstaller : MonoInstaller
 		ATTrackingStatusBinding.RequestAuthorizationTracking();
 		#endif
 		
+		#if UNITY_IOS
+		switch (Device.generation)
+		{
+			case DeviceGeneration.iPhone13:
+			case DeviceGeneration.iPhone12:
+			case DeviceGeneration.iPhone11:
+			case DeviceGeneration.iPhoneX:
+			case DeviceGeneration.iPhoneXR:
+				Application.targetFrameRate = 120;
+				break;
+			default:
+				Application.targetFrameRate = 60;
+				break;
+		}
+		#else
 		Application.targetFrameRate = 60;
+		#endif
 		
 		InstallCulture();
 		
