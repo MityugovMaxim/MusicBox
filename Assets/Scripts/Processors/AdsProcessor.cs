@@ -195,7 +195,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 	[Inject] AudioManager    m_AudioManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 
-	double m_Time;
+	float m_Time;
 
 	protected override Task OnFetch()
 	{
@@ -270,13 +270,13 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		return m_AdsProviders.FirstOrDefault(_AdsProvider => _AdsProvider.ID == _AdsProviderID);
 	}
 
-	public bool CheckAvailable() => Time.timeAsDouble >= m_Time;
+	public bool CheckAvailable() => Time.realtimeSinceStartup >= m_Time;
 
-	public bool CheckUnavailable() => Time.timeAsDouble < m_Time;
+	public bool CheckUnavailable() => Time.realtimeSinceStartup < m_Time;
 
 	public async Task<bool> Interstitial()
 	{
-		double time = Time.timeAsDouble;
+		float time = Time.realtimeSinceStartup;
 		
 		if (time < m_Time)
 			return true;
@@ -308,7 +308,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 
 	public async Task<bool> Rewarded()
 	{
-		m_Time = Time.timeAsDouble + m_ConfigProcessor.AdsCooldown;
+		m_Time = Time.realtimeSinceStartup + m_ConfigProcessor.AdsCooldown;
 		
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
