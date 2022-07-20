@@ -442,6 +442,10 @@ public class UISongEditMenu : UIMenu
 
 	public void Back()
 	{
+		m_AmbientProcessor.Resume();
+		
+		m_Player.Stop();
+		
 		Hide();
 	}
 
