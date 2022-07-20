@@ -3,9 +3,9 @@ using System.Globalization;
 using System.Linq;
 #if UNITY_IOS
 using Unity.Advertisement.IosSupport;
+using UnityEngine.iOS;
 #endif
 using UnityEngine;
-using UnityEngine.iOS;
 using Zenject;
 using Object = UnityEngine.Object;
 
