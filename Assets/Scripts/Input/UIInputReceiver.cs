@@ -68,7 +68,8 @@ public class UIInputReceiver : UIEntity
 		
 		EnableHandles();
 		
-		m_InputModule.Process();
+		if (m_InputModule != null)
+			m_InputModule.Process();
 		
 		MoveInput();
 		
