@@ -289,15 +289,14 @@ public class UIDailyElement : UIOverlayButton
 		{
 			m_Timer.Setup(startTimestamp, endTimestamp, OnTimer);
 			
-			await m_ItemsGroup.HideAsync();
-			
-			await m_TimerGroup.ShowAsync();
+			await Task.WhenAll(
+				m_ItemsGroup.HideAsync(),
+				m_TimerGroup.ShowAsync()
+			);
 			
 			m_DailyID = m_DailyManager.GetDailyIDs().FirstOrDefault();
 			
 			ProcessDaily();
-			
-			await Task.Delay(250);
 			
 			await m_ItemsGroup.ShowAsync();
 		}
