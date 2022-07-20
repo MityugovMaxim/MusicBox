@@ -68,7 +68,7 @@ public class ProductSnapshot : Snapshot
 		_Data["coins"]          = Coins;
 		_Data["badge"]          = Badge;
 		_Data["color"]          = Color;
-		_Data["song_ids"]       = SongIDs;
+		_Data["song_ids"]       = SongIDs.ToDictionary(_SongID => _SongID, _SongID => true);
 	}
 }
 
