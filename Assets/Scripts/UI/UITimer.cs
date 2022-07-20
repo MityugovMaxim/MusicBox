@@ -36,7 +36,7 @@ public class UITimer : UIEntity
 
 	DateTime m_StartTime;
 	DateTime m_EndTime;
-	double   m_Time;
+	float    m_Time;
 
 	protected override void OnEnable()
 	{
@@ -64,10 +64,10 @@ public class UITimer : UIEntity
 
 	void ProcessTimer()
 	{
-		if (Time.realtimeSinceStartupAsDouble < m_Time)
+		if (Time.realtimeSinceStartup < m_Time)
 			return;
 		
-		m_Time = Time.realtimeSinceStartupAsDouble + 1;
+		m_Time = Time.realtimeSinceStartup + 1;
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
