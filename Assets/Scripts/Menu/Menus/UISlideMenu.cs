@@ -2,17 +2,33 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerExitHandler
 {
 	[SerializeField] RectTransform m_Content;
 	[SerializeField] RectTransform m_Parallax;
+	[SerializeField] Button        m_CloseButton;
 
 	bool    m_Drag;
 	bool    m_Pressed;
 	Vector2 m_Delta;
 
 	CancellationTokenSource m_TokenSource;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_CloseButton.onClick.AddListener(Close);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_CloseButton.onClick.RemoveListener(Close);
+	}
 
 	async void Expand(bool _Instant = false)
 	{
@@ -120,6 +136,13 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 			_Function,
 			_Token
 		);
+	}
+
+	void Close()
+	{
+		CancelSlide();
+		
+		Hide();
 	}
 
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
