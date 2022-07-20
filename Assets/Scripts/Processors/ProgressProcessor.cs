@@ -40,7 +40,7 @@ public class ProgressSnapshot : Snapshot
 		_Data["level"]    = Level;
 		_Data["discs"]    = Discs;
 		_Data["coins"]    = Coins;
-		_Data["song_ids"] = SongIDs;
+		_Data["song_ids"] = SongIDs.ToDictionary(_SongID => _SongID, _SongID => true);
 	}
 }
 
