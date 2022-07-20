@@ -19,7 +19,7 @@ public class ProductSnapshot : Snapshot
 	public bool         NoAds        { get; }
 	public long         Coins        { get; }
 	public string       Badge        { get; }
-	public Color        Color        { get; }
+	public string       Color        { get; }
 	public List<string> SongIDs      { get; }
 
 	public ProductSnapshot() : base("new_product", 0)
@@ -34,6 +34,7 @@ public class ProductSnapshot : Snapshot
 		NoAds        = false;
 		Coins        = 0;
 		Badge        = string.Empty;
+		Color        = "#0081FFFF";
 		SongIDs      = new List<string>();
 	}
 
@@ -48,7 +49,7 @@ public class ProductSnapshot : Snapshot
 		Special      = _Data.GetBool("special");
 		Coins        = _Data.GetLong("coins");
 		Badge        = _Data.GetString("badge");
-		Color        = _Data.GetColor("color", "#0081FFFF");
+		Color        = _Data.GetString("color", "#0081FFFF");
 		NoAds        = _Data.GetBool("no_ads");
 		SongIDs      = _Data.GetChildKeys("song_ids");
 	}
@@ -149,9 +150,14 @@ public class ProductsProcessor : DataProcessor<ProductSnapshot, ProductsDataUpda
 
 	public Color GetColor(string _ProductID)
 	{
+		Color fallback = new Color(0, 0.5f, 1);
+		
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		return snapshot?.Color ?? new Color(0, 0.5f, 1);
+		if (snapshot == null)
+			return fallback;
+		
+		return ColorUtility.TryParseHtmlString(snapshot.Color, out Color color) ? color : fallback;
 	}
 
 	public List<string> GetSongIDs(string _ProductID)
