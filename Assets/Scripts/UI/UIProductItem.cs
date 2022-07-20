@@ -13,7 +13,7 @@ public class UIProductItem : UIOverlayButton
 	public static bool Processing { get; private set; }
 
 	[SerializeField] UIProductImage    m_Image;
-	[SerializeField] UIProductDiscount m_Discount;
+	[SerializeField] UIProductBadge m_Badge;
 	[SerializeField] UIProductPrice    m_Price;
 	[SerializeField] UIUnitLabel       m_Coins;
 	[SerializeField] UIGroup           m_OverlayGroup;
@@ -36,7 +36,7 @@ public class UIProductItem : UIOverlayButton
 		m_ProductID = _ProductID;
 		
 		m_Image.Setup(m_ProductID);
-		m_Discount.Setup(m_ProductID);
+		m_Badge.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
 		
 		m_Coins.Value = m_ProductsProcessor.GetCoins(m_ProductID);

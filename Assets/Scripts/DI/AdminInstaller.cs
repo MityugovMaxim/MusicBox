@@ -20,15 +20,15 @@ public class AdminInstaller : MonoInstaller
 		
 		Container.BindFactory<IListField, int, RectTransform, UIListEntry, UIListEntry.Factory>().FromFactory<UIListEntryFactory>();
 		
-		InstallPool<UIAdminElement, UIAdminElement.Pool>(m_AdminElement, 3);
+		InstallPool<UIAdminElement, UIAdminElement.Pool>(m_AdminElement);
 		
-		InstallPool<UISnapshotElement, UISnapshotElement.Pool>(m_SnapshotElement, 10);
+		InstallPool<UISnapshotElement, UISnapshotElement.Pool>(m_SnapshotElement);
 		
-		InstallPool<UILanguageElement, UILanguageElement.Pool>(m_LanguageElement, 10);
+		InstallPool<UILanguageElement, UILanguageElement.Pool>(m_LanguageElement);
 		
-		InstallPool<UILocalizationElement, UILocalizationElement.Pool>(m_LocalizationElement, 10);
+		InstallPool<UILocalizationElement, UILocalizationElement.Pool>(m_LocalizationElement);
 		
-		InstallPool<UIMapElement, UIMapElement.Pool>(m_MapElement, 10);
+		InstallPool<UIMapElement, UIMapElement.Pool>(m_MapElement);
 	}
 
 	void InstallProcessor<T>()
@@ -36,10 +36,10 @@ public class AdminInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<T>().FromNew().AsSingle();
 	}
 
-	void InstallPool<TItem, TPool>(TItem _Prefab, int _Capacity = 5) where TItem : Object where TPool : IMemoryPool
+	void InstallPool<TItem, TPool>(TItem _Prefab) where TItem : Object where TPool : IMemoryPool
 	{
 		Container.BindMemoryPool<TItem, TPool>()
-			.WithInitialSize(_Capacity)
+			.WithInitialSize(0)
 			.FromComponentInNewPrefab(_Prefab)
 			.UnderTransformGroup($"[{typeof(TItem).Name}] Pool");
 	}

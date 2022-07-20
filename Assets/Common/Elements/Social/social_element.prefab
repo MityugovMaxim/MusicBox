@@ -599,6 +599,14 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2970751322775506060}
   m_PrefabAsset: {fileID: 0}
+--- !u!222 &530372360166387937
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3262418167575546769}
+  m_CullTransparentMesh: 1
 --- !u!114 &247893838247468677
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -612,14 +620,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ShowMaskGraphic: 0
---- !u!222 &530372360166387937
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3262418167575546769}
-  m_CullTransparentMesh: 1
 --- !u!114 &954038368301700801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -634,9 +634,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
+  m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -667,6 +667,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: apple_button
+      objectReference: {fileID: 0}
+    - target: {fileID: 4441741908557212273, guid: f2a7e13f71ce147968f8ebfbb6885d5c,
+        type: 3}
+      propertyPath: m_TouchDownSound
+      value: Down
+      objectReference: {fileID: 0}
+    - target: {fileID: 4441741908557212273, guid: f2a7e13f71ce147968f8ebfbb6885d5c,
+        type: 3}
+      propertyPath: m_TouchClickSound
+      value: Click
       objectReference: {fileID: 0}
     - target: {fileID: 7166590539289901979, guid: f2a7e13f71ce147968f8ebfbb6885d5c,
         type: 3}
@@ -773,6 +783,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7665013834825893701, guid: f2a7e13f71ce147968f8ebfbb6885d5c,
+        type: 3}
+      propertyPath: m_Maskable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7665013834825893701, guid: f2a7e13f71ce147968f8ebfbb6885d5c,
+        type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f2a7e13f71ce147968f8ebfbb6885d5c, type: 3}
 --- !u!224 &369453055313634995 stripped
@@ -800,6 +820,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7373614939849756707}
     m_Modifications:
+    - target: {fileID: -2347067129036375926, guid: 78db739cc73774f8d9ade9e99b0e6b77,
+        type: 3}
+      propertyPath: m_TouchDownSound
+      value: Down
+      objectReference: {fileID: 0}
+    - target: {fileID: -2347067129036375926, guid: 78db739cc73774f8d9ade9e99b0e6b77,
+        type: 3}
+      propertyPath: m_TouchClickSound
+      value: Click
+      objectReference: {fileID: 0}
     - target: {fileID: 601441264168477315, guid: 78db739cc73774f8d9ade9e99b0e6b77,
         type: 3}
       propertyPath: m_Pivot.x
@@ -909,6 +939,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Color.a
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8053541279123334712, guid: 78db739cc73774f8d9ade9e99b0e6b77,
+        type: 3}
+      propertyPath: m_Maskable
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8237863388370757870, guid: 78db739cc73774f8d9ade9e99b0e6b77,
         type: 3}
@@ -1047,6 +1082,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4504125435580218678, guid: 1b8e432add50646d59dd0f10821ce925,
+        type: 3}
+      propertyPath: m_Maskable
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8716556505909965180, guid: 1b8e432add50646d59dd0f10821ce925,
         type: 3}
       propertyPath: m_Name
@@ -1087,9 +1127,9 @@ MonoBehaviour:
   m_TouchDownHaptic: 1
   m_TouchUpHaptic: 0
   m_TouchClickHaptic: 5
-  m_TouchDownSound: down
+  m_TouchDownSound: Down
   m_TouchUpSound: 
-  m_TouchClickSound: click
+  m_TouchClickSound: Click
   m_Button: {fileID: 759259428946484613}
 --- !u!224 &5413031872255811699 stripped
 RectTransform:

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
+using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Scripting;
 using Zenject;
@@ -17,7 +18,8 @@ public class ProductSnapshot : Snapshot
 	public bool         Special      { get; }
 	public bool         NoAds        { get; }
 	public long         Coins        { get; }
-	public float        Discount     { get; }
+	public string       Badge        { get; }
+	public Color        Color        { get; }
 	public List<string> SongIDs      { get; }
 
 	public ProductSnapshot() : base("new_product", 0)
@@ -31,7 +33,7 @@ public class ProductSnapshot : Snapshot
 		Special      = false;
 		NoAds        = false;
 		Coins        = 0;
-		Discount     = 0;
+		Badge        = string.Empty;
 		SongIDs      = new List<string>();
 	}
 
@@ -45,7 +47,8 @@ public class ProductSnapshot : Snapshot
 		Promo        = _Data.GetBool("promo");
 		Special      = _Data.GetBool("special");
 		Coins        = _Data.GetLong("coins");
-		Discount     = _Data.GetFloat("discount");
+		Badge        = _Data.GetString("badge");
+		Color        = _Data.GetColor("color", "#0081FFFF");
 		NoAds        = _Data.GetBool("no_ads");
 		SongIDs      = _Data.GetChildKeys("song_ids");
 	}
@@ -62,7 +65,8 @@ public class ProductSnapshot : Snapshot
 		_Data["promo"]          = Promo;
 		_Data["special"]        = Special;
 		_Data["coins"]          = Coins;
-		_Data["discount"]       = Discount;
+		_Data["badge"]          = Badge;
+		_Data["color"]          = Color;
 		_Data["song_ids"]       = SongIDs;
 	}
 }
@@ -136,11 +140,18 @@ public class ProductsProcessor : DataProcessor<ProductSnapshot, ProductsDataUpda
 		return snapshot?.Coins ?? 0;
 	}
 
-	public float GetDiscount(string _ProductID)
+	public string GetBadge(string _ProductID)
 	{
 		ProductSnapshot snapshot = GetSnapshot(_ProductID);
 		
-		return snapshot?.Discount ?? 0;
+		return snapshot?.Badge ?? string.Empty;
+	}
+
+	public Color GetColor(string _ProductID)
+	{
+		ProductSnapshot snapshot = GetSnapshot(_ProductID);
+		
+		return snapshot?.Color ?? new Color(0, 0.5f, 1);
 	}
 
 	public List<string> GetSongIDs(string _ProductID)

@@ -29,6 +29,15 @@ public class AmbientSnapshot : Snapshot
 		Sound  = _Data.GetString("sound", $"Ambient/{ID}.ogg");
 		Volume = _Data.GetFloat("volume");
 	}
+
+	public override void Serialize(Dictionary<string, object> _Data)
+	{
+		base.Serialize(_Data);
+		
+		_Data["active"] = Active;
+		_Data["sound"]  = Sound;
+		_Data["volume"] = Volume;
+	}
 }
 
 public class AmbientProcessor : MonoBehaviour

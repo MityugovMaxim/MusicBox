@@ -55,12 +55,18 @@ public class UIDailyElement : UIOverlayButton
 		
 		if (m_DailyManager.IsDailyAvailable(m_DailyID))
 		{
+			ProcessDaily();
+			
 			m_ItemsGroup.Show(true);
 			m_TimerGroup.Hide(true);
 		}
 		else
 		{
-			m_ItemsGroup.Hide(true);
+			m_DailyID = m_DailyManager.GetDailyIDs().FirstOrDefault();
+			
+			ProcessDaily();
+			
+			m_ItemsGroup.Show(true);
 			m_TimerGroup.Show(true);
 		}
 		
@@ -69,8 +75,6 @@ public class UIDailyElement : UIOverlayButton
 			m_DailyManager.GetEndTimestamp(),
 			OnTimer
 		);
-		
-		ProcessDaily();
 		
 		ProcessPhase(0);
 	}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firebase.Database;
+using UnityEngine;
 
 public static class DataSnapshotExtension
 {
@@ -15,6 +16,13 @@ public static class DataSnapshotExtension
 		if (_DataSnapshot.HasChild(_Name))
 			return _DataSnapshot.Child(_Name).GetString();
 		return _Default;
+	}
+
+	public static Color GetColor(this DataSnapshot _DataSnapshot, string _Name, string _Default = "#FFFFFFFF")
+	{
+		string color = _DataSnapshot.GetString(_Name, _Default);
+		
+		return ColorUtility.TryParseHtmlString(color, out Color value) ? value : Color.white;
 	}
 
 	public static int GetInt(this DataSnapshot _DataSnapshot)
