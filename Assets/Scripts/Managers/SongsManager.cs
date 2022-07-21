@@ -14,7 +14,7 @@ public class SongsManager
 	public List<string> GetLibrarySongIDs()
 	{
 		return m_SongsProcessor.GetSongIDs()
-			.Where(IsSongAvailable)
+			.Where(_SongID => IsSongAvailable(_SongID) || IsSongLockedByCoins(_SongID))
 			.OrderBy(m_ScoresProcessor.GetRank)
 			.ThenByDescending(m_SongsProcessor.GetPrice)
 			.ThenBy(m_ProgressProcessor.GetSongLevel)
@@ -47,7 +47,10 @@ public class SongsManager
 		if (IsSongAvailable(_SongID))
 			return false;
 		
-		return m_SongsProcessor.GetPrice(_SongID) > 0;
+		int currentLevel  = m_ProfileProcessor.Level;
+		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
+		
+		return currentLevel >= requiredLevel && m_SongsProcessor.GetPrice(_SongID) > 0;
 	}
 
 	public bool IsSongAvailable(string _SongID)

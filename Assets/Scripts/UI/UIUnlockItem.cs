@@ -1,28 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Scripting;
 using Zenject;
 
 [RequireComponent(typeof(Animator))]
 public class UIUnlockItem : UIEntity
 {
-	public enum UnlockType
-	{
-		Song  = 0,
-		Coins = 1,
-	}
-
-	[Preserve]
-	public class Pool : UIEntityPool<UIUnlockItem> { }
-
 	const string PLAY_STATE = "play";
 
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
-
-	[SerializeField] WebGraphic  m_Image;
-	[SerializeField] UIUnitLabel m_Value;
 
 	[SerializeField, Sound] string m_Sound;
 
@@ -30,7 +17,8 @@ public class UIUnlockItem : UIEntity
 	[Inject] HapticProcessor m_HapticProcessor;
 
 	Animator m_Animator;
-	Action   m_PlayFinished;
+
+	Action m_PlayFinished;
 
 	protected override void Awake()
 	{
@@ -48,27 +36,6 @@ public class UIUnlockItem : UIEntity
 		base.OnDestroy();
 		
 		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
-	}
-
-	public void Setup(string _Path, long _Value = 0)
-	{
-		m_Image.Path  = _Path;
-		m_Value.Value = _Value;
-		
-		m_Value.gameObject.SetActive(_Value != 0);
-		
-		Restore();
-	}
-
-	public void Play(Action _Finished = null)
-	{
-		InvokePlayFinished();
-		
-		m_PlayFinished = _Finished;
-		
-		m_HapticProcessor.Process(Haptic.Type.ImpactMedium);
-		
-		m_Animator.SetTrigger(m_PlayParameterID);
 	}
 
 	public Task PlayAsync(bool _Instant = false)
@@ -95,7 +62,7 @@ public class UIUnlockItem : UIEntity
 		return completionSource.Task;
 	}
 
-	void Restore()
+	protected void Restore()
 	{
 		InvokePlayFinished();
 		
