@@ -1,72 +1,63 @@
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
 public class FXProcessor : UIOrder
 {
+	[SerializeField] UIEntity        m_Container;
 	[SerializeField] UIFXHighlight[] m_Highlights;
+	[SerializeField] UIIndicatorFX[] m_SingleFXs;
+	[SerializeField] UIIndicatorFX   m_DoubleFX;
 	[SerializeField] UIFXHighlight   m_Flash;
 	[SerializeField] UIFXHighlight   m_Dim;
-	[SerializeField] RectTransform   m_InputArea;
-	[SerializeField] RectTransform   m_FXContainer;
 
-	[Inject(Id = ScoreType.Tap)]    UIIndicatorFX.Pool m_TapFXPool;
-	[Inject(Id = ScoreType.Double)] UIIndicatorFX.Pool m_DoubleFXPool;
+	[Inject] ScoreManager m_ScoreManager;
 
-	public async void TapFX(Rect _Rect, float _Progress)
+	public void Setup(float _Ratio)
 	{
-		Highlight(_Rect.center);
+		Vector2 anchorMin = m_Container.RectTransform.anchorMin;
+		Vector2 anchorMax = m_Container.RectTransform.anchorMax;
 		
-		UIIndicatorFX item = m_TapFXPool.Spawn(m_FXContainer);
+		anchorMin.y = 1.0f - _Ratio;
+		anchorMax.y = 1.0f - _Ratio;
 		
-		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
-		
-		await item.PlayAsync(_Progress);
-		
-		m_TapFXPool.Despawn(item);
+		m_Container.RectTransform.anchorMin = anchorMin;
+		m_Container.RectTransform.anchorMax = anchorMax;
 	}
 
-	public async void DoubleFX(Rect _Rect, float _Progress)
+	public void TapFX(Rect _Rect, float _Progress)
 	{
+		int index = GetIndex(_Rect.center);
+		
+		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Tap, _Progress);
+		
+		Highlight(index);
+		
+		Single(index, grade);
+	}
+
+	public void DoubleFX(Rect _Rect, float _Progress)
+	{
+		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Double, _Progress);
+		
 		Flash();
 		
-		UIIndicatorFX item = m_DoubleFXPool.Spawn(m_FXContainer);
-		
-		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
-		
-		await item.PlayAsync(_Progress);
-		
-		m_DoubleFXPool.Despawn(item);
+		Double(grade);
 	}
 
-	public async void HoldFX(Rect _Rect, float _Progress)
+	public void HoldFX(Rect _Rect, float _Progress)
 	{
-		Highlight(_Rect.center);
+		int index = GetIndex(_Rect.center);
 		
-		UIIndicatorFX item = m_TapFXPool.Spawn(m_FXContainer);
+		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Hold, _Progress);
 		
-		item.RectTransform.localPosition = GetZonePosition(_Rect.center);
+		Highlight(index);
 		
-		await item.PlayAsync(_Progress);
-		
-		m_TapFXPool.Despawn(item);
+		Single(index, grade);
 	}
 
 	public void Fail()
 	{
 		Dim();
-	}
-
-	Vector2 GetZonePosition(Vector2 _Position)
-	{
-		Rect rect = m_InputArea.GetWorldRect();
-		
-		Vector2 position = new Vector2(
-			_Position.x,
-			rect.y + rect.height * 0.5f
-		);
-		
-		return RectTransform.InverseTransformPoint(position);
 	}
 
 	void Flash()
@@ -79,13 +70,33 @@ public class FXProcessor : UIOrder
 		m_Dim.Play();
 	}
 
-	void Highlight(Vector2 _Position)
+	int GetIndex(Vector2 _Position)
 	{
-		UIFXHighlight highlight = m_Highlights.FirstOrDefault(_Highlight => _Highlight != null && _Highlight.GetWorldRect().Contains(_Position, true));
+		Vector2 position = m_Container.GetLocalPoint(_Position);
 		
-		if (highlight == null)
-			return;
+		Rect rect = m_Container.GetLocalRect();
+		
+		float phase = MathUtility.Remap(position.x, rect.xMin, rect.xMax, 0, 4);
+		
+		return Mathf.Clamp((int)phase, 0, 3);
+	}
+
+	void Highlight(int _Index)
+	{
+		UIFXHighlight highlight = m_Highlights[_Index];
 		
 		highlight.Play();
+	}
+
+	void Single(int _Index, ScoreGrade _Grade)
+	{
+		UIIndicatorFX fx = m_SingleFXs[_Index];
+		
+		fx.Play(_Grade);
+	}
+
+	void Double(ScoreGrade _Grade)
+	{
+		m_DoubleFX.Play(_Grade);
 	}
 }

@@ -15,7 +15,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &574308787530795225
 RectTransform:
   m_ObjectHideFlags: 0
@@ -88,7 +88,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -4967,7 +4967,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -9846,7 +9846,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -14725,7 +14725,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -19607,22 +19607,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9db9511292949858011c3fe453e19c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Mode: 0
-  m_Thickness: 0
-  m_Grades:
-  - m_Grade: 1
-    m_FX: {fileID: 7190934126028603470}
-    m_Duration: 0.5
-  - m_Grade: 2
-    m_FX: {fileID: 7125533550385099725}
-    m_Duration: 0.5
-  - m_Grade: 3
-    m_FX: {fileID: 1278338433059799926}
-    m_Duration: 0.45
-  - m_Grade: 4
-    m_FX: {fileID: 9202561669055453617}
-    m_Duration: 0.4
-  m_Type: 1
+  m_Mode: 2
+  m_Thickness: 1
+  m_Perfect:
+    m_FXs:
+    - {fileID: 5891690417529165267}
+    - {fileID: 3313473543158058994}
+    - {fileID: 9014841313077928901}
+    - {fileID: 8888890081500389771}
+  m_Great:
+    m_FXs:
+    - {fileID: 7996462631930097660}
+    - {fileID: 8116715455304244412}
+  m_Good:
+    m_FXs:
+    - {fileID: 2182349401872333522}
+    - {fileID: 4878253035746973014}
+  m_Bad:
+    m_FXs:
+    - {fileID: 8963439995504648044}
 --- !u!1 &5055259328239094508
 GameObject:
   m_ObjectHideFlags: 0
@@ -19673,7 +19676,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -24552,7 +24555,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -29431,7 +29434,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -34275,7 +34278,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6714489483628486875
 RectTransform:
   m_ObjectHideFlags: 0
@@ -34313,7 +34316,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7039925444749557196
 RectTransform:
   m_ObjectHideFlags: 0
@@ -34388,7 +34391,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -39267,7 +39270,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -44111,7 +44114,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1918656777070510606
 RectTransform:
   m_ObjectHideFlags: 0

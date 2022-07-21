@@ -17,6 +17,7 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] UIHoldTrack     m_HoldTrack;
 	[SerializeField] UIColorTrack    m_ColorTrack;
 	[SerializeField] UIInputReceiver m_InputReceiver;
+	[SerializeField] FXProcessor     m_FXProcessor;
 	[SerializeField] UICountdown     m_Countdown;
 
 	Action m_Finished;
@@ -33,6 +34,7 @@ public class SongPlayer : ASFPlayer
 		m_Finished = _Finished;
 		
 		m_InputReceiver.Setup(Ratio);
+		m_FXProcessor.Setup(Ratio);
 		
 		AddTrack(new ASFTapTrack(m_TapTrack));
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));

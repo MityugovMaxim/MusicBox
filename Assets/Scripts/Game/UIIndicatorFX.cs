@@ -1,9 +1,6 @@
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 public class UIIndicatorFX : UIOrder
 {
@@ -15,35 +12,36 @@ public class UIIndicatorFX : UIOrder
 	[Serializable]
 	public class FX
 	{
-		public ScoreGrade Grade => m_Grade;
+		[SerializeField] ParticleSystem[] m_FXs;
 
-		[SerializeField] ScoreGrade m_Grade;
-		[SerializeField] GameObject m_FX;
-		[SerializeField] float      m_Duration;
-
-		public async Task PlayAsync()
+		public void Play()
 		{
-			m_FX.SetActive(true);
-			
-			await UnityTask.Delay(m_Duration);
-			
-			m_FX.SetActive(false);
+			foreach (ParticleSystem fx in m_FXs)
+				fx.Play(true);
 		}
 	}
 
-	public ScoreType Type => m_Type;
+	[SerializeField] FX m_Perfect;
+	[SerializeField] FX m_Great;
+	[SerializeField] FX m_Good;
+	[SerializeField] FX m_Bad;
 
-	[SerializeField, NonReorderable] FX[]      m_Grades;
-	[SerializeField]                 ScoreType m_Type;
-
-	[Inject] ScoreManager m_ScoreManager;
-
-	public Task PlayAsync(float _Progress)
+	public void Play(ScoreGrade _Grade)
 	{
-		ScoreGrade grade = m_ScoreManager.GetGrade(m_Type, _Progress);
-		
-		FX fx = m_Grades.FirstOrDefault(_FX => _FX.Grade == grade);
-		
-		return fx != null ? fx.PlayAsync() : Task.CompletedTask;
+		switch (_Grade)
+		{
+			case ScoreGrade.Perfect:
+				m_Perfect.Play();
+				break;
+			case ScoreGrade.Great:
+				m_Great.Play();
+				break;
+			case ScoreGrade.Good:
+				m_Good.Play();
+				break;
+			case ScoreGrade.Bad:
+				m_Bad.Play();
+				break;
+		}
 	}
 }

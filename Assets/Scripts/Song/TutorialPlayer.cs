@@ -16,6 +16,7 @@ public class TutorialPlayer : ASFPlayer
 	public override double Length => 28;
 
 	[SerializeField] UIInputReceiver m_InputReceiver;
+	[SerializeField] FXProcessor     m_FXProcessor;
 	[SerializeField] UIColorTrack    m_ColorTrack;
 	[SerializeField] UITapTrack      m_TapTrack;
 	[SerializeField] UIDoubleTrack   m_DoubleTrack;
@@ -79,6 +80,7 @@ public class TutorialPlayer : ASFPlayer
 		m_Finished = _Finished;
 		
 		m_InputReceiver.Setup(Ratio);
+		m_FXProcessor.Setup(Ratio);
 		m_InputOverlay.Setup(Ratio);
 		m_Fingers.Setup(Ratio);
 		

@@ -50,7 +50,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -4929,7 +4929,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -9808,7 +9808,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -14652,7 +14652,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6371287096833468892
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14730,20 +14730,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Mode: 0
   m_Thickness: 0
-  m_Grades:
-  - m_Grade: 1
-    m_FX: {fileID: 4910387855024611759}
-    m_Duration: 0.5
-  - m_Grade: 2
-    m_FX: {fileID: 3006037835240551842}
-    m_Duration: 0.5
-  - m_Grade: 3
-    m_FX: {fileID: 5837520270916278520}
-    m_Duration: 0.45
-  - m_Grade: 4
-    m_FX: {fileID: 7894629490120706432}
-    m_Duration: 0.4
-  m_Type: 0
+  m_Perfect:
+    m_FXs: []
+  m_Great:
+    m_FXs: []
+  m_Good:
+    m_FXs: []
+  m_Bad:
+    m_FXs: []
 --- !u!1 &4910387855024611759
 GameObject:
   m_ObjectHideFlags: 0
@@ -14833,7 +14827,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -19712,7 +19706,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -24591,7 +24585,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -29435,7 +29429,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2580671924016707009
 RectTransform:
   m_ObjectHideFlags: 0
@@ -29508,7 +29502,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -34387,7 +34381,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 0
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -39231,7 +39225,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &3739894052829893941
 RectTransform:
   m_ObjectHideFlags: 0
