@@ -140,7 +140,7 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 
 	protected abstract void FireSignal();
 
-	protected int GetOrder(string _ID)
+	public int GetOrder(string _ID)
 	{
 		TSnapshot snapshot = GetSnapshot(_ID);
 		

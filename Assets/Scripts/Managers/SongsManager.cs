@@ -19,6 +19,7 @@ public class SongsManager
 			.ThenByDescending(m_SongsProcessor.GetPrice)
 			.ThenBy(m_ProgressProcessor.GetSongLevel)
 			.ThenBy(m_SongsProcessor.GetSpeed)
+			.ThenBy(m_SongsProcessor.GetOrder)
 			.ToList();
 	}
 
