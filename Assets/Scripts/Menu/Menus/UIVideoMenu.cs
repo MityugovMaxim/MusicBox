@@ -41,8 +41,12 @@ public class UIVideoMenu : UIMenu
 		m_Processed = false;
 	}
 
-	protected override void OnShowFinished()
+	protected override async void OnShowFinished()
 	{
+		m_Player.Stop();
+		
+		await PrepareAsync();
+		
 		m_Player.Play();
 	}
 
@@ -53,6 +57,27 @@ public class UIVideoMenu : UIMenu
 		m_Player.Stop();
 		
 		InvokeFinished();
+	}
+
+	Task PrepareAsync()
+	{
+		if (m_Player.isPrepared)
+			return Task.CompletedTask;
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		void Complete(VideoPlayer _Player)
+		{
+			m_Player.prepareCompleted -= Complete;
+			
+			completionSource.TrySetResult(true);
+		}
+		
+		m_Player.prepareCompleted += Complete;
+		
+		m_Player.Prepare();
+		
+		return completionSource.Task;
 	}
 
 	void InvokeFinished()

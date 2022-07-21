@@ -195,17 +195,31 @@ public class ScoreManager
 
 	Threshold GetTapThreshold(float _Progress)
 	{
-		return m_TapThresholds.FirstOrDefault(_Threshold => _Threshold.Progress <= _Progress);
+		return GetThreshold(m_TapThresholds, _Progress);
 	}
 
 	Threshold GetDoubleThreshold(float _Progress)
 	{
-		return m_DoubleThresholds.FirstOrDefault(_Threshold => _Threshold.Progress <= _Progress);
+		return GetThreshold(m_DoubleThresholds, _Progress);
 	}
 
 	Threshold GetHoldThreshold(float _Progress)
 	{
-		return m_HoldThresholds.FirstOrDefault(_Threshold => _Threshold.Progress <= _Progress);
+		return GetThreshold(m_HoldThresholds, _Progress);
+	}
+
+	static Threshold GetThreshold(List<Threshold> _Thresholds, float _Progress)
+	{
+		if (_Thresholds == null || _Thresholds.Count == 0)
+			return null;
+		
+		foreach (Threshold threshold in _Thresholds)
+		{
+			if (threshold.Progress <= _Progress)
+				return threshold;
+		}
+		
+		return _Thresholds[^1];
 	}
 
 	void RegisterHit(ScoreType _Type, float _Progress)
@@ -247,7 +261,7 @@ public class ScoreManager
 
 	public void DoubleHit(float _Progress)
 	{
-		RegisterHit(ScoreType.Tap, _Progress);
+		RegisterHit(ScoreType.Double, _Progress);
 	}
 
 	public void HoldHit(float _Progress, float _Length)
@@ -257,7 +271,6 @@ public class ScoreManager
 		float      progress   = threshold?.Progress ?? 0;
 		ScoreGrade grade      = threshold?.Grade ?? ScoreGrade.None;
 		float      multiplier = threshold?.Multiplier ?? 0;
-		
 		
 		if (grade < ScoreGrade.Bad)
 			SourceCombo++;

@@ -135,6 +135,8 @@ public class UISongStatistics : UIGroup
 			m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		}
 		
+		m_Count.Value = _Count;
+		
 		_Finished?.Invoke();
 	}
 }
