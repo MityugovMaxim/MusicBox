@@ -14,6 +14,7 @@ public class UISongScoreList : UIEntity
 	[SerializeField] UIFlare              m_Flare;
 	[SerializeField] UISongScoreCoins     m_Coins;
 	[SerializeField] UISongStatistics     m_Statistics;
+	[SerializeField] UISongScoreMilestone m_Milestone; 
 	[SerializeField] UISongScoreElement[] m_UpperElements;
 	[SerializeField] UISongScoreElement[] m_LowerElements;
 	[SerializeField] AnimationCurve       m_Curve    = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -58,6 +59,7 @@ public class UISongScoreList : UIEntity
 		
 		m_Image.Setup(m_SongID);
 		m_Label.Setup(m_SongID);
+		m_Milestone.Setup(m_SongID);
 		
 		m_Score.Value = 0;
 		m_Coins.Value = 0;
@@ -262,6 +264,22 @@ public class UISongScoreList : UIEntity
 		}
 	}
 
+	void SetMilestone(int _Accuracy)
+	{
+		int accuracy = _Accuracy + m_UpperElements.Length;
+		
+		if (accuracy < m_BronzeThreshold)
+			m_Milestone.Accuracy = m_BronzeThreshold;
+		else if (accuracy < m_SilverThreshold)
+			m_Milestone.Accuracy = m_SilverThreshold;
+		else if (accuracy < m_GoldThreshold)
+			m_Milestone.Accuracy = m_GoldThreshold;
+		else if (accuracy < m_PlatinumThreshold)
+			m_Milestone.Accuracy = m_PlatinumThreshold;
+		else
+			m_Milestone.Hide();
+	}
+
 	IEnumerator ShiftRoutine(Action _Finished)
 	{
 		float time = 0;
@@ -286,6 +304,8 @@ public class UISongScoreList : UIEntity
 				SetDisc(targetAccuracy);
 				
 				SetAccuracy(targetAccuracy);
+				
+				SetMilestone(targetAccuracy);
 			}
 			
 			float phase = target - targetAccuracy;
@@ -294,6 +314,8 @@ public class UISongScoreList : UIEntity
 		}
 		
 		SetAccuracy(m_TargetAccuracy);
+		
+		SetMilestone(m_TargetAccuracy);
 		
 		ProcessPhase(0);
 		
