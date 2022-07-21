@@ -58,6 +58,9 @@ public class UIBuffer : UIOrder
 		m_ACamera.enabled = false;
 		m_BCamera.enabled = false;
 		
+		m_ACamera.orthographicSize = size.y / 2;
+		m_BCamera.orthographicSize = size.y / 2;
+		
 		m_ACamera.targetTexture = m_A;
 		m_BCamera.targetTexture = m_B;
 		
