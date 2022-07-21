@@ -13,10 +13,20 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 	[SerializeField] UIGroup      m_Target;
 	[SerializeField] ReorderEvent m_Reorder;
 
+	bool m_Pressed;
 	int  m_SourceIndex;
 	int  m_TargetIndex;
 	Rect m_SourceRect;
 	Rect m_TargetRect;
+
+	void Update()
+	{
+		if (!m_Pressed)
+			return;
+		
+		ProcessSource();
+		ProcessTarget();
+	}
 
 	void ProcessSource()
 	{
@@ -36,6 +46,8 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)
 	{
+		m_Pressed = true;
+		
 		Vector2 position = m_Layout.GetLocalPoint(_EventData.position, _EventData.pressEventCamera);
 		
 		(int index, Rect rect) = m_Layout.FindEntity(position);
@@ -52,13 +64,13 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 		m_TargetIndex = index;
 		m_SourceRect  = rect;
 		m_TargetRect  = rect;
-		
-		ProcessSource();
-		ProcessTarget();
 	}
 
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
+		if (!m_Pressed)
+			return;
+		
 		Vector2 position = m_Layout.GetLocalPoint(_EventData.position, _EventData.pressEventCamera);
 		
 		(int index, Rect rect) = m_Layout.FindEntity(position);
@@ -70,12 +82,15 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 		
 		m_TargetIndex = index;
 		m_TargetRect  = rect;
-		
-		ProcessTarget();
 	}
 
 	void IDropHandler.OnDrop(PointerEventData _EventData)
 	{
+		if (!m_Pressed)
+			return;
+		
+		m_Pressed = false;
+		
 		m_Source.Hide();
 		m_Target.Hide();
 		
@@ -84,6 +99,8 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 
 	void IPointerExitHandler.OnPointerExit(PointerEventData _EventData)
 	{
+		m_Pressed = false;
+		
 		m_Source.Hide();
 		m_Target.Hide();
 	}
