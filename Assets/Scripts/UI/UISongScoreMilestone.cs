@@ -1,5 +1,5 @@
+using System;
 using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -60,9 +60,11 @@ public class UISongScoreMilestone : UIGroup
 			
 			ProcessValues();
 			
+			token.ThrowIfCancellationRequested();
+			
 			await ShowAsync();
 		}
-		catch (TaskCanceledException)
+		catch (OperationCanceledException)
 		{
 			return;
 		}

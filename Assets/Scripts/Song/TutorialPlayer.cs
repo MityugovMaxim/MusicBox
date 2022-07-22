@@ -45,6 +45,7 @@ public class TutorialPlayer : ASFPlayer
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 	[Inject] SoundProcessor  m_SoundProcessor;
+	[Inject] HealthManager   m_HealthManager;
 
 	Action m_Finished;
 
@@ -111,8 +112,6 @@ public class TutorialPlayer : ASFPlayer
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		token.ThrowIfCancellationRequested();
-		
 		try
 		{
 			await HealthTutorialAsync(token);
@@ -149,7 +148,7 @@ public class TutorialPlayer : ASFPlayer
 			
 			await CompleteTutorialAsync(token);
 		}
-		catch (TaskCanceledException)
+		catch (OperationCanceledException)
 		{
 			return;
 		}
@@ -172,14 +171,22 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task HealthTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Heath tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		await m_InputOverlay.ShowAsync(_Token);
 		
 		m_HealthLabel.Show();
 		
-		await Task.Delay(3000, _Token);
+		await Task.Delay(1500, _Token);
+		
+		for (int i = 0; i < 4; i++)
+		{
+			m_ScoreManager.TapFail();
+			
+			await Task.Delay(750, _Token);
+		}
+		
+		m_HealthManager.Restore();
 		
 		m_HealthLabel.Hide();
 		
@@ -188,14 +195,33 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task ComboTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Combo tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		await m_ComboOverlay.ShowAsync(_Token);
 		
 		m_ComboLabel.Show();
 		
-		await Task.Delay(3000, _Token);
+		await Task.Delay(1500, _Token);
+		
+		int count = m_ConfigProcessor.ComboX2;
+		
+		const int sourceDelay = 250;
+		const int targetDelay = 50;
+		
+		float step = 1.0f / (count - 1);
+		
+		for (int i = 0; i < count; i++)
+		{
+			m_ScoreManager.TapHit(1);
+			
+			int delay = MathUtility.Lerp(sourceDelay, targetDelay, step * i);
+			
+			await Task.Delay(delay, _Token);
+		}
+		
+		await Task.Delay(1500, _Token);
+		
+		m_ScoreManager.Restore();
 		
 		m_ComboLabel.Hide();
 		
@@ -204,8 +230,7 @@ public class TutorialPlayer : ASFPlayer
 
 	async Task CompleteTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Complete tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		m_CompleteLabel.Show();
 		
@@ -214,8 +239,7 @@ public class TutorialPlayer : ASFPlayer
 
 	Task<bool> TapTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Tap tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		ASFTapClip[] clips =
 		{
@@ -224,9 +248,6 @@ public class TutorialPlayer : ASFPlayer
 			new ASFTapClip(3, GetPosition(3)),   // 3
 			new ASFTapClip(4.5, GetPosition(2)), // 4
 			new ASFTapClip(6, GetPosition(1)),   // 5
-			new ASFTapClip(7.5, GetPosition(2)), // 6
-			new ASFTapClip(9, GetPosition(3)),   // 7
-			new ASFTapClip(10.5, GetPosition(4)) // 8
 		};
 		
 		ASFColorClip color = new ASFColorClip(
@@ -250,8 +271,7 @@ public class TutorialPlayer : ASFPlayer
 
 	Task<bool> DoubleTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Double tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		ASFDoubleClip[] clips =
 		{
@@ -260,9 +280,6 @@ public class TutorialPlayer : ASFPlayer
 			new ASFDoubleClip(4),  // 3
 			new ASFDoubleClip(6),  // 4
 			new ASFDoubleClip(8),  // 5
-			new ASFDoubleClip(10), // 6
-			new ASFDoubleClip(12), // 7
-			new ASFDoubleClip(14)  // 8
 		};
 		
 		ASFColorClip color = new ASFColorClip(
@@ -286,8 +303,7 @@ public class TutorialPlayer : ASFPlayer
 
 	Task<bool> HoldTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Hold tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		ASFHoldClip[] clips =
 		{
@@ -319,8 +335,7 @@ public class TutorialPlayer : ASFPlayer
 
 	Task<bool> BendTutorialAsync(CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			throw new TaskCanceledException("Bend tutorial canceled.");
+		_Token.ThrowIfCancellationRequested();
 		
 		ASFHoldClip[] clips =
 		{
@@ -329,8 +344,6 @@ public class TutorialPlayer : ASFPlayer
 			new ASFHoldClip(6,   8, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(2))), // 3
 			new ASFHoldClip(9,  11, new ASFHoldKey(0, GetPosition(2)), new ASFHoldKey(2, GetPosition(1))), // 4
 			new ASFHoldClip(12, 14, new ASFHoldKey(0, GetPosition(1)), new ASFHoldKey(2, GetPosition(2))), // 5
-			new ASFHoldClip(15, 17, new ASFHoldKey(0, GetPosition(2)), new ASFHoldKey(2, GetPosition(3))), // 6
-			new ASFHoldClip(18, 20, new ASFHoldKey(0, GetPosition(3)), new ASFHoldKey(2, GetPosition(4)))  // 7
 		};
 		
 		ASFColorClip color = new ASFColorClip(
@@ -510,9 +523,9 @@ public class TutorialPlayer : ASFPlayer
 		
 		bool selected = false;
 		
-		void Select(UIHandle _Handle) => selected = _Handle != null;
+		void Hit(ScoreType _Type, ScoreGrade _Grade) => selected = true;
 		
-		m_InputReceiver.OnSelect += Select;
+		m_ScoreManager.OnHit += Hit; 
 		
 		m_Input = true;
 		
@@ -522,7 +535,7 @@ public class TutorialPlayer : ASFPlayer
 				if (!selected)
 					return false;
 				
-				m_InputReceiver.OnSelect -= Select;
+				m_ScoreManager.OnHit -= Hit;
 				
 				return true;
 			},

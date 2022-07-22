@@ -60,9 +60,10 @@ public class ScoreManager
 	int ComboX4 { get; set; }
 	int ComboX2 { get; set; }
 
-	public event Action<long>            OnScoreChanged;
-	public event Action<int, ScoreGrade> OnComboChanged;
-	public event Action<int, float>      OnMultiplierChanged;
+	public event Action<long>                  OnScoreChanged;
+	public event Action<int, ScoreGrade>       OnComboChanged;
+	public event Action<int, float>            OnMultiplierChanged;
+	public event Action<ScoreType, ScoreGrade> OnHit;
 
 	[Inject] ScoresProcessor  m_ScoresProcessor;
 	[Inject] SongsProcessor   m_SongsProcessor;
@@ -241,6 +242,8 @@ public class ScoreManager
 		AddTargetScore(_Type);
 		
 		ProcessScore(grade);
+		
+		OnHit?.Invoke(_Type, grade);
 	}
 
 	void RegisterFail(ScoreType _Type)
@@ -298,6 +301,8 @@ public class ScoreManager
 		}
 		
 		ProcessScore(grade);
+		
+		OnHit?.Invoke(ScoreType.Hold, grade);
 	}
 
 	public void TapFail() => RegisterFail(ScoreType.Tap);

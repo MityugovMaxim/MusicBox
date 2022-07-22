@@ -414,6 +414,11 @@ public static class MathUtility
 		return value < 0 ? value + _Length : value;
 	}
 
+	public static int Lerp(int _Source, int _Target, float _Phase)
+	{
+		return _Source + (int)((_Target - _Source) * _Phase);
+	}
+
 	public static long Lerp(long _Source, long _Target, float _Phase)
 	{
 		return _Source + (long)((_Target - _Source) * (double)_Phase);

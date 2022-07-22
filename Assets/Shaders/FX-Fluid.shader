@@ -15,16 +15,15 @@ Shader "FX/Fluid"
 	{
 		Tags
 		{
-			"RenderType" = "Geometry"
-			"RenderQueue" = "Geometry"
+			"Queue" = "Geometry"
+			"RenderType" = "Opaque"
 		}
 		
 		Cull Off
 		Lighting Off
-		ZWrite Off
-		ZTest [unity_GUIZTestMode]
+		ZWrite On
 		Fog { Mode Off }
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend Off
 
 		Pass
 		{

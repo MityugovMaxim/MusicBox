@@ -35,6 +35,9 @@ public class UISongStatistics : UIGroup
 			return;
 		
 		await ShowAsync();
+		
+		await Task.Delay(500);
+		
 		await ProcessAsync(m_Bad, bad);
 		await ProcessAsync(m_Good, good);
 		await ProcessAsync(m_Great, great);
@@ -47,12 +50,10 @@ public class UISongStatistics : UIGroup
 
 	async Task ProcessAsync(UIUnitLabel _Label, int _Count)
 	{
-		const float speed = 0.0075f;
-		
 		if (_Count == 0)
 			return;
 		
-		await Task.Delay(250);
+		const float speed = 0.0125f;
 		
 		await UnitAsync(_Label, _Count, _Count * speed);
 		
