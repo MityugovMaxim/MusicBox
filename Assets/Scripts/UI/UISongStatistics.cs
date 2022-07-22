@@ -39,25 +39,32 @@ public class UISongStatistics : UIGroup
 		await Task.Delay(500);
 		
 		await ProcessAsync(m_Bad, bad);
+		
+		await Task.Delay(500);
+		
 		await ProcessAsync(m_Good, good);
+		
+		await Task.Delay(500);
+		
 		await ProcessAsync(m_Great, great);
+		
+		await Task.Delay(500);
+		
 		await ProcessAsync(m_Perfect, perfect);
 		
-		await Task.Delay(750);
+		await Task.Delay(1000);
 		
 		await HideAsync();
 	}
 
-	async Task ProcessAsync(UIUnitLabel _Label, int _Count)
+	Task ProcessAsync(UIUnitLabel _Label, int _Count)
 	{
 		if (_Count == 0)
-			return;
+			return Task.CompletedTask;
 		
 		const float speed = 0.0125f;
 		
-		await UnitAsync(_Label, _Count, _Count * speed);
-		
-		await Task.Delay(500);
+		return UnitAsync(_Label, _Count, _Count * speed);
 	}
 
 	Task UnitAsync(UIUnitLabel _Label, int _Count, float _Duration)
@@ -74,7 +81,10 @@ public class UISongStatistics : UIGroup
 	IEnumerator UnitRoutine(UIUnitLabel _Label, long _Count, float _Duration, Action _Finished)
 	{
 		if (_Label == null)
+		{
+			_Finished?.Invoke();
 			yield break;
+		}
 		
 		EaseFunction function = EaseFunction.EaseOut;
 		
@@ -83,16 +93,14 @@ public class UISongStatistics : UIGroup
 		{
 			yield return null;
 			
-			long source = MathUtility.Lerp(0, _Count, function.Get(time));
-			
 			time += Time.deltaTime;
 			
-			long target = MathUtility.Lerp(0, _Count, function.Get(time));
+			long coins = MathUtility.Lerp(0, _Count, function.Get(time));
 			
-			_Label.Value = target;
-			
-			if (source >= target)
+			if (coins < _Label.Value)
 				continue;
+			
+			_Label.Value = coins;
 			
 			m_SoundProcessor.Play(m_UnitSound);
 			m_HapticProcessor.Process(Haptic.Type.ImpactLight);

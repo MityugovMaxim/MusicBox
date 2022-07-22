@@ -27,7 +27,7 @@ public class UIUnitLabel : UIEntity
 		get => m_Value;
 		set
 		{
-			if (m_Value.Equals(value))
+			if (MathUtility.Approximately(m_Value, value))
 				return;
 			
 			m_Value = value;
