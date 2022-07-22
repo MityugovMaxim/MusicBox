@@ -14,7 +14,9 @@ public class UIVideoMenu : UIMenu
 
 	public void Setup(VideoClip _Clip)
 	{
+		m_Player.Stop();
 		m_Player.clip = _Clip;
+		m_Player.time = 0;
 	}
 
 	public Task ProcessAsync()
@@ -38,11 +40,15 @@ public class UIVideoMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_Processed = false;
 	}
 
 	protected override async void OnShowFinished()
 	{
+		base.OnShowFinished();
+		
 		m_Player.Stop();
 		
 		await PrepareAsync();
@@ -52,6 +58,8 @@ public class UIVideoMenu : UIMenu
 
 	protected override void OnHideFinished()
 	{
+		base.OnHideFinished();
+		
 		m_Processed = true;
 		
 		m_Player.Stop();
