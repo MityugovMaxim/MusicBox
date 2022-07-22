@@ -95,21 +95,18 @@ public class UISongStatistics : UIGroup
 			
 			time += Time.deltaTime;
 			
-			long coins = MathUtility.Lerp(0, _Count, function.Get(time));
+			long value = MathUtility.Lerp(0, _Count, function.Get(time));
 			
-			if (coins < _Label.Value)
+			if (value <= _Label.Value)
 				continue;
 			
-			_Label.Value = coins;
+			_Label.Value = value;
 			
 			m_SoundProcessor.Play(m_UnitSound);
 			m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 		}
 		
 		_Label.Value = _Count;
-		
-		m_SoundProcessor.Play(m_TitleSound);
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
 		_Finished?.Invoke();
 	}
