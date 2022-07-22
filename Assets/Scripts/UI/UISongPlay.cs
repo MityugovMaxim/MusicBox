@@ -70,9 +70,6 @@ public class UISongPlay : UIEntity
 
 	public void Play()
 	{
-		if (!m_SongsManager.IsSongAvailable(m_SongID))
-			return;
-		
 		switch (m_Mode)
 		{
 			case SongMode.Free:
@@ -92,6 +89,9 @@ public class UISongPlay : UIEntity
 
 	async void PlayFree()
 	{
+		if (!m_SongsManager.IsSongAvailable(m_SongID))
+			return;
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		StopPreview();
@@ -111,6 +111,9 @@ public class UISongPlay : UIEntity
 
 	async void PlayAds()
 	{
+		if (!m_SongsManager.IsSongAvailable(m_SongID))
+			return;
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_ControlGroup.HideAsync();
@@ -153,6 +156,12 @@ public class UISongPlay : UIEntity
 
 	async void PlayPaid()
 	{
+		if (m_SongsManager.IsSongAvailable(m_SongID))
+		{
+			PlayFree();
+			return;
+		}
+		
 		long coins = m_SongsProcessor.GetPrice(m_SongID);
 		
 		if (!await m_ProfileProcessor.CheckCoins(coins))
