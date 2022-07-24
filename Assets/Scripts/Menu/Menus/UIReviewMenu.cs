@@ -67,7 +67,7 @@ public class UIReviewMenu : UIAnimationMenu
 			return;
 		
 		long timestamp = TimeUtility.GetTimestamp();
-		long cooldown  = m_ConfigProcessor.ReviewCooldown;
+		long cooldown  = m_ConfigProcessor.ReviewCooldown * 1000;
 		
 		if (timestamp + cooldown < ReviewTimestamp)
 			return;
@@ -77,12 +77,12 @@ public class UIReviewMenu : UIAnimationMenu
 		Show();
 	}
 
-	public void Cancel()
+	void Cancel()
 	{
 		Hide();
 	}
 
-	public void Review()
+	void Review()
 	{
 		ReviewProcessed = true;
 		

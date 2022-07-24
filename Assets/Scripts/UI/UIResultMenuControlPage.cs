@@ -154,6 +154,9 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	void RequestReview()
 	{
+		if (UIReviewMenu.ReviewProcessed)
+			return;
+		
 		UIReviewMenu reviewMenu = m_MenuProcessor.GetMenu<UIReviewMenu>();
 		
 		if (reviewMenu == null)
