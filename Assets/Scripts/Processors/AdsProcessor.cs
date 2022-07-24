@@ -35,20 +35,17 @@ public class AdsProviderMadPixel : IAdsProvider
 	string m_InterstitialID;
 	string m_RewardedID;
 
-	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
+	public async Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
 		m_InterstitialID = _InterstitialID;
 		m_RewardedID     = _RewardedID;
 		
-		return UnityTask.Until(MaxSdk.IsInitialized)
-			.ContinueWithOnMainThread(
-				_Task =>
-				{
-					AdsManager.Instance.InitializeInterstitial(_InterstitialID);
-					AdsManager.Instance.InitializeRewarded(_RewardedID);
-					return true;
-				}
-			);
+		await UnityTask.Until(MaxSdk.IsInitialized);
+		
+		AdsManager.Instance.InitializeInterstitial(_InterstitialID);
+		AdsManager.Instance.InitializeRewarded(_RewardedID);
+		
+		return true;
 	}
 
 	public Task<bool> Interstitial()
@@ -184,6 +181,7 @@ public class AdsProviderSnapshot : Snapshot
 	}
 }
 
+[Preserve]
 public class AdsProvidersDataUpdateSignal { }
 
 [Preserve]
@@ -276,12 +274,8 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 
 	public async Task<bool> Interstitial()
 	{
-		float time = Time.realtimeSinceStartup;
-		
-		if (time < m_Time)
+		if (CheckUnavailable())
 			return true;
-		
-		m_Time = time + m_ConfigProcessor.AdsCooldown;
 		
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
@@ -290,11 +284,11 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 			if (!await provider.Interstitial())
 				continue;
 			
+			ProcessCooldown();
+			
 			AudioListener.volume = 1;
 			
 			m_AudioManager.SetAudioActive(true);
-			
-			await UnityTask.Yield();
 			
 			return true;
 		}
@@ -308,8 +302,6 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 
 	public async Task<bool> Rewarded()
 	{
-		m_Time = Time.realtimeSinceStartup + m_ConfigProcessor.AdsCooldown;
-		
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
 			AudioListener.volume = 0;
@@ -317,11 +309,11 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 			if (!await provider.Rewarded())
 				continue;
 			
+			ProcessCooldown();
+			
 			AudioListener.volume = 1;
 			
 			m_AudioManager.SetAudioActive(true);
-			
-			await UnityTask.Yield();
 			
 			return true;
 		}
@@ -331,5 +323,10 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		m_AudioManager.SetAudioActive(true);
 		
 		return false;
+	}
+
+	void ProcessCooldown()
+	{
+		m_Time = Time.realtimeSinceStartup + m_ConfigProcessor.AdsCooldown;
 	}
 }
