@@ -207,10 +207,9 @@ public class AmbientProcessor : MonoBehaviour
 		
 		try
 		{
-			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", null, token);
+			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync($"Ambient/{_AmbientID}.ogg", null, CancellationToken.None);
 			
-			if (token.IsCancellationRequested)
-				return;
+			token.ThrowIfCancellationRequested();
 			
 			m_AudioSource.Stop();
 			m_AudioSource.volume = 0;
