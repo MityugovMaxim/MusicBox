@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AudioBox.Logging;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Localization Registry", fileName = "Localization Registry")]
@@ -25,17 +26,22 @@ public class LocalizationRegistry : ScriptableObject
 			? PlayerPrefs.GetString(LANGUAGE_KEY)
 			: Application.systemLanguage.GetCode();
 		
-		LocalizationRegistry localization = Resources.Load<LocalizationRegistry>($"Localization/{language}");
+		LocalizationRegistry[] localizations = Resources.LoadAll<LocalizationRegistry>($"{language}");
 		
-		if (localization == null)
-			localization = Resources.Load<LocalizationRegistry>($"Localization{SystemLanguage.English.GetCode()}");
+		if (localizations == null || localizations.Length == 0)
+			localizations = Resources.LoadAll<LocalizationRegistry>($"{SystemLanguage.English.GetCode()}");
 		
-		if (localization == null)
+		if (localizations == null || localizations.Length == 0)
+		{
+			Log.Error(typeof(LocalizationRegistry), "Load built-in localization failed.");
 			return;
+		}
 		
+		foreach (LocalizationRegistry localization in localizations)
 		foreach (LocalizationEntry entry in localization.m_Entries)
 			_Localization[entry.Key] = entry.Value;
 		
-		Resources.UnloadAsset(localization);
+		foreach (LocalizationRegistry localization in localizations)
+			Resources.UnloadAsset(localization);
 	}
 }

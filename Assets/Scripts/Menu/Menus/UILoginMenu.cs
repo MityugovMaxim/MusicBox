@@ -54,11 +54,11 @@ public class UILoginMenu : UIMenu
 			
 			if (attempt >= LOGIN_ATTEMPT_LIMIT)
 			{
-				await m_MenuProcessor.RetryAsync(
+				await m_MenuProcessor.RetryLocalizedAsync(
 					"login",
 					"login_menu",
-					m_LocalizationProcessor.GetBuiltIn("LOGIN_ERROR_TITLE"),
-					m_LocalizationProcessor.GetBuiltIn("LOGIN_ERROR_MESSAGE"),
+					"LOGIN_ERROR_TITLE",
+					"LOGIN_ERROR_MESSAGE",
 					Retry
 				);
 				

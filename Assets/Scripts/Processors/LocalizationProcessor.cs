@@ -87,7 +87,7 @@ public class LocalizationProcessor : IInitializable
 		if (string.IsNullOrEmpty(_Key))
 			return $"[{m_Language}] INVALID";
 		
-		if (!m_Localization.TryGetValue(_Key, out string format))
+		if (!m_Localization.TryGetValue(_Key, out string format) && !m_BuiltIn.TryGetValue(_Key, out format))
 			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
@@ -110,7 +110,7 @@ public class LocalizationProcessor : IInitializable
 		if (string.IsNullOrEmpty(_Key))
 			return $"[{m_Language}] INVALID";
 		
-		if (!m_Localization.TryGetValue(_Key, out string format))
+		if (!m_Localization.TryGetValue(_Key, out string format) && !m_BuiltIn.TryGetValue(_Key, out format))
 			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
@@ -133,7 +133,7 @@ public class LocalizationProcessor : IInitializable
 		if (string.IsNullOrEmpty(_Key))
 			return $"[{m_Language}] INVALID";
 		
-		if (!m_Localization.TryGetValue(_Key, out string format))
+		if (!m_Localization.TryGetValue(_Key, out string format) && !m_BuiltIn.TryGetValue(_Key, out format))
 			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
@@ -156,7 +156,7 @@ public class LocalizationProcessor : IInitializable
 		if (string.IsNullOrEmpty(_Key))
 			return $"[{m_Language}] INVALID";
 		
-		if (!m_Localization.TryGetValue(_Key, out string format))
+		if (!m_Localization.TryGetValue(_Key, out string format) && !m_BuiltIn.TryGetValue(_Key, out format))
 			return $"[{m_Language}] {_Key}";
 		
 		if (string.IsNullOrEmpty(format))
@@ -182,17 +182,9 @@ public class LocalizationProcessor : IInitializable
 		if (m_Localization.TryGetValue(_Key, out string value))
 			return value ?? $"[{m_Language}] NULL";
 		
+		if (m_BuiltIn.TryGetValue(_Key, out value))
+			return value ?? $"[{m_Language}] NULL";
+		
 		return _Default ?? (string.IsNullOrEmpty(_Key) ? $"[{m_Language}] NULL" : $"[{m_Language}] {_Key}");
-	}
-
-	public string GetBuiltIn(string _Key, string _Default = null)
-	{
-		if (string.IsNullOrEmpty(_Key))
-			return _Default ?? "BUILT-IN: INVALID";
-		
-		if (m_BuiltIn.TryGetValue(_Key, out string value))
-			return value ?? _Default;
-		
-		return _Default ?? $"BUILT-IN: {_Key}";
 	}
 }
