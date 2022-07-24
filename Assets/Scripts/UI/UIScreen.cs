@@ -80,8 +80,8 @@ public class UIScreen : UIOrder
 			m_Height
 		);
 		
-		float width  = Screen.currentResolution.width;
-		float height = Screen.currentResolution.height;
+		float width  = Screen.width;
+		float height = Screen.height;
 		float aspect = width / height;
 		
 		view = MathUtility.Fill(view, aspect);

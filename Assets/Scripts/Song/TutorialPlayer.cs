@@ -427,6 +427,8 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_ScoreManager.OnComboChanged += ComboChanged;
 		
+		m_HealthManager.Restore();
+		
 		await SampleAsync(Duration, _Token);
 		
 		await m_InputOverlay.ShowAsync(_Token);

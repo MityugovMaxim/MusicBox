@@ -109,7 +109,7 @@ public class UIHoldHandle : UIHandle
 		
 		Progress = Mathf.Max(0, 1.0f - distance / length);
 		
-		m_Indicator.Hit();
+		m_Indicator.Hit(Progress);
 	}
 
 	public override void TouchMove(int _ID, Rect _Area)

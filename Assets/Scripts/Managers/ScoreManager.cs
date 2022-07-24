@@ -267,7 +267,16 @@ public class ScoreManager
 		RegisterHit(ScoreType.Double, _Progress);
 	}
 
-	public void HoldHit(float _Progress, float _Length)
+	public void HoldHit(float _Progress)
+	{
+		Threshold threshold = GetThreshold(ScoreType.Hold, _Progress);
+		
+		ScoreGrade grade = threshold?.Grade ?? ScoreGrade.None;
+		
+		OnHit?.Invoke(ScoreType.Hold, grade);
+	}
+
+	public void HoldRelease(float _Progress, float _Length)
 	{
 		Threshold threshold = GetThreshold(ScoreType.Hold, _Progress);
 		
@@ -301,8 +310,6 @@ public class ScoreManager
 		}
 		
 		ProcessScore(grade);
-		
-		OnHit?.Invoke(ScoreType.Hold, grade);
 	}
 
 	public void TapFail() => RegisterFail(ScoreType.Tap);

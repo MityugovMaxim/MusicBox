@@ -50,6 +50,7 @@ public class UIVideoMenu : UIMenu
 		base.OnShowFinished();
 		
 		m_Player.Stop();
+		m_Player.time = 0;
 		
 		await PrepareAsync();
 		
@@ -63,6 +64,7 @@ public class UIVideoMenu : UIMenu
 		m_Processed = true;
 		
 		m_Player.Stop();
+		m_Player.time = 0;
 		
 		InvokeFinished();
 	}
