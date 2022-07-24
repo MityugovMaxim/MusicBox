@@ -14,9 +14,9 @@ public class UIConsentMenu : UIAnimationMenu
 		private set => PlayerPrefs.SetInt(CONSENT_PROCESSED_KEY, value ? 1 : 0);
 	}
 
-	[SerializeField] Button   m_TermsOfServiceButton;
-	[SerializeField] Button   m_PrivacyPolicyButton;
-	[SerializeField] Button   m_AcceptButton;
+	[SerializeField] Button m_TermsOfServiceButton;
+	[SerializeField] Button m_PrivacyPolicyButton;
+	[SerializeField] Button m_AcceptButton;
 
 	[SerializeField] string m_TermsOfServiceURL;
 	[SerializeField] string m_PrivacyPolicyURL;
@@ -69,7 +69,7 @@ public class UIConsentMenu : UIAnimationMenu
 	void PrivacyPolicy()
 	{
 		if (string.IsNullOrEmpty(m_PrivacyPolicyURL))
-			return;
+			return; 
 		
 		Application.OpenURL(m_PrivacyPolicyURL);
 	}

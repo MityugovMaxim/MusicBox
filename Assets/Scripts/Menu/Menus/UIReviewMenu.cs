@@ -10,10 +10,10 @@ public class UIReviewMenu : UIAnimationMenu
 
 	static int ReviewCount { get; set; }
 
-	public static bool ReviewProcessed
+	public static bool Processed
 	{
 		get => PlayerPrefs.GetInt(REVIEW_PROCESSED_KEY, 0) > 0;
-		set => PlayerPrefs.SetInt(REVIEW_PROCESSED_KEY, value ? 1 : 0);
+		private set => PlayerPrefs.SetInt(REVIEW_PROCESSED_KEY, value ? 1 : 0);
 	}
 
 	static long ReviewTimestamp
@@ -25,6 +25,7 @@ public class UIReviewMenu : UIAnimationMenu
 	[SerializeField] Button m_CancelButton;
 	[SerializeField] Button m_ReviewButton;
 
+	[Inject] MenuProcessor        m_MenuProcessor;
 	[Inject] ConfigProcessor      m_ConfigProcessor;
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
 
@@ -51,9 +52,9 @@ public class UIReviewMenu : UIAnimationMenu
 		m_Rank = _Rank;
 	}
 
-	public void Display()
+	public void Process()
 	{
-		if (ReviewProcessed)
+		if (Processed)
 			return;
 		
 		ReviewCount++;
@@ -77,21 +78,26 @@ public class UIReviewMenu : UIAnimationMenu
 		Show();
 	}
 
-	void Cancel()
+	async void Cancel()
 	{
-		Hide();
+		await HideAsync();
+		
+		m_MenuProcessor.RemoveMenu(MenuType.ReviewMenu);
 	}
 
-	void Review()
+	async void Review()
 	{
-		ReviewProcessed = true;
+		Processed = true;
 		
 		#if UNITY_IOS
 		AppStoreReview();
 		#elif UNITY_ANDROID
 		GooglePlayReview();
 		#endif
-		Hide();
+		
+		await HideAsync();
+		
+		m_MenuProcessor.RemoveMenu(MenuType.ReviewMenu);
 	}
 
 	#if UNITY_IOS

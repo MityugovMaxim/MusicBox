@@ -154,7 +154,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	void RequestReview()
 	{
-		if (UIReviewMenu.ReviewProcessed)
+		if (UIReviewMenu.Processed)
 			return;
 		
 		UIReviewMenu reviewMenu = m_MenuProcessor.GetMenu<UIReviewMenu>();
@@ -164,7 +164,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		reviewMenu.Setup(m_ScoreManager.GetRank());
 		
-		reviewMenu.Display();
+		reviewMenu.Process();
 	}
 
 	async Task ProcessNextAds()
