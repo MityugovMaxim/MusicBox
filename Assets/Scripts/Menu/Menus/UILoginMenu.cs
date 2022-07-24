@@ -72,6 +72,15 @@ public class UILoginMenu : UIMenu
 		
 		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
 		
+		try
+		{
+			await LoadAdmin();
+		}
+		catch (Exception)
+		{
+			// Ignored
+		}
+		
 		await LoadApplication();
 		
 		Log.Info(
@@ -109,10 +118,14 @@ public class UILoginMenu : UIMenu
 		await Login();
 	}
 
+	Task LoadAdmin()
+	{
+		return m_RolesProcessor.Load();
+	}
+
 	Task LoadApplication()
 	{
 		return Task.WhenAll(
-			m_RolesProcessor.Load(),
 			m_ConfigProcessor.Load(),
 			m_ApplicationProcessor.Load()
 		);

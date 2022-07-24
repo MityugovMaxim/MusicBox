@@ -141,16 +141,18 @@ public class AmbientProcessor : MonoBehaviour
 		{
 			await m_AudioSource.SetVolumeAsync(0, PAUSE_FADE_DURATION, token);
 		}
-		catch (TaskCanceledException) { }
+		catch (TaskCanceledException)
+		{
+			return;
+		}
 		catch (Exception exception)
 		{
 			Log.Exception(this, exception);
 		}
-		
-		if (token.IsCancellationRequested)
-			return;
-		
-		m_AudioSource.Pause();
+		finally
+		{
+			m_AudioSource.Pause();
+		}
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -175,14 +177,18 @@ public class AmbientProcessor : MonoBehaviour
 		{
 			await m_AudioSource.SetVolumeAsync(GetVolume(m_AmbientID), RESUME_FADE_DURATION, token);
 		}
-		catch (TaskCanceledException) { }
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
 		catch (Exception exception)
 		{
 			Log.Exception(this, exception);
 		}
-		
-		if (token.IsCancellationRequested)
-			return;
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -219,14 +225,18 @@ public class AmbientProcessor : MonoBehaviour
 				await m_AudioSource.SetVolumeAsync(volume, PLAY_FADE_DURATION, token);
 			}
 		}
-		catch (TaskCanceledException) { }
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
 		catch (Exception exception)
 		{
 			Log.Exception(this, exception);
 		}
-		
-		if (token.IsCancellationRequested)
-			return;
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;

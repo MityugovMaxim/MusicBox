@@ -45,6 +45,10 @@ public class UIProductMenu : UISlideMenu
 		m_Label.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
 		
+		m_Image.RectTransform.sizeDelta = m_ProductsProcessor.IsSpecial(m_ProductID)
+			? new Vector2(600, 300)
+			: new Vector2(350, 350);
+		
 		Refresh();
 	}
 

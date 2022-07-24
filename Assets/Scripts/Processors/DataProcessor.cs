@@ -87,7 +87,6 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 		if (_EventArgs.DatabaseError != null)
 		{
 			Log.Error(this, _EventArgs.DatabaseError.Message);
-			Log.Error(this, _EventArgs.DatabaseError.Details);
 			Unload();
 			return;
 		}
