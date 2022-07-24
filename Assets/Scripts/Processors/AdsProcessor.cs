@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Database;
-using Firebase.Extensions;
 using JetBrains.Annotations;
 using MAXHelper;
 using UnityEngine;
