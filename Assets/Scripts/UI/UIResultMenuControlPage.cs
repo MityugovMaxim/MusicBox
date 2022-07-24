@@ -9,8 +9,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public override bool Valid => true;
 
-	static bool m_ReviewRequested;
-
 	[SerializeField] UISongImage     m_Image;
 	[SerializeField] UISongDiscs     m_Discs;
 	[SerializeField] UISongLabel     m_Label;
@@ -146,26 +144,24 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	{
 		m_Preview.Play(m_SongID);
 		
-		if (m_ReviewRequested)
-			return;
-		
-		ScoreRank rank = m_ScoreManager.GetRank();
-		
-		if (rank >= ScoreRank.Gold)
-		{
-			m_ReviewRequested = true;
-			
-			#if UNITY_IOS
-			UnityEngine.iOS.Device.RequestStoreReview();
-			#elif UNITY_ANDROID
-			// TODO: Create review request
-			#endif
-		}
+		RequestReview();
 	}
 
 	protected override void OnHideFinished()
 	{
 		m_Rating.Execute();
+	}
+
+	void RequestReview()
+	{
+		UIReviewMenu reviewMenu = m_MenuProcessor.GetMenu<UIReviewMenu>();
+		
+		if (reviewMenu == null)
+			return;
+		
+		reviewMenu.Setup(m_ScoreManager.GetRank());
+		
+		reviewMenu.Display();
 	}
 
 	async Task ProcessNextAds()

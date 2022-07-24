@@ -5,18 +5,21 @@ using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 [Preserve]
 public class ApplicationDataUpdateSignal { }
 
 public class ApplicationSnapshot
 {
-	public string Version { get; }
+	public string Version             { get; }
+	public string AppStoreReviewURL   { get; }
+	public string GooglePlayReviewURL { get; }
 
 	public ApplicationSnapshot(DataSnapshot _Data)
 	{
-		Version = _Data.GetString("version");
+		Version             = _Data.GetString("version");
+		AppStoreReviewURL   = _Data.GetString("app_store_review_url");
+		GooglePlayReviewURL = _Data.GetString("google_play_review_url");
 	}
 }
 
@@ -34,10 +37,6 @@ public class ApplicationProcessor
 		set => PlayerPrefs.SetString(CACHE_VERSION_KEY, value);
 	}
 
-	bool Loaded { get; set; }
-
-	[Inject] SignalBus m_SignalBus;
-
 	DatabaseReference m_Data;
 
 	ApplicationSnapshot m_Snapshot;
@@ -45,30 +44,20 @@ public class ApplicationProcessor
 	public async Task Load()
 	{
 		if (m_Data == null)
-		{
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child("application");
-			m_Data.ValueChanged += OnUpdate;
-		}
+			m_Data = FirebaseDatabase.DefaultInstance.RootReference.Child("application");
 		
 		await Fetch();
 		
 		TryClearCache();
-		
-		Loaded = true;
 	}
 
-	async void OnUpdate(object _Sender, EventArgs _Args)
+	public string GetReviewURL()
 	{
-		if (!Loaded)
-			return;
-		
-		Debug.Log("[ApplicationProcessor] Updating application data...");
-		
-		await Fetch();
-		
-		Debug.Log("[ApplicationProcessor] Update application data complete.");
-		
-		m_SignalBus.Fire<ApplicationDataUpdateSignal>();
+		#if UNITY_IOS
+		return m_Snapshot?.AppStoreReviewURL;
+		#elif UNITY_ANDROID
+		return m_Snapshot?.GooglePlayReviewURL;
+		#endif
 	}
 
 	async Task Fetch()

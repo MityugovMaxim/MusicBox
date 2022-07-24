@@ -49,6 +49,9 @@ public class ConfigProcessor
 	const string TUTORIAL_BEND_THRESHOLD   = "tutorial_bend_threshold";
 
 	const string SONG_LIBRARY_GROUP_SIZE = "song_library_group_size";
+	const string REVIEW_COUNT            = "review_count";
+	const string REVIEW_RANK             = "review_rank";
+	const string REVIEW_COOLDOWN         = "review_cooldown";
 
 	public int   ComboX2                 => GetInt(COMBO_X2);
 	public int   ComboX4                 => GetInt(COMBO_X4);
@@ -79,6 +82,9 @@ public class ConfigProcessor
 	public float TutorialHoldThreshold   => GetFloat(TUTORIAL_HOLD_THRESHOLD);
 	public float TutorialBendThreshold   => GetFloat(TUTORIAL_BEND_THRESHOLD);
 	public int   SongLibraryGroupSize    => GetInt(SONG_LIBRARY_GROUP_SIZE);
+	public int   ReviewCount             => GetInt(REVIEW_COUNT);
+	public int   ReviewRank              => GetInt(REVIEW_RANK);
+	public long  ReviewCooldown          => GetLong(REVIEW_COOLDOWN);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
@@ -130,6 +136,9 @@ public class ConfigProcessor
 		
 		// Menu
 		{ SONG_LIBRARY_GROUP_SIZE, 4 },
+		{ REVIEW_COUNT, 2 },
+		{ REVIEW_RANK, 3 },
+		{ REVIEW_COOLDOWN, 259200000 },
 	};
 
 	public async Task Load()
