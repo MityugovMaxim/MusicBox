@@ -11,6 +11,8 @@ public class UISplashMenu : UIMenu
 
 	[Inject] MenuProcessor m_MenuProcessor;
 
+	MaxSdkBase.ConsentDialogState m_ConsentState;
+
 	protected override async void OnShowFinished()
 	{
 		await InitializeThirdParty();
@@ -38,11 +40,9 @@ public class UISplashMenu : UIMenu
 	{
 		await InitializeFacebook();
 		
-		await InitializeGDPR();
-		
-		await Task.Delay(1500);
-		
 		await InitializeAppLovin();
+		
+		await InitializeGDPR();
 	}
 
 	Task InitializeFacebook()
@@ -64,15 +64,44 @@ public class UISplashMenu : UIMenu
 		return completionSource.Task;
 	}
 
-	Task InitializeGDPR()
-	{
-		return Task.CompletedTask;
-	}
-
 	Task InitializeAppLovin()
 	{
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		void Complete(MaxSdkBase.SdkConfiguration _Configuration)
+		{
+			MaxSdkCallbacks.OnSdkInitializedEvent -= Complete;
+			
+			m_ConsentState = _Configuration.ConsentDialogState;
+			
+			completionSource.TrySetResult(true);
+		}
+		
+		MaxSdkCallbacks.OnSdkInitializedEvent += Complete;
+		
 		AdsManager.Instance.InitApplovin();
 		
-		return Task.CompletedTask;
+		return completionSource.Task;
+	}
+
+	async Task InitializeGDPR()
+	{
+		if (m_ConsentState == MaxSdkBase.ConsentDialogState.DoesNotApply)
+			return;
+		
+		if (m_ConsentState == MaxSdkBase.ConsentDialogState.Unknown && UIConsentMenu.Processed)
+		{
+			MaxSdk.SetHasUserConsent(true);
+			return;
+		}
+		
+		UIConsentMenu consentMenu = m_MenuProcessor.GetMenu<UIConsentMenu>();
+		
+		if (consentMenu == null)
+			return;
+		
+		await consentMenu.ProcessAsync();
+		
+		MaxSdk.SetHasUserConsent(true);
 	}
 }
