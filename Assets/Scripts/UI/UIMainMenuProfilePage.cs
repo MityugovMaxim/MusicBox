@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 public class UIMainMenuProfilePage : UIMainMenuPage
@@ -12,6 +13,11 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	[SerializeField] UIUnitLabel    m_Coins;
 	[SerializeField] UILanguageItem m_Language;
 	[SerializeField] GameObject     m_LogoutControls;
+	[SerializeField] Button         m_ReviewButton;
+	[SerializeField] Button         m_PrivacyPolicyButton;
+	[SerializeField] Button         m_TermsOfServiceButton;
+	[SerializeField] string         m_PrivacyPolicyURL;
+	[SerializeField] string         m_TermsOfServiceURL;
 
 	[Inject] SignalBus          m_SignalBus;
 	[Inject] LanguageProcessor  m_LanguageProcessor;
@@ -26,6 +32,9 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 		base.Awake();
 		
 		m_Username.onSubmit.AddListener(SetUsername);
+		m_ReviewButton.onClick.AddListener(Review);
+		m_TermsOfServiceButton.onClick.AddListener(TermsOfService);
+		m_PrivacyPolicyButton.onClick.AddListener(PrivacyPolicy);
 	}
 
 	protected override void OnDestroy()
@@ -33,6 +42,9 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 		base.OnDestroy();
 		
 		m_Username.onSubmit.RemoveListener(SetUsername);
+		m_ReviewButton.onClick.RemoveListener(Review);
+		m_TermsOfServiceButton.onClick.RemoveListener(TermsOfService);
+		m_PrivacyPolicyButton.onClick.RemoveListener(PrivacyPolicy);
 	}
 
 	public async void Logout()
@@ -108,6 +120,9 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	{
 		Refresh();
 		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
@@ -117,6 +132,9 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 
 	protected override void OnHideStarted()
 	{
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
@@ -126,6 +144,8 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 
 	void Refresh()
 	{
+		m_ReviewButton.gameObject.SetActive(!UIReviewMenu.Processed);
+		
 		m_Image.Setup(m_SocialProcessor.Photo);
 		
 		m_Level.Level   = m_ProfileProcessor.Level;
@@ -150,6 +170,27 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 		m_HapticProcessor.Process(Haptic.Type.Success);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	async void Review()
+	{
+		await m_MenuProcessor.Show(MenuType.ReviewMenu);
+	}
+
+	void TermsOfService()
+	{
+		if (string.IsNullOrEmpty(m_TermsOfServiceURL))
+			return;
+		
+		Application.OpenURL(m_TermsOfServiceURL);
+	}
+
+	void PrivacyPolicy()
+	{
+		if (string.IsNullOrEmpty(m_PrivacyPolicyURL))
+			return;
+		
+		Application.OpenURL(m_PrivacyPolicyURL);
 	}
 
 	async void SetLanguage(string _Language)
