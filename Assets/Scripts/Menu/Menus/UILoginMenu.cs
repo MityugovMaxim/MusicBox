@@ -120,6 +120,15 @@ public class UILoginMenu : UIMenu
 
 	Task LoadAdmin()
 	{
+		string userID = m_SocialProcessor.UserID;
+		
+		string serviceCode = !string.IsNullOrEmpty(userID)
+			? CRC32.Get(userID)
+			: null;
+		
+		if (Application.absoluteURL != "audiobox://admin" && GUIUtility.systemCopyBuffer != serviceCode)
+			return Task.CompletedTask;
+		
 		return m_RolesProcessor.Load();
 	}
 
