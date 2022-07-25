@@ -34,17 +34,12 @@ public class AdsProviderMadPixel : IAdsProvider
 	string m_InterstitialID;
 	string m_RewardedID;
 
-	public async Task<bool> Initialize(string _InterstitialID, string _RewardedID)
+	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
 	{
 		m_InterstitialID = _InterstitialID;
 		m_RewardedID     = _RewardedID;
 		
-		await UnityTask.Until(MaxSdk.IsInitialized);
-		
-		AdsManager.Instance.InitializeInterstitial(_InterstitialID);
-		AdsManager.Instance.InitializeRewarded(_RewardedID);
-		
-		return true;
+		return Task.FromResult(true);
 	}
 
 	public Task<bool> Interstitial()
