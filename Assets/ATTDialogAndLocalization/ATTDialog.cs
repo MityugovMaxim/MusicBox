@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if UNITY_IOS
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System;
@@ -58,3 +59,4 @@ public class ATTDialog : MonoBehaviour
         _onATTComplete = null;
     }
 }
+#endif
