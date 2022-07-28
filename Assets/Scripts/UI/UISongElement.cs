@@ -14,6 +14,7 @@ public class UISongElement : UIOverlayButton
 	[SerializeField] UISongPlay  m_Play;
 
 	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] SongsManager    m_SongsManager;
 	[Inject] ScoresProcessor m_ScoresProcessor;
 
 	string m_SongID;
@@ -29,7 +30,7 @@ public class UISongElement : UIOverlayButton
 		m_Play.Setup(m_SongID);
 		
 		ScoreRank rank = m_ScoresProcessor.GetRank(m_SongID);
-		if (rank > ScoreRank.None)
+		if (m_SongsManager.IsSongAvailable(m_SongID) && rank > ScoreRank.None)
 		{
 			m_Discs.gameObject.SetActive(true);
 			m_Play.gameObject.SetActive(false);
