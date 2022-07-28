@@ -12,6 +12,7 @@ public class UISongRestart : UIEntity
 	[SerializeField] GameObject  m_Paid;
 	[SerializeField] SongPreview m_Preview;
 
+	[Inject] SongsManager     m_SongsManager;
 	[Inject] SongsProcessor   m_SongsProcessor;
 	[Inject] ProfileProcessor m_ProfileProcessor;
 	[Inject] AdsProcessor     m_AdsProcessor;
@@ -27,6 +28,9 @@ public class UISongRestart : UIEntity
 		m_Mode   = m_SongsProcessor.GetMode(m_SongID);
 		
 		if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
+			m_Mode = SongMode.Free;
+		
+		if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
 			m_Mode = SongMode.Free;
 		
 		m_ControlGroup.Show(true);
@@ -141,7 +145,15 @@ public class UISongRestart : UIEntity
 
 	async void RestartPaid()
 	{
-		long coins = m_SongsProcessor.GetPrice(m_SongID);
+		if (m_SongsManager.IsSongAvailable(m_SongID))
+		{
+			RestartFree();
+			return;
+		}
+		
+		string songID = m_SongID;
+		
+		long coins = m_SongsProcessor.GetPrice(songID);
 		
 		if (!await m_ProfileProcessor.CheckCoins(coins))
 			return;
@@ -151,7 +163,7 @@ public class UISongRestart : UIEntity
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		SongPayRequest request = new SongPayRequest(m_SongID);
+		SongUnlockRequest request = new SongUnlockRequest(songID);
 		
 		bool success = await request.SendAsync();
 		
@@ -173,11 +185,11 @@ public class UISongRestart : UIEntity
 		else
 		{
 			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_restart_coins",
+				"song_restart_paid",
 				"song_restart_button",
-				"SONG_RESTART_COINS_ERROR_TITLE",
-				"SONG_RESTART_COINS_ERROR_MESSAGE",
-				RestartAds,
+				"SONG_RESTART_PAID_ERROR_TITLE",
+				"SONG_RESTART_PAID_ERROR_MESSAGE",
+				RestartPaid,
 				() => { }
 			);
 		}

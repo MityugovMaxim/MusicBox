@@ -38,6 +38,7 @@ public class UISongPlay : UIEntity
 		
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
+		m_CompleteGroup.Hide(true);
 		
 		SetLockActive(false);
 		SetFreeActive(false);
@@ -162,7 +163,9 @@ public class UISongPlay : UIEntity
 			return;
 		}
 		
-		long coins = m_SongsProcessor.GetPrice(m_SongID);
+		string songID = m_SongID;
+		
+		long coins = m_SongsProcessor.GetPrice(songID);
 		
 		if (!await m_ProfileProcessor.CheckCoins(coins))
 			return;
@@ -172,7 +175,9 @@ public class UISongPlay : UIEntity
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		SongUnlockRequest request = new SongUnlockRequest(m_SongID);
+		m_ProfileProcessor.Lock();
+		
+		SongUnlockRequest request = new SongUnlockRequest(songID);
 		
 		bool success = await request.SendAsync();
 		
@@ -187,9 +192,13 @@ public class UISongPlay : UIEntity
 			
 			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
 			
-			loadingMenu.Setup(m_SongID);
+			loadingMenu.Setup(songID);
 			
 			await m_MenuProcessor.Show(MenuType.LoadingMenu);
+			
+			m_CompleteGroup.Hide(true);
+			
+			m_ProfileProcessor.Unlock();
 			
 			loadingMenu.Load();
 			
@@ -198,6 +207,8 @@ public class UISongPlay : UIEntity
 		}
 		else
 		{
+			m_ProfileProcessor.Unlock();
+			
 			await m_LoaderGroup.HideAsync();
 			await m_ControlGroup.ShowAsync();
 			
