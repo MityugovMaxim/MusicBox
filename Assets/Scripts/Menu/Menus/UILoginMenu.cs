@@ -10,30 +10,29 @@ public class UILoginMenu : UIMenu
 {
 	const int LOGIN_ATTEMPT_LIMIT = 2;
 
-	[Inject] RolesProcessor        m_RolesProcessor;
-	[Inject] SocialProcessor       m_SocialProcessor;
-	[Inject] ConfigProcessor       m_ConfigProcessor;
-	[Inject] ApplicationProcessor  m_ApplicationProcessor;
-	[Inject] AdsProcessor          m_AdsProcessor;
-	[Inject] SongsProcessor        m_SongsProcessor;
-	[Inject] ScoresProcessor       m_ScoresProcessor;
-	[Inject] NewsProcessor         m_NewsProcessor;
-	[Inject] OffersProcessor       m_OffersProcessor;
-	[Inject] ProductsProcessor     m_ProductsProcessor;
-	[Inject] RevivesProcessor      m_RevivesProcessor;
-	[Inject] StoreProcessor        m_StoreProcessor;
-	[Inject] ProgressProcessor     m_ProgressProcessor;
-	[Inject] MessageProcessor      m_MessageProcessor;
-	[Inject] ProfileProcessor      m_ProfileProcessor;
-	[Inject] MenuProcessor         m_MenuProcessor;
-	[Inject] LanguageProcessor     m_LanguageProcessor;
-	[Inject] AmbientProcessor      m_AmbientProcessor;
-	[Inject] BannersProcessor      m_BannersProcessor;
-	[Inject] StatisticProcessor    m_StatisticProcessor;
-	[Inject] UrlProcessor          m_UrlProcessor;
-	[Inject] SongsManager          m_SongsManager;
-	[Inject] DailyProcessor        m_DailyProcessor;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] RolesProcessor       m_RolesProcessor;
+	[Inject] SocialProcessor      m_SocialProcessor;
+	[Inject] ConfigProcessor      m_ConfigProcessor;
+	[Inject] ApplicationProcessor m_ApplicationProcessor;
+	[Inject] AdsProcessor         m_AdsProcessor;
+	[Inject] SongsProcessor       m_SongsProcessor;
+	[Inject] ScoresProcessor      m_ScoresProcessor;
+	[Inject] NewsProcessor        m_NewsProcessor;
+	[Inject] OffersProcessor      m_OffersProcessor;
+	[Inject] ProductsProcessor    m_ProductsProcessor;
+	[Inject] RevivesProcessor     m_RevivesProcessor;
+	[Inject] StoreProcessor       m_StoreProcessor;
+	[Inject] ProgressProcessor    m_ProgressProcessor;
+	[Inject] MessageProcessor     m_MessageProcessor;
+	[Inject] ProfileProcessor     m_ProfileProcessor;
+	[Inject] MenuProcessor        m_MenuProcessor;
+	[Inject] LanguageProcessor    m_LanguageProcessor;
+	[Inject] AmbientProcessor     m_AmbientProcessor;
+	[Inject] BannersProcessor     m_BannersProcessor;
+	[Inject] StatisticProcessor   m_StatisticProcessor;
+	[Inject] UrlProcessor         m_UrlProcessor;
+	[Inject] SongsManager         m_SongsManager;
+	[Inject] DailyProcessor       m_DailyProcessor;
 
 	public async Task Login()
 	{
@@ -48,22 +47,28 @@ public class UILoginMenu : UIMenu
 			if (login)
 				break;
 			
-			await Task.Delay(250);
+			await Task.Delay(150);
 			
 			attempt++;
 			
-			if (attempt >= LOGIN_ATTEMPT_LIMIT)
-			{
-				await m_MenuProcessor.RetryLocalizedAsync(
-					"login",
-					"login_menu",
-					"LOGIN_ERROR_TITLE",
-					"LOGIN_ERROR_MESSAGE",
-					Retry
-				);
-				
-				return;
-			}
+			if (attempt < LOGIN_ATTEMPT_LIMIT)
+				continue;
+			
+			TaskCompletionSource<bool> retry = new TaskCompletionSource<bool>();
+			
+			await m_MenuProcessor.RetryLocalizedAsync(
+				"login",
+				"login_menu",
+				"LOGIN_ERROR_TITLE",
+				"LOGIN_ERROR_MESSAGE",
+				() => retry.TrySetResult(true)
+			);
+			
+			await retry.Task;
+			
+			await Task.Delay(250);
+			
+			attempt = 0;
 		}
 		
 		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.Login);
@@ -111,11 +116,6 @@ public class UILoginMenu : UIMenu
 		Log.Info(this, "Load monetization complete.");
 		
 		await LoadViews();
-	}
-
-	async void Retry()
-	{
-		await Login();
 	}
 
 	Task LoadAdmin()

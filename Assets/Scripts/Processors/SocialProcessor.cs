@@ -29,6 +29,9 @@ public class SocialProcessor : IInitializable, IDisposable
 
 	public async Task<bool> Login()
 	{
+		if (Application.internetReachability == NetworkReachability.NotReachable)
+			return false;
+		
 		m_Auth = FirebaseAuth.DefaultInstance;
 		
 		try
@@ -44,7 +47,7 @@ public class SocialProcessor : IInitializable, IDisposable
 		}
 		catch (Exception exception)
 		{
-			Debug.LogException(exception);
+			Log.Exception(this, exception);
 			
 			return false;
 		}
