@@ -22,6 +22,8 @@ public class LocalizationRegistry : ScriptableObject
 
 	public static void Load(Dictionary<string, string> _Localization)
 	{
+		_Localization.Clear();
+		
 		string language = PlayerPrefs.HasKey(LANGUAGE_KEY)
 			? PlayerPrefs.GetString(LANGUAGE_KEY)
 			: Application.systemLanguage.GetCode();

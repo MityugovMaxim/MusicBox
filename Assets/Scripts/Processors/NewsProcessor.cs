@@ -86,9 +86,9 @@ public class NewsProcessor : DataProcessor<NewsSnapshot, NewsDataUpdateSignal>
 		if (snapshot == null || snapshot.Timestamp == 0)
 			return string.Empty;
 		
-		DateTimeOffset date = DateTimeOffset.FromUnixTimeSeconds(snapshot.Timestamp);
+		DateTime date = TimeUtility.GetLocalTime(snapshot.Timestamp);
 		
-		return date.LocalDateTime.ToShortDateString();
+		return date.ToShortDateString();
 	}
 
 	public string GetURL(string _NewsID)

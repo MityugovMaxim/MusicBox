@@ -22,7 +22,7 @@ public class LocalizationProcessor : IInitializable
 
 	void IInitializable.Initialize()
 	{
-		LocalizationRegistry.Load(m_BuiltIn);
+		LoadBuiltIn();
 	}
 
 	public async Task Load(string _Language)
@@ -73,6 +73,11 @@ public class LocalizationProcessor : IInitializable
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	public void LoadBuiltIn()
+	{
+		LocalizationRegistry.Load(m_BuiltIn);
 	}
 
 	public Task Reload(string _Language)

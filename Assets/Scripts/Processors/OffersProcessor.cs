@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Database;
@@ -87,7 +88,20 @@ public class OffersProcessor : DataProcessor<OfferSnapshot, OffersDataUpdateSign
 
 	public string GetTitle(string _OfferID) => m_OffersDescriptor.GetTitle(_OfferID);
 
-	public string GetDescription(string _OfferID) => m_OffersDescriptor.GetDescription(_OfferID);
+	public string GetDescription(string _OfferID)
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		string description = m_OffersDescriptor.GetDescription(_OfferID);
+		if (!string.IsNullOrEmpty(description))
+			builder.AppendLine(description);
+		
+		long coins = GetCoins(_OfferID);
+		if (coins > 0)
+			builder.AppendLine($"<b>+{coins}</b><sprite name=coins_icon>");
+		
+		return builder.ToString().TrimEnd();
+	}
 
 	public string GetSongID(string _OfferID)
 	{

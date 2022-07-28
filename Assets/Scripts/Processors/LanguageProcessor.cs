@@ -102,7 +102,9 @@ public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpd
 		
 		await m_LocalizationProcessor.Load(Language);
 		
-		FireSignal();
+		m_LocalizationProcessor.LoadBuiltIn();
+		
+		SignalBus.Fire<LanguageSelectSignal>();
 		
 		return true;
 	}
