@@ -425,6 +425,8 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_Input = false;
 		
+		_Token.Register(() => m_ScoreManager.OnComboChanged -= ComboChanged);
+		
 		m_ScoreManager.OnComboChanged += ComboChanged;
 		
 		m_HealthManager.Restore();
@@ -526,6 +528,8 @@ public class TutorialPlayer : ASFPlayer
 		bool selected = false;
 		
 		void Hit(ScoreType _Type, ScoreGrade _Grade) => selected = true;
+		
+		_Token.Register(() => m_ScoreManager.OnHit -= Hit);
 		
 		m_ScoreManager.OnHit += Hit; 
 		
