@@ -36,23 +36,23 @@ public class UISongStatistics : UIGroup
 		
 		await ShowAsync();
 		
-		await Task.Delay(500);
+		await Task.Delay(250);
 		
 		await ProcessAsync(m_Bad, bad);
 		
-		await Task.Delay(500);
+		await Task.Delay(150);
 		
 		await ProcessAsync(m_Good, good);
 		
-		await Task.Delay(500);
+		await Task.Delay(150);
 		
 		await ProcessAsync(m_Great, great);
 		
-		await Task.Delay(500);
+		await Task.Delay(150);
 		
 		await ProcessAsync(m_Perfect, perfect);
 		
-		await Task.Delay(1000);
+		await Task.Delay(500);
 		
 		await HideAsync();
 	}
