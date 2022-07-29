@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.Database;
 using JetBrains.Annotations;
-using MAXHelper;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -12,21 +11,24 @@ using Zenject;
 public interface IAdsProvider
 {
 	string ID             { get; }
-	string InterstitialID { get; }
-	string RewardedID     { get; }
 	Task<bool> Initialize(string _InterstitialID, string _RewardedID);
 	Task<bool> Interstitial();
-	Task<bool> Interstitial(string _PlacementID);
 	Task<bool> Rewarded();
-	Task<bool> Rewarded(string _PlacementID);
+}
+
+public enum AdsState
+{
+	Unavailable = 0,
+	Completed   = 1,
+	Canceled    = 2,
+	Failed      = 3,
+	Timeout     = 4,
 }
 
 [Preserve]
 public class AdsProviderMadPixel : IAdsProvider
 {
-	string IAdsProvider.ID             => "mad_pixel";
-	string IAdsProvider.InterstitialID => m_InterstitialID;
-	string IAdsProvider.RewardedID     => m_RewardedID;
+	string IAdsProvider.ID => "mad_pixel";
 
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
@@ -34,97 +36,87 @@ public class AdsProviderMadPixel : IAdsProvider
 	string m_InterstitialID;
 	string m_RewardedID;
 
-	public Task<bool> Initialize(string _InterstitialID, string _RewardedID)
+	async Task<bool> IAdsProvider.Initialize(string _InterstitialID, string _RewardedID)
 	{
 		m_InterstitialID = _InterstitialID;
 		m_RewardedID     = _RewardedID;
 		
-		return Task.FromResult(true);
+		bool interstitial = await MediationManager.Instance.WaitInterstitial();
+		
+		if (interstitial)
+			Log.Info(this, "Interstitial load complete.");
+		else
+			Log.Error(this, "Interstitial load failed.");
+		
+		bool rewarded = await MediationManager.Instance.WaitRewarded();
+		
+		if (rewarded)
+			Log.Info(this, "Rewarded load complete.");
+		else
+			Log.Error(this, "Rewarded load failed.");
+		
+		return interstitial && rewarded;
 	}
 
-	public Task<bool> Interstitial()
-	{
-		return Interstitial(m_InterstitialID);
-	}
-
-	public Task<bool> Interstitial(string _PlacementID)
+	async Task<bool> IAdsProvider.Interstitial()
 	{
 		const string type = "interstitial";
 		
-		if (string.IsNullOrEmpty(_PlacementID))
-			return Task.FromResult(false);
+		string placementID = m_InterstitialID;
 		
-		bool available = AdsManager.Instance.HasLoadedAd(false);
+		if (string.IsNullOrEmpty(placementID))
+			return false;
 		
-		m_StatisticProcessor.LogAdsAvailable(type, _PlacementID, available);
+		bool available = await MediationManager.Instance.WaitInterstitial();
+		
+		m_StatisticProcessor.LogAdsAvailable(type, placementID, available);
 		
 		if (!available)
-			return Task.FromResult(false);
+			return false;
 		
-		m_StatisticProcessor.LogAdsStarted(type, _PlacementID);
+		m_StatisticProcessor.LogAdsStarted(type, placementID);
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		AdsState state = await MediationManager.Instance.ShowInterstitialAsync();
 		
-		AdsManager.Instance.ShowAd(
-			_Success =>
-			{
-				m_StatisticProcessor.LogAdsFinished(type, _PlacementID, _Success ? "watched" : "canceled");
-				
-				completionSource.TrySetResult(_Success);
-			},
-			() =>
-			{
-				m_StatisticProcessor.LogAdsFinished(type, _PlacementID, "watched");
-				
-				completionSource.TrySetResult(true);
-			},
-			_PlacementID,
-			false
-		);
+		m_StatisticProcessor.LogAdsFinished(type, placementID, GetState(state));
 		
-		return completionSource.Task;
+		return state == AdsState.Completed;
 	}
 
-	public Task<bool> Rewarded()
-	{
-		return Rewarded(m_RewardedID);
-	}
-
-	public Task<bool> Rewarded(string _PlacementID)
+	async Task<bool> IAdsProvider.Rewarded()
 	{
 		const string type = "rewarded";
 		
-		if (string.IsNullOrEmpty(_PlacementID))
-			return Task.FromResult(false);
+		string placementID = m_RewardedID;
 		
-		bool available = AdsManager.Instance.HasLoadedAd();
+		if (string.IsNullOrEmpty(placementID))
+			return false;
 		
-		m_StatisticProcessor.LogAdsAvailable(type, _PlacementID, available);
+		bool available = await MediationManager.Instance.WaitRewarded();
 		
 		if (!available)
-			return Task.FromResult(false);
+			return false;
 		
-		m_StatisticProcessor.LogAdsStarted(type, _PlacementID);
+		m_StatisticProcessor.LogAdsStarted(type, placementID);
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		AdsState state = await MediationManager.Instance.ShowRewardedAsync();
 		
-		AdsManager.Instance.ShowAd(
-			_Success =>
-			{
-				m_StatisticProcessor.LogAdsFinished(type, _PlacementID, _Success ? "watched" : "canceled");
-				
-				completionSource.TrySetResult(_Success);
-			},
-			() =>
-			{
-				m_StatisticProcessor.LogAdsFinished(type, _PlacementID, "watched");
-				
-				completionSource.TrySetResult(false);
-			},
-			_PlacementID
-		);
+		m_StatisticProcessor.LogAdsFinished(type, placementID, GetState(state));
 		
-		return completionSource.Task;
+		return state == AdsState.Completed;
+	}
+
+	static string GetState(AdsState _State)
+	{
+		switch (_State)
+		{
+			case AdsState.Unavailable: return "unavailable";
+			case AdsState.Completed:   return "watched";
+			case AdsState.Canceled:    return "canceled";
+			case AdsState.Failed:      return "failed";
+			case AdsState.Timeout:     return "unavailable";
+			default:                   return "unavailable";
+		}
 	}
 }
 

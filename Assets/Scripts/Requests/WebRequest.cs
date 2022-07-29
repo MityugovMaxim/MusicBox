@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
@@ -65,6 +66,7 @@ public static class WebRequest
 				}
 				
 				AudioClip audioClip = handler.audioClip;
+				audioClip.name = Path.GetFileNameWithoutExtension(_URL);
 				
 				if (audioClip == null)
 				{

@@ -8,7 +8,7 @@ public abstract class FunctionRequest<TResult>
 {
 	protected abstract string Command { get; }
 
-	public async Task<TResult> SendAsync(int _Timeout = 30000)
+	public async Task<TResult> SendAsync(int _Timeout = 15000)
 	{
 		Dictionary<string, object> data = new Dictionary<string, object>();
 		
@@ -18,9 +18,15 @@ public abstract class FunctionRequest<TResult>
 		
 		try
 		{
-			HttpsCallableResult result = await function.CallAsync(data);
+			Task<HttpsCallableResult> task = function.CallAsync(data);
 			
-			return Success(result.Data);
+			await Task.WhenAny(
+				task,
+				Task.Delay(_Timeout)
+			);
+			
+			if (task.IsCompletedSuccessfully)
+				return Success(task.Result.Data);
 		}
 		catch (Exception exception)
 		{
