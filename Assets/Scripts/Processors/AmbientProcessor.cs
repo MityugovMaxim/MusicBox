@@ -140,6 +140,8 @@ public class AmbientProcessor : MonoBehaviour
 		try
 		{
 			await m_AudioSource.SetVolumeAsync(0, PAUSE_FADE_DURATION, token);
+			
+			m_AudioSource.Pause();
 		}
 		catch (TaskCanceledException)
 		{
@@ -148,10 +150,6 @@ public class AmbientProcessor : MonoBehaviour
 		catch (Exception exception)
 		{
 			Log.Exception(this, exception);
-		}
-		finally
-		{
-			m_AudioSource.Pause();
 		}
 		
 		m_TokenSource?.Dispose();
@@ -170,8 +168,9 @@ public class AmbientProcessor : MonoBehaviour
 		
 		CancellationToken token = m_TokenSource.Token;
 		
-		m_Paused = false;
 		m_AudioSource.UnPause();
+		
+		m_Paused = false;
 		
 		try
 		{
@@ -196,6 +195,8 @@ public class AmbientProcessor : MonoBehaviour
 
 	async Task PlayAsync(string _AmbientID)
 	{
+		Debug.LogError("---> PLAY ASYNC");
+		
 		m_AmbientID = _AmbientID;
 		
 		m_TokenSource?.Cancel();
@@ -218,6 +219,8 @@ public class AmbientProcessor : MonoBehaviour
 			if (audioClip != null)
 			{
 				m_AudioSource.Play();
+				
+				m_Paused = false;
 				
 				float volume = GetVolume(_AmbientID);
 				
@@ -260,7 +263,14 @@ public class AmbientProcessor : MonoBehaviour
 			
 			await PlayAsync(snapshot.ID);
 			
-			await UnityTask.While(() => m_AudioSource.isPlaying || m_Paused);
+			await UnityTask.While(() =>
+				{
+					if (!m_AudioSource.isPlaying && !m_Paused)
+						Debug.LogError("---> WTF?!?!");
+					
+					return m_AudioSource.isPlaying || m_Paused;
+				}
+			);
 		}
 	}
 
