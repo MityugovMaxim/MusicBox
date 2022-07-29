@@ -413,18 +413,36 @@ public class SongController
 		return null;
 	}
 
-	Task<AudioClip> LoadMusicAsync(string _SongID, CancellationToken _Token = default)
+	async Task<AudioClip> LoadMusicAsync(string _SongID)
 	{
+		const int timeout = 30000;
+		
 		string path = m_SongsProcessor.GetMusic(_SongID);
 		
-		return m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress, _Token);
+		Task<AudioClip> task = m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress);
+		
+		await Task.WhenAny(
+			task,
+			Task.Delay(timeout)
+		);
+		
+		return task.IsCompletedSuccessfully ? task.Result : null;
 	}
 
-	Task<string> LoadASFAsync(string _SongID, CancellationToken _Token = default)
+	async Task<string> LoadASFAsync(string _SongID)
 	{
+		const int timeout = 30000;
+		
 		string path = $"Songs/{_SongID}.asf";
 		
-		return m_StorageProcessor.LoadJson(path, true, ProcessASFProgress, _Token);
+		Task<string> task = m_StorageProcessor.LoadJson(path, true, ProcessASFProgress);
+		
+		await Task.WhenAny(
+			task,
+			Task.Delay(timeout)
+		);
+		
+		return task.IsCompletedSuccessfully ? task.Result : null;
 	}
 
 	void ProcessMusicProgress(float _Progress)
