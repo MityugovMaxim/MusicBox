@@ -25,13 +25,13 @@ public class UISongRestart : UIEntity
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
-		m_Mode   = m_SongsProcessor.GetMode(m_SongID);
+		m_Mode   = SongMode.Free;
 		
-		if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
-			m_Mode = SongMode.Free;
-		
-		if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
-			m_Mode = SongMode.Free;
+		// if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
+		// 	m_Mode = SongMode.Free;
+		//
+		// if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
+		// 	m_Mode = SongMode.Free;
 		
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
@@ -52,7 +52,7 @@ public class UISongRestart : UIEntity
 				SetPaidActive(true);
 				break;
 			default:
-				SetAdsActive(true);
+				SetFreeActive(true);
 				break;
 		}
 	}
@@ -131,8 +131,8 @@ public class UISongRestart : UIEntity
 		else
 		{
 			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_play_ads",
-				"song_play_button",
+				"song_restart_ads",
+				"song_restart_button",
 				"SONG_RESTART_ADS_ERROR_TITLE",
 				"SONG_RESTART_ADS_ERROR_MESSAGE",
 				RestartAds,

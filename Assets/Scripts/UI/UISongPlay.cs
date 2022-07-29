@@ -83,7 +83,7 @@ public class UISongPlay : UIEntity
 				PlayPaid();
 				break;
 			default:
-				PlayAds();
+				PlayFree();
 				break;
 		}
 	}
@@ -91,7 +91,14 @@ public class UISongPlay : UIEntity
 	async void PlayFree()
 	{
 		if (!m_SongsManager.IsSongAvailable(m_SongID))
+		{
+			if (m_SongsManager.IsSongLockedByAds(m_SongID))
+				PlayAds();
+			else if (m_SongsManager.IsSongLockedByCoins(m_SongID))
+				PlayPaid();
+			
 			return;
+		}
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -112,28 +119,46 @@ public class UISongPlay : UIEntity
 
 	async void PlayAds()
 	{
-		if (!m_SongsManager.IsSongAvailable(m_SongID))
+		if (m_SongsManager.IsSongAvailable(m_SongID))
+		{
+			PlayFree();
 			return;
+		}
+		
+		string songID = m_SongID;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		bool success = await m_AdsProcessor.Rewarded();
+		m_ProfileProcessor.Lock();
 		
-		await m_LoaderGroup.HideAsync(true);
-		await m_ControlGroup.ShowAsync(true);
+		SongUnlockRequest request = new SongUnlockRequest(songID);
+		
+		bool success = false;
+		
+		if (m_ProfileProcessor.HasNoAds() || await m_AdsProcessor.Rewarded())
+			success = await request.SendAsync();
 		
 		if (success)
 		{
+			await m_LoaderGroup.HideAsync();
+			await m_CompleteGroup.ShowAsync();
+			
+			await Task.Delay(500);
+			
 			StopPreview();
 			
 			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
 			
-			loadingMenu.Setup(m_SongID);
+			loadingMenu.Setup(songID);
 			
 			await m_MenuProcessor.Show(MenuType.LoadingMenu);
+			
+			m_CompleteGroup.Hide(true);
+			
+			m_ProfileProcessor.Unlock();
 			
 			loadingMenu.Load();
 			
@@ -142,6 +167,11 @@ public class UISongPlay : UIEntity
 		}
 		else
 		{
+			m_ProfileProcessor.Unlock();
+			
+			await m_LoaderGroup.HideAsync();
+			await m_ControlGroup.ShowAsync();
+			
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"song_play_ads",
 				"song_play_button",

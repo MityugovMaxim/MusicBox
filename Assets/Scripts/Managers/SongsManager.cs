@@ -22,6 +22,12 @@ public class SongsManager
 			.ThenBy(m_SongsProcessor.GetSpeed)
 			.ThenBy(m_SongsProcessor.GetOrder);
 		
+		IEnumerable<string> adsSongIDs = songIDs
+			.Where(IsSongLockedByAds)
+			.OrderBy(m_ProgressProcessor.GetSongLevel)
+			.ThenBy(m_SongsProcessor.GetSpeed)
+			.ThenBy(m_SongsProcessor.GetOrder);
+		
 		IEnumerable<string> paidSongIDs = songIDs
 			.Where(IsSongLockedByCoins)
 			.OrderBy(m_SongsProcessor.GetPrice)
@@ -29,7 +35,11 @@ public class SongsManager
 			.ThenBy(m_SongsProcessor.GetSpeed)
 			.ThenBy(m_SongsProcessor.GetOrder);
 		
-		return availableSongIDs.Union(paidSongIDs).Distinct().ToList();
+		return availableSongIDs
+			.Union(adsSongIDs)
+			.Union(paidSongIDs)
+			.Distinct()
+			.ToList();
 	}
 
 	public Dictionary<int, List<string>> GetLockedSongIDs()
@@ -61,6 +71,17 @@ public class SongsManager
 		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
 		
 		return currentLevel >= requiredLevel && m_SongsProcessor.GetMode(_SongID) == SongMode.Paid;
+	}
+
+	public bool IsSongLockedByAds(string _SongID)
+	{
+		if (IsSongAvailable(_SongID))
+			return false;
+		
+		int currentLevel  = m_ProfileProcessor.Level;
+		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
+		
+		return currentLevel >= requiredLevel && m_SongsProcessor.GetMode(_SongID) == SongMode.Ads;
 	}
 
 	public bool IsSongAvailable(string _SongID)
