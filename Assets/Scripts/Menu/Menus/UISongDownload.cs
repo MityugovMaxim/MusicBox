@@ -133,7 +133,7 @@ public class UISongDownload : UIGroup
 				"song_download",
 				"song_menu",
 				"SONG_LOAD_ERROR_TITLE",
-				"SONG_LOAD_ERROR_MESSAGE"
+				"COMMON_ERROR_MESSAGE"
 			);
 		}
 	}
