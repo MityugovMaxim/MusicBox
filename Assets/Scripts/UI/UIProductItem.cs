@@ -113,7 +113,7 @@ public class UIProductItem : UIOverlayButton
 					"product_purchase",
 					"main_menu",
 					"PRODUCT_PURCHASE_ERROR_TITLE",
-					"PRODUCT_PURCHASE_ERROR_MESSAGE",
+					"COMMON_ERROR_MESSAGE",
 					Purchase,
 					() => { }
 				);
