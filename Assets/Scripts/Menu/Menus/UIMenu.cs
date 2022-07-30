@@ -44,10 +44,7 @@ public class UIMenu : UIGroup
 
 	protected virtual bool OnEscape() => false;
 
-	protected string GetLocalization(string _Key)
-	{
-		return m_LocalizationProcessor.Get(_Key);
-	}
+	protected string GetLocalization(string _Key) => m_LocalizationProcessor.Get(_Key);
 
 	protected string GetLocalization(string _Key, params object[] _Args)
 	{
