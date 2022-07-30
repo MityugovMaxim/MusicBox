@@ -27,14 +27,15 @@ public class UIDailyElement : UIOverlayButton
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] DailyManager     m_DailyManager;
-	[Inject] DailyProcessor   m_DailyProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] MessageProcessor m_MessageProcessor;
-	[Inject] SoundProcessor   m_SoundProcessor;
-	[Inject] HapticProcessor  m_HapticProcessor;
+	[Inject] DailyManager          m_DailyManager;
+	[Inject] DailyProcessor        m_DailyProcessor;
+	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] AdsProcessor          m_AdsProcessor;
+	[Inject] ProfileProcessor      m_ProfileProcessor;
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] MessageProcessor      m_MessageProcessor;
+	[Inject] SoundProcessor        m_SoundProcessor;
+	[Inject] HapticProcessor       m_HapticProcessor;
 
 	string m_DailyID;
 
@@ -207,8 +208,8 @@ public class UIDailyElement : UIOverlayButton
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"daily_ads",
 				"daily_element",
-				"ERROR_DAILY_COLLECT_TITLE",
-				"ERROR_DAILY_COLLECT_MESSAGE",
+				"DAILY_COLLECT_ERROR_TITLE",
+				"COMMON_ERROR_MESSAGE",
 				Collect,
 				() => { }
 			);
@@ -235,8 +236,8 @@ public class UIDailyElement : UIOverlayButton
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"daily_collect",
 				"daily_element",
-				"ERROR_DAILY_COLLECT_TITLE",
-				"ERROR_DAILY_COLLECT_MESSAGE",
+				"DAILY_COLLECT_ERROR_TITLE",
+				"COMMON_ERROR_MESSAGE",
 				Collect,
 				() => { }
 			);
@@ -272,7 +273,7 @@ public class UIDailyElement : UIOverlayButton
 			m_MessageProcessor.Schedule(
 				"daily",
 				Application.productName,
-				"Get your daily reward now!",
+				m_LocalizationProcessor.Get("DAILY_NOTIFICATION"),
 				"audiobox://store",
 				endTimestamp
 			);
