@@ -80,7 +80,7 @@ public class AdsProviderMadPixel : IAdsProvider
 		
 		m_StatisticProcessor.LogAdsFinished(type, placementID, GetState(state));
 		
-		return state == AdsState.Completed;
+		return state == AdsState.Completed || state == AdsState.Canceled;
 	}
 
 	async Task<bool> IAdsProvider.Rewarded()
