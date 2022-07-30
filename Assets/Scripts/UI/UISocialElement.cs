@@ -46,36 +46,15 @@ public class UISocialElement : UIEntity
 		m_FacebookButton.onClick.RemoveListener(SignInFacebook);
 	}
 
-	void SignInApple()
-	{
-		SignIn(
-			m_SocialProcessor.AttachAppleID,
-			GetLocalization("APPLE_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("APPLE_SING_IN_ERROR_MESSAGE")
-		);
-	}
+	void SignInApple() => SignIn(m_SocialProcessor.AttachAppleID);
 
-	void SignInGoogle()
-	{
-		SignIn(
-			m_SocialProcessor.AttachGoogleID,
-			GetLocalization("GOOGLE_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("GOOGLE_SIGN_IN_ERROR_MESSAGE")
-		);
-	}
+	void SignInGoogle() => SignIn(m_SocialProcessor.AttachGoogleID);
 
-	void SignInFacebook()
-	{
-		SignIn(
-			m_SocialProcessor.AttachFacebookID,
-			GetLocalization("FACEBOOK_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("FACEBOOK_SIGN_IN_ERROR_MESSAGE")
-		);
-	}
+	void SignInFacebook() => SignIn(m_SocialProcessor.AttachFacebookID);
 
 	string GetLocalization(string _Key) => m_LocalizationProcessor.Get(_Key);
 
-	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)
+	async void SignIn(Func<Task<bool>> _SignInTask)
 	{
 		if (_SignInTask == null)
 			return;
@@ -106,8 +85,8 @@ public class UISocialElement : UIEntity
 				errorMenu.Setup(
 					"sign_in_error",
 					"main_menu",
-					_Title,
-					_Message
+					GetLocalization("SIGN_IN_ERROR_TITLE"),
+					GetLocalization("COMMON_ERROR_MESSAGE")
 				);
 			}
 			
