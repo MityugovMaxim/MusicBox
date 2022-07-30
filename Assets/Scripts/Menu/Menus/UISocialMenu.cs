@@ -13,32 +13,11 @@ public class UISocialMenu : UISlideMenu
 	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 
-	public void SignInApple()
-	{
-		SignIn(
-			m_SocialProcessor.AttachAppleID,
-			GetLocalization("APPLE_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("APPLE_SING_IN_ERROR_MESSAGE")
-		);
-	}
+	public void SignInApple() => SignIn(m_SocialProcessor.AttachAppleID);
 
-	public void SignInGoogle()
-	{
-		SignIn(
-			m_SocialProcessor.AttachGoogleID,
-			GetLocalization("GOOGLE_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("GOOGLE_SIGN_IN_ERROR_MESSAGE")
-		);
-	}
+	public void SignInGoogle() => SignIn(m_SocialProcessor.AttachGoogleID);
 
-	public void SignInFacebook()
-	{
-		SignIn(
-			m_SocialProcessor.AttachFacebookID,
-			GetLocalization("FACEBOOK_SIGN_IN_ERROR_TITLE"),
-			GetLocalization("FACEBOOK_SIGN_IN_ERROR_MESSAGE")
-		);
-	}
+	public void SignInFacebook() => SignIn(m_SocialProcessor.AttachFacebookID);
 
 	protected override void OnShowStarted()
 	{
@@ -66,7 +45,7 @@ public class UISocialMenu : UISlideMenu
 		return true;
 	}
 
-	async void SignIn(Func<Task<bool>> _SignInTask, string _Title, string _Message)
+	async void SignIn(Func<Task<bool>> _SignInTask)
 	{
 		if (_SignInTask == null)
 			return;
@@ -93,7 +72,14 @@ public class UISocialMenu : UISlideMenu
 		{
 			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
 			if (errorMenu != null)
-				errorMenu.Setup("sign_in_error", "social_menu", _Title, _Message);
+			{
+				errorMenu.Setup(
+					"sign_in_error",
+					"social_menu",
+					GetLocalization("SIGN_IN_ERROR_TITLE"),
+					GetLocalization("COMMON_ERROR_MESSAGE")
+				);
+			}
 			
 			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
 			
