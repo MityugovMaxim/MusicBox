@@ -94,7 +94,7 @@ public class UILoadingMenu : UIAnimationMenu
 				"tutorial_load",
 				"loading_menu",
 				"TUTORIAL_LOAD_ERROR_TITLE",
-				"TUTORIAL_LOAD_ERROR_MESSAGE"
+				"COMMON_ERROR_MESSAGE"
 			);
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
@@ -138,7 +138,7 @@ public class UILoadingMenu : UIAnimationMenu
 				"song_load",
 				"loading_menu",
 				"SONG_LOAD_ERROR_TITLE",
-				"SONG_LOAD_ERROR_MESSAGE"
+				"COMMON_ERROR_MESSAGE"
 			);
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
