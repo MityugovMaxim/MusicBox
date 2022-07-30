@@ -205,7 +205,7 @@ public class UILoginMenu : UIMenu
 		m_MessageProcessor.Schedule(
 			"launch",
 			Application.productName,
-			"Which song you will play for today?", // TODO: Localize
+			GetLocalization("COMMON_NOTIFICATION"),
 			"audiobox://play",
 			TimeSpan.FromHours(24)
 		);
