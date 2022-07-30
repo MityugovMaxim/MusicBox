@@ -27,12 +27,6 @@ public class UISongRestart : UIEntity
 		m_SongID = _SongID;
 		m_Mode   = SongMode.Free;
 		
-		// if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
-		// 	m_Mode = SongMode.Free;
-		//
-		// if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
-		// 	m_Mode = SongMode.Free;
-		
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
 		
@@ -134,7 +128,7 @@ public class UISongRestart : UIEntity
 				"song_restart_ads",
 				"song_restart_button",
 				"SONG_RESTART_ADS_ERROR_TITLE",
-				"SONG_RESTART_ADS_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				RestartAds,
 				() => { }
 			);
@@ -188,7 +182,7 @@ public class UISongRestart : UIEntity
 				"song_restart_paid",
 				"song_restart_button",
 				"SONG_RESTART_PAID_ERROR_TITLE",
-				"SONG_RESTART_PAID_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				RestartPaid,
 				() => { }
 			);
