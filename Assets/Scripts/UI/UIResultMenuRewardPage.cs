@@ -63,9 +63,9 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		else
 		{
 			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_revive_ads",
-				"revive_menu",
-				"SONG_REVIVE_ERROR_TITLE",
+				"song_double",
+				"result_menu",
+				"SONG_DOUBLE_ERROR_TITLE",
 				"COMMON_ERROR_MESSAGE",
 				Double,
 				Continue
