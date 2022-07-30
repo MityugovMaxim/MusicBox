@@ -58,7 +58,7 @@ public class UIReviveMenu : UIMenu
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"song_revive_coins",
 				"revive_menu",
-				"SONG_REVIVE_ERROR_TITLE",
+				"REVIVE_ERROR_TITLE",
 				"COMMON_ERROR_MESSAGE",
 				ReviveCoins,
 				() => { }
@@ -93,7 +93,7 @@ public class UIReviveMenu : UIMenu
 			await m_MenuProcessor.RetryLocalizedAsync(
 				"song_revive_ads",
 				"revive_menu",
-				"SONG_REVIVE_ERROR_TITLE",
+				"REVIVE_ERROR_TITLE",
 				"COMMON_ERROR_MESSAGE",
 				ReviveAds,
 				() => { }
