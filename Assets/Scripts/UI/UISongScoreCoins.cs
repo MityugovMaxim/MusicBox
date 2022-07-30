@@ -65,6 +65,12 @@ public class UISongScoreCoins : UIEntity
 	{
 		Cancel();
 		
+		if (!gameObject.activeInHierarchy)
+		{
+			m_Coins.Value = m_Value;
+			return;
+		}
+		
 		try
 		{
 			long source = (long)m_Coins.Value;
