@@ -30,10 +30,11 @@ public class UISongPlay : UIEntity
 		m_SongID = _SongID;
 		m_Mode   = m_SongsProcessor.GetMode(m_SongID);
 		
-		if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
+		if (m_SongsManager.IsSongAvailable(m_SongID))
 			m_Mode = SongMode.Free;
-		
-		if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
+		else if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
+			m_Mode = SongMode.Free;
+		else if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
 			m_Mode = SongMode.Free;
 		
 		m_ControlGroup.Show(true);
@@ -134,12 +135,14 @@ public class UISongPlay : UIEntity
 		
 		m_ProfileProcessor.Lock();
 		
-		SongUnlockRequest request = new SongUnlockRequest(songID);
-		
 		bool success = false;
 		
 		if (m_ProfileProcessor.HasNoAds() || await m_AdsProcessor.Rewarded())
+		{
+			SongUnlockRequest request = new SongUnlockRequest(songID);
+			
 			success = await request.SendAsync();
+		}
 		
 		if (success)
 		{
@@ -176,7 +179,7 @@ public class UISongPlay : UIEntity
 				"song_play_ads",
 				"song_play_button",
 				"SONG_PLAY_ADS_ERROR_TITLE",
-				"SONG_PLAY_ADS_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				PlayAds,
 				() => { }
 			);
@@ -246,7 +249,7 @@ public class UISongPlay : UIEntity
 				"song_play_paid",
 				"song_play_button",
 				"SONG_PLAY_PAID_ERROR_TITLE",
-				"SONG_PLAY_PAID_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				PlayPaid,
 				() => { }
 			);
