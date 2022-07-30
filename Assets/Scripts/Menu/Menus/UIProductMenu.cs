@@ -109,7 +109,7 @@ public class UIProductMenu : UISlideMenu
 					"product_purchase",
 					"product_menu",
 					"PRODUCT_PURCHASE_ERROR_TITLE",
-					"PRODUCT_PURCHASE_ERROR_MESSAGE",
+					"COMMON_ERROR_MESSAGE",
 					Purchase,
 					() => { }
 				);
