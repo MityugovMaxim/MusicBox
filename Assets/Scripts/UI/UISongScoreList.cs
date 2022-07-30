@@ -100,7 +100,7 @@ public class UISongScoreList : UIEntity
 	{
 		m_Coins.Value *= 2;
 		
-		await Task.Delay(1500);
+		await Task.Delay(2000);
 	}
 
 	ScoreRank GetDisc(int _Accuracy)

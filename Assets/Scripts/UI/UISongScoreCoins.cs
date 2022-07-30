@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class UISongScoreCoins : UIGroup
+public class UISongScoreCoins : UIEntity
 {
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_NextParameterID    = Animator.StringToHash("Next");
@@ -49,6 +49,9 @@ public class UISongScoreCoins : UIGroup
 		base.OnDisable();
 		
 		Cancel();
+		
+		m_Animator.ResetTrigger(m_NextParameterID);
+		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
 	public void Next()
@@ -56,16 +59,6 @@ public class UISongScoreCoins : UIGroup
 		m_SoundProcessor.Play(m_Sound);
 		
 		m_Animator.SetTrigger(m_NextParameterID);
-	}
-
-	protected override void OnHideFinished()
-	{
-		base.OnHideFinished();
-		
-		Cancel();
-		
-		m_Animator.ResetTrigger(m_NextParameterID);
-		m_Animator.SetTrigger(m_RestoreParameterID);
 	}
 
 	async void ProcessValue()
