@@ -480,10 +480,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 821054325}
-  - component: {fileID: 821054324}
+  - component: {fileID: 821054326}
   - component: {fileID: 821054323}
   m_Layer: 0
-  m_Name: AdsManager
+  m_Name: MediationManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -501,21 +501,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27958a8c40854234c85f602391b71504, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &821054324
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 821054322}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bedceeb2090b48344b1c79ee59851812, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bInitializeOnStart: 0
-  CustomSettings: {fileID: 11400000, guid: d2e89ce89bc82c84a847949bb2f06478, type: 2}
-  CooldownBetweenInterstitials: 0
 --- !u!4 &821054325
 Transform:
   m_ObjectHideFlags: 0
@@ -531,6 +516,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &821054326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821054322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367978a4911141cf8d3aca76044e52de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Settings: {fileID: 11400000, guid: d2e89ce89bc82c84a847949bb2f06478, type: 2}
 --- !u!1 &1530727137
 GameObject:
   m_ObjectHideFlags: 0
