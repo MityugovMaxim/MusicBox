@@ -160,7 +160,7 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 			"offer_progress",
 			"main_menu",
 			"OFFER_PROGRESS_ERROR_TITLE",
-			"OFFER_PROGRESS_ERROR_MESSAGE",
+			"COMMON_ERROR_MESSAGE",
 			() => ProcessOffer(_OfferID),
 			() => { }
 		);
@@ -172,7 +172,7 @@ public class UIMainMenuOffersPage : UIMainMenuPage
 			"offer_collect",
 			"main_menu",
 			"OFFER_COLLECT_ERROR_TITLE",
-			"OFFER_COLLECT_ERROR_MESSAGE",
+			"COMMON_ERROR_MESSAGE",
 			() => ProcessOffer(_OfferID),
 			() => { }
 		);
