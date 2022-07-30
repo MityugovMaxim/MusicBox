@@ -195,8 +195,6 @@ public class AmbientProcessor : MonoBehaviour
 
 	async Task PlayAsync(string _AmbientID)
 	{
-		Debug.LogError("---> PLAY ASYNC");
-		
 		m_AmbientID = _AmbientID;
 		
 		m_TokenSource?.Cancel();
