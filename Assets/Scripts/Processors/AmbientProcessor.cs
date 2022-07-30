@@ -261,14 +261,7 @@ public class AmbientProcessor : MonoBehaviour
 			
 			await PlayAsync(snapshot.ID);
 			
-			await UnityTask.While(() =>
-				{
-					if (!m_AudioSource.isPlaying && !m_Paused)
-						Debug.LogError("---> WTF?!?!");
-					
-					return m_AudioSource.isPlaying || m_Paused;
-				}
-			);
+			await UnityTask.While(() => m_AudioSource.isPlaying || m_Paused);
 		}
 	}
 
