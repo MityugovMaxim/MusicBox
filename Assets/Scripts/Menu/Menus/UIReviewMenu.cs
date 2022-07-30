@@ -70,9 +70,9 @@ public class UIReviewMenu : UIAnimationMenu
 		long timestamp = TimeUtility.GetTimestamp();
 		long cooldown  = m_ConfigProcessor.ReviewCooldown * 1000;
 		
-		if (timestamp + cooldown < ReviewTimestamp)
+		if (timestamp - ReviewTimestamp < cooldown)
 			return;
-		
+
 		ReviewTimestamp = timestamp;
 		
 		Show();
