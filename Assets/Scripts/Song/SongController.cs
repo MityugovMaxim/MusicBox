@@ -27,6 +27,8 @@ public class SongController
 
 	string        m_SongID;
 	Action<float> m_Progress;
+	float         m_Loading;
+	float         m_PingTime;
 	SongPlayer    m_Player;
 
 	float m_LoadTime;
@@ -415,15 +417,18 @@ public class SongController
 
 	async Task<AudioClip> LoadMusicAsync(string _SongID)
 	{
-		const int timeout = 30000;
+		const float timeout = 15;
 		
 		string path = m_SongsProcessor.GetMusic(_SongID);
+		
+		m_Loading  = 0;
+		m_PingTime = Time.realtimeSinceStartup;
 		
 		Task<AudioClip> task = m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress);
 		
 		await Task.WhenAny(
 			task,
-			Task.Delay(timeout)
+			UnityTask.While(() => Time.realtimeSinceStartup - m_PingTime < timeout)
 		);
 		
 		return task.IsCompletedSuccessfully ? task.Result : null;
@@ -431,15 +436,18 @@ public class SongController
 
 	async Task<string> LoadASFAsync(string _SongID)
 	{
-		const int timeout = 30000;
+		const float timeout = 15;
 		
 		string path = $"Songs/{_SongID}.asf";
+		
+		m_Loading  = 0;
+		m_PingTime = Time.realtimeSinceStartup;
 		
 		Task<string> task = m_StorageProcessor.LoadJson(path, true, ProcessASFProgress);
 		
 		await Task.WhenAny(
 			task,
-			Task.Delay(timeout)
+			UnityTask.While(() => Time.realtimeSinceStartup - m_PingTime < timeout)
 		);
 		
 		return task.IsCompletedSuccessfully ? task.Result : null;
@@ -447,6 +455,12 @@ public class SongController
 
 	void ProcessMusicProgress(float _Progress)
 	{
+		if (m_Loading < _Progress)
+		{
+			m_Loading  = _Progress;
+			m_PingTime = Time.realtimeSinceStartup;
+		}
+		
 		float progress = MathUtility.Remap(_Progress, 0, 1, 0, 0.95f);
 		
 		m_Progress?.Invoke(progress);
@@ -454,6 +468,12 @@ public class SongController
 
 	void ProcessASFProgress(float _Progress)
 	{
+		if (m_Loading < _Progress)
+		{
+			m_Loading  = _Progress;
+			m_PingTime = Time.realtimeSinceStartup;
+		}
+		
 		float progress = MathUtility.Remap(_Progress, 0, 1, 0.95f, 1);
 		
 		m_Progress?.Invoke(progress);
