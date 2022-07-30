@@ -79,7 +79,7 @@ public class UISplashMenu : UIMenu
 		
 		MaxSdkCallbacks.OnSdkInitializedEvent += Complete;
 		
-		AdsManager.Instance.InitApplovin();
+		MediationManager.Instance.Initialize();
 		
 		return completionSource.Task;
 	}
