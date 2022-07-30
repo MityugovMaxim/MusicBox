@@ -66,7 +66,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 				"song_revive_ads",
 				"revive_menu",
 				"SONG_REVIVE_ERROR_TITLE",
-				"SONG_REVIVE_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				Double,
 				Continue
 			);
@@ -107,7 +107,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 				"song_finish",
 				"result_menu",
 				"SONG_FINISH_ERROR_TITLE",
-				"SONG_FINISH_ERROR_MESSAGE",
+				"COMMON_ERROR_MESSAGE",
 				Continue,
 				Next
 			);
