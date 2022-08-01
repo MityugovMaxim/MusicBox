@@ -53,7 +53,9 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			
 			config.AddProduct(
 				productID,
-				m_ProductsProcessor.GetType(productID),
+				m_ProductsProcessor.GetType(productID) != ProductType.Subscription
+					? ProductType.Consumable
+					: ProductType.Subscription,
 				m_ProductsProcessor.GetStoreIDs(productID)
 			);
 		}
