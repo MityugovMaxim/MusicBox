@@ -48,7 +48,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		await m_ContinueGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		bool success = await m_AdsProcessor.Rewarded();
+		bool success = await m_AdsProcessor.Rewarded("double");
 		
 		if (success)
 		{
@@ -123,7 +123,7 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 			await m_ContinueGroup.HideAsync();
 			await m_LoaderGroup.ShowAsync();
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("reward_next");
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}

@@ -79,7 +79,7 @@ public class UISongRestart : UIEntity
 			await m_ControlGroup.HideAsync();
 			await m_LoaderGroup.ShowAsync();
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("song_restart");
 			
 			await m_LoaderGroup.HideAsync();
 			await m_ControlGroup.ShowAsync();
@@ -105,7 +105,7 @@ public class UISongRestart : UIEntity
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		bool success = await m_AdsProcessor.Rewarded();
+		bool success = await m_AdsProcessor.Rewarded(null);
 		
 		await m_LoaderGroup.HideAsync();
 		await m_ControlGroup.ShowAsync();

@@ -196,7 +196,7 @@ public class UIDailyElement : UIOverlayButton
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
-			success &= await m_AdsProcessor.Rewarded();
+			success &= await m_AdsProcessor.Rewarded("daily");
 			
 			await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		}

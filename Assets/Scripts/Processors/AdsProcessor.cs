@@ -12,8 +12,8 @@ public interface IAdsProvider
 {
 	string ID             { get; }
 	Task<bool> Initialize(string _InterstitialID, string _RewardedID);
-	Task<bool> Interstitial();
-	Task<bool> Rewarded();
+	Task<bool> Interstitial(string _Place);
+	Task<bool> Rewarded(string _Place);
 }
 
 public enum AdsState
@@ -58,38 +58,38 @@ public class AdsProviderMadPixel : IAdsProvider
 		return interstitial && rewarded;
 	}
 
-	async Task<bool> IAdsProvider.Interstitial()
+	async Task<bool> IAdsProvider.Interstitial(string _Place)
 	{
 		const string type = "interstitial";
 		
-		string placementID = m_InterstitialID;
+		string place = string.IsNullOrEmpty(_Place) ? m_InterstitialID : _Place;
 		
-		if (string.IsNullOrEmpty(placementID))
+		if (string.IsNullOrEmpty(place))
 			return false;
 		
 		bool available = await MediationManager.Instance.WaitInterstitial();
 		
-		m_StatisticProcessor.LogAdsAvailable(type, placementID, available);
+		m_StatisticProcessor.LogAdsAvailable(type, place, available);
 		
 		if (!available)
 			return false;
 		
-		m_StatisticProcessor.LogAdsStarted(type, placementID);
+		m_StatisticProcessor.LogAdsStarted(type, place);
 		
 		AdsState state = await MediationManager.Instance.ShowInterstitialAsync();
 		
-		m_StatisticProcessor.LogAdsFinished(type, placementID, GetState(state));
+		m_StatisticProcessor.LogAdsFinished(type, place, GetState(state));
 		
 		return state == AdsState.Completed || state == AdsState.Canceled;
 	}
 
-	async Task<bool> IAdsProvider.Rewarded()
+	async Task<bool> IAdsProvider.Rewarded(string _Place)
 	{
 		const string type = "rewarded";
 		
-		string placementID = m_RewardedID;
+		string place = string.IsNullOrEmpty(_Place) ? m_RewardedID : _Place;
 		
-		if (string.IsNullOrEmpty(placementID))
+		if (string.IsNullOrEmpty(place))
 			return false;
 		
 		bool available = await MediationManager.Instance.WaitRewarded();
@@ -97,11 +97,11 @@ public class AdsProviderMadPixel : IAdsProvider
 		if (!available)
 			return false;
 		
-		m_StatisticProcessor.LogAdsStarted(type, placementID);
+		m_StatisticProcessor.LogAdsStarted(type, place);
 		
 		AdsState state = await MediationManager.Instance.ShowRewardedAsync();
 		
-		m_StatisticProcessor.LogAdsFinished(type, placementID, GetState(state));
+		m_StatisticProcessor.LogAdsFinished(type, place, GetState(state));
 		
 		return state == AdsState.Completed;
 	}
@@ -258,7 +258,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 
 	public bool CheckUnavailable() => Time.realtimeSinceStartup < m_Time;
 
-	public async Task<bool> Interstitial()
+	public async Task<bool> Interstitial(string _Place)
 	{
 		if (CheckUnavailable())
 			return true;
@@ -267,7 +267,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		{
 			AudioListener.volume = 0;
 			
-			if (!await provider.Interstitial())
+			if (!await provider.Interstitial(_Place))
 				continue;
 			
 			ProcessCooldown();
@@ -286,13 +286,13 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		return false;
 	}
 
-	public async Task<bool> Rewarded()
+	public async Task<bool> Rewarded(string _Place)
 	{
 		foreach (IAdsProvider provider in m_AdsProviders)
 		{
 			AudioListener.volume = 0;
 			
-			if (!await provider.Rewarded())
+			if (!await provider.Rewarded(_Place))
 				continue;
 			
 			ProcessCooldown();

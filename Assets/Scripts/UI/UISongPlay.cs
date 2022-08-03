@@ -137,7 +137,7 @@ public class UISongPlay : UIEntity
 		
 		bool success = false;
 		
-		if (m_ProfileProcessor.HasNoAds() || await m_AdsProcessor.Rewarded())
+		if (m_ProfileProcessor.HasNoAds() || await m_AdsProcessor.Rewarded("unlock"))
 		{
 			SongUnlockRequest request = new SongUnlockRequest(songID);
 			

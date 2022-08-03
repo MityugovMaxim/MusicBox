@@ -284,7 +284,7 @@ public class SongController
 		DisableAudio();
 	}
 
-	public void Leave()
+	public void Leave(string _Place)
 	{
 		if (m_Player == null)
 		{
@@ -302,7 +302,7 @@ public class SongController
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
-			"leave"
+			_Place
 		);
 		
 		m_RewindToken?.Cancel();
@@ -361,7 +361,7 @@ public class SongController
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
-			"leave"
+			"finish"
 		);
 		
 		m_RewindToken?.Cancel();

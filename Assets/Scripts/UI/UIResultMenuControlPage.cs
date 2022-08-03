@@ -59,7 +59,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		if (mainMenu != null)
 			mainMenu.Select(MainMenuPageType.Songs);
 		
-		m_SongController.Leave();
+		m_SongController.Leave("result_leave");
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
@@ -74,7 +74,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		m_Preview.Stop();
 		
-		m_SongController.Leave();
+		m_SongController.Leave("result_next");
 		
 		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongNext);
 		
@@ -174,7 +174,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		await m_AdsProcessor.Interstitial();
+		await m_AdsProcessor.Interstitial("result_next");
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
@@ -186,7 +186,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		await m_AdsProcessor.Interstitial();
+		await m_AdsProcessor.Interstitial("result_leave");
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}

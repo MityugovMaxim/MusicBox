@@ -74,7 +74,7 @@ public class UIReviveMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		bool success = await m_AdsProcessor.Rewarded();
+		bool success = await m_AdsProcessor.Rewarded("revive");
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 		
@@ -109,7 +109,7 @@ public class UIReviveMenu : UIMenu
 		{
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("revive_restart");
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}
@@ -127,7 +127,7 @@ public class UIReviveMenu : UIMenu
 		{
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("revive_leave");
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}
@@ -140,7 +140,7 @@ public class UIReviveMenu : UIMenu
 		if (songMenu != null)
 			songMenu.Setup(m_SongID);
 		
-		m_SongController.Leave();
+		m_SongController.Leave("revive_leave");
 		
 		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);

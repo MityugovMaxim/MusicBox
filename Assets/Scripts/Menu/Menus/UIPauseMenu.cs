@@ -26,7 +26,7 @@ public class UIPauseMenu : UIMenu
 		{
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("pause_restart");
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}
@@ -46,7 +46,7 @@ public class UIPauseMenu : UIMenu
 		{
 			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 			
-			await m_AdsProcessor.Interstitial();
+			await m_AdsProcessor.Interstitial("pause_leave");
 			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 		}
@@ -59,7 +59,7 @@ public class UIPauseMenu : UIMenu
 		if (songMenu != null)
 			songMenu.Setup(m_SongID);
 		
-		m_SongController.Leave();
+		m_SongController.Leave("pause_leave");
 		
 		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);

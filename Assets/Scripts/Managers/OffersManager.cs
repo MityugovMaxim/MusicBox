@@ -58,7 +58,7 @@ public class OffersManager
 		if (string.IsNullOrEmpty(_OfferID) || m_ProfileProcessor.HasOffer(_OfferID))
 			return false;
 		
-		bool success = await m_AdsProcessor.Rewarded();
+		bool success = await m_AdsProcessor.Rewarded("offer");
 		
 		if (success)
 		{
