@@ -29,11 +29,11 @@ public class InputModule
 		Vector2 position = Input.mousePosition;
 		if (Input.GetMouseButtonDown(0))
 			ProcessTouchDown(0, position);
-		if (Input.GetMouseButton(0))
+		if (Input.GetMouseButton(0) && m_Positions.ContainsKey(0))
 			ProcessTouchMove(0, position - m_Positions[0]);
-		if (Input.GetMouseButtonUp(0))
+		if (Input.GetMouseButtonUp(0) && m_Positions.ContainsKey(0))
 			ProcessTouchUp(0, position);
-		if (!Input.GetMouseButton(0))
+		if (!Input.GetMouseButton(0) && m_Positions.ContainsKey(0))
 			ProcessTouchCancel(0, position);
 		#else
 		for (int i = 0; i < Input.touchCount; i++)
