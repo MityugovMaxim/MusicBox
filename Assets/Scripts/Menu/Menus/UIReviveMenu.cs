@@ -140,7 +140,7 @@ public class UIReviveMenu : UIMenu
 		if (songMenu != null)
 			songMenu.Setup(m_SongID);
 		
-		m_SongController.Leave("revive_leave");
+		m_SongController.Leave();
 		
 		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);

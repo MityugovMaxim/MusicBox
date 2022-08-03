@@ -59,7 +59,7 @@ public class UIPauseMenu : UIMenu
 		if (songMenu != null)
 			songMenu.Setup(m_SongID);
 		
-		m_SongController.Leave("pause_leave");
+		m_SongController.Leave();
 		
 		await m_MenuProcessor.Show(MenuType.SongMenu);
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);

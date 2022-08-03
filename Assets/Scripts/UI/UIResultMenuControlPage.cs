@@ -59,7 +59,9 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		if (mainMenu != null)
 			mainMenu.Select(MainMenuPageType.Songs);
 		
-		m_SongController.Leave("result_leave");
+		m_SongController.Complete();
+		
+		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongLeave);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
@@ -74,7 +76,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		
 		m_Preview.Stop();
 		
-		m_SongController.Leave("result_next");
+		m_SongController.Complete();
 		
 		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongNext);
 		
