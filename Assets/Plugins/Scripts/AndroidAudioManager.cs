@@ -42,7 +42,19 @@ public class AndroidAudioManager : AudioManager
 		m_AudioController.Dispose();
 	}
 
-	public override void SetAudioActive(bool _Value) { }
+	public override void SetAudioActive(bool _Value)
+	{
+		if (_Value)
+		{
+			AudioListener.volume = 1;
+			AudioListener.pause  = false;
+		}
+		else
+		{
+			AudioListener.volume = 0;
+			AudioListener.pause  = true;
+		}
+	}
 
 	public override string GetAudioOutputName()
 	{
