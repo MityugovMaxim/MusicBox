@@ -273,6 +273,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 			ProcessCooldown();
 			
 			AudioListener.volume = 1;
+			AudioListener.pause  = false;
 			
 			m_AudioManager.SetAudioActive(true);
 			
@@ -280,6 +281,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		}
 		
 		AudioListener.volume = 1;
+		AudioListener.pause  = false;
 		
 		m_AudioManager.SetAudioActive(true);
 		
@@ -298,6 +300,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 			ProcessCooldown();
 			
 			AudioListener.volume = 1;
+			AudioListener.pause  = false;
 			
 			m_AudioManager.SetAudioActive(true);
 			
@@ -305,6 +308,7 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 		}
 		
 		AudioListener.volume = 1;
+		AudioListener.pause  = false;
 		
 		m_AudioManager.SetAudioActive(true);
 		
