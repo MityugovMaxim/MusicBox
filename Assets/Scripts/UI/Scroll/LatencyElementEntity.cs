@@ -28,9 +28,7 @@ public class LatencyElementEntity : LayoutEntity
 
 	public override void Remove()
 	{
-		if (m_Item == null)
-			return;
-		
-		m_Item.gameObject.SetActive(true);
+		if (m_Item != null)
+			m_Item.gameObject.SetActive(false);
 	}
 }
