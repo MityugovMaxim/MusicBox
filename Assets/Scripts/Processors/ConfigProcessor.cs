@@ -87,7 +87,7 @@ public class ConfigProcessor
 	public int   ReviewCount             => GetInt(REVIEW_COUNT);
 	public int   ReviewRank              => GetInt(REVIEW_RANK);
 	public long  ReviewCooldown          => GetLong(REVIEW_COOLDOWN);
-	public int   BluetoothLatency        => GetInt(BLUETOOTH_LATENCY);
+	public float BluetoothLatency        => GetInt(BLUETOOTH_LATENCY) * 0.001f;
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{

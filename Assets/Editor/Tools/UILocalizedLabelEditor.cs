@@ -72,12 +72,12 @@ public class UILocalizedLabelEditor : Editor
 
 	void DrawPostfix()
 	{
-		EditorGUILayout.PropertyField(PrefixProperty);
+		EditorGUILayout.PropertyField(PostfixProperty);
 	}
 
 	void DrawPrefix()
 	{
-		EditorGUILayout.PropertyField(PostfixProperty);
+		EditorGUILayout.PropertyField(PrefixProperty);
 	}
 
 	ReorderableList CreateDataList()

@@ -92,6 +92,8 @@ public class UILatencyIndicator : UIEntity
 		
 		m_Latency = Mathf.Lerp(m_MaxLimit, m_MinLimit, phase);
 		
+		m_Latency = Mathf.RoundToInt(m_Latency / MANUAL_LATENCY_STEP) * MANUAL_LATENCY_STEP;
+		
 		ProcessLatency();
 	}
 
@@ -143,8 +145,11 @@ public class UILatencyIndicator : UIEntity
 		token.Register(
 			() =>
 			{
-				m_Group.alpha = 0;
-				m_AudioSource.Stop();
+				if (m_Group != null)
+					m_Group.alpha = 0;
+				
+				if (m_AudioSource != null)
+					m_AudioSource.Stop();
 			}
 		);
 		
@@ -152,6 +157,9 @@ public class UILatencyIndicator : UIEntity
 		{
 			while (!token.IsCancellationRequested)
 			{
+				m_Indicator.anchorMin = new Vector2(0.5f, 1);
+				m_Indicator.anchorMax = new Vector2(0.5f, 1);
+				
 				await ShowAsync(token);
 				
 				await Task.WhenAll(
@@ -165,14 +173,18 @@ public class UILatencyIndicator : UIEntity
 				await HideAsync(token);
 			}
 		}
-		catch (TaskCanceledException) { }
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
 		catch (Exception exception)
 		{
 			Debug.LogException(exception);
 		}
-		
-		if (token.IsCancellationRequested)
-			return;
 		
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -188,30 +200,42 @@ public class UILatencyIndicator : UIEntity
 		m_AudioSource.Stop();
 	}
 
-	async Task ShowAsync(CancellationToken _Token = default)
+	Task ShowAsync(CancellationToken _Token = default)
 	{
-		await UnityTask.Phase(
+		_Token.ThrowIfCancellationRequested();
+		
+		if (m_Group == null)
+			return Task.CompletedTask;
+		
+		return UnityTask.Phase(
 			_Phase => m_Group.alpha = _Phase,
 			0.1f,
 			_Token
 		);
 	}
 
-	async Task HideAsync(CancellationToken _Token = default)
+	Task HideAsync(CancellationToken _Token = default)
 	{
-		await UnityTask.Phase(
+		_Token.ThrowIfCancellationRequested();
+		
+		if (m_Group == null)
+			return Task.CompletedTask;
+		
+		return UnityTask.Phase(
 			_Phase => m_Group.alpha = 1 - _Phase,
 			0.1f,
 			_Token
 		);
-		
-		m_Indicator.anchorMin = new Vector2(0.5f, 1);
-		m_Indicator.anchorMax = new Vector2(0.5f, 1);
 	}
 
-	async Task MoveAsync(CancellationToken _Token = default)
+	Task MoveAsync(CancellationToken _Token = default)
 	{
-		await UnityTask.Phase(
+		_Token.ThrowIfCancellationRequested();
+		
+		if (m_Indicator == null)
+			return Task.CompletedTask;
+		
+		return UnityTask.Phase(
 			_Phase =>
 			{
 				Vector2 anchor = new Vector2(0.5f, 1 - _Phase);
@@ -223,14 +247,19 @@ public class UILatencyIndicator : UIEntity
 		);
 	}
 
-	async Task FlashAsync(CancellationToken _Token = default)
+	Task FlashAsync(CancellationToken _Token = default)
 	{
+		_Token.ThrowIfCancellationRequested();
+		
+		if (m_Flash == null)
+			return Task.CompletedTask;
+		
 		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
 		float scale = m_Duration / (m_MaxLimit - m_MinLimit);
 		
 		float delay = m_Duration * pivot + m_Latency * scale;
 		
-		await UnityTask.Phase(
+		return UnityTask.Phase(
 			_Phase => m_Flash.alpha = 1 - _Phase,
 			delay,
 			0.15f,
@@ -238,8 +267,13 @@ public class UILatencyIndicator : UIEntity
 		);
 	}
 
-	async Task BeatAsync(CancellationToken _Token = default)
+	Task BeatAsync(CancellationToken _Token = default)
 	{
+		_Token.ThrowIfCancellationRequested();
+		
+		if (m_AudioSource == null)
+			return Task.CompletedTask;
+		
 		float pivot = Mathf.Abs(m_MinLimit) / (m_MaxLimit - m_MinLimit);
 		
 		float delay = m_Duration * pivot;
@@ -247,6 +281,6 @@ public class UILatencyIndicator : UIEntity
 		m_AudioSource.Stop();
 		m_AudioSource.PlayScheduled(AudioSettings.dspTime + delay);
 		
-		await UnityTask.Delay(m_AudioSource.clip.length, _Token);
+		return UnityTask.Delay(m_AudioSource.clip.length, _Token);
 	}
 }

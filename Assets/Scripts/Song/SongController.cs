@@ -517,7 +517,7 @@ public class SongController
 			return m_AudioManager.GetLatency();
 		
 		if (m_AudioManager.GetAudioOutputType() == AudioOutputType.Bluetooth)
-			return m_ConfigProcessor.BluetoothLatency * 0.001f;
+			return m_ConfigProcessor.BluetoothLatency;
 		
 		return 0;
 	}

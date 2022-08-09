@@ -8,8 +8,10 @@ public class UIGameMenu : UIMenu
 
 	[SerializeField] UISongLabel m_Label;
 	[SerializeField] UITimeline  m_Timeline;
+	[SerializeField] GameObject  m_Latency;
 
 	[Inject] SignalBus      m_SignalBus;
+	[Inject] AudioManager   m_AudioManager;
 	[Inject] SongController m_SongController;
 	[Inject] MenuProcessor  m_MenuProcessor;
 
@@ -27,6 +29,8 @@ public class UIGameMenu : UIMenu
 		if (!m_SongController.Pause())
 			return;
 		
+		ProcessLatency();
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.PauseMenu);
@@ -34,9 +38,20 @@ public class UIGameMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
+	public async void Latency()
+	{
+		Pause();
+		
+		await m_MenuProcessor.Show(MenuType.LatencyMenu);
+		
+		m_Latency.SetActive(false);
+	}
+
 	protected override void OnShowStarted()
 	{
 		base.OnShowStarted();
+		
+		ProcessLatency();
 		
 		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Pause);
 	}
@@ -44,6 +59,8 @@ public class UIGameMenu : UIMenu
 	protected override void OnHideStarted()
 	{
 		base.OnHideStarted();
+		
+		ProcessLatency();
 		
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Pause);
 	}
@@ -55,6 +72,14 @@ public class UIGameMenu : UIMenu
 		return true;
 	}
 
+	void ProcessLatency()
+	{
+		if (m_AudioManager.HasSettings() || m_AudioManager.GetAudioOutputType() != AudioOutputType.Bluetooth)
+			m_Latency.SetActive(false);
+		else
+			m_Latency.SetActive(true);
+	}
+
 	async void OnApplicationFocus(bool _Focus)
 	{
 		if (_Focus || !Shown)
@@ -62,6 +87,8 @@ public class UIGameMenu : UIMenu
 		
 		if (!m_SongController.Pause())
 			return;
+		
+		ProcessLatency();
 		
 		await m_MenuProcessor.Show(MenuType.PauseMenu, true);
 	}
