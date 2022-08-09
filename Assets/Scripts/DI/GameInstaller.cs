@@ -124,6 +124,8 @@ public class GameInstaller : MonoInstaller
 		Container.BindFactory<UIMenu, UIMenu, UIMenu.Factory>().FromFactory<PrefabFactory<UIMenu>>();
 		
 		Container.BindFactory<UIBackgroundItem, UIBackgroundItem, UIBackgroundItem.Factory>().FromFactory<PrefabFactory<UIBackgroundItem>>();
+		
+		Container.BindFactory<string, UILatencyElement, UILatencyElement.Factory>().FromFactory<ResourceFactory<UILatencyElement>>();
 	}
 
 	void InstallProcessors()

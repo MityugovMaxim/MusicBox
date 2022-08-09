@@ -53,6 +53,8 @@ public class ConfigProcessor
 	const string REVIEW_RANK             = "review_rank";
 	const string REVIEW_COOLDOWN         = "review_cooldown";
 
+	const string BLUETOOTH_LATENCY = "bluetooth_latency";
+
 	public int   ComboX2                 => GetInt(COMBO_X2);
 	public int   ComboX4                 => GetInt(COMBO_X4);
 	public int   ComboX6                 => GetInt(COMBO_X6);
@@ -85,6 +87,7 @@ public class ConfigProcessor
 	public int   ReviewCount             => GetInt(REVIEW_COUNT);
 	public int   ReviewRank              => GetInt(REVIEW_RANK);
 	public long  ReviewCooldown          => GetLong(REVIEW_COOLDOWN);
+	public int   BluetoothLatency        => GetInt(BLUETOOTH_LATENCY);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
@@ -139,6 +142,9 @@ public class ConfigProcessor
 		{ REVIEW_COUNT, 2 },
 		{ REVIEW_RANK, 3 },
 		{ REVIEW_COOLDOWN, 259200000 },
+		
+		// Settings
+		{ BLUETOOTH_LATENCY, 300 },
 	};
 
 	public async Task Load()

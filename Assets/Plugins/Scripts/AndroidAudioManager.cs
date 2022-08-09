@@ -31,44 +31,18 @@ public class AndroidAudioManager : AudioManager
 	protected override void Load(Action _AudioSourceChanged)
 	{
 		m_AudioController    = new AndroidJavaObject(CLASS_NAME);
-		m_AudioSourceChanged = new  AudioSourceChanged(_AudioSourceChanged);
+		m_AudioSourceChanged = new AudioSourceChanged(_AudioSourceChanged);
 		
 		m_AudioController.Call("Register", m_AudioSourceChanged);
-		
-		AudioSettings.OnAudioConfigurationChanged += OnAudioConfigurationChanged;
 	}
 
 	protected override void Unload()
 	{
 		m_AudioController.Call("Unregister");
 		m_AudioController.Dispose();
-		
-		AudioSettings.OnAudioConfigurationChanged -= OnAudioConfigurationChanged;
 	}
 
-	public override void SetAudioActive(bool _Value)
-	{
-		if (_Value)
-		{
-			AudioListener.volume = 1;
-			AudioListener.pause  = false;
-		}
-		else
-		{
-			AudioListener.volume = 0;
-			AudioListener.pause  = true;
-		}
-	}
-
-	static void OnAudioConfigurationChanged(bool _DeviceChanged)
-	{
-		if (!_DeviceChanged)
-			return;
-		
-		AudioConfiguration config = AudioSettings.GetConfiguration();
-		
-		AudioSettings.Reset(config);
-	}
+	public override void SetAudioActive(bool _Value) { }
 
 	public override string GetAudioOutputName()
 	{

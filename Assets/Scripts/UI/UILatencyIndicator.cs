@@ -20,7 +20,8 @@ public class UILatencyIndicator : UIEntity
 	[SerializeField] float         m_MaxLimit = 1.0f;
 	[SerializeField] float         m_Duration = 2;
 
-	[Inject] AudioManager m_AudioManager;
+	[Inject] AudioManager    m_AudioManager;
+	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	CancellationTokenSource m_TokenSource;
 
@@ -82,6 +83,18 @@ public class UILatencyIndicator : UIEntity
 		ProcessLatency();
 	}
 
+	public void Sync()
+	{
+		Vector2 anchorMin = m_Indicator.anchorMin;
+		Vector2 anchorMax = m_Indicator.anchorMax;
+		
+		float phase = (anchorMin.y + anchorMax.y) * 0.5f;
+		
+		m_Latency = Mathf.Lerp(m_MaxLimit, m_MinLimit, phase);
+		
+		ProcessLatency();
+	}
+
 	public void Restore()
 	{
 		m_Latency = 0;
@@ -95,7 +108,12 @@ public class UILatencyIndicator : UIEntity
 		AudioOutputType outputType = m_AudioManager.GetAudioOutputType();
 		string          outputIcon = GetOutputIcon(outputType);
 		
-		m_Latency = m_AudioManager.GetLatency();
+		if (m_AudioManager.HasSettings())
+			m_Latency = m_AudioManager.GetLatency();
+		else if (m_AudioManager.GetAudioOutputType() == AudioOutputType.Bluetooth)
+			m_Latency = m_ConfigProcessor.BluetoothLatency;
+		else
+			m_Latency = 0;
 		
 		m_OutputLabel.text = $"{outputIcon}{outputName}";
 	}

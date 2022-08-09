@@ -155,7 +155,7 @@ public class SongController
 			reviveMenu.Setup(m_SongID);
 		
 		m_Player.Time = -m_Player.Duration;
-		m_Player.Play(m_AudioManager.GetLatency());
+		m_Player.Play(GetLatency());
 		
 		DisableAudio();
 		
@@ -204,7 +204,7 @@ public class SongController
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Player.Play(m_AudioManager.GetLatency());
+		m_Player.Play(GetLatency());
 		
 		DisableAudio();
 		
@@ -237,7 +237,7 @@ public class SongController
 		if (token.IsCancellationRequested)
 			return;
 		
-		m_Player.Play(m_AudioManager.GetLatency());
+		m_Player.Play(GetLatency());
 		
 		DisableAudio();
 		
@@ -279,7 +279,7 @@ public class SongController
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Clear();
-		m_Player.Play(m_AudioManager.GetLatency());
+		m_Player.Play(GetLatency());
 		
 		DisableAudio();
 	}
@@ -509,6 +509,17 @@ public class SongController
 		float progress = MathUtility.Remap(_Progress, 0, 1, 0.95f, 1);
 		
 		m_Progress?.Invoke(progress);
+	}
+
+	float GetLatency()
+	{
+		if (m_AudioManager.HasSettings())
+			return m_AudioManager.GetLatency();
+		
+		if (m_AudioManager.GetAudioOutputType() == AudioOutputType.Bluetooth)
+			return m_ConfigProcessor.BluetoothLatency * 0.001f;
+		
+		return 0;
 	}
 
 	void DisableAudio()

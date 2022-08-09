@@ -16,6 +16,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[SerializeField] UILayout m_Content;
 
 	[Inject] SignalBus       m_SignalBus;
+	[Inject] AudioManager    m_AudioManager;
 	[Inject] SongsManager    m_SongsManager;
 	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ProductsManager m_ProductsManager;
@@ -23,13 +24,14 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 
-	[Inject] UIAdminElement.Pool  m_AdminPool;
-	[Inject] UISocialElement.Pool m_SocialPool;
-	[Inject] UISongHeader.Pool    m_HeaderPool;
-	[Inject] UIProductItem.Pool   m_ProductPool;
-	[Inject] UIProductPromo.Pool  m_PromoPool;
-	[Inject] UISongItem.Pool      m_ItemPool;
-	[Inject] UISongElement.Pool   m_ElementPool;
+	[Inject] UIAdminElement.Pool      m_AdminPool;
+	[Inject] UISocialElement.Pool     m_SocialPool;
+	[Inject] UISongHeader.Pool        m_HeaderPool;
+	[Inject] UIProductItem.Pool       m_ProductPool;
+	[Inject] UIProductPromo.Pool      m_PromoPool;
+	[Inject] UISongItem.Pool          m_ItemPool;
+	[Inject] UISongElement.Pool       m_ElementPool;
+	[Inject] UILatencyElement.Factory m_LatencyFactory;
 
 	protected override void OnShowStarted()
 	{
@@ -39,6 +41,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		m_SignalBus.Subscribe<SongsDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
@@ -50,6 +53,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Refresh);
 	}
 
 	void Refresh()
@@ -231,6 +235,8 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
+		CreateLatency();
+		
 		CreateSocial();
 		
 		int group = m_ConfigProcessor.SongLibraryGroupSize;
@@ -282,6 +288,20 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		m_Content.Add(new SocialElementEntity(m_SocialPool));
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
+	}
+
+	void CreateLatency()
+	{
+		if (m_AudioManager.HasSettings() || m_AudioManager.GetAudioOutputType() != AudioOutputType.Bluetooth)
+			return;
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(new LatencyElementEntity(m_LatencyFactory));
 		
 		VerticalStackLayout.End(m_Content);
 		
