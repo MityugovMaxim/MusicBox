@@ -216,21 +216,24 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	static bool FormatPrice(decimal _Price, string _CurrencyCode, out string _PriceString)
 	{
+		string[] trim =
+		{
+			"RUB",
+			"THB",
+			"JPY",
+			"IDR",
+			"INR",
+		};
+		
 		RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
 			.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
 			.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
 			.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
 		
-		if (regionInfo == null)
-		{
-			_PriceString = null;
-			return false;
-		}
-		
 		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
-		numberFormatInfo.CurrencySymbol = regionInfo.CurrencySymbol;
+		numberFormatInfo.CurrencySymbol = regionInfo?.CurrencySymbol ?? _CurrencyCode;
 		
-		if (_CurrencyCode == "RUB" || _CurrencyCode == "JPY" || _CurrencyCode == "IDR" || _CurrencyCode == "INR")
+		if (trim.Contains(_CurrencyCode))
 		{
 			if (_Price - decimal.Truncate(_Price) < 0.001M)
 				numberFormatInfo.CurrencyDecimalDigits = 0;
