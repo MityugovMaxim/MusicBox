@@ -237,7 +237,10 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		else
 		{
 			sign = _CurrencyCode;
-			
+		}
+		
+		if (sign != null && sign.Length >= 3)
+		{
 			numberFormatInfo.CurrencyPositivePattern = 2;
 			numberFormatInfo.CurrencyNegativePattern = 12;
 		}
