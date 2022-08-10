@@ -56,7 +56,7 @@ public class AndroidAudioManager : AudioManager
 
 	public override string GetAudioOutputID()
 	{
-		return m_AudioController.Call<string>("GetAudioOutputID");
+		return $"{GetAudioOutputName()}_{GetAudioOutputType()}";
 	}
 }
 #endif
