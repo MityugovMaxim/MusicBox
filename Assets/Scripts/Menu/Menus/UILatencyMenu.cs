@@ -24,6 +24,9 @@ public class UILatencyMenu : UISlideMenu
 	{
 		base.OnHideStarted();
 		
+		if (m_SignalBus == null)
+			return;
+		
 		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
 	}
 
