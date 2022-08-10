@@ -223,6 +223,8 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			"INR",
 		};
 		
+		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
+		
 		string sign;
 		if (_Sign)
 		{
@@ -235,16 +237,17 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		else
 		{
 			sign = _CurrencyCode;
+			
+			numberFormatInfo.CurrencyPositivePattern = 2;
+			numberFormatInfo.CurrencyNegativePattern = 12;
 		}
-		
-		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
 		
 		numberFormatInfo.CurrencySymbol = sign;
 		
 		if (trim.Contains(_CurrencyCode) && _Price - decimal.Truncate(_Price) < 0.001M)
 			numberFormatInfo.CurrencyDecimalDigits = 0;
 		
-		return string.Format(numberFormatInfo, "{0:C}", _Price);
+		return string.Format(numberFormatInfo, "{0:C}", _Price).Trim();
 	}
 
 	Product GetProduct(string _ProductID)
