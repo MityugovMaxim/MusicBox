@@ -16,6 +16,14 @@ public class UIProductPrice : UIEntity
 
 	public void Setup(string _ProductID)
 	{
-		m_Price.text = m_StoreProcessor.GetPrice(_ProductID);
+		if (m_Price == null || m_Price.font == null)
+			return;
+		
+		string price = m_StoreProcessor.GetPrice(_ProductID);
+		
+		if (!m_Price.font.HasCharacters(price))
+			price = m_StoreProcessor.GetPrice(_ProductID, false);
+		
+		m_Price.text = price;
 	}
 }

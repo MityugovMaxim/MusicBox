@@ -199,7 +199,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		return subscription.isSubscribed() == Result.True;
 	}
 
-	public string GetPrice(string _ProductID)
+	public string GetPrice(string _ProductID, bool _Sign = true)
 	{
 		Product product = GetProduct(_ProductID);
 		
@@ -209,12 +209,10 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			return "-";
 		}
 		
-		return FormatPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, out string localizedPriceString)
-			? localizedPriceString
-			: product.metadata.localizedPriceString;
+		return FormatPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, _Sign);
 	}
 
-	static bool FormatPrice(decimal _Price, string _CurrencyCode, out string _PriceString)
+	static string FormatPrice(decimal _Price, string _CurrencyCode, bool _Sign)
 	{
 		string[] trim =
 		{
@@ -225,23 +223,28 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			"INR",
 		};
 		
-		RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
-			.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
-			.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
-			.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
-		
-		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
-		numberFormatInfo.CurrencySymbol = regionInfo?.CurrencySymbol ?? _CurrencyCode;
-		
-		if (trim.Contains(_CurrencyCode))
+		string sign;
+		if (_Sign)
 		{
-			if (_Price - decimal.Truncate(_Price) < 0.001M)
-				numberFormatInfo.CurrencyDecimalDigits = 0;
+			RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
+				.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
+				.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
+				.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
+			sign = regionInfo?.CurrencySymbol ?? _CurrencyCode;
+		}
+		else
+		{
+			sign = _CurrencyCode;
 		}
 		
-		_PriceString = string.Format(numberFormatInfo, "{0:C}", _Price);
+		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
 		
-		return true;
+		numberFormatInfo.CurrencySymbol = sign;
+		
+		if (trim.Contains(_CurrencyCode) && _Price - decimal.Truncate(_Price) < 0.001M)
+			numberFormatInfo.CurrencyDecimalDigits = 0;
+		
+		return string.Format(numberFormatInfo, "{0:C}", _Price);
 	}
 
 	Product GetProduct(string _ProductID)
