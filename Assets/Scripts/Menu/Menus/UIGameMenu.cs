@@ -40,6 +40,11 @@ public class UIGameMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
+	public void Play()
+	{
+		ProcessLatency();
+	}
+
 	public async void Latency()
 	{
 		Pause();

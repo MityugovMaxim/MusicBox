@@ -33,6 +33,11 @@ public class UIPauseMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
+		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
+		
+		if (gameMenu != null)
+			gameMenu.Play();
+		
 		m_SongController.Restart();
 		
 		await m_MenuProcessor.Hide(MenuType.PauseMenu);
@@ -70,6 +75,11 @@ public class UIPauseMenu : UIMenu
 	public async void Resume()
 	{
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
+		
+		if (gameMenu != null)
+			gameMenu.Play();
 		
 		m_SongController.Resume();
 		
