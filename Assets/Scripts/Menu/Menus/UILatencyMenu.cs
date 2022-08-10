@@ -24,6 +24,8 @@ public class UILatencyMenu : UISlideMenu
 	{
 		base.OnHideStarted();
 		
+		m_LatencyIndicator.Complete();
+		
 		if (m_SignalBus == null)
 			return;
 		
@@ -33,8 +35,6 @@ public class UILatencyMenu : UISlideMenu
 	protected override void OnHideFinished()
 	{
 		base.OnHideFinished();
-		
-		m_LatencyIndicator.Complete();
 		
 		m_AmbientProcessor.Resume();
 	}

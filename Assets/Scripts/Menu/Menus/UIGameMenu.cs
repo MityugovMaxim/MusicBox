@@ -22,6 +22,8 @@ public class UIGameMenu : UIMenu
 		m_SongID = _SongID;
 		
 		m_Label.Setup(m_SongID);
+		
+		ProcessLatency();
 	}
 
 	public async void Pause()
@@ -42,9 +44,9 @@ public class UIGameMenu : UIMenu
 	{
 		Pause();
 		
-		await m_MenuProcessor.Show(MenuType.LatencyMenu);
-		
 		m_Latency.SetActive(false);
+		
+		await m_MenuProcessor.Show(MenuType.LatencyMenu);
 	}
 
 	protected override void OnShowStarted()
