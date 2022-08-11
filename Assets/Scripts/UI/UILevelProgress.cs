@@ -73,8 +73,8 @@ public class UILevelProgress : UIEntity
 
 	void ProcessLabel()
 	{
-		int source = m_Discs - m_SourceDiscs;
-		int target = m_TargetDiscs - m_SourceDiscs;
+		int source = Mathf.Max(0, m_Discs - m_SourceDiscs);
+		int target = Mathf.Max(0, m_TargetDiscs - m_SourceDiscs);
 		
 		m_Label.text = $"{source}/{target}";
 	}
