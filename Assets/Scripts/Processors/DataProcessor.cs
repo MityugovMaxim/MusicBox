@@ -136,6 +136,9 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 
 	protected TSnapshot GetSnapshot(string _ID)
 	{
+		if (string.IsNullOrEmpty(_ID))
+			return null;
+		
 		if (m_Registry.TryGetValue(_ID, out TSnapshot snapshot) && snapshot != null)
 			return snapshot;
 		
