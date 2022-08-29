@@ -11,8 +11,10 @@ public class UIMapsMenu : UIMenu
 	[SerializeField] UILayout m_Content;
 	[SerializeField] Button   m_BackButton;
 	[SerializeField] Button   m_RestoreButton;
+	[SerializeField] Button   m_ColorsButton;
 
 	[Inject] SongsProcessor    m_SongsProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
 	[Inject] UIMapElement.Pool m_Pool;
 
 	protected override void Awake()
@@ -20,6 +22,7 @@ public class UIMapsMenu : UIMenu
 		base.Awake();
 		
 		m_BackButton.onClick.AddListener(Back);
+		m_ColorsButton.onClick.AddListener(Colors);
 		m_RestoreButton.onClick.AddListener(Restore);
 	}
 
@@ -28,6 +31,7 @@ public class UIMapsMenu : UIMenu
 		base.OnDestroy();
 		
 		m_BackButton.onClick.RemoveListener(Back);
+		m_ColorsButton.onClick.RemoveListener(Colors);
 		m_RestoreButton.onClick.RemoveListener(Restore);
 	}
 
@@ -39,6 +43,11 @@ public class UIMapsMenu : UIMenu
 	void Restore()
 	{
 		Refresh();
+	}
+
+	async void Colors()
+	{
+		await m_MenuProcessor.Show(MenuType.ColorsMenu);
 	}
 
 	protected override void OnShowStarted()

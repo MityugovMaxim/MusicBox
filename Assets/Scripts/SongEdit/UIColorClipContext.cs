@@ -86,26 +86,6 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 		RectTransform.anchoredPosition = point.TransformPoint(m_Beat.RectTransform, Container);
 	}
 
-	void ProcessColors(
-		Color _BackgroundPrimary,
-		Color _BackgroundSecondary,
-		Color _ForegroundPrimary,
-		Color _ForegroundSecondary
-	)
-	{
-		Clip.BackgroundPrimary   = _BackgroundPrimary;
-		Clip.BackgroundSecondary = _BackgroundSecondary;
-		Clip.ForegroundPrimary   = _ForegroundPrimary;
-		Clip.ForegroundSecondary = _ForegroundSecondary;
-		
-		m_BackgroundPrimary.color   = Clip.BackgroundPrimary;
-		m_BackgroundSecondary.color = Clip.BackgroundSecondary;
-		m_ForegroundPrimary.color   = Clip.ForegroundPrimary;
-		m_ForegroundSecondary.color = Clip.ForegroundSecondary;
-		
-		m_Player.Sample();
-	}
-
 	void IDragHandler.OnDrag(PointerEventData _EventData)
 	{
 		_EventData.Use();
@@ -138,7 +118,7 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 		
 		UIColorMenu colorMenu = m_MenuProcessor.GetMenu<UIColorMenu>();
 		
-		colorMenu.Setup(Clip, ProcessColors);
+		colorMenu.Select(Clip);
 		
 		await m_MenuProcessor.Show(MenuType.ColorMenu);
 	}

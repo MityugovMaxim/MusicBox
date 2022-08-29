@@ -32,5 +32,7 @@ public enum MenuType
 	SongEditMenu         = 29,
 	ColorMenu            = 30,
 	ReviewMenu           = 31,
-	ConsentMenu        = 32
+	ConsentMenu          = 32,
+	ColorsMenu           = 33,
+	ColorsEditMenu       = 34,
 }

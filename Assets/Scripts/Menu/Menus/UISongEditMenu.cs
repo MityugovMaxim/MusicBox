@@ -365,8 +365,6 @@ public static class ASFMidiParser
 [Menu(MenuType.SongEditMenu)]
 public class UISongEditMenu : UIMenu
 {
-	public UIPlayer Player => m_Player;
-
 	[SerializeField] UIPlayer    m_Player;
 	[SerializeField] UIAudioWave m_Background;
 	[SerializeField] UIBeat      m_Beat;
@@ -432,6 +430,10 @@ public class UISongEditMenu : UIMenu
 		m_Beat.BPM      = bpm;
 		m_Beat.Bar      = bar;
 		m_Beat.Time     = 0;
+		
+		UIColorMenu colorMenu = m_MenuProcessor.GetMenu<UIColorMenu>();
+		
+		colorMenu.Setup(m_SongID, m_Player);
 		
 		await m_Background.RenderAsync();
 		

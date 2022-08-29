@@ -89,6 +89,13 @@ public class LocalizationData
 		OnChanged?.Invoke();
 	}
 
+	public void Sort()
+	{
+		m_Entries.Sort((_A, _B) => _A.Key.NaturalCompareTo(_B.Key));
+		
+		OnChanged?.Invoke();
+	}
+
 	public void Rename(string _SourceKey, string _TargetKey)
 	{
 		if (string.IsNullOrEmpty(_SourceKey) || string.IsNullOrEmpty(_TargetKey))

@@ -20,6 +20,7 @@ Shader "UI/Fluid"
 		Cull Back
 		Lighting Off
 		ZWrite On
+		ZTest [unity_GUIZTestMode]
 		Fog { Mode Off }
 		Blend Off
 

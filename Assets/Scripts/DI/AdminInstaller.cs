@@ -9,6 +9,7 @@ public class AdminInstaller : MonoInstaller
 	[SerializeField] UILanguageElement     m_LanguageElement;
 	[SerializeField] UILocalizationElement m_LocalizationElement;
 	[SerializeField] UIMapElement          m_MapElement;
+	[SerializeField] UIColorsElement       m_ColorsElement;
 
 	public override void InstallBindings()
 	{
@@ -29,6 +30,8 @@ public class AdminInstaller : MonoInstaller
 		InstallPool<UILocalizationElement, UILocalizationElement.Pool>(m_LocalizationElement);
 		
 		InstallPool<UIMapElement, UIMapElement.Pool>(m_MapElement);
+		
+		InstallPool<UIColorsElement, UIColorsElement.Pool>(m_ColorsElement);
 	}
 
 	void InstallProcessor<T>()

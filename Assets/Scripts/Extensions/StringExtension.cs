@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using UnityEngine;
 
 public static class StringExtension
 {
@@ -14,6 +16,22 @@ public static class StringExtension
 		"ASF",
 		"URL",
 	};
+
+	public static int NaturalCompareTo(this string _Source, string _Target)
+	{
+		MatchCollection source = Regex.Matches(_Source, @"\d+");
+		MatchCollection target = Regex.Matches(_Target, @"\d+");
+		
+		int max = Mathf.Max(
+			source.Count > 0 ? source.Max(_Match => _Match.Value.Length) : 0,
+			target.Count > 0 ? target.Max(_Match => _Match.Value.Length) : 0
+		);
+		
+		string a = Regex.Replace(_Source, @"\d+", _Match => _Match.Value.PadLeft(max, '0'));
+		string b = Regex.Replace(_Target, @"\d+", _Match => _Match.Value.PadLeft(max, '0'));
+		
+		return string.Compare(a, b, StringComparison.Ordinal);
+	}
 
 	public static string ToDisplayName(this string _String)
 	{

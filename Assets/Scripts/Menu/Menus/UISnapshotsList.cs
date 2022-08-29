@@ -4,38 +4,62 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class UISnapshotsList : UIEntity
+public abstract class UISnapshotsList<TSnapshot, TEntity> : UIEntity where TSnapshot : Snapshot where TEntity : LayoutEntity 
 {
 	const float LIST_SPACING = 15;
+
+	protected IReadOnlyList<TSnapshot> Snapshots => m_Snapshots;
 
 	[SerializeField] UILayout m_Content;
 	[SerializeField] Button   m_AddButton;
 
-	[Inject] UISnapshotElement.Pool m_Pool;
-
-	string         m_Path;
-	string         m_Descriptors;
-	List<Snapshot> m_Snapshots;
+	List<TSnapshot> m_Snapshots;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_AddButton.onClick.AddListener(Add);
+		if (m_AddButton != null)
+			m_AddButton.onClick.AddListener(Add);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_AddButton.onClick.RemoveListener(Add);
+		if (m_AddButton != null)
+			m_AddButton.onClick.RemoveListener(Add);
 	}
 
-	public void Setup(string _Path, string _Descriptors, List<Snapshot> _Snapshots)
+	public void Setup(List<TSnapshot> _Snapshots)
 	{
-		m_Path        = _Path;
-		m_Descriptors = _Descriptors;
-		m_Snapshots   = _Snapshots;
+		m_Snapshots = _Snapshots;
+		
+		Refresh();
+	}
+
+	public void Clear()
+	{
+		m_Snapshots = null;
+		
+		Refresh();
+	}
+
+	public void Reorder(int _SourceIndex, int _TargetIndex)
+	{
+		if (_SourceIndex < 0 || _TargetIndex < 0 || _SourceIndex == _TargetIndex)
+			return;
+		
+		TSnapshot snapshot = m_Snapshots[_SourceIndex];
+		
+		if (snapshot == null)
+			return;
+		
+		m_Snapshots.RemoveAt(_SourceIndex);
+		m_Snapshots.Insert(_TargetIndex, snapshot);
+		
+		for (int i = 0; i < m_Snapshots.Count; i++)
+			m_Snapshots[i].Order = i;
 		
 		Refresh();
 	}
@@ -49,8 +73,8 @@ public class UISnapshotsList : UIEntity
 		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		foreach (Snapshot snapshot in m_Snapshots)
-			m_Content.Add(new SnapshotElementEntity(m_Path, m_Descriptors, snapshot, Remove, m_Pool));
+		foreach (TSnapshot snapshot in m_Snapshots)
+			m_Content.Add(CreateEntity(snapshot, Remove));
 		
 		VerticalStackLayout.End(m_Content);
 		
@@ -59,22 +83,17 @@ public class UISnapshotsList : UIEntity
 
 	void Add()
 	{
-		if (m_Snapshots == null)
+		TSnapshot snapshot = CreateSnapshot();
+		
+		if (snapshot == null)
 			return;
-		
-		Type type = m_Snapshots.GetType().GetElementType();
-		
-		if (type == null)
-			return;
-		
-		Snapshot snapshot = Activator.CreateInstance(type) as Snapshot;
 		
 		m_Snapshots.Add(snapshot);
 		
 		Refresh();
 	}
 
-	void Remove(Snapshot _Snapshot)
+	void Remove(TSnapshot _Snapshot)
 	{
 		if (m_Snapshots == null)
 			return;
@@ -84,22 +103,45 @@ public class UISnapshotsList : UIEntity
 		Refresh();
 	}
 
-	public void Reorder(int _SourceIndex, int _TargetIndex)
+	protected abstract TSnapshot CreateSnapshot();
+
+	protected abstract TEntity CreateEntity(TSnapshot _Snapshot, Action<TSnapshot> _Remove);
+}
+
+public class UISnapshotsList : UISnapshotsList<Snapshot, SnapshotElementEntity>
+{
+	[Inject] UISnapshotElement.Pool m_Pool;
+
+	string m_Path;
+	string m_Descriptors;
+
+	public void Setup(
+		string         _Path,
+		string         _Descriptors,
+		List<Snapshot> _Snapshots
+	)
 	{
-		if (_SourceIndex < 0 || _TargetIndex < 0 || _SourceIndex == _TargetIndex)
-			return;
+		m_Path        = _Path;
+		m_Descriptors = _Descriptors;
 		
-		Snapshot snapshot = m_Snapshots[_SourceIndex];
+		base.Setup(_Snapshots);
+	}
+
+	protected override Snapshot CreateSnapshot()
+	{
+		if (Snapshots == null)
+			return null;
 		
-		if (snapshot == null)
-			return;
+		Type type = Snapshots.GetType().GetElementType();
 		
-		m_Snapshots.RemoveAt(_SourceIndex);
-		m_Snapshots.Insert(_TargetIndex, snapshot);
+		if (type == null)
+			return null;
 		
-		for (int i = 0; i < m_Snapshots.Count; i++)
-			m_Snapshots[i].Order = i;
-		
-		Refresh();
+		return Activator.CreateInstance(type) as Snapshot;
+	}
+
+	protected override SnapshotElementEntity CreateEntity(Snapshot _Snapshot, Action<Snapshot> _Remove)
+	{
+		return new SnapshotElementEntity(m_Path, m_Descriptors, _Snapshot, _Remove, m_Pool);
 	}
 }

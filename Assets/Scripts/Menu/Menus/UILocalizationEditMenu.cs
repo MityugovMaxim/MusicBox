@@ -13,12 +13,12 @@ using Zenject;
 [Menu(MenuType.LocalizationEditMenu)]
 public class UILocalizationEditMenu : UIMenu
 {
-	[SerializeField] TMP_InputField m_KeyField;
-	[SerializeField] TMP_InputField m_ValueField;
-	[SerializeField] TMP_Text       m_PreviewLabel;
-	[SerializeField] Button         m_BackButton;
-	[SerializeField] Button         m_RestoreButton;
-	[SerializeField] Button         m_UploadButton;
+	[SerializeField] UILocalizationField m_KeyField;
+	[SerializeField] UILocalizationField m_ValueField;
+	[SerializeField] TMP_Text            m_PreviewLabel;
+	[SerializeField] Button              m_BackButton;
+	[SerializeField] Button              m_RestoreButton;
+	[SerializeField] Button              m_UploadButton;
 
 	[Inject] StorageProcessor  m_StorageProcessor;
 	[Inject] LanguageProcessor m_LanguageProcessor;
@@ -34,8 +34,8 @@ public class UILocalizationEditMenu : UIMenu
 	{
 		base.Awake();
 		
-		m_KeyField.onEndEdit.AddListener(SubmitKey);
-		m_ValueField.onEndEdit.AddListener(SubmitValue);
+		m_KeyField.Submit.AddListener(SubmitKey);
+		m_ValueField.Submit.AddListener(SubmitValue);
 		m_BackButton.onClick.AddListener(Back);
 		m_RestoreButton.onClick.AddListener(Restore);
 		m_UploadButton.onClick.AddListener(Upload);
@@ -45,8 +45,8 @@ public class UILocalizationEditMenu : UIMenu
 	{
 		base.OnDestroy();
 		
-		m_KeyField.onEndEdit.RemoveListener(SubmitKey);
-		m_ValueField.onEndEdit.RemoveListener(SubmitValue);
+		m_KeyField.Submit.RemoveListener(SubmitKey);
+		m_ValueField.Submit.RemoveListener(SubmitValue);
 		m_BackButton.onClick.RemoveListener(Back);
 		m_RestoreButton.onClick.RemoveListener(Restore);
 		m_UploadButton.onClick.RemoveListener(Upload);
@@ -60,8 +60,8 @@ public class UILocalizationEditMenu : UIMenu
 		m_CachedKey   = m_Key;
 		m_CachedValue = m_Localization.GetValue(m_Key);
 		
-		m_KeyField.SetTextWithoutNotify(m_Key);
-		m_ValueField.SetTextWithoutNotify(m_Localization.GetValue(m_Key));
+		m_KeyField.SetValue(m_Key);
+		m_ValueField.SetValue(m_Localization.GetValue(m_Key));
 		m_PreviewLabel.text = m_Localization.GetValue(m_Key);
 	}
 
@@ -97,8 +97,8 @@ public class UILocalizationEditMenu : UIMenu
 			m_Localization.SetValue(m_Key, m_CachedValue);
 		}
 		
-		m_KeyField.SetTextWithoutNotify(m_Key);
-		m_ValueField.SetTextWithoutNotify(m_Localization.GetValue(m_Key));
+		m_KeyField.SetValue(m_Key);
+		m_ValueField.SetValue(m_Localization.GetValue(m_Key));
 		m_PreviewLabel.text = m_Localization.GetValue(m_Key);
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
@@ -199,7 +199,7 @@ public class UILocalizationEditMenu : UIMenu
 	{
 		m_Localization.SetValue(m_Key, _Value);
 		
-		m_ValueField.SetTextWithoutNotify(m_Localization.GetValue(m_Key));
+		m_ValueField.SetValue(m_Localization.GetValue(m_Key));
 		m_PreviewLabel.text = m_Localization.GetValue(m_Key);
 	}
 }

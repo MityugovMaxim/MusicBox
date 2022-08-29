@@ -19,6 +19,7 @@ public class UILocalizationMenu : UIMenu
 	[SerializeField] Button   m_RestoreButton;
 	[SerializeField] Button   m_UploadButton;
 	[SerializeField] Button   m_AddButton;
+	[SerializeField] Button   m_SortButton;
 
 	[Inject] StorageProcessor           m_StorageProcessor;
 	[Inject] MenuProcessor              m_MenuProcessor;
@@ -35,6 +36,7 @@ public class UILocalizationMenu : UIMenu
 		m_RestoreButton.onClick.AddListener(Restore);
 		m_UploadButton.onClick.AddListener(Upload);
 		m_AddButton.onClick.AddListener(Add);
+		m_SortButton.onClick.AddListener(Sort);
 	}
 
 	protected override void OnDestroy()
@@ -45,6 +47,7 @@ public class UILocalizationMenu : UIMenu
 		m_RestoreButton.onClick.RemoveListener(Restore);
 		m_UploadButton.onClick.RemoveListener(Upload);
 		m_AddButton.onClick.RemoveListener(Add);
+		m_SortButton.onClick.RemoveListener(Sort);
 	}
 
 	public void Setup(LocalizationData _Localization)
@@ -134,6 +137,13 @@ public class UILocalizationMenu : UIMenu
 	void Add()
 	{
 		m_Localization.Create();
+		
+		Refresh();
+	}
+
+	void Sort()
+	{
+		m_Localization.Sort();
 		
 		Refresh();
 	}

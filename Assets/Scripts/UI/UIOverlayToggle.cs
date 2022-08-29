@@ -32,6 +32,16 @@ public class UIOverlayToggle : UIButton
 
 	bool m_Value;
 
+	public void SetState(bool _Value)
+	{
+		if (m_Value == _Value)
+			return;
+		
+		m_Value = _Value;
+		
+		ProcessValue();
+	}
+
 	protected override void Awake()
 	{
 		base.Awake();

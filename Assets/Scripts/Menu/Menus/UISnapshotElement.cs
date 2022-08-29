@@ -35,7 +35,12 @@ public class UISnapshotElement : UIOverlayButton
 		m_RemoveButton.onClick.RemoveListener(Remove);
 	}
 
-	public void Setup(string _Path, string _Descriptors, Snapshot _Snapshot, Action<Snapshot> _Remove)
+	public void Setup(
+		string           _Path,
+		string           _Descriptors,
+		Snapshot         _Snapshot,
+		Action<Snapshot> _Remove
+	)
 	{
 		m_Path        = _Path;
 		m_Descriptors = _Descriptors;

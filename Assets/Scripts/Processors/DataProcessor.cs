@@ -40,7 +40,8 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 
 	protected SignalBus SignalBus => m_SignalBus;
 
-	protected IReadOnlyList<TSnapshot> Snapshots => m_Snapshots;
+	protected IReadOnlyList<TSnapshot>               Snapshots => m_Snapshots;
+	protected IReadOnlyDictionary<string, TSnapshot> Registry  => m_Registry;
 
 	bool Loaded { get; set; }
 
@@ -49,7 +50,8 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 	string            m_DataPath;
 	DatabaseReference m_Data;
 
-	readonly List<TSnapshot> m_Snapshots = new List<TSnapshot>();
+	readonly List<TSnapshot>               m_Snapshots = new List<TSnapshot>();
+	readonly Dictionary<string, TSnapshot> m_Registry  = new Dictionary<string, TSnapshot>();
 
 	public async Task Load()
 	{
@@ -134,6 +136,9 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 
 	protected TSnapshot GetSnapshot(string _ID)
 	{
+		if (m_Registry.TryGetValue(_ID, out TSnapshot snapshot) && snapshot != null)
+			return snapshot;
+		
 		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ID);
 	}
 
