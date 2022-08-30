@@ -225,21 +225,23 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		
 		NumberFormatInfo numberFormatInfo = (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
 		
+		string code = _CurrencyCode ?? string.Empty;
+		
 		string sign;
 		if (_Sign)
 		{
 			RegionInfo regionInfo = CultureInfo.GetCultures(CultureTypes.AllCultures)
 				.Where(_CultureInfo => _CultureInfo.Name.Length > 0 && !_CultureInfo.IsNeutralCulture)
 				.Select(_CultureInfo => new RegionInfo(_CultureInfo.LCID))
-				.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, _CurrencyCode, StringComparison.InvariantCultureIgnoreCase));
-			sign = regionInfo?.CurrencySymbol ?? _CurrencyCode;
+				.FirstOrDefault(_RegionInfo => string.Equals(_RegionInfo.ISOCurrencySymbol, code, StringComparison.InvariantCultureIgnoreCase));
+			sign = regionInfo?.CurrencySymbol ?? code;
 		}
 		else
 		{
-			sign = _CurrencyCode;
+			sign = code;
 		}
 		
-		if (sign != null && sign.Length >= 3)
+		if (sign.Length >= 3)
 		{
 			numberFormatInfo.CurrencyPositivePattern = 2;
 			numberFormatInfo.CurrencyNegativePattern = 12;
