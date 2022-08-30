@@ -4,137 +4,142 @@ using Random = UnityEngine.Random;
 
 public static class ColorGenerator
 {
-	static readonly Func<Color, Color[]>[] m_Algorithms =
-	{
-		Monochromatic,
-		Complementary,
-		SplitComplementary,
-		Triad,
-		Square,
-		Analogous,
-		Shades,
-		GoldenRatio,
-	};
-
-	public static Color[] Generate()
-	{
-		Color color = GenerateBase();
-		
-		int index = Random.Range(0, m_Algorithms.Length);
-		
-		return m_Algorithms[index].Invoke(color);
-	}
-
-	public static Color GenerateBase()
+	public static Color GenerateColor(float _Alpha = 1.0f)
 	{
 		float h = Random.Range(0.0f, 1.0f);
 		float s = Random.Range(0.5f, 1.0f);
 		float v = Random.Range(0.5f, 1.0f);
 		
-		return Color.HSVToRGB(h, s, v);
+		Color color = Color.HSVToRGB(h, s, v);
+		
+		color.a = _Alpha;
+		
+		return color;
+	}
+
+	public static Color[] Arbitrary(Color _Base)
+	{
+		return new Color[]
+		{
+			GenerateColor(),
+			GenerateColor(),
+			new Color(1, 1, 1, 0.75f),
+			GenerateColor(),
+		};
 	}
 
 	public static Color[] Monochromatic(Color _Base)
 	{
-		Color[] colors = new Color[4];
-		
 		float s    = _Base.GetS();
 		float step = -Random.Range(0.0f, 100.0f * s / 3.0f);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.DevianceH(5).ShiftS(step * 1);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.DevianceH(5).ShiftS(step * 2);
+		(float a, float b) = RandomSwitch(step * 1, step * 2);
 		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.DevianceH(15).ShiftS(a),
+			new Color(1, 1, 1, 0.75f),
+			_Base.DevianceH(15).ShiftS(b),
+		};
 	}
 
 	public static Color[] Complementary(Color _Base)
 	{
-		Color[] colors = new Color[4];
+		(Color a, Color b) = RandomSwitch(
+			_Base.ShiftH(180).DevianceS(25),
+			_Base.DevianceS(50)
+		);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(180).DevianceS(10);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.DevianceS(50);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			a,
+			new Color(1, 1, 1, 0.75f),
+			b,
+		};
 	}
 
 	public static Color[] SplitComplementary(Color _Base)
 	{
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(150, 210);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(150);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.ShiftH(210);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftH(a),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftH(b),
+		};
 	}
 
 	public static Color[] Triad(Color _Base)
 	{
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(120, 240);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(120).DevianceS(10);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.ShiftH(240).DevianceS(10);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftH(a).DevianceS(15),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftH(b).DevianceS(15),
+		};
 	}
 
 	public static Color[] Square(Color _Base)
 	{
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(90, 270);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(90).DevianceS(10);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.ShiftH(270).DevianceS(10);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftH(a).DevianceS(25),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftH(b).DevianceS(25),
+		};
 	}
 
 	public static Color[] Analogous(Color _Base)
 	{
-		float angle = Random.Range(0.0f, 45.0f);
+		float angle = Random.Range(0.0f, 90.0f);
 		
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(angle, -angle);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(angle).ShiftS(5);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.ShiftH(-angle).ShiftS(5);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftH(a).ShiftS(5),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftH(b).ShiftS(5),
+		};
 	}
 
 	public static Color[] Shades(Color _Base)
 	{
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(-50, -25);
 		
-		colors[0] = _Base;
-		colors[3] = _Base.ShiftV(-50);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[1] = _Base.ShiftV(-25);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftV(a).DevianceH(15).DevianceS(25),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftV(b).DevianceH(15).DevianceS(25),
+		};
 	}
 
 	public static Color[] GoldenRatio(Color _Base)
 	{
 		const float angle = 137.5f;
 		
-		Color[] colors = new Color[4];
+		(float a, float b) = RandomSwitch(angle * 1, angle * 2);
 		
-		colors[0] = _Base;
-		colors[1] = _Base.ShiftH(angle * 1);
-		colors[2] = new Color(1, 1, 1, 0.75f);
-		colors[3] = _Base.ShiftH(angle * 2);
-		
-		return colors;
+		return new Color[]
+		{
+			_Base,
+			_Base.ShiftH(a),
+			new Color(1, 1, 1, 0.75f),
+			_Base.ShiftH(b),
+		};
 	}
 
 	static float GetH(this Color _Color)
@@ -267,5 +272,11 @@ public static class ColorGenerator
 		v = Random.Range(min, max);
 		
 		return _Color.ApplyHSV(h, s, v);
+	}
+
+	static (T a, T b) RandomSwitch<T>(T _A, T _B)
+	{
+		float value = Random.value;
+		return value >= 0.5f ? (_A, _B) : (_B, _A);
 	}
 }

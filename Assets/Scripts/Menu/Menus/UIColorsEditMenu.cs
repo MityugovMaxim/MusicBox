@@ -47,8 +47,13 @@ public class UIColorsEditMenu : UIMenu
 	[SerializeField] Graphic       m_ForegroundPrimary;
 	[SerializeField] Graphic       m_ForegroundSecondary;
 
-	[SerializeField] Button m_BackButton;
 	[SerializeField] Button m_BaseButton;
+	[SerializeField] Button m_BackgroundPrimaryButton;
+	[SerializeField] Button m_BackgroundSecondaryButton;
+	[SerializeField] Button m_ForegroundPrimaryButton;
+	[SerializeField] Button m_ForegroundSecondaryButton;
+
+	[SerializeField] Button m_BackButton;
 	[SerializeField] Button m_RandomButton;
 	[SerializeField] Button m_MonochromaticButton;
 	[SerializeField] Button m_ComplementaryButton;
@@ -59,15 +64,21 @@ public class UIColorsEditMenu : UIMenu
 	[SerializeField] Button m_ShadesButton;
 	[SerializeField] Button m_GoldenRatioButton;
 
-	ColorsSnapshot m_Snapshot;
-	Action         m_Callback;
+	ColorsSnapshot       m_Snapshot;
+	Action               m_Callback;
+	Func<Color, Color[]> m_Algorithm;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_BackButton.onClick.AddListener(Back);
 		m_BaseButton.onClick.AddListener(GenerateBase);
+		m_BackgroundPrimaryButton.onClick.AddListener(GenerateBackgroundPrimary);
+		m_BackgroundSecondaryButton.onClick.AddListener(GenerateBackgroundSecondary);
+		m_ForegroundPrimaryButton.onClick.AddListener(GenerateForegroundPrimary);
+		m_ForegroundSecondaryButton.onClick.AddListener(GenerateForegroundSecondary);
+		
+		m_BackButton.onClick.AddListener(Back);
 		m_RandomButton.onClick.AddListener(GenerateRandom);
 		m_MonochromaticButton.onClick.AddListener(GenerateMonochromatic);
 		m_ComplementaryButton.onClick.AddListener(GenerateComplementary);
@@ -83,8 +94,13 @@ public class UIColorsEditMenu : UIMenu
 	{
 		base.OnDestroy();
 		
-		m_BackButton.onClick.RemoveListener(Back);
 		m_BaseButton.onClick.RemoveListener(GenerateBase);
+		m_BackgroundPrimaryButton.onClick.RemoveListener(GenerateBackgroundPrimary);
+		m_BackgroundSecondaryButton.onClick.RemoveListener(GenerateBackgroundSecondary);
+		m_ForegroundPrimaryButton.onClick.RemoveListener(GenerateForegroundPrimary);
+		m_ForegroundSecondaryButton.onClick.RemoveListener(GenerateForegroundSecondary);
+		
+		m_BackButton.onClick.RemoveListener(Back);
 		m_RandomButton.onClick.RemoveListener(GenerateRandom);
 		m_MonochromaticButton.onClick.RemoveListener(GenerateMonochromatic);
 		m_ComplementaryButton.onClick.RemoveListener(GenerateComplementary);
@@ -116,35 +132,82 @@ public class UIColorsEditMenu : UIMenu
 		m_Callback?.Invoke();
 	}
 
+	void GenerateBase()
+	{
+		Base = ColorGenerator.GenerateColor();
+		
+		GenerateColors(m_Algorithm ?? ColorGenerator.Monochromatic);
+	}
+
+	void GenerateBackgroundPrimary()
+	{
+		ProcessColors(
+			ColorGenerator.GenerateColor(),
+			BackgroundSecondary,
+			ForegroundPrimary,
+			ForegroundSecondary
+		);
+	}
+
+	void GenerateBackgroundSecondary()
+	{
+		ProcessColors(
+			BackgroundPrimary,
+			ColorGenerator.GenerateColor(),
+			ForegroundPrimary,
+			ForegroundSecondary
+		);
+	}
+
+	void GenerateForegroundPrimary()
+	{
+		ProcessColors(
+			BackgroundPrimary,
+			BackgroundSecondary,
+			ColorGenerator.GenerateColor(0.75f),
+			ForegroundSecondary
+		);
+	}
+
+	void GenerateForegroundSecondary()
+	{
+		ProcessColors(
+			BackgroundPrimary,
+			BackgroundSecondary,
+			ForegroundPrimary,
+			ColorGenerator.GenerateColor()
+		);
+	}
+
 	void Back()
 	{
 		Hide();
 	}
 
-	void GenerateBase()
+	void GenerateRandom() => GenerateColors(ColorGenerator.Arbitrary);
+
+	void GenerateMonochromatic() => GenerateColors(ColorGenerator.Monochromatic);
+
+	void GenerateComplementary() => GenerateColors(ColorGenerator.Complementary);
+
+	void GenerateSplitComplementary() => GenerateColors(ColorGenerator.SplitComplementary);
+
+	void GenerateTriad() => GenerateColors(ColorGenerator.Triad);
+
+	void GenerateSquare() => GenerateColors(ColorGenerator.Square);
+
+	void GenerateAnalogous() => GenerateColors(ColorGenerator.Analogous);
+
+	void GenerateShades() => GenerateColors(ColorGenerator.Shades);
+
+	void GenerateGoldenRatio() => GenerateColors(ColorGenerator.GoldenRatio);
+
+	void GenerateColors(Func<Color, Color[]> _Algorithm)
 	{
-		Base = ColorGenerator.GenerateBase();
+		m_Algorithm = _Algorithm;
 		
-		GenerateMonochromatic();
+		ProcessColors(m_Algorithm(Base));
 	}
-
-	void GenerateRandom() => ProcessColors(ColorGenerator.Generate());
-
-	void GenerateMonochromatic() => ProcessColors(ColorGenerator.Monochromatic(Base));
-
-	void GenerateComplementary() => ProcessColors(ColorGenerator.Complementary(Base));
-
-	void GenerateSplitComplementary() => ProcessColors(ColorGenerator.SplitComplementary(Base));
-
-	void GenerateTriad() => ProcessColors(ColorGenerator.Triad(Base));
-
-	void GenerateSquare() => ProcessColors(ColorGenerator.Square(Base));
-
-	void GenerateAnalogous() => ProcessColors(ColorGenerator.Analogous(Base));
-
-	void GenerateShades() => ProcessColors(ColorGenerator.Shades(Base));
-
-	void GenerateGoldenRatio() => ProcessColors(ColorGenerator.GoldenRatio(Base));
 
 	void ProcessColors(params Color[] _Colors)
 	{
