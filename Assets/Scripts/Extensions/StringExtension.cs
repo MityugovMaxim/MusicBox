@@ -68,7 +68,14 @@ public static class StringExtension
 			char target = _String[i];
 			
 			if (!char.IsLetterOrDigit(source))
+			{
+				if (builder.Length > 0)
+				{
+					words.Add(builder.ToString());
+					builder.Clear();
+				}
 				continue;
+			}
 			
 			builder.Append(source);
 			
@@ -87,14 +94,31 @@ public static class StringExtension
 		words.Add(builder.ToString());
 		builder.Clear();
 		
-		for (int i = 0; i < words.Count - 1; i++)
+		foreach (string word in words)
 		{
-			builder.Append(words[i]);
+			builder.Append(word.ToCapital());
 			builder.Append(' ');
 		}
-		builder.Append(words[^1]);
-		builder.Append(' ');
 		
+		return builder.ToString();
+	}
+
+	public static string ToCapital(this string _String)
+	{
+		StringBuilder builder = new StringBuilder();
+		bool          first   = true;
+		foreach (char symbol in _String)
+		{
+			if (char.IsLetter(symbol))
+			{
+				builder.Append(first ? char.ToUpperInvariant(symbol) : char.ToLowerInvariant(symbol));
+				first = false;
+			}
+			else
+			{
+				builder.Append(symbol);
+			}
+		}
 		return builder.ToString();
 	}
 
@@ -152,5 +176,30 @@ public static class StringExtension
 			patch = 0;
 		
 		return (major, minor, patch);
+	}
+
+	public static string GenerateUniqueID<T>(this ICollection<T> _List, string _ID, Func<T, string> _Selector)
+	{
+		if (_List == null || _List.Count == 0 || _Selector == null)
+			return _ID;
+			
+		HashSet<string> ids = new HashSet<string>();
+		foreach (string id in _List.Select(_Selector))
+		{
+			if (!string.IsNullOrEmpty(id))
+				ids.Add(id);
+		}
+		
+		const int limit = 250;
+		
+		for (int i = 1; i <= limit; i++)
+		{
+			string uniqueID = $"{_ID} {i}";
+			if (ids.Contains(uniqueID))
+				continue;
+			return uniqueID;
+		}
+		
+		return $"{_ID} {CRC32.Get(Guid.NewGuid().ToString())}";
 	}
 }

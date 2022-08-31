@@ -214,6 +214,9 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	static string FormatPrice(decimal _Price, string _CurrencyCode, bool _Sign)
 	{
+		if (_Price.Equals(0m))
+			return "-";
+		
 		string[] trim =
 		{
 			"RUB",

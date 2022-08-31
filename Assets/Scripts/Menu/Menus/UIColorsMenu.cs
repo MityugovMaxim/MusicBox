@@ -200,7 +200,7 @@ public class UIColorsMenu : UIMenu
 
 	void Add()
 	{
-		string colorsID = m_Snapshots.GenerateUniqueID("Colors ", _Snapshot => _Snapshot.ID);
+		string colorsID = m_Snapshots.GenerateUniqueID("Colors", _Snapshot => _Snapshot.ID);
 		
 		m_Snapshots.Add(new ColorsSnapshot(colorsID, 0));
 		
