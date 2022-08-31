@@ -11,7 +11,6 @@ public class UISongStatistics : UIGroup
 	[SerializeField] UIUnitLabel m_Good;
 	[SerializeField] UIUnitLabel m_Bad;
 
-	[SerializeField, Sound] string m_TitleSound;
 	[SerializeField, Sound] string m_UnitSound;
 
 	[Inject] ScoreManager    m_ScoreManager;

@@ -1,7 +1,8 @@
-using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+[SuppressMessage("ReSharper", "UnusedMember.Local")]
 public static class ColorGenerator
 {
 	public static Color GenerateColor(float _Alpha = 1.0f)
@@ -144,21 +145,21 @@ public static class ColorGenerator
 
 	static float GetH(this Color _Color)
 	{
-		Color.RGBToHSV(_Color, out float h, out float s, out float v);
+		Color.RGBToHSV(_Color, out float h, out _, out _);
 		
 		return h;
 	}
 
 	static float GetS(this Color _Color)
 	{
-		Color.RGBToHSV(_Color, out float h, out float s, out float v);
+		Color.RGBToHSV(_Color, out _, out float s, out _);
 		
 		return s;
 	}
 
 	static float GetV(this Color _Color)
 	{
-		Color.RGBToHSV(_Color, out float h, out float s, out float v);
+		Color.RGBToHSV(_Color, out _, out _, out float v);
 		
 		return v;
 	}

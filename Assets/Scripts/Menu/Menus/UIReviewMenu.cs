@@ -27,7 +27,10 @@ public class UIReviewMenu : UIAnimationMenu
 
 	[Inject] MenuProcessor        m_MenuProcessor;
 	[Inject] ConfigProcessor      m_ConfigProcessor;
+
+	#if UNITY_ANDROID
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
+	#endif
 
 	ScoreRank m_Rank;
 

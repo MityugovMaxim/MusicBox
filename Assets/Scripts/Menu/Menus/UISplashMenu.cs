@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Facebook.Unity;
-using MAXHelper;
 using UnityEngine;
 using Zenject;
 
