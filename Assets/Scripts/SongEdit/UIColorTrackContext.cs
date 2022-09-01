@@ -40,6 +40,8 @@ public class UIColorTrackContext : ASFTrackContext<ASFColorClip>, IASFColorSampl
 		
 		item.ClipRect = _ClipRect;
 		item.ViewRect = _ViewRect;
+		
+		item.Process();
 	}
 
 	public override void Clear()

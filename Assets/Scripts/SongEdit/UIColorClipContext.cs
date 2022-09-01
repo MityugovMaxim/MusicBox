@@ -49,10 +49,18 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 	{
 		base.Setup(_Container, _Clip, _ClipRect, _ViewRect);
 		
-		m_BackgroundPrimary.color   = _Clip.BackgroundPrimary;
-		m_BackgroundSecondary.color = _Clip.BackgroundSecondary;
-		m_ForegroundPrimary.color   = _Clip.ForegroundPrimary;
-		m_ForegroundSecondary.color = _Clip.ForegroundSecondary;
+		m_BackgroundPrimary.color   = Clip.BackgroundPrimary;
+		m_BackgroundSecondary.color = Clip.BackgroundSecondary;
+		m_ForegroundPrimary.color   = Clip.ForegroundPrimary;
+		m_ForegroundSecondary.color = Clip.ForegroundSecondary;
+	}
+
+	public void Process()
+	{
+		m_BackgroundPrimary.color   = Clip.BackgroundPrimary;
+		m_BackgroundSecondary.color = Clip.BackgroundSecondary;
+		m_ForegroundPrimary.color   = Clip.ForegroundPrimary;
+		m_ForegroundSecondary.color = Clip.ForegroundSecondary;
 	}
 
 	void Select(bool _Value)

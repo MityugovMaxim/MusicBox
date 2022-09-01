@@ -262,8 +262,6 @@ public class UIColorMenu : UIMenu
 		m_Clip.ForegroundPrimary   = ForegroundPrimary;
 		m_Clip.ForegroundSecondary = ForegroundSecondary;
 		
-		m_Track.Context.Clear();
-		
 		m_Player.Sample();
 		
 		Hide();
