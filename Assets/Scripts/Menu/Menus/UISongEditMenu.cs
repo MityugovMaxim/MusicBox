@@ -442,11 +442,25 @@ public class UISongEditMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
-	public void Back()
+	public async void Back()
 	{
+		string artist = m_SongsProcessor.GetArtist(m_SongID);
+		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		
+		bool confirm = await m_MenuProcessor.ConfirmAsync(
+			"song_edit",
+			$"EXIT '{artist} - {title}' EDIT",
+			"Are you sure want to exit map edit?\nAll unsaved changes will be lost."
+		);
+		
+		if (!confirm)
+			return;
+		
 		m_AmbientProcessor.Resume();
 		
 		m_Player.Stop();
+		
+		m_Player.Time = 0;
 		
 		Hide();
 	}

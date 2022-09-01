@@ -154,7 +154,6 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		
 		return Snapshots
 			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
 			.Select(_Snapshot => _Snapshot.ID)
 			.FirstOrDefault(_SongID => GetSongHash(_SongID).Equals(_SongHash, StringComparison.InvariantCultureIgnoreCase));
 	}

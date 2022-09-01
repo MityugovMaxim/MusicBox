@@ -19,6 +19,8 @@ public class UISongToolbar : UIEntity
 	[SerializeField] Button m_CopyButton;
 	[SerializeField] Button m_PasteButton;
 	[SerializeField] Button m_DeleteButton;
+	[SerializeField] Button m_GenerateButton;
+	[SerializeField] Button m_CleanupButton;
 
 	[SerializeField] Button m_StepForwardButton;
 	[SerializeField] Button m_StepBackwardButton;
@@ -49,6 +51,8 @@ public class UISongToolbar : UIEntity
 		m_CopyButton.onClick.AddListener(Copy);
 		m_PasteButton.onClick.AddListener(Paste);
 		m_DeleteButton.onClick.AddListener(Delete);
+		m_GenerateButton.onClick.AddListener(Generate);
+		m_CleanupButton.onClick.AddListener(Cleanup);
 		
 		m_StepForwardButton.onClick.AddListener(StepForward);
 		m_StepBackwardButton.onClick.AddListener(StepBackward);
@@ -70,6 +74,8 @@ public class UISongToolbar : UIEntity
 		m_CopyButton.onClick.RemoveAllListeners();
 		m_PasteButton.onClick.RemoveAllListeners();
 		m_DeleteButton.onClick.RemoveAllListeners();
+		m_GenerateButton.onClick.RemoveAllListeners();
+		m_CleanupButton.onClick.RemoveAllListeners();
 		
 		m_StepForwardButton.onClick.RemoveAllListeners();
 		m_StepBackwardButton.onClick.RemoveAllListeners();
@@ -103,6 +109,20 @@ public class UISongToolbar : UIEntity
 		DeleteClips<ASFHoldTrack, ASFHoldClip>();
 		DeleteClips<ASFColorTrack, ASFColorClip>();
 		ClipSelection.Clear();
+		
+		m_Player.Sample();
+	}
+
+	void Generate()
+	{
+		m_Player.Generate();
+		
+		m_Player.Sample();
+	}
+
+	void Cleanup()
+	{
+		m_Player.Cleanup();
 		
 		m_Player.Sample();
 	}

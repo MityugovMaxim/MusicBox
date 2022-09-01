@@ -148,10 +148,41 @@ public class UIAudioWave : Graphic, IDisposable
 	}
 	#endif
 
+	public float GetValue(double _Time)
+	{
+		const int range = 5;
+		
+		int sample = (int)(_Time * m_Frequency / m_SamplesPerUnit);
+		
+		float minValue = float.MaxValue;
+		float maxValue = float.MinValue;
+		for (int i = -range; i <= range; i++)
+		{
+			float value = GetValue(sample + i);
+			minValue = Mathf.Min(minValue, value);
+			maxValue = Mathf.Max(maxValue, value);
+		}
+		return Mathf.Abs(maxValue - minValue);
+	}
+
+	public float GetValue(int _Sample)
+	{
+		int x = _Sample % m_MaxTexture.width;
+		int y = _Sample / m_MaxTexture.height;
+		
+		if (x < 0 || x >= m_MaxTexture.width)
+			return 0;
+		
+		if (y < 0 || y >= m_MaxTexture.height)
+			return 0;
+		
+		return m_MaxTexture.GetPixel(x, y).a;
+	}
+
 	void ProcessTime()
 	{
-		int minTime = (int)(((m_Time + m_MinTime) * m_Frequency) / m_SamplesPerUnit);
-		int maxTime = (int)(((m_Time + m_MaxTime) * m_Frequency) / m_SamplesPerUnit);
+		int minTime = (int)((m_Time + m_MinTime) * m_Frequency / m_SamplesPerUnit);
+		int maxTime = (int)((m_Time + m_MaxTime) * m_Frequency / m_SamplesPerUnit);
 		
 		material.SetInt(m_MinTimePropertyID, minTime);
 		material.SetInt(m_MaxTimePropertyID, maxTime);
