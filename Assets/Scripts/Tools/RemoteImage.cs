@@ -11,9 +11,10 @@ public abstract class RemoteImage : UIEntity
 	[Flags]
 	public enum Options
 	{
-		Blur = 1 << 1,
-		URL  = 1 << 2,
-		Pack = 1 << 3,
+		Blur  = 1 << 1,
+		URL   = 1 << 2,
+		Pack  = 1 << 3,
+		Local = 1 << 4,
 	}
 
 	public string Path
@@ -197,9 +198,13 @@ public abstract class RemoteImage : UIEntity
 		if (string.IsNullOrEmpty(Path))
 			return Task.FromResult<Texture2D>(null);
 		
-		return CheckOptions(Options.URL)
-			? m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None)
-			: m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
+		if (CheckOptions(Options.Local))
+			return WebRequest.LoadTextureFile(Path);
+		
+		if (CheckOptions(Options.URL))
+			m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None);
+		
+		return m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
 	}
 
 	void CreateAtlas()

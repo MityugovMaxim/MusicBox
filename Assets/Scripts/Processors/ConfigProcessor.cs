@@ -53,7 +53,8 @@ public class ConfigProcessor
 	const string REVIEW_RANK             = "review_rank";
 	const string REVIEW_COOLDOWN         = "review_cooldown";
 
-	const string BLUETOOTH_LATENCY = "bluetooth_latency";
+	const string BLUETOOTH_LATENCY    = "bluetooth_latency";
+	const string OGG_ENCODING_QUALITY = "ogg_encoding_quality";
 
 	public int   ComboX2                 => GetInt(COMBO_X2);
 	public int   ComboX4                 => GetInt(COMBO_X4);
@@ -88,6 +89,7 @@ public class ConfigProcessor
 	public int   ReviewRank              => GetInt(REVIEW_RANK);
 	public long  ReviewCooldown          => GetLong(REVIEW_COOLDOWN);
 	public float BluetoothLatency        => GetInt(BLUETOOTH_LATENCY) * 0.001f;
+	public float OggEncodingQuality      => GetFloat(OGG_ENCODING_QUALITY);
 
 	readonly Dictionary<string, object> m_DefaultValues = new Dictionary<string, object>()
 	{
@@ -145,6 +147,7 @@ public class ConfigProcessor
 		
 		// Settings
 		{ BLUETOOTH_LATENCY, 300 },
+		{ OGG_ENCODING_QUALITY, 0.85f },
 	};
 
 	public async Task Load()

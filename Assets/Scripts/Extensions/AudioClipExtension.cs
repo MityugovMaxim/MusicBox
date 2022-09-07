@@ -122,10 +122,15 @@ public static class AudioClipExtension
 		_AudioClip.SetData(buffer, offset);
 	}
 
-	public static void FadeInOut(this AudioClip _AudioClip, float _Duration, EaseFunction _Function)
+	public static AudioClip FadeInOut(this AudioClip _AudioClip, float _Duration)
+	{
+		return _AudioClip.FadeInOut(_Duration, EaseFunction.Linear);
+	}
+
+	public static AudioClip FadeInOut(this AudioClip _AudioClip, float _Duration, EaseFunction _Function)
 	{
 		if (_AudioClip == null || _Duration < float.Epsilon)
-			return;
+			return _AudioClip;
 		
 		int channels = _AudioClip.channels;
 		int samples  = (int)(Mathf.Clamp(_Duration, 0, _AudioClip.length) * _AudioClip.frequency);
@@ -158,6 +163,8 @@ public static class AudioClipExtension
 		}
 		
 		_AudioClip.SetData(buffer, offset);
+		
+		return _AudioClip;
 	}
 
 	public static byte[] EncodeToOGG(this AudioClip _AudioClip, float _Quality, Dictionary<string, string> _Tags = null)

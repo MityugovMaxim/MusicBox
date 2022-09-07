@@ -137,6 +137,7 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	protected override string Path => "songs"; 
 
 	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] MapsProcessor    m_MapsProcessor;
 
 	public List<string> GetSongIDs(bool _IncludeInactive = false)
 	{
@@ -166,7 +167,7 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	public int GetNumber(string _SongID)
 	{
 		int number = Snapshots
-			.Where(_Snapshot => _Snapshot != null)
+			.Where(_Snapshot => _Snapshot != null && _Snapshot.ID == _SongID)
 			.Where(_Snapshot => _Snapshot.Active)
 			.OrderBy(_Snapshot => _Snapshot.Speed)
 			.Select((_Snapshot, _Index) => _Index)
@@ -175,30 +176,39 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return number;
 	}
 
-	public string GetSkin(string _LevelID)
+	public string GetSkin(string _SongID)
 	{
-		SongSnapshot snapshot = GetSnapshot(_LevelID);
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Skin ?? "default";
 	}
 
-	public string GetArtist(string _LevelID)
+	public string GetArtist(string _SongID)
 	{
-		SongSnapshot snapshot = GetSnapshot(_LevelID);
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Artist ?? string.Empty;
+		if (snapshot == null)
+			snapshot = m_MapsProcessor.GetSnapshot(_SongID);
+		
+		return snapshot.Artist ?? string.Empty;
 	}
 
 	public string GetTitle(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		return snapshot?.Title ?? string.Empty;
+		if (snapshot == null)
+			snapshot = m_MapsProcessor.GetSnapshot(_SongID);
+		
+		return snapshot.Title ?? string.Empty;
 	}
 
 	public string GetImage(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		if (snapshot == null)
+			snapshot = m_MapsProcessor.GetSnapshot(_SongID);
 		
 		return snapshot?.Image ?? string.Empty;
 	}
@@ -206,6 +216,9 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	public string GetPreview(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		if (snapshot == null)
+			snapshot = m_MapsProcessor.GetSnapshot(_SongID);
 		
 		return snapshot?.Preview ?? string.Empty;
 	}
@@ -222,7 +235,7 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		if (snapshot == null)
-			return 0;
+			snapshot = m_MapsProcessor.GetSnapshot(_SongID);
 		
 		switch (_Rank)
 		{

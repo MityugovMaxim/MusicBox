@@ -9,6 +9,7 @@ public enum MainMenuPageType
 	Songs   = 2,
 	Profile = 3,
 	Offers  = 4,
+	Library = 5,
 }
 
 [Menu(MenuType.MainMenu)]

@@ -16,17 +16,21 @@ public class ProfileSnapshot
 	public int                               Level        { get; }
 	public int                               Discs        { get; }
 	public IReadOnlyList<string>             SongIDs      { get; }
+	public IReadOnlyList<string>             MapIDs       { get; }
+	public IReadOnlyList<string>             Playlist      { get; }
 	public IReadOnlyList<string>             OfferIDs     { get; }
 	public IReadOnlyList<ProfileTransaction> Transactions { get; }
 	public IReadOnlyList<ProfileTimer>       Timers       { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
-		Coins        = _Data.GetLong("coins");
-		Discs        = _Data.GetInt("discs");
-		Level        = _Data.GetInt("level", 1);
-		SongIDs      = _Data.GetChildKeys("song_ids");
-		OfferIDs     = _Data.GetChildKeys("offer_ids");
+		Coins    = _Data.GetLong("coins");
+		Discs    = _Data.GetInt("discs");
+		Level    = _Data.GetInt("level", 1);
+		SongIDs  = _Data.GetChildKeys("song_ids");
+		OfferIDs = _Data.GetChildKeys("offer_ids");
+		MapIDs   = _Data.GetChildKeys("map_ids");
+		Playlist = _Data.GetChildKeys("playlist");
 		Transactions = _Data.Child("transactions").Children
 			.Select(_Transaction => new ProfileTransaction(_Transaction))
 			.ToList();
@@ -204,6 +208,11 @@ public class ProfileProcessor : IInitializable, IDisposable
 	public void ProcessTimer()
 	{
 		m_SignalBus.Fire<ProfileTimerSignal>();
+	}
+
+	public IReadOnlyList<string> GetPlaylist()
+	{
+		return m_Snapshot?.Playlist;
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)
