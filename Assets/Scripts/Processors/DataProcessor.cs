@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using Firebase;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
@@ -108,6 +109,7 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 	async Task Fetch()
 	{
 		m_Snapshots.Clear();
+		m_Registry.Clear();
 		
 		DataSnapshot dataSnapshot = await Filter(m_Data).GetValueAsync(15000, 2);
 		
@@ -118,6 +120,59 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 		}
 		
 		m_Snapshots.AddRange(dataSnapshot.Children.Select(Create));
+		
+		foreach (TSnapshot snapshot in m_Snapshots)
+			m_Registry[snapshot.ID] = snapshot;
+	}
+
+	protected async Task<bool> Download(ICollection<string> _Paths)
+	{
+		if (_Paths == null || _Paths.Count == 0)
+			return false;
+		
+		List<Task<DataSnapshot>> tasks = new List<Task<DataSnapshot>>();
+		
+		foreach (string path in _Paths)
+		{
+			if (string.IsNullOrEmpty(path))
+				continue;
+			
+			DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference.Child(path);
+			
+			tasks.Add(reference.GetValueAsync());
+		}
+		
+		try
+		{
+			await Task.WhenAll(tasks);
+		}
+		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
+		catch (FirebaseException) { }
+		
+		TSnapshot[] snapshots = tasks
+			.Where(_Task => _Task.IsCompletedSuccessfully)
+			.Select(_Task => _Task.Result)
+			.Where(_Data => _Data.Exists)
+			.Select(Create)
+			.ToArray();
+		
+		foreach (TSnapshot snapshot in snapshots)
+		{
+			if (snapshot == null)
+				continue;
+			
+			m_Snapshots.Add(snapshot);
+			
+			m_Registry[snapshot.ID] = snapshot;
+		}
+		
+		return true;
+	}
+
+	protected bool Contains(string _ID)
+	{
+		return m_Registry.ContainsKey(_ID);
 	}
 
 	protected virtual Task OnFetch() => Task.CompletedTask;

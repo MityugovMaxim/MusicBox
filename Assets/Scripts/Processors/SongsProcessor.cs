@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
@@ -9,6 +10,7 @@ using Zenject;
 public class SongSnapshot : Snapshot
 {
 	public bool      Active            { get; }
+	public string    Author            { get; }
 	public string    Title             { get; }
 	public string    Artist            { get; }
 	public string    Image             { get; }
@@ -35,7 +37,7 @@ public class SongSnapshot : Snapshot
 	public string    EpidemicSoundURL  { get; }
 	public string    DeezerURL         { get; }
 
-	public SongSnapshot() : base("new_song_id", 0)
+	public SongSnapshot() : base("song", 0)
 	{
 		Active            = false;
 		Title             = string.Empty;
@@ -68,6 +70,7 @@ public class SongSnapshot : Snapshot
 	public SongSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active            = _Data.GetBool("active");
+		Author            = _Data.GetString("author", string.Empty);
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
 		Image             = _Data.GetString("image", $"Thumbnails/Songs/{ID}.jpg");
@@ -100,6 +103,7 @@ public class SongSnapshot : Snapshot
 		base.Serialize(_Data);
 		
 		_Data["active"]             = Active;
+		_Data["author"]             = Author;
 		_Data["title"]              = Title;
 		_Data["artist"]             = Artist;
 		_Data["image"]              = Image;
@@ -125,6 +129,11 @@ public class SongSnapshot : Snapshot
 		_Data["apple_music_url"]    = AppleMusicURL;
 		_Data["epidemic_sound_url"] = EpidemicSoundURL;
 		_Data["deezer_url"]         = DeezerURL;
+	}
+
+	public override string ToString()
+	{
+		return $"{Title} - {Artist}";
 	}
 }
 
@@ -168,6 +177,7 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		int number = Snapshots
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Active)
+			.Where(_Snapshot => _Snapshot.ID == _SongID)
 			.OrderBy(_Snapshot => _Snapshot.Speed)
 			.Select((_Snapshot, _Index) => _Index)
 			.FirstOrDefault();
@@ -175,16 +185,23 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return number;
 	}
 
-	public string GetSkin(string _LevelID)
+	public string GetSkin(string _SongID)
 	{
-		SongSnapshot snapshot = GetSnapshot(_LevelID);
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Skin ?? "default";
 	}
 
-	public string GetArtist(string _LevelID)
+	public string GetAuthor(string _SongID)
 	{
-		SongSnapshot snapshot = GetSnapshot(_LevelID);
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Author ?? string.Empty;
+	}
+
+	public string GetArtist(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Artist ?? string.Empty;
 	}
@@ -350,5 +367,36 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
+	}
+
+	public async Task Reload()
+	{
+		await DownloadSongs();
+		
+		FireSignal();
+	}
+
+	protected override Task OnFetch() => DownloadSongs();
+
+	protected override Task OnUpdate() => DownloadSongs();
+
+	Task DownloadSongs()
+	{
+		if (m_ProfileProcessor.SongIDs == null)
+			return Task.CompletedTask;
+		
+		List<string> paths = new List<string>();
+		
+		foreach (string songID in m_ProfileProcessor.SongIDs)
+		{
+			if (string.IsNullOrEmpty(songID) || Contains(songID))
+				continue;
+			
+			string path = $"maps/{songID}";
+			
+			paths.Add(path);
+		}
+		
+		return Download(paths);
 	}
 }

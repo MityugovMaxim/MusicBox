@@ -92,6 +92,8 @@ public class ProfileProcessor : IInitializable, IDisposable
 	public int  Discs => m_Snapshot?.Discs ?? 0;
 	public int  Level => m_Snapshot?.Level ?? 1;
 
+	public IReadOnlyList<string> SongIDs => m_Snapshot?.SongIDs;
+
 	bool Loaded  { get; set; }
 	bool Locked  { get; set; }
 	bool Pending { get; set; }
