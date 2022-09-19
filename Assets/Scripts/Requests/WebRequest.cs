@@ -12,6 +12,11 @@ public static class WebRequest
 		return LoadAudioClip($"file://{_Path}", AudioType.OGGVORBIS, _Token);
 	}
 
+	public static Task<AudioClip> LoadAudioClipFile(string _Path, AudioType _AudioType, CancellationToken _Token = default)
+	{
+		return LoadAudioClip($"file://{_Path}", _AudioType, _Token);
+	}
+
 	public static Task<AudioClip> LoadAudioClip(string _URL, AudioType _AudioType, CancellationToken _Token = default)
 	{
 		TaskCompletionSource<AudioClip> completionSource = new TaskCompletionSource<AudioClip>();

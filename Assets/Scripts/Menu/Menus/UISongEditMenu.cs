@@ -572,9 +572,10 @@ public class UISongEditMenu : UIMenu
 		
 		try
 		{
-			path = await m_FileManager.SelectFile("mid");
+			path = await m_FileManager.SelectFile(FileManagerUtility.MidiExtensions);
 		}
 		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
 		catch (Exception exception)
 		{
 			await m_MenuProcessor.ExceptionAsync(exception);

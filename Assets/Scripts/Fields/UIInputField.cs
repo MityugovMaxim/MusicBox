@@ -1,8 +1,12 @@
+using System;
+using System.Text;
 using TMPro;
 using UnityEngine;
 
 public abstract class UIInputField<T> : UIField<T>
 {
+	public event Action<T> OnSubmit;
+
 	[SerializeField] TMP_Text       m_Label;
 	[SerializeField] TMP_InputField m_Value;
 	[SerializeField] UIGroup        m_Changed;
@@ -59,9 +63,37 @@ public abstract class UIInputField<T> : UIField<T>
 
 	void Submit(string _Text)
 	{
-		Value = ParseValue(_Text);
+		string text = Filter(_Text);
+		
+		Value = ParseValue(text);
 		
 		Refresh();
+		
+		OnSubmit?.Invoke(Value);
+	}
+
+	string Filter(string _Text)
+	{
+		if (_Text == null)
+			return string.Empty;
+		
+		if (m_Value == null)
+			return _Text;
+		
+		TMP_FontAsset font = m_Value.fontAsset;
+		
+		if (font == null)
+			return _Text;
+		
+		StringBuilder filter = new StringBuilder();
+		
+		foreach (char symbol in _Text)
+		{
+			if (font.HasCharacter(symbol))
+				filter.Append(symbol);
+		}
+		
+		return filter.ToString().Trim();
 	}
 
 	protected abstract string ParseString(T _Value);

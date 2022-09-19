@@ -1,12 +1,66 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class UIAudioWave : Graphic, IDisposable
+public class UIAudioWave : UIImage
 {
+	class Block
+	{
+		public bool Full => m_Count >= m_Data.Length;
+
+		readonly float[] m_Data;
+
+		int m_Count;
+
+		public Block(int _Capacity)
+		{
+			m_Data = new float[_Capacity];
+		}
+
+		public Color Convert() => new Color(GetMax(), GetAverage(), GetRMS(), 1);
+
+		float GetMax()
+		{
+			float value = 0;
+			for (int i = 0; i < m_Count; i++)
+				value = Mathf.Max(value, m_Data[i]);
+			return value;
+		}
+
+		float GetAverage()
+		{
+			float value = 0;
+			for (int i = 0; i < m_Count; i++)
+				value += m_Data[i];
+			return value / m_Count;
+		}
+
+		float GetRMS()
+		{
+			double value = 0;
+			for (int i = 0; i < m_Count; i++)
+				value += m_Data[i] * m_Data[i];
+			return (float)Math.Sqrt(value / m_Count);
+		}
+
+		public void Add(float _Value)
+		{
+			m_Data[m_Count++] = Mathf.Abs(_Value);
+		}
+
+		public void Clear()
+		{
+			m_Count = 0;
+		}
+	}
+
+	public enum Mode
+	{
+		Vertical   = 0,
+		Horizontal = 1,
+	}
+
 	public AudioClip AudioClip
 	{
 		get => m_AudioClip;
@@ -26,31 +80,26 @@ public class UIAudioWave : Graphic, IDisposable
 		get => m_Time;
 		set
 		{
-			if (Math.Abs(m_Time - value) < double.Epsilon)
+			if (Math.Abs(m_Time - value) < double.Epsilon * 2)
 				return;
 			
 			m_Time = value;
 			
-			ProcessTime();
+			SetVerticesDirty();
 		}
 	}
 
-	public int Frequency => m_Frequency;
-
-	public float Duration
+	public double Duration
 	{
 		get => m_Duration;
 		set
 		{
-			if (Mathf.Approximately(m_Duration, value))
+			if (Math.Abs(m_Duration - value) < double.Epsilon * 2)
 				return;
 			
 			m_Duration = value;
 			
-			m_MinTime = m_Duration * (Ratio - 1);
-			m_MaxTime = m_Duration * Ratio;
-			
-			ProcessLimits();
+			SetVerticesDirty();
 		}
 	}
 
@@ -64,287 +113,268 @@ public class UIAudioWave : Graphic, IDisposable
 			
 			m_Ratio = value;
 			
-			ProcessLimits();
+			SetVerticesDirty();
 		}
 	}
 
-	public override Material defaultMaterial
-	{
-		get
-		{
-			if (m_DefaultMaterial == null)
-			{
-				m_DefaultMaterial           = new Material(Shader.Find("UI/AudioWave"));
-				m_DefaultMaterial.hideFlags = HideFlags.HideAndDontSave;
-			}
-			return m_DefaultMaterial;
-		}
-	}
-
-	static Material m_DefaultMaterial;
-
-	static readonly int m_BackgroundColorPropertyID  = Shader.PropertyToID("_BackgroundColor");
-	static readonly int m_MaxColorPropertyID         = Shader.PropertyToID("_MaxColor");
-	static readonly int m_MaxSamplesPropertyID       = Shader.PropertyToID("_MaxSamples");
-	static readonly int m_MaxSamplesLengthPropertyID = Shader.PropertyToID("_MaxSamplesLength");
-	static readonly int m_AvgColorPropertyID         = Shader.PropertyToID("_AvgColor");
-	static readonly int m_AvgSamplesPropertyID       = Shader.PropertyToID("_AvgSamples");
-	static readonly int m_AvgSamplesLengthPropertyID = Shader.PropertyToID("_AvgSamplesLength");
-	static readonly int m_MinTimePropertyID          = Shader.PropertyToID("_MinTime");
-	static readonly int m_MaxTimePropertyID          = Shader.PropertyToID("_MaxTime");
-	static readonly int m_SizePropertyID             = Shader.PropertyToID("_Size");
-
-	[SerializeField] Color     m_BackgroundColor = new Color(0.12f, 0.12f, 0.12f, 1);
-	[SerializeField] Color     m_MaxColor        = new Color(1, 0.5f, 0, 1);
-	[SerializeField] Color     m_AvgColor        = new Color(1, 0.75f, 0, 1);
 	[SerializeField] double    m_Time;
-	[SerializeField] float     m_Duration;
+	[SerializeField] double    m_Duration;
 	[SerializeField] float     m_Ratio;
 	[SerializeField] AudioClip m_AudioClip;
+	[SerializeField] Mode      m_Mode;
 
-	double m_MinTime;
-	double m_MaxTime;
-
-	int                     m_Samples;
-	int                     m_Frequency;
-	double                  m_SamplesPerUnit;
 	CancellationTokenSource m_TokenSource;
 
-	[SerializeField] Texture2D m_MaxTexture;
-	[SerializeField] Texture2D m_AvgTexture;
-
-	readonly UIVertex[] m_Vertices =
+	protected override Material GetMaterial()
 	{
-		new UIVertex(),
-		new UIVertex(),
-		new UIVertex(),
-		new UIVertex(),
-	};
-
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		ProcessLimits();
-		ProcessTime();
-		Render();
+		return CreateMaterial("UI/AudioWave");
 	}
 
-	protected override void OnDestroy()
+	float GetSize()
 	{
-		base.OnDestroy();
+		Rect rect = rectTransform.rect;
 		
-		if (this is IDisposable disposable)
-			disposable.Dispose();
+		return m_Mode == Mode.Horizontal ? rect.width : rect.height;
 	}
 
-	#if UNITY_EDITOR
+	double GetSPP()
+	{
+		if (m_AudioClip == null)
+			return 0;
+		
+		float size = GetSize();
+		
+		if (size < float.Epsilon * 2)
+			return 0;
+		
+		return m_AudioClip.frequency * m_Duration / size;
+	}
+
 	protected override void OnValidate()
 	{
 		base.OnValidate();
 		
-		ProcessTime();
-		ProcessColor();
-	}
-	#endif
-
-	public float GetValue(double _Time)
-	{
-		const int range = 5;
-		
-		int sample = (int)(_Time * m_Frequency / m_SamplesPerUnit);
-		
-		float minValue = float.MaxValue;
-		float maxValue = float.MinValue;
-		for (int i = -range; i <= range; i++)
-		{
-			float value = GetValue(sample + i);
-			minValue = Mathf.Min(minValue, value);
-			maxValue = Mathf.Max(maxValue, value);
-		}
-		return Mathf.Abs(maxValue - minValue);
+		SetAllDirty();
 	}
 
-	public float GetValue(int _Sample)
+	(double min, double max) GetLimits()
 	{
-		int x = _Sample % m_MaxTexture.width;
-		int y = _Sample / m_MaxTexture.height;
+		if (m_AudioClip == null)
+			return (0, 0);
 		
-		if (x < 0 || x >= m_MaxTexture.width)
-			return 0;
+		double spp = GetSPP();
 		
-		if (y < 0 || y >= m_MaxTexture.height)
-			return 0;
+		double minTime = m_Time - m_Duration * (1 - m_Ratio);
+		double maxTime = m_Time + m_Duration * m_Ratio;
 		
-		return m_MaxTexture.GetPixel(x, y).a;
+		double min = m_AudioClip.frequency * minTime / spp;
+		double max = m_AudioClip.frequency * maxTime / spp;
+		
+		return (min, max);
 	}
 
-	void ProcessTime()
+	protected override Vector2 GetUV2()
 	{
-		int minTime = (int)((m_Time + m_MinTime) * m_Frequency / m_SamplesPerUnit);
-		int maxTime = (int)((m_Time + m_MaxTime) * m_Frequency / m_SamplesPerUnit);
+		(double min, double max) = GetLimits();
 		
-		material.SetInt(m_MinTimePropertyID, minTime);
-		material.SetInt(m_MaxTimePropertyID, maxTime);
+		return new Vector2(
+			(float)min,
+			(float)max
+		);
 	}
 
-	void ProcessLimits()
+	protected override Vector2 GetUV3()
 	{
-		m_MinTime = Duration * (Ratio - 1);
-		m_MaxTime = Duration * Ratio;
+		return m_Mode == Mode.Horizontal
+			? new Vector2(1, 0)
+			: new Vector2(0, 1);
 	}
 
-	void ProcessColor()
+	protected override Vector3 GetNormal()
 	{
-		material.SetColor(m_BackgroundColorPropertyID, m_BackgroundColor);
-		material.SetColor(m_MaxColorPropertyID, m_MaxColor);
-		material.SetColor(m_AvgColorPropertyID, m_AvgColor);
+		return Vector3.zero;
+	}
+
+	protected override Vector4 GetTangent()
+	{
+		return Vector4.zero;
+	}
+
+	public float GetMax(double _Time)
+	{
+		return GetValue(_Time).x;
+	}
+
+	public float GetMax(int _Sample)
+	{
+		return GetValue(_Sample).x;
+	}
+
+	public float GetAverage(double _Time)
+	{
+		return GetValue(_Time).y;
+	}
+
+	public float GetAverage(int _Sample)
+	{
+		return GetValue(_Sample).y;
+	}
+
+	public float GetRMS(double _Time)
+	{
+		return GetValue(_Time).z;
+	}
+
+	public float GetRMS(int _Sample)
+	{
+		return GetValue(_Sample).z;
+	}
+
+	public Vector3 GetValue(double _Time)
+	{
+		if (m_AudioClip == null)
+			return Vector3.zero;
+		
+		int sample = (int)(m_AudioClip.frequency * _Time);
+		
+		return GetValue(sample);
+	}
+
+	public Vector3 GetValue(int _Sample)
+	{
+		if (Sprite == null || Sprite.texture == null)
+			return Vector3.zero;
+		
+		int size = Sprite.texture.width;
+		
+		double spp = GetSPP();
+		
+		int sample = (int)(_Sample / spp);
+		
+		int x = sample % size;
+		int y = sample / size;
+		
+		Color color = Sprite.texture.GetPixel(x, y);
+		
+		return new Vector3(color.r, color.g, color.b);
 	}
 
 	public async void Render()
 	{
-		await RenderAsync();
-	}
-
-	public async Task RenderAsync()
-	{
-		if (m_AudioClip == null || Mathf.Approximately(m_Duration, 0))
-			return;
-		
-		Rect rect = GetPixelAdjustedRect();
-		
-		m_Frequency      = m_AudioClip.frequency;
-		m_Samples        = m_AudioClip.samples;
-		m_SamplesPerUnit = m_Frequency / (rect.height / (m_MaxTime - m_MinTime)) * 4;
-		
-		ProcessTime();
-		
-		ProcessColor();
-		
-		await LoadAudioData(m_AudioClip);
-	}
-
-	async Task LoadAudioData(AudioClip _AudioClip)
-	{
 		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
 		
 		m_TokenSource = new CancellationTokenSource();
 		
-		CancellationToken token = m_TokenSource.Token;
-		
-		Task<float[]> maxDataTask = GetAudioData(_AudioClip, _Buffer => _Buffer.Max(Mathf.Abs), token);
-		Task<float[]> avgDataTask = GetAudioData(_AudioClip, _Buffer => _Buffer.Average(Mathf.Abs), token);
-		
-		await Task.WhenAll(maxDataTask, avgDataTask);
-		
-		float[] maxData = maxDataTask.Result;
-		float[] avgData = avgDataTask.Result;
-		
-		if (token.IsCancellationRequested)
-			return;
-		
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
-		
-		int size = Mathf.NextPowerOfTwo(Mathf.CeilToInt(Mathf.Sqrt(Mathf.Max(maxData.Length, avgData.Length))));
-		
-		if (size == 0)
-			return;
-		
-		m_MaxTexture            = new Texture2D(size, size, TextureFormat.ARGB32, false);
-		m_MaxTexture.filterMode = FilterMode.Point;
-		m_AvgTexture            = new Texture2D(size, size, TextureFormat.ARGB32, false);
-		m_AvgTexture.filterMode = FilterMode.Point;
-		for (int x = 0; x < size; x++)
-		for (int y = 0; y < size; y++)
+		try
 		{
-			int index = y * size + x;
-			float maxValue = index >= 0 && index < maxData.Length
-				? maxData[index]
-				: 0;
-			float avgValue = index >= 0 && index < avgData.Length
-				? avgData[index]
-				: 0;
-			m_MaxTexture.SetPixel(x, y, new Color(1, 1, 1, maxValue));
-			m_AvgTexture.SetPixel(x, y, new Color(1, 1, 1, avgValue));
+			await RenderAsync(m_AudioClip, m_AudioClip.length, m_TokenSource.Token);
 		}
-		m_MaxTexture.Apply();
-		m_AvgTexture.Apply();
-		
-		await Task.Yield();
-		
-		material.SetInt(m_SizePropertyID, size);
-		
-		if (maxData.Length > 0)
+		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
+		finally
 		{
-			material.SetTexture(m_MaxSamplesPropertyID, m_MaxTexture);
-			material.SetInt(m_MaxSamplesLengthPropertyID, maxData.Length);
-		}
-		
-		if (avgData.Length > 0)
-		{
-			material.SetTexture(m_AvgSamplesPropertyID, m_AvgTexture);
-			material.SetInt(m_AvgSamplesLengthPropertyID, avgData.Length);
+			m_TokenSource?.Dispose();
+			m_TokenSource = null;
 		}
 	}
 
-	async Task<float[]> GetAudioData(AudioClip _AudioClip, Func<float[], float> _Function, CancellationToken _Token = default)
+	public Task RenderAsync(CancellationToken _Token = default)
 	{
-		if (_AudioClip == null)
-			return Array.Empty<float>();
+		m_Time     = 0;
+		m_Duration = m_AudioClip != null ? m_AudioClip.length : 0;
 		
-		int samples   = (int)(m_Samples / m_SamplesPerUnit);
-		int threshold = samples / 30;
+		return RenderAsync(m_AudioClip, m_AudioClip.length, _Token);
+	}
+
+	public async Task RenderAsync(AudioClip _AudioClip, double _Duration, CancellationToken _Token = default)
+	{
+		_Token.ThrowIfCancellationRequested();
 		
-		float[] buffer = new float[(int)m_SamplesPerUnit];
-		float[] data   = new float[samples];
+		m_AudioClip = _AudioClip;
+		m_Duration  = Math.Clamp(_Duration, 0, m_AudioClip != null ? m_AudioClip.length : 0);
 		
-		for (int i = 0; i < data.Length; i++)
+		double spp = GetSPP();
+		
+		Texture2D texture = await RenderAudioClip(m_AudioClip, spp, _Token);
+		
+		_Token.ThrowIfCancellationRequested();
+		
+		Sprite = texture.CreateSprite();
+		
+		SetAllDirty();
+	}
+
+	static async Task<Texture2D> RenderAudioClip(AudioClip _AudioClip, double _SPP, CancellationToken _Token = default)
+	{
+		_Token.ThrowIfCancellationRequested();
+		
+		if (_AudioClip == null || _SPP < double.Epsilon * 2)
+			return Texture2D.blackTexture;
+		
+		const int chunk = 1024;
+		
+		int count = (int)(_AudioClip.samples / _SPP);
+		
+		Block block = new Block((int)_SPP * _AudioClip.channels);
+		
+		float[] buffer = new float[chunk * _AudioClip.channels];
+		
+		int size = Mathf.NextPowerOfTwo(Mathf.CeilToInt(Mathf.Sqrt(count)));
+		
+		Texture2D texture = new Texture2D(size, size, TextureFormat.RGB24, false);
+		
+		texture.wrapMode   = TextureWrapMode.Clamp;
+		texture.filterMode = FilterMode.Point;
+		
+		for (int x = 0; x < texture.width; x++)
+		for (int y = 0; y < texture.height; y++)
 		{
-			if (_Token.IsCancellationRequested)
-				break;
+			_Token.ThrowIfCancellationRequested();
 			
-			_AudioClip.GetData(buffer, (int)(i * m_SamplesPerUnit));
-			
-			if (i % threshold == 0)
-				await Task.Yield();
-			
-			data[i] = _Function(buffer);
+			texture.SetPixel(x, y, Color.black);
 		}
 		
-		return data;
-	}
-
-	protected override void OnPopulateMesh(VertexHelper _VertexHelper)
-	{
-		_VertexHelper.Clear();
+		int offset = 0;
+		int index  = 0;
+		while (offset < _AudioClip.samples)
+		{
+			_Token.ThrowIfCancellationRequested();
+			
+			_AudioClip.GetData(buffer, offset);
+			
+			foreach (float value in buffer)
+			{
+				_Token.ThrowIfCancellationRequested();
+				
+				block.Add(value);
+				
+				if (!block.Full)
+					continue;
+				
+				int x = index % size;
+				int y = index / size;
+				
+				texture.SetPixel(x, y, block.Convert());
+				
+				block.Clear();
+				
+				index++;
+				
+				if (index % 32 == 0)
+					await Task.Yield();
+			}
+			
+			offset += chunk;
+		}
 		
-		Rect rect = GetPixelAdjustedRect();
-		Color32 color32 = color;
+		texture.SetPixel(0, 0, Color.black);
 		
-		m_Vertices[0].position = new Vector3(rect.xMin, rect.yMin);
-		m_Vertices[1].position = new Vector3(rect.xMin, rect.yMax);
-		m_Vertices[2].position = new Vector3(rect.xMax, rect.yMax);
-		m_Vertices[3].position = new Vector3(rect.xMax, rect.yMin);
+		texture.SetPixel(texture.width - 1, texture.height - 1, Color.black);
 		
-		m_Vertices[0].uv0 = new Vector2(0, 0);
-		m_Vertices[1].uv0 = new Vector2(0, 1);
-		m_Vertices[2].uv0 = new Vector2(1, 1);
-		m_Vertices[3].uv0 = new Vector2(1, 0);
+		_Token.ThrowIfCancellationRequested();
 		
-		m_Vertices[0].color = color32;
-		m_Vertices[1].color = color32;
-		m_Vertices[2].color = color32;
-		m_Vertices[3].color = color32;
+		texture.Apply(false, true);
 		
-		_VertexHelper.AddUIVertexQuad(m_Vertices);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
+		return texture;
 	}
 }

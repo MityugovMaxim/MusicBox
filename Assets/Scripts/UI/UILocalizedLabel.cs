@@ -20,6 +20,20 @@ public class UILocalizedLabel : UIEntity
 		Lower   = 1 << 5,
 	}
 
+	public string Key
+	{
+		get => m_Key;
+		set
+		{
+			if (m_Key == value)
+				return;
+			
+			m_Key = value;
+			
+			ProcessText();
+		}
+	}
+
 	[SerializeField, HideInInspector] string   m_Key;
 	[SerializeField, HideInInspector] Options  m_Options;
 	[SerializeField, HideInInspector] string[] m_Data;
@@ -58,7 +72,13 @@ public class UILocalizedLabel : UIEntity
 
 	void ProcessText()
 	{
-		string text = m_LocalizationProcessor.Get(m_Key);
+		if (string.IsNullOrEmpty(Key))
+		{
+			m_Label.text = string.Empty;
+			return;
+		}
+		
+		string text = m_LocalizationProcessor.Get(Key);
 		
 		text = Format(text);
 		text = Prefix(text);

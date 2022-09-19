@@ -50,14 +50,20 @@ namespace AudioBox.AudioWave
 	{
 		static UIAudioWaveEditor() { }
 
-		SerializedProperty AudioClipProperty => m_AudioClipProperty ?? (m_AudioClipProperty = serializedObject.FindProperty("m_AudioClip")); 
+		SerializedProperty AudioClipProperty => m_AudioClipProperty ?? (m_AudioClipProperty = serializedObject.FindProperty("m_AudioClip"));
+
+		SerializedProperty DurationProperty => m_DurationProperty ?? (m_DurationProperty = serializedObject.FindProperty("m_Duration"));
 
 		SerializedProperty m_AudioClipProperty;
+		SerializedProperty m_DurationProperty;
 
 		static readonly HashSet<string> m_ExcludedFields = new HashSet<string>()
 		{
 			"m_Material",
 			"m_AudioClip",
+			//"m_Duration",
+			"m_OnCullStateChanged",
+			"m_Sprite",
 		};
 
 		public override void OnInspectorGUI()
@@ -72,6 +78,8 @@ namespace AudioBox.AudioWave
 				EditorGUILayout.PropertyField(property, true);
 			
 			DrawAudioClip();
+			
+			//DrawDuration();
 			
 			while (property.NextVisible(false))
 			{
@@ -105,10 +113,37 @@ namespace AudioBox.AudioWave
 			EditorGUILayout.EndHorizontal();
 		}
 
+		void DrawDuration()
+		{
+			EditorGUI.BeginChangeCheck();
+			
+			EditorGUILayout.PropertyField(DurationProperty);
+			
+			if (EditorGUI.EndChangeCheck())
+			{
+				//Limit();
+				//Render();
+				serializedObject.ApplyModifiedProperties();
+			}
+		}
+
 		void Render()
 		{
 			foreach (UIAudioWave audioWave in targets.OfType<UIAudioWave>())
 				audioWave.Render();
+		}
+
+		void Limit()
+		{
+			double duration = DurationProperty.doubleValue;
+			
+			AudioClip audioClip = AudioClipProperty.objectReferenceValue as AudioClip;
+			
+			double limit = audioClip != null ? audioClip.length : 0;
+			
+			DurationProperty.doubleValue = Math.Clamp(duration, 0, limit);
+			
+			//DurationProperty.serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

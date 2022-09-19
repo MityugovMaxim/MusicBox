@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(CanvasRenderer))]
 public abstract class UIImage : MaskableGraphic
 {
 	static readonly int m_BlendSrcPropertyID = Shader.PropertyToID("_BlendSrc");

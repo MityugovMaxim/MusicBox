@@ -16,29 +16,28 @@ public class iOSFileManager : IFileManager
 	public delegate void SelectCanceled();
 
 	[DllImport("__Internal")]
-	static extern void SelectFile(string _Extension, SelectSuccess _Success, SelectFailed _Failed, SelectCanceled _Canceled);
+	static extern void SelectFile(string[] _Extensions, int _Count, SelectSuccess _Success, SelectFailed _Failed, SelectCanceled _Canceled);
 
 	static Action<string> m_SelectSuccess;
 	static Action         m_SelectCanceled;
 	static Action<string> m_SelectFailed;
 
-	public Task<string> SelectFile(string _Extension, CancellationToken _Token = default)
+	public Task<string> SelectFile(string[] _Extensions, CancellationToken _Token = default)
 	{
+		_Token.ThrowIfCancellationRequested();
+		
+		if (_Extensions == null || _Extensions.Length == 0)
+			return Task.FromCanceled<string>(CancellationToken.None);
+		
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
-		if (_Token.IsCancellationRequested)
-		{
-			completionSource.SetCanceled();
-			return completionSource.Task;
-		}
-		
-		_Token.Register(() => completionSource.SetCanceled());
+		_Token.Register(() => completionSource.TrySetCanceled());
 		
 		m_SelectSuccess  = _URL => completionSource.SetResult(_URL);
 		m_SelectFailed   = _Error => completionSource.SetException(new Exception(_Error));
 		m_SelectCanceled = () => completionSource.SetCanceled();
 		
-		SelectFile(_Extension, InvokeSelectSuccess, InvokeSelectFailed, InvokeSelectCanceled);
+		SelectFile(_Extensions, _Extensions.Length, InvokeSelectSuccess, InvokeSelectFailed, InvokeSelectCanceled);
 		
 		return completionSource.Task;
 	}

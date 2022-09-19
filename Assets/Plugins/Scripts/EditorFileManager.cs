@@ -7,12 +7,15 @@ using UnityEngine.Scripting;
 [Preserve]
 public class EditorFileManager : IFileManager
 {
-	public Task<string> SelectFile(string _Extension, CancellationToken _Token = default)
+	public Task<string> SelectFile(string[] _Extensions, CancellationToken _Token = default)
 	{
-		if (_Token.IsCancellationRequested)
-			return Task.FromResult<string>(null);
+		_Token.ThrowIfCancellationRequested();
 		
-		string path = UnityEditor.EditorUtility.OpenFilePanel("Select file", Application.dataPath, _Extension);
+		string path = UnityEditor.EditorUtility.OpenFilePanelWithFilters(
+			"Select file",
+			Application.dataPath,
+			new string[] { "AllFiles", string.Join(',', _Extensions) }
+		);
 		
 		return Task.FromResult(path);
 	}

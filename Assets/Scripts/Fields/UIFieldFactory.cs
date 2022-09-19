@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using ModestTree;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -18,6 +21,12 @@ public class UIFieldFactory : IFactory<object, PropertyInfo, RectTransform, UIFi
 		{ typeof(bool), "boolean" },
 		{ typeof(Enum), "enum" },
 		{ typeof(List<string>), "string_list" },
+	};
+
+	static readonly Dictionary<Type, string> m_Attributes = new Dictionary<Type, string>()
+	{
+		{ typeof(HideInInspector), "hidden" },
+		{ typeof(RangeAttribute), "slider" },
 	};
 
 	[Inject] DiContainer m_Container;
@@ -46,5 +55,32 @@ public class UIFieldFactory : IFactory<object, PropertyInfo, RectTransform, UIFi
 		field.Setup(_Target, _PropertyInfo);
 		
 		return field;
+	}
+
+	UIField Instantiate(string _Name, PropertyInfo _PropertyInfo)
+	{
+		if (_PropertyInfo == null)
+			return null;
+		
+		HideInInspector hideAttribute = _PropertyInfo.GetCustomAttribute<HideInInspector>();
+		
+		if (hideAttribute != null)
+			return null;
+		
+		RangeAttribute rangeAttribute = _PropertyInfo.GetCustomAttribute<RangeAttribute>();
+		
+		if (rangeAttribute != null)
+		{
+			UIField sliderField = Resources.Load<UIField>($"Fields/{_Name}_slider");
+			
+			if (sliderField != null)
+			{
+				sliderField.SetAttribute(rangeAttribute);
+				
+				return sliderField;
+			}
+		}
+		
+		return Resources.Load<UIField>($"Fields/{_Name}_field");
 	}
 }

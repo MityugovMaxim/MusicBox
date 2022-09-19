@@ -66,7 +66,7 @@ public class UIPlayer : ASFPlayer
 		
 		while (source <= target)
 		{
-			float value = m_Background.GetValue(source);
+			float value = m_Background.GetMax(source);
 			
 			source += step;
 			

@@ -239,6 +239,8 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateSocial();
 		
+		CreateAdmin(new AdminElementEntity("Create song", m_AdminPool, CreateSong));
+		
 		int group = m_ConfigProcessor.SongLibraryGroupSize;
 		
 		int position = 0;
@@ -254,6 +256,11 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		CreateCoins();
 		
 		CreateList(songIDs, position);
+	}
+
+	async void CreateSong()
+	{
+		await m_MenuProcessor.Show(MenuType.SongCreateMenu);
 	}
 
 	void CreateLevelLocked()

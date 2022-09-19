@@ -25,6 +25,18 @@ public abstract class UIField : UIEntity
 		Refresh();
 	}
 
+	public virtual void SetAttribute<TAttribute>(TAttribute _Attribute) where TAttribute : Attribute { }
+
+	public void Setup(object _Target, string _Property)
+	{
+		if (_Target == null)
+			return;
+		
+		PropertyInfo propertyInfo = _Target.GetType().GetProperty(_Property);
+		
+		Setup(_Target, propertyInfo);
+	}
+
 	public abstract void Restore();
 
 	protected T GetValue<T>()

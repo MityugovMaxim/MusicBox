@@ -23,4 +23,25 @@ public static class AudioSourceExtension
 			_Token
 		);
 	}
+
+	public static Task PlayAsync(this AudioSource _AudioSource, CancellationToken _Token = default)
+	{
+		return _AudioSource.PlayAsync(0, _Token);
+	}
+
+	public static Task PlayAsync(this AudioSource _AudioSource, float _Time, CancellationToken _Token = default)
+	{
+		_Token.ThrowIfCancellationRequested();
+		
+		if (_AudioSource == null || _AudioSource.clip == null)
+			return Task.CompletedTask;
+		
+		_Token.Register(_AudioSource.Stop);
+		
+		_AudioSource.time = _Time;
+		
+		_AudioSource.Play();
+		
+		return UnityTask.While(() => _AudioSource.isPlaying, _Token);
+	}
 }
