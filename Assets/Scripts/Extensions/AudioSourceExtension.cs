@@ -31,17 +31,26 @@ public static class AudioSourceExtension
 
 	public static Task PlayAsync(this AudioSource _AudioSource, float _Time, CancellationToken _Token = default)
 	{
+		return _AudioSource.PlayAsync(_Time, float.MaxValue, _Token);
+	}
+
+	public static Task PlayAsync(this AudioSource _AudioSource, float _Time, float _Length, CancellationToken _Token = default)
+	{
 		_Token.ThrowIfCancellationRequested();
 		
 		if (_AudioSource == null || _AudioSource.clip == null)
 			return Task.CompletedTask;
 		
-		_Token.Register(_AudioSource.Stop);
+		float source = _Time;
+		float target = _Time + _Length;
 		
-		_AudioSource.time = _Time;
+		source = Mathf.Clamp(source, 0, _AudioSource.clip.length);
+		target = Mathf.Clamp(target, 0, _AudioSource.clip.length);
+		
+		_AudioSource.time = source;
 		
 		_AudioSource.Play();
 		
-		return UnityTask.While(() => _AudioSource.isPlaying, _Token);
+		return UnityTask.While(() => _AudioSource.isPlaying && _AudioSource.time <= target, _Token);
 	}
 }

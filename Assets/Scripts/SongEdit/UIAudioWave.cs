@@ -267,7 +267,7 @@ public class UIAudioWave : UIImage
 		
 		try
 		{
-			await RenderAsync(m_AudioClip, m_AudioClip.length, m_TokenSource.Token);
+			await RenderAsync(m_TokenSource.Token);
 		}
 		catch (TaskCanceledException) { }
 		catch (OperationCanceledException) { }
@@ -280,10 +280,9 @@ public class UIAudioWave : UIImage
 
 	public Task RenderAsync(CancellationToken _Token = default)
 	{
-		m_Time     = 0;
-		m_Duration = m_AudioClip != null ? m_AudioClip.length : 0;
+		m_Time = 0;
 		
-		return RenderAsync(m_AudioClip, m_AudioClip.length, _Token);
+		return RenderAsync(m_AudioClip, m_Duration, _Token);
 	}
 
 	public async Task RenderAsync(AudioClip _AudioClip, double _Duration, CancellationToken _Token = default)
@@ -291,7 +290,7 @@ public class UIAudioWave : UIImage
 		_Token.ThrowIfCancellationRequested();
 		
 		m_AudioClip = _AudioClip;
-		m_Duration  = Math.Clamp(_Duration, 0, m_AudioClip != null ? m_AudioClip.length : 0);
+		m_Duration  = _Duration;
 		
 		double spp = GetSPP();
 		

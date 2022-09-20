@@ -32,6 +32,15 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		m_StopButton.Subscribe(Stop);
 	}
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_SelectButton.Unsubscribe(Select);
+		m_PlayButton.Unsubscribe(Play);
+		m_StopButton.Unsubscribe(Stop);
+	}
+
 	public byte[] CreateMusic()
 	{
 		return m_Music != null ? m_Music.EncodeToOGG(0.85f) : null;

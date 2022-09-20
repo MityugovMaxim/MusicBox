@@ -1662,14 +1662,14 @@ MonoBehaviour:
   m_Interactable: 1
   m_ShowDuration: 0.2
   m_HideDuration: 0.2
-  m_Scroll: {fileID: 4808452193324124724}
   m_Container: {fileID: 4808452193685735875}
   m_Content: {fileID: 4808452194696948391}
+  m_SelectButton: {fileID: 8653971671899155877}
+  m_PlayButton: {fileID: 2343229269178472873}
+  m_StopButton: {fileID: 2343229269178472873}
   m_AudioSource: {fileID: 4808452193889332032}
   m_ControlGroup: {fileID: 4808452192797183230}
   m_Wave: {fileID: 4808452194696948390}
-  m_PlayButton: {fileID: 2343229269178472873}
-  m_StopButton: {fileID: 2343229269178472873}
 --- !u!225 &4808452193686216834
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5318,6 +5318,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 13eff084ac587431784947b6587d4d11, type: 3}
+--- !u!114 &8653971671899155877 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4224966517920917077, guid: 13eff084ac587431784947b6587d4d11,
+    type: 3}
+  m_PrefabInstance: {fileID: 4808452194008288240}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &8653971671899155878 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4224966517920917078, guid: 13eff084ac587431784947b6587d4d11,
