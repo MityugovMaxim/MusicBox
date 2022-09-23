@@ -21,8 +21,9 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 	[SerializeField] UIGroup       m_ControlGroup;
 	[SerializeField] UIAudioWave   m_Wave;
 
-	[Inject] IFileManager  m_FileManager;
-	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] IFileManager     m_FileManager;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	AudioClip m_Preview;
 
@@ -46,14 +47,17 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		m_StopButton.Unsubscribe(Stop);
 	}
 
-	public byte[] CreatePreview()
+	public Task<string> CreatePreview()
 	{
 		if (m_Preview == null)
-			return null;
+			return Task.FromResult<string>(null);
 		
 		(float min, float max) = GetTime();
 		
 		float duration = Mathf.Abs(max - min);
+		
+		if (duration < float.Epsilon)
+			return Task.FromResult<string>(null);
 		
 		float fade = Mathf.Min(FADE, duration * 0.5f);
 		
@@ -61,12 +65,12 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		
 		preview.FadeInOut(fade, EaseFunction.Linear);
 		
-		return preview.EncodeToOGG(0.85f);
+		return preview.CacheOGG(0.85f);
 	}
 
 	protected override void OnShowStarted()
 	{
-		base.OnShowStarted();
+		Stop();
 		
 		if (m_Preview != null)
 			m_ControlGroup.Show(true);
@@ -74,8 +78,15 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 			m_ControlGroup.Hide(true);
 	}
 
+	protected override void OnHideStarted()
+	{
+		Stop();
+	}
+
 	async void Select()
 	{
+		Stop();
+		
 		string path = null;
 		
 		try
@@ -118,6 +129,8 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		
 		m_StopButton.gameObject.SetActive(true);
 		
+		m_AmbientProcessor.Pause();
+		
 		try
 		{
 			(float min, float max) = GetTime();
@@ -154,13 +167,21 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		m_StopButton.gameObject.SetActive(false);
 		
 		m_PlayButton.gameObject.SetActive(true);
+		
+		m_AmbientProcessor.Resume();
+	}
+
+	void Cancel()
+	{
+		m_TokenSource?.Cancel();
+		m_TokenSource?.Dispose();
+		m_TokenSource = null;
 	}
 
 	(float min, float max) GetTime()
 	{
-		Rect source = m_Content.GetWorldRect();
-		
-		Rect target = m_Container.GetWorldRect();
+		Rect source = m_Container.GetWorldRect();
+		Rect target = m_Content.GetWorldRect();
 		
 		float min = MathUtility.Remap(source.xMin, target.xMin, target.xMax, 0, m_Preview.length);
 		float max = MathUtility.Remap(source.xMax, target.xMin, target.xMax, 0, m_Preview.length);
@@ -183,12 +204,5 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		m_Content.sizeDelta = size;
 		
 		m_Content.ForceUpdateRectTransforms();
-	}
-
-	void Cancel()
-	{
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
 	}
 }

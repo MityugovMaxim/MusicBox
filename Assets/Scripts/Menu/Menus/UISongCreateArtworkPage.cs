@@ -36,7 +36,7 @@ public class UISongCreateArtworkPage : UISongCreateMenuPage
 		if (m_Artwork == null)
 			return null;
 		
-		Texture2D artwork = m_Artwork.SetSize(512);
+		Texture2D artwork = m_Artwork.SetSize(512, true);
 		
 		return artwork.EncodeToJPG();
 	}
@@ -66,7 +66,7 @@ public class UISongCreateArtworkPage : UISongCreateMenuPage
 		if (m_Artwork == null)
 			return;
 		
-		m_Artwork = m_Artwork.SetSize(512, 512);
+		m_Artwork = m_Artwork.SetSize(512);
 		
 		m_Image.texture = m_Artwork;
 		

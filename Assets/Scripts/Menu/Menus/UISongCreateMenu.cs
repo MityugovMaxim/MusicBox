@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Firebase.Storage;
 using UnityEngine;
@@ -141,7 +142,7 @@ public class UISongCreateMenu : UIMenu
 			await m_MenuProcessor.ExceptionAsync(exception);
 		}
 		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
 	void Cancel()
@@ -158,6 +159,10 @@ public class UISongCreateMenu : UIMenu
 			throw new UnityException("Create song failed");
 		}
 		
+		UIProcessingMenu processingMenu = m_MenuProcessor.GetMenu<UIProcessingMenu>();
+		
+		processingMenu.Text = "Creating song...";
+		
 		SongCreateRequest request = new SongCreateRequest(
 			m_LabelsPage.Title,
 			m_LabelsPage.Artist,
@@ -171,18 +176,31 @@ public class UISongCreateMenu : UIMenu
 
 	async Task UploadMusic()
 	{
-		if (string.IsNullOrEmpty(m_SongID) || string.IsNullOrEmpty(m_UserID))
+		if (string.IsNullOrEmpty(m_SongID))
 		{
 			Select(m_LabelsPage);
 			
-			throw new UnityException("Upload music failed");
+			throw new UnityException("Upload music failed. Song ID is invalid.");
+		}
+		
+		if (string.IsNullOrEmpty(m_UserID))
+		{
+			Select(m_LabelsPage);
+			
+			throw new UnityException("Upload music failed. User ID is invalid.");
 		}
 		
 		string path = $"Maps/{m_UserID}/Music/{m_SongID}.ogg";
 		
-		byte[] music = m_MusicPage.CreateMusic();
+		UIProcessingMenu processingMenu = m_MenuProcessor.GetMenu<UIProcessingMenu>();
 		
-		bool success = await UploadFile(path, music);
+		processingMenu.Text = "Compressing music...";
+		
+		string file = await m_MusicPage.CreateMusic(_Progress => processingMenu.SetProgress("Compressing music...", _Progress));
+		
+		processingMenu.Text = "Uploading music...";
+		
+		bool success = await UploadFile(file, path, "audio/ogg", _Progress => processingMenu.SetProgress("Uploading music...", _Progress));
 		
 		if (success)
 			return;
@@ -203,9 +221,15 @@ public class UISongCreateMenu : UIMenu
 		
 		string path = $"Maps/{m_UserID}/Preview/{m_SongID}.ogg";
 		
-		byte[] preview = m_PreviewPage.CreatePreview();
+		UIProcessingMenu processingMenu = m_MenuProcessor.GetMenu<UIProcessingMenu>();
 		
-		bool success = await UploadFile(path, preview);
+		processingMenu.Text = "Compressing preview...";
+		
+		string file = await m_PreviewPage.CreatePreview();
+		
+		processingMenu.Text = "Uploading preview...";
+		
+		bool success = await UploadFile(file, path, "audio/ogg", _Progress => processingMenu.SetProgress("Uploading preview...", _Progress));
 		
 		if (success)
 			return;
@@ -226,9 +250,15 @@ public class UISongCreateMenu : UIMenu
 		
 		string path = $"Maps/{m_UserID}/Artwork/{m_SongID}.jpg";
 		
+		UIProcessingMenu processingMenu = m_MenuProcessor.GetMenu<UIProcessingMenu>();
+		
+		processingMenu.Text = "Compressing artwork...";
+		
 		byte[] artwork = m_ArtworkPage.CreateArtwork();
 		
-		bool success = await UploadFile(path, artwork);
+		processingMenu.Text = "Uploading artwork...";
+		
+		bool success = await UploadFile(path, artwork, "image/jpeg");
 		
 		if (success)
 			return;
@@ -238,7 +268,24 @@ public class UISongCreateMenu : UIMenu
 		throw new UnityException("Upload artwork failed");
 	}
 
-	static async Task<bool> UploadFile(string _Path, byte[] _Data)
+	static async Task<bool> UploadFile(string _File, string _Path, string _ContentType, Action<float> _Progress)
+	{
+		if (string.IsNullOrEmpty(_File) || string.IsNullOrEmpty(_Path))
+			return false;
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_Path);
+		
+		MetadataChange metadata = new MetadataChange();
+		metadata.ContentType = _ContentType;
+		
+		StorageUpload process = new StorageUpload(_Progress);
+		
+		await reference.PutFileAsync(_File, metadata, process);
+		
+		return true;
+	}
+
+	static async Task<bool> UploadFile(string _Path, byte[] _Data, string _ContentType)
 	{
 		if (string.IsNullOrEmpty(_Path))
 			return false;
@@ -248,14 +295,10 @@ public class UISongCreateMenu : UIMenu
 		
 		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_Path);
 		
-		try
-		{
-			await reference.PutBytesAsync(_Data);
-		}
-		catch (Exception)
-		{
-			return false;
-		}
+		MetadataChange metadata = new MetadataChange();
+		metadata.ContentType = _ContentType;
+		
+		await reference.PutBytesAsync(_Data, metadata);
 		
 		return true;
 	}

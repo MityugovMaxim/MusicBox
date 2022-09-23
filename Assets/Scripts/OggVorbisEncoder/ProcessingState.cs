@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using OggVorbisEncoder.Lookups;
 using OggVorbisEncoder.Setup;
 
@@ -105,6 +106,11 @@ public class ProcessingState
         // clumsy, but simple.  It only runs once, so simple is good. 
         if (!m_PreExtrapolated && (m_PCMCurrent - m_CenterWindow > ci.BlockSizes[1]))
             PreExtrapolate();
+    }
+
+    public Task WriteDataAsync(float[] _Data, int _Length)
+    {
+        return Task.Run(() => WriteData(_Data, _Length));
     }
 
     public void WriteEndOfStream()

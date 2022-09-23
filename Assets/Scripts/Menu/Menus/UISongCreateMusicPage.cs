@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Windows;
 using Zenject;
 
 public class UISongCreateMusicPage : UISongCreateMenuPage
@@ -16,8 +18,9 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 	[SerializeField] Button      m_PlayButton;
 	[SerializeField] Button      m_StopButton;
 
-	[Inject] IFileManager  m_FileManager;
-	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] IFileManager     m_FileManager;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	AudioClip m_Music;
 
@@ -41,14 +44,17 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		m_StopButton.Unsubscribe(Stop);
 	}
 
-	public byte[] CreateMusic()
+	public Task<string> CreateMusic(Action<float> _Progress = null)
 	{
-		return m_Music != null ? m_Music.EncodeToOGG(0.85f) : null;
+		if (m_Music == null)
+			return Task.FromResult<string>(null);
+		
+		return m_Music.CacheOGG(0.85f, null, _Progress);
 	}
 
 	async void Select()
 	{
-		Cancel();
+		Stop();
 		
 		string path = null;
 		
@@ -92,6 +98,8 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		
 		m_StopButton.gameObject.SetActive(true);
 		
+		m_AmbientProcessor.Pause();
+		
 		try
 		{
 			await m_AudioSource.PlayAsync(m_TokenSource.Token);
@@ -106,6 +114,8 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		}
 		finally
 		{
+			m_AmbientProcessor.Resume();
+			
 			m_PlayButton.gameObject.SetActive(true);
 			
 			m_StopButton.gameObject.SetActive(false);
@@ -131,5 +141,20 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
+	}
+
+	protected override void OnShowStarted()
+	{
+		Stop();
+		
+		if (m_Music != null)
+			m_ControlGroup.Show(true);
+		else
+			m_ControlGroup.Hide(true);
+	}
+
+	protected override void OnHideStarted()
+	{
+		Stop();
 	}
 }

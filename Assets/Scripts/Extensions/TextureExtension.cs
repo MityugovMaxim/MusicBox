@@ -7,12 +7,12 @@ public static class TextureExtension
 		return BlurUtility.Blur(_Texture, _Scale, _Iterations);
 	}
 
-	public static Texture2D SetSize(this Texture2D _Texture, int _Size)
+	public static Texture2D SetSize(this Texture2D _Texture, int _Size, bool _Readable = false)
 	{
 		return _Texture.SetSize(_Size, _Size);
 	}
 
-	public static Texture2D SetSize(this Texture2D _Texture, int _Width, int _Height)
+	public static Texture2D SetSize(this Texture2D _Texture, int _Width, int _Height, bool _Readable = false)
 	{
 		if (_Texture.width == _Width && _Texture.height == _Height)
 			return _Texture;
@@ -31,7 +31,7 @@ public static class TextureExtension
 		
 		RenderTexture.active = active;
 		
-		texture.Apply(false, true);
+		texture.Apply(false, !_Readable);
 		
 		RenderTexture.ReleaseTemporary(buffer);
 		

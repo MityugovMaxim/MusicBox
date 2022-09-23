@@ -11,13 +11,13 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Object = UnityEngine.Object;
 
-public abstract class StorageProgress : IProgress<DownloadState>
+public class StorageDownload : IProgress<DownloadState>
 {
 	Action<float> m_Progress;
 
 	float m_Value;
 
-	public StorageProgress(Action<float> _Progress)
+	public StorageDownload(Action<float> _Progress)
 	{
 		m_Progress = _Progress;
 		m_Value    = 0;
@@ -52,7 +52,47 @@ public abstract class StorageProgress : IProgress<DownloadState>
 	}
 }
 
-public class StorageProgress<T> : StorageProgress
+public class StorageUpload : IProgress<UploadState>
+{
+	Action<float> m_Progress;
+	float         m_Value;
+
+	public StorageUpload(Action<float> _Progress)
+	{
+		m_Progress = _Progress;
+		m_Value    = 0;
+	}
+
+	public void Subscribe(Action<float> _Action)
+	{
+		if (_Action == null)
+			return;
+		
+		_Action(m_Value);
+		
+		m_Progress += _Action;
+	}
+
+	public void Unsubscribe(Action<float> _Action)
+	{
+		if (_Action == null)
+			return;
+		
+		_Action(m_Value);
+		
+		m_Progress -= _Action;
+	}
+
+	void IProgress<UploadState>.Report(UploadState _State)
+	{
+		double state = _State.BytesTransferred;
+		double count = _State.TotalByteCount;
+		m_Value = (float)(state / count);
+		m_Progress?.Invoke(m_Value);
+	}
+}
+
+public class StorageProgress<T> : StorageDownload
 {
 	public Task<T> Task { get; }
 
@@ -101,17 +141,17 @@ public class StorageProcessor
 	{
 		if (m_Textures.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_Textures[_RemotePath];
+			StorageDownload progress = m_Textures[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
 		else if (m_AudioClips.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_AudioClips[_RemotePath];
+			StorageDownload progress = m_AudioClips[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
 		else if (m_Texts.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_Texts[_RemotePath];
+			StorageDownload progress = m_Texts[_RemotePath];
 			progress?.Subscribe(_Progress);
 		}
 	}
@@ -120,17 +160,17 @@ public class StorageProcessor
 	{
 		if (m_Textures.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_Textures[_RemotePath];
+			StorageDownload progress = m_Textures[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
 		else if (m_AudioClips.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_AudioClips[_RemotePath];
+			StorageDownload progress = m_AudioClips[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
 		else if (m_Texts.ContainsKey(_RemotePath))
 		{
-			StorageProgress progress = m_Texts[_RemotePath];
+			StorageDownload progress = m_Texts[_RemotePath];
 			progress?.Unsubscribe(_Progress);
 		}
 	}
@@ -263,7 +303,7 @@ public class StorageProcessor
 		return completionSource.Task;
 	}
 
-	static async Task<byte[]> LoadDataAsync(string _RemotePath, bool _Force, StorageProgress _Progress, CancellationToken _Token = default)
+	static async Task<byte[]> LoadDataAsync(string _RemotePath, bool _Force, StorageDownload _Progress, CancellationToken _Token = default)
 	{
 		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
@@ -312,7 +352,7 @@ public class StorageProcessor
 		return null;
 	}
 
-	static async Task<T> LoadAssetAsync<T>(string _RemotePath, bool _Update, Func<string, CancellationToken, Task<T>> _Request, StorageProgress _Progress, CancellationToken _Token = default) where T : Object
+	static async Task<T> LoadAssetAsync<T>(string _RemotePath, bool _Update, Func<string, CancellationToken, Task<T>> _Request, StorageDownload _Progress, CancellationToken _Token = default) where T : Object
 	{
 		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
@@ -413,7 +453,7 @@ public class StorageProcessor
 		return completionSource.Task;
 	}
 
-	static async Task LoadFileAsync(string _RemotePath, string _LocalPath, StorageProgress _Progress, CancellationToken _Token = default)
+	static async Task LoadFileAsync(string _RemotePath, string _LocalPath, StorageDownload _Progress, CancellationToken _Token = default)
 	{
 		if (string.IsNullOrEmpty(_RemotePath))
 		{
