@@ -42,6 +42,7 @@ public class MenuPrebuild
 		{ typeof(UISnapshotMenu), MenuType.SnapshotMenu },
 		{ typeof(UISnapshotsMenu), MenuType.SnapshotsMenu },
 		{ typeof(UISocialMenu), MenuType.SocialMenu },
+		{ typeof(UISongCreateMenu), MenuType.SongCreateMenu },
 		{ typeof(UISongEditMenu), MenuType.SongEditMenu },
 		{ typeof(UISongMenu), MenuType.SongMenu },
 		{ typeof(UISplashMenu), MenuType.SplashMenu },

@@ -99,7 +99,7 @@ public class UISongDownload : UIGroup
 			m_DownloadGroup.Hide();
 			m_CompleteGroup.Hide();
 			
-			await m_StorageProcessor.LoadAudioClipAsync(musicPath, ProcessMusicProgress);
+			await m_StorageProcessor.LoadMusicAsync(musicPath, ProcessMusicProgress);
 			
 			await m_StorageProcessor.LoadJson(asfPath, true, ProcessASFProgress);
 			

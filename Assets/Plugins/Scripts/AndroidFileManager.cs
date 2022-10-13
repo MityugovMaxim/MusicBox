@@ -64,7 +64,7 @@ public class AndroidFileManager : IFileManager
 	Action         m_Cancel;
 	Action<string> m_Fail;
 
-	Task<string> IFileManager.SelectFile(string _Extension, CancellationToken _Token)
+	Task<string> IFileManager.SelectFile(string[] _Extensions, CancellationToken _Token)
 	{
 		TaskCompletionSource<string> completionSource = new TaskCompletionSource<string>();
 		
@@ -84,7 +84,7 @@ public class AndroidFileManager : IFileManager
 		{
 			controller.CallStatic(
 				"SelectFile",
-				_Extension,
+				_Extensions,
 				new SuccessHandler(m_Success),
 				new CancelHandler(m_Cancel),
 				new FailHandler(m_Fail)

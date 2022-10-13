@@ -150,12 +150,14 @@ public class UIAudioWave : UIImage
 		return m_AudioClip.frequency * m_Duration / size;
 	}
 
+	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
 		base.OnValidate();
 		
 		SetAllDirty();
 	}
+	#endif
 
 	(double min, double max) GetLimits()
 	{

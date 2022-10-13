@@ -456,7 +456,7 @@ public class SongController
 		m_Loading  = 0;
 		m_PingTime = Time.realtimeSinceStartup;
 		
-		Task<AudioClip> task = m_StorageProcessor.LoadAudioClipAsync(path, ProcessMusicProgress);
+		Task<AudioClip> task = m_StorageProcessor.LoadMusicAsync(path, ProcessMusicProgress);
 		
 		await Task.WhenAny(
 			task,

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Compression;
+using AudioBox.Logging;
 using Firebase.Storage;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -106,6 +107,8 @@ public class StorageProgress<T> : StorageDownload
 [SuppressMessage("ReSharper", "UnusedMember.Local")]
 public class StorageProcessor
 {
+	static Type Tag => typeof(StorageProcessor);
+
 	static readonly Dictionary<string, StorageProgress<Texture2D>> m_Textures   = new Dictionary<string, StorageProgress<Texture2D>>();
 	static readonly Dictionary<string, StorageProgress<AudioClip>> m_AudioClips = new Dictionary<string, StorageProgress<AudioClip>>();
 	static readonly Dictionary<string, StorageProgress<string>>    m_Texts      = new Dictionary<string, StorageProgress<string>>();
@@ -227,6 +230,11 @@ public class StorageProcessor
 	public Task<AudioClip> LoadAudioClipAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
 	{
 		return LoadAsync(_RemotePath, false, _Progress, m_AudioClips, WebRequest.LoadAudioClipFile, _Token);
+	}
+
+	public Task<AudioClip> LoadMusicAsync(string _RemotePath, Action<float> _Progress, CancellationToken _Token = default)
+	{
+		return LoadEncryptedAsync(_RemotePath, _Progress,m_AudioClips, WebRequest.LoadAudioClipFile, _Token);
 	}
 
 	public Task<string> LoadJson(string _RemotePath, bool _Force, CancellationToken _Token = default)
@@ -352,7 +360,61 @@ public class StorageProcessor
 		return null;
 	}
 
-	static async Task<T> LoadAssetAsync<T>(string _RemotePath, bool _Update, Func<string, CancellationToken, Task<T>> _Request, StorageDownload _Progress, CancellationToken _Token = default) where T : Object
+	static async Task<T> LoadEncryptedAssetAsync<T>(
+		string                                   _RemotePath,
+		Func<string, CancellationToken, Task<T>> _Request,
+		StorageDownload                          _Progress,
+		CancellationToken                        _Token = default
+	) where T : Object
+	{
+		string path = Path.Combine(Application.persistentDataPath, _RemotePath);
+		
+		if (string.IsNullOrEmpty(path))
+			return null;
+		
+		string directory = Path.GetDirectoryName(path);
+		
+		if (!Directory.Exists(directory) && !string.IsNullOrEmpty(directory))
+			Directory.CreateDirectory(directory);
+		
+		StorageReference reference = FirebaseStorage.DefaultInstance.RootReference.Child(_RemotePath);
+		
+		StorageMetadata metadata = await reference.GetMetadataAsync();
+		
+		if (metadata == null)
+		{
+			Log.Error(Tag, "Load encrypted asset failed. File not found at remote path '{0}'.", _RemotePath);
+			return null;
+		}
+		
+		string key = $"METADATA_{CRC32.Get(_RemotePath)}";
+		
+		try
+		{
+			if (File.Exists(path) && PlayerPrefs.GetString(key) == metadata.Md5Hash)
+				return await FileEncryption.Load(path, _Request, _Token);
+		}
+		catch (Exception)
+		{
+			Log.Warning(Tag, "Load encrypted asset failed. Trying to download it...");
+		}
+		
+		byte[] data = await reference.GetBytesAsync(1024 * 1024 * 20, _Progress, _Token);
+		
+		await FileEncryption.Save(path, data, _Token);
+		
+		PlayerPrefs.SetString(key, metadata.Md5Hash);
+		
+		return await FileEncryption.Load(path, _Request, _Token);
+	}
+
+	static async Task<T> LoadAssetAsync<T>(
+		string                                   _RemotePath,
+		bool                                     _Update,
+		Func<string, CancellationToken, Task<T>> _Request,
+		StorageDownload                          _Progress,
+		CancellationToken                        _Token = default
+	) where T : Object
 	{
 		string localPath = Path.Combine(Application.persistentDataPath, _RemotePath);
 		
@@ -399,6 +461,54 @@ public class StorageProcessor
 		}
 		
 		return null;
+	}
+
+	static Task<T> LoadEncryptedAsync<T>(
+		string                                   _RemotePath,
+		Action<float>                            _Progress,
+		IDictionary<string, StorageProgress<T>>  _Registry,
+		Func<string, CancellationToken, Task<T>> _Request,
+		CancellationToken                        _Token = default
+	) where T : Object
+	{
+		if (string.IsNullOrEmpty(_RemotePath))
+			return null;
+		
+		if (_Token.IsCancellationRequested)
+			return null;
+		
+		if (_Registry != null && _Registry.TryGetValue(_RemotePath, out StorageProgress<T> progress) && progress != null)
+		{
+			progress.Subscribe(_Progress);
+			return progress.Task;
+		}
+		
+		TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
+		
+		progress = new StorageProgress<T>(completionSource.Task, _Progress);
+		
+		if (_Registry != null)
+			_Registry[_RemotePath] = progress;
+		
+		LoadEncryptedAssetAsync(_RemotePath, _Request, progress, _Token)
+			.ContinueWith(
+				_Task =>
+				{
+					if (_Registry != null && _Registry.ContainsKey(_RemotePath))
+						_Registry.Remove(_RemotePath);
+					if (_Task.IsFaulted)
+						completionSource.TrySetException(_Task.Exception ?? new Exception("Unknown exception"));
+					else if (_Task.IsCanceled)
+						completionSource.TrySetCanceled();
+					else if (_Task.IsCompleted)
+						completionSource.TrySetResult(_Task.Result);
+					else
+						completionSource.TrySetResult(null);
+				},
+				CancellationToken.None
+			);
+		
+		return completionSource.Task;
 	}
 
 	static Task<T> LoadAsync<T>(
@@ -501,13 +611,13 @@ public class StorageProcessor
 	{
 		if (string.IsNullOrEmpty(_RemotePath))
 		{
-			Debug.LogError("[StorageProcessor] Load file failed. Remove path is null or empty");
+			Debug.LogError("[StorageProcessor] Update file failed. Remove path is null or empty");
 			return;
 		}
 		
 		if (string.IsNullOrEmpty(_LocalPath))
 		{
-			Debug.LogError("[StorageProcessor] Load file failed. Local path is null or empty");
+			Debug.LogError("[StorageProcessor] Update file failed. Local path is null or empty");
 			return;
 		}
 		
