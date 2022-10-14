@@ -409,7 +409,10 @@ public class SongController
 		if (resultMenu != null)
 			resultMenu.Setup(m_SongID);
 		
-		await m_MenuProcessor.Show(MenuType.ResultMenu);
+		await Task.WhenAll(
+			m_MenuProcessor.Show(MenuType.ResultMenu),
+			m_MenuProcessor.Show(MenuType.TransitionMenu)
+		);
 	}
 
 	Task Rewind(CancellationToken _Token = default)

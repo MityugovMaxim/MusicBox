@@ -23,7 +23,11 @@ public class UISplashMenu : UIMenu
 		await Task.Delay(1500);
 		
 		await m_MenuProcessor.Show(MenuType.LoginMenu, true);
-		await m_MenuProcessor.Hide(MenuType.SplashMenu);
+		
+		await Task.WhenAll(
+			m_MenuProcessor.Show(MenuType.TransitionMenu),
+			m_MenuProcessor.Hide(MenuType.SplashMenu)
+		);
 		
 		UILoginMenu loginMenu = m_MenuProcessor.GetMenu<UILoginMenu>();
 		

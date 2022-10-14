@@ -28,7 +28,7 @@ public class TutorialController
 		{
 			m_Player.Stop();
 			m_Player.Clear();
-			GameObject.Destroy(m_Player.gameObject);
+			Object.Destroy(m_Player.gameObject);
 		}
 		
 		m_Player = null;
@@ -114,7 +114,7 @@ public class TutorialController
 			await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 			
-			GameObject.Destroy(m_Player.gameObject);
+			Object.Destroy(m_Player.gameObject);
 			
 			m_MenuProcessor.RemoveMenu(MenuType.TutorialMenu);
 			
@@ -123,7 +123,10 @@ public class TutorialController
 		
 		if (string.IsNullOrEmpty(m_SongID))
 		{
-			await m_MenuProcessor.Show(MenuType.MainMenu);
+			await Task.WhenAll(
+				m_MenuProcessor.Show(MenuType.MainMenu),
+				m_MenuProcessor.Show(MenuType.TransitionMenu)
+			);
 			
 			await DestroyPlayer();
 		}
