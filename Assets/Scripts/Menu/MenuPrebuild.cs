@@ -46,6 +46,7 @@ public class MenuPrebuild
 		{ typeof(UISongEditMenu), MenuType.SongEditMenu },
 		{ typeof(UISongMenu), MenuType.SongMenu },
 		{ typeof(UISplashMenu), MenuType.SplashMenu },
+		{ typeof(UITransitionMenu), MenuType.TransitionMenu },
 		{ typeof(UITutorialMenu), MenuType.TutorialMenu },
 		{ typeof(UIVideoMenu), MenuType.VideoMenu },
 	};
