@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4a2575d9-d538-4b32-8e4c-8c9f50953105" name="Changes" comment="Added transition menu" />
+    <list default="true" id="4a2575d9-d538-4b32-8e4c-8c9f50953105" name="Changes" comment="Resolved Android libraries">
+      <change afterPath="$PROJECT_DIR$/Assets/Plugins/Android/com.applovin.applovin-sdk-11.5.3.aar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Plugins/Android/com.applovin.applovin-sdk-11.5.3.aar.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AUDIO_BOX/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AUDIO_BOX/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/FacebookSDK/SDK/Resources/FacebookSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/FacebookSDK/SDK/Resources/FacebookSettings.asset" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,19 +18,11 @@
     </option>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Firebase/Plugins/iOS/Firebase.Analytics.dll.meta" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Menus/Admin Registry.asset" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scenes/Main.unity" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/FacebookSDK/SDK/Resources/FacebookSettings.asset" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/FacebookSDK/SDK/Resources/FacebookSettings.asset" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/AudioClipExtension.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Menu/MenuType.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Menu/Menus/UISplashMenu.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Processors/ConfigProcessor.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Processors/ConfigProcessor.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Song/SongController.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/Song/TutorialController.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Scripts/UI/UIMainMenuSongsPage.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Sounds/Data/Damage.asset" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/Assets/Sounds/Sound Registry.asset" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/ProjectSettings/ProjectSettings.asset" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Users/maksimmitugov/Documents/PROJECTS/AUDIO_BOX/ProjectSettings/ProjectSettings.asset" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -40,18 +37,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Discover.Launch.Via.Unity": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Discover.Launch.Via.Unity&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="UnitTests (batch mode)" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="/Applications/Unity/Hub/Editor/2021.3.11f1/Unity.app/Contents/MacOS/Unity" />
@@ -91,6 +88,7 @@
       <option name="presentableId" value="Default" />
       <updated>1665680915352</updated>
       <workItem from="1665680918696" duration="7307000" />
+      <workItem from="1666085580014" duration="5531000" />
     </task>
     <task id="LOCAL-00001" summary="Updat Firebase dependencies">
       <created>1665680961235</created>
@@ -127,7 +125,21 @@
       <option name="project" value="LOCAL" />
       <updated>1665737511120</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Resolved Android libraries">
+      <created>1666095848046</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1666095848046</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Resolved Android libraries">
+      <created>1666095856253</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1666095856253</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,6 +166,7 @@
     <MESSAGE value="Removed access to song creating menu" />
     <MESSAGE value="Added new keystore" />
     <MESSAGE value="Added transition menu" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added transition menu" />
+    <MESSAGE value="Resolved Android libraries" />
+    <option name="LAST_COMMIT_MESSAGE" value="Resolved Android libraries" />
   </component>
 </project>
