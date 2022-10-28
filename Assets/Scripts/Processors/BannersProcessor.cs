@@ -52,6 +52,8 @@ public class BannersProcessor : DataProcessor<BannerSnapshot, BannersDataUpdateS
 {
 	protected override string Path => $"banners/{m_LanguageProcessor.Language}";
 
+	protected override bool SupportsDevelopment => true;
+
 	[Inject] LanguageProcessor m_LanguageProcessor;
 
 	void IInitializable.Initialize()

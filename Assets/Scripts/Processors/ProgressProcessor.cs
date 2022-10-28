@@ -52,6 +52,8 @@ public class ProgressProcessor : DataProcessor<ProgressSnapshot, ProgressDataUpd
 {
 	protected override string Path => "progress";
 
+	protected override bool SupportsDevelopment => true;
+
 	public int GetSongLevel(string _SongID)
 	{
 		if (Snapshots.Count == 0)

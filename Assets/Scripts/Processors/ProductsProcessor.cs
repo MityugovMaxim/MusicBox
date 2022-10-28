@@ -86,6 +86,8 @@ public class ProductsProcessor : DataProcessor<ProductSnapshot, ProductsDataUpda
 {
 	protected override string Path => "products";
 
+	protected override bool SupportsDevelopment => true;
+
 	[Inject] ProductsDescriptor m_ProductsDescriptor;
 
 	protected override Task OnFetch()

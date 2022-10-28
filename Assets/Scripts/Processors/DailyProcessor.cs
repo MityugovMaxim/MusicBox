@@ -47,6 +47,8 @@ public class DailyProcessor : DataProcessor<DailySnapshot, DailyDataUpdateSignal
 {
 	protected override string Path => "daily";
 
+	protected override bool SupportsDevelopment => true;
+
 	public List<string> GetDailyIDs()
 	{
 		return Snapshots

@@ -143,7 +143,9 @@ public class SongsDataUpdateSignal { }
 [Preserve]
 public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 {
-	protected override string Path => "songs"; 
+	protected override string Path => "songs";
+
+	protected override bool SupportsDevelopment => true;
 
 	[Inject] ProfileProcessor m_ProfileProcessor;
 

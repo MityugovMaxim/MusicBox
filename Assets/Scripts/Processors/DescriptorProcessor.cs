@@ -62,8 +62,12 @@ public abstract class DescriptorProcessor<TSignal> : IInitializable, IDisposable
 	{
 		if (m_Data == null)
 		{
+			FirebaseDatabase database = DevelopmentMode.Enabled
+				? FirebaseDatabase.GetInstance("https://audiobox-76b0e-dev.firebaseio.com/")
+				: FirebaseDatabase.DefaultInstance;
+			
 			string path = $"{Path}/{m_LanguageProcessor.Language}";
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child(path);
+			m_Data              =  database.RootReference.Child(path);
 			m_Data.ValueChanged += OnUpdate;
 		}
 		

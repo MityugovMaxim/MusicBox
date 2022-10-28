@@ -175,6 +175,8 @@ public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataU
 {
 	protected override string Path => "ads_providers";
 
+	protected override bool SupportsDevelopment => false;
+
 	[Inject] IAdsProvider[]  m_AdsProviders;
 	[Inject] AudioManager    m_AudioManager;
 	[Inject] ConfigProcessor m_ConfigProcessor;

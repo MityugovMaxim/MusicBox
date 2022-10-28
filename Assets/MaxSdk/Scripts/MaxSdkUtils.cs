@@ -306,7 +306,7 @@ public class MaxSdkUtils
         return false;
 #endif
     }
-    
+
 #if UNITY_IOS
     [DllImport("__Internal")]
     private static extern bool _MaxIsPhysicalDevice();
@@ -505,7 +505,8 @@ public class MaxSdkUtils
     public static string GetAssetPathForExportPath(string exportPath)
     {
         var defaultPath = Path.Combine("Assets", exportPath);
-        var assetGuids = AssetDatabase.FindAssets("l:al_max_export_path-" + exportPath);
+        var assetLabelToFind = "l:al_max_export_path-" + exportPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var assetGuids = AssetDatabase.FindAssets(assetLabelToFind);
 
         return assetGuids.Length < 1 ? defaultPath : AssetDatabase.GUIDToAssetPath(assetGuids[0]);
     }

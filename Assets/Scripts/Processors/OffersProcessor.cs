@@ -64,6 +64,8 @@ public class OffersProcessor : DataProcessor<OfferSnapshot, OffersDataUpdateSign
 {
 	protected override string Path => "offers";
 
+	protected override bool SupportsDevelopment => true;
+
 	[Inject] OffersDescriptor m_OffersDescriptor;
 
 	protected override Task OnFetch() => m_OffersDescriptor.Load();

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase;
 using Firebase.Database;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -41,8 +42,10 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 
 	protected SignalBus SignalBus => m_SignalBus;
 
-	protected IReadOnlyList<TSnapshot>               Snapshots => m_Snapshots;
-	protected IReadOnlyDictionary<string, TSnapshot> Registry  => m_Registry;
+	protected IReadOnlyList<TSnapshot>               Snapshots  => m_Snapshots;
+	protected IReadOnlyDictionary<string, TSnapshot> Registry   => m_Registry;
+
+	protected abstract bool SupportsDevelopment { get; }
 
 	bool Loaded { get; set; }
 
@@ -58,8 +61,12 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 	{
 		if (m_Data == null || m_DataPath != Path)
 		{
+			FirebaseDatabase database = SupportsDevelopment && DevelopmentMode.Enabled
+				? FirebaseDatabase.GetInstance("https://audiobox-76b0e-dev.firebaseio.com/")
+				: FirebaseDatabase.DefaultInstance;
+			
 			m_DataPath          =  Path;
-			m_Data              =  FirebaseDatabase.DefaultInstance.RootReference.Child(Path);
+			m_Data              =  database.RootReference.Child(Path);
 			m_Data.ValueChanged += OnUpdate;
 		}
 		

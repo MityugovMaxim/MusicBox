@@ -36,6 +36,8 @@ public class ScoresProcessor : DataProcessor<ScoreSnapshot, ScoresDataUpdateSign
 {
 	protected override string Path => $"scores/{m_SocialProcessor.UserID}";
 
+	protected override bool SupportsDevelopment => false;
+
 	[Inject] SocialProcessor m_SocialProcessor;
 
 	public int GetAccuracy(string _SongID)

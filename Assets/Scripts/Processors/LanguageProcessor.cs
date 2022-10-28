@@ -51,6 +51,8 @@ public class LanguageProcessor : DataProcessor<LanguageSnapshot, LanguageDataUpd
 
 	protected override string Path => "languages";
 
+	protected override bool SupportsDevelopment => true;
+
 	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	protected override Task OnFetch()

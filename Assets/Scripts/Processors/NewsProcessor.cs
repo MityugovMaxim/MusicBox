@@ -54,6 +54,8 @@ public class NewsProcessor : DataProcessor<NewsSnapshot, NewsDataUpdateSignal>
 {
 	protected override string Path => "news";
 
+	protected override bool SupportsDevelopment => true;
+
 	[Inject] NewsDescriptor m_NewsDescriptor;
 
 	protected override Task OnFetch() => m_NewsDescriptor.Load();

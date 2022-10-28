@@ -89,6 +89,8 @@ public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
 {
 	protected override string Path => "roles";
 
+	protected override bool SupportsDevelopment => false;
+
 	[Inject] SocialProcessor m_SocialProcessor;
 
 	protected override Task OnFetch()

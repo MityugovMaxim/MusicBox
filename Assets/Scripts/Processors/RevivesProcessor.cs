@@ -43,6 +43,8 @@ public class RevivesProcessor : DataProcessor<ReviveSnapshot, RevivesDataUpdateS
 {
 	protected override string Path => "revives";
 
+	protected override bool SupportsDevelopment => true;
+
 	public long GetCoins(int _Count)
 	{
 		if (Snapshots.Count == 0)
