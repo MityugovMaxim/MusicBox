@@ -204,6 +204,7 @@ public class GameInstaller : MonoInstaller
 		SignalBusInstaller.Install(Container);
 		
 		Container.DeclareSignal<BannersDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<AdsProvidersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LanguageDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LanguageSelectSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ApplicationDataUpdateSignal>().OptionalSubscriber();
