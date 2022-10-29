@@ -155,7 +155,7 @@ public class UnityTask : MonoBehaviour
 		if (_Token.IsCancellationRequested)
 			return Task.FromCanceled(_Token);
 		
-		if (Mathf.Approximately(_Delay, 0) && Mathf.Approximately(_Duration, 0))
+		if (m_Instance == null || Mathf.Approximately(_Delay, 0) && Mathf.Approximately(_Duration, 0))
 		{
 			_Action?.Invoke(_Evaluate?.Invoke(1) ?? 1);
 			return Task.CompletedTask;
