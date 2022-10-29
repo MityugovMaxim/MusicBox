@@ -72,7 +72,7 @@ public class UILocalizedLabel : UIEntity
 
 	void ProcessText()
 	{
-		if (string.IsNullOrEmpty(Key))
+		if (string.IsNullOrEmpty(Key) || m_LocalizationProcessor == null)
 		{
 			m_Label.text = string.Empty;
 			return;
