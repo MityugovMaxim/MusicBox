@@ -1,4 +1,5 @@
 using System;
+using Firebase.DynamicLinks;
 using UnityEngine;
 using Zenject;
 
@@ -54,7 +55,8 @@ public class UIMainMenu : UIMenu
 		}
 		m_Control.Select(m_PageType, true);
 		
-		Application.deepLinkActivated += ProcessDeepLink;
+		Application.deepLinkActivated    += ProcessDeepLink;
+		DynamicLinks.DynamicLinkReceived += ProcessDynamicLink;
 		
 		if (m_SignalBus == null)
 			return;
@@ -68,7 +70,8 @@ public class UIMainMenu : UIMenu
 
 	protected override void OnHideStarted()
 	{
-		Application.deepLinkActivated -= ProcessDeepLink;
+		Application.deepLinkActivated    -= ProcessDeepLink;
+		DynamicLinks.DynamicLinkReceived -= ProcessDynamicLink;
 		
 		if (m_SignalBus == null)
 			return;
@@ -94,5 +97,10 @@ public class UIMainMenu : UIMenu
 	async void ProcessDeepLink(string _URL)
 	{
 		await m_UrlProcessor.ProcessURL(_URL);
+	}
+
+	async void ProcessDynamicLink(object _Sender, ReceivedDynamicLinkEventArgs _Args)
+	{
+		await m_UrlProcessor.ProcessDynamicLink(_Args.ReceivedDynamicLink.Url);
 	}
 }

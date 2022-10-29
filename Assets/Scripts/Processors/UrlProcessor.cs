@@ -3,16 +3,56 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
+using Firebase.DynamicLinks;
 using UnityEngine;
 using Zenject;
 
 public class UrlProcessor
 {
-	const string SCHEME = "audiobox";
+	const string SCHEME     = "audiobox";
+	const string URL_PREFIX = "https://audiobox.page.link";
+	const string URL_HOST   = "https://outofbounds.studio/audiobox?";
 
 	[Inject] MenuProcessor  m_MenuProcessor;
 	[Inject] SongsProcessor m_SongsProcessor;
 	[Inject] SongsManager   m_SongsManager;
+
+	public async Task<string> GenerateDynamicLink(string _Payload = null)
+	{
+		if (_Payload == null)
+			_Payload = string.Empty;
+		
+		DynamicLinkComponents components = new DynamicLinkComponents(
+			new Uri(URL_HOST + _Payload),
+			URL_PREFIX
+		);
+		components.IOSParameters     = new IOSParameters(Application.identifier);
+		components.AndroidParameters = new AndroidParameters(Application.identifier);
+		
+		DynamicLinkOptions options = new DynamicLinkOptions();
+		options.PathLength = DynamicLinkPathLength.Short;
+		
+		ShortDynamicLink link = await DynamicLinks.GetShortLinkAsync(components, options);
+		
+		foreach (string warning in link.Warnings)
+			Log.Warning(this, warning);
+		
+		return link.Url.ToString();
+	}
+
+	public Task ProcessDynamicLink(Uri _URL, bool _Instant = false)
+	{
+		if (_URL == null)
+			return Task.CompletedTask;
+		
+		if (string.IsNullOrEmpty(_URL.Query))
+			return Task.CompletedTask;
+		
+		string url = $"{SCHEME}://{_URL.Query.Replace("audiobox?", string.Empty)}";
+		
+		return ProcessURL(url, _Instant);
+	}
 
 	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
@@ -61,14 +101,6 @@ public class UrlProcessor
 			return $"{SCHEME}://";
 		
 		return $"{SCHEME}://songs?song_id={_SongID}";
-	}
-
-	public string GetSongHash(string _SongID)
-	{
-		if (string.IsNullOrEmpty(_SongID))
-			return $"{SCHEME}://";
-		
-		return $"{SCHEME}://{CRC32.Get(_SongID)}";
 	}
 
 	static Dictionary<string, string> GetParameters(string _URL)
