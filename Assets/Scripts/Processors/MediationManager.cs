@@ -9,8 +9,8 @@ public class MediationManager : MonoBehaviour
 {
 	const int TIMEOUT = 15000;
 
-	bool InterstitialLoaded { get; set; }
-	bool RewardedLoaded     { get; set; }
+	bool InterstitialLoaded => m_Mediation.IsReady(false);
+	bool RewardedLoaded     => m_Mediation.IsReady(true);
 
 	public static MediationManager Instance { get; private set; }
 
@@ -53,30 +53,42 @@ public class MediationManager : MonoBehaviour
 		m_Mediation.Init(m_Settings);
 	}
 
-	public async Task<bool> WaitInterstitial()
+	public async Task<bool> WaitInterstitial(int _Attempts = 1)
 	{
-		if (InterstitialLoaded || m_Mediation.IsReady(false))
-			return true;
+		int attempt = 0;
+		while (attempt < _Attempts)
+		{
+			if (InterstitialLoaded)
+				return true;
+			
+			await Task.WhenAny(
+				UnityTask.Check(() => InterstitialLoaded, 0.1f),
+				Task.Delay(TIMEOUT)
+			);
+			
+			attempt++;
+		}
 		
-		await Task.WhenAny(
-			UnityTask.Until(() => InterstitialLoaded),
-			Task.Delay(TIMEOUT)
-		);
-		
-		return InterstitialLoaded || m_Mediation.IsReady(false);
+		return InterstitialLoaded;
 	}
 
-	public async Task<bool> WaitRewarded()
+	public async Task<bool> WaitRewarded(int _Attempts = 1)
 	{
-		if (RewardedLoaded || m_Mediation.IsReady(true))
-			return true;
+		int attempt = 0;
+		while (attempt < _Attempts)
+		{
+			if (RewardedLoaded)
+				return true;
+			
+			await Task.WhenAny(
+				UnityTask.Check(() => RewardedLoaded, 0.1f),
+				Task.Delay(TIMEOUT)
+			);
+			
+			attempt++;
+		}
 		
-		await Task.WhenAny(
-			UnityTask.Until(() => RewardedLoaded),
-			Task.Delay(TIMEOUT)
-		);
-		
-		return RewardedLoaded || m_Mediation.IsReady(true);
+		return RewardedLoaded;
 	}
 
 	public async Task<AdsState> ShowInterstitialAsync()
@@ -87,9 +99,6 @@ public class MediationManager : MonoBehaviour
 		);
 		
 		if (!InterstitialLoaded)
-			return AdsState.Timeout;
-		
-		if (!m_Mediation.IsReady(false))
 			return AdsState.Unavailable;
 		
 		AdsState state = await ShowInterstitial();
@@ -108,12 +117,12 @@ public class MediationManager : MonoBehaviour
 		);
 		
 		AdsState state;
-		if (RewardedLoaded && m_Mediation.IsReady(true))
+		if (RewardedLoaded)
 			state = await ShowRewarded();
 		else
 			return AdsState.Timeout;
 		
-		if (state == AdsState.Failed && m_Mediation.IsReady(false))
+		if (state == AdsState.Failed && RewardedLoaded)
 			state = await ShowInterstitial();
 		
 		return state;
@@ -184,15 +193,9 @@ public class MediationManager : MonoBehaviour
 	void AdsLoaded(bool _Rewarded)
 	{
 		if (_Rewarded)
-		{
 			Log.Info(this, "Rewarded load complete.");
-			RewardedLoaded = true;
-		}
 		else
-		{
 			Log.Info(this, "Interstitial load complete.");
-			InterstitialLoaded = true;
-		}
 	}
 
 	void RestoreActions()

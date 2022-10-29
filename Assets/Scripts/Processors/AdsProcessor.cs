@@ -94,6 +94,8 @@ public class AdsProviderMadPixel : IAdsProvider
 		
 		bool available = await MediationManager.Instance.WaitRewarded();
 		
+		m_StatisticProcessor.LogAdsAvailable(type, place, available);
+		
 		if (!available)
 			return false;
 		

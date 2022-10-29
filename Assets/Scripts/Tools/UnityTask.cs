@@ -241,6 +241,30 @@ public class UnityTask : MonoBehaviour
 		return completionSource.Task;
 	}
 
+	public static Task Check(Func<bool> _Condition, float _Delay, CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			return Task.FromCanceled(_Token);
+		
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		
+		IEnumerator routine = CheckRoutine(_Condition, _Delay, () => completionSource.SetResult(true));
+		
+		_Token.Register(
+			() =>
+			{
+				if (routine != null && !ReferenceEquals(m_Instance, null))
+					m_Instance.StopCoroutine(routine);
+				
+				completionSource.TrySetCanceled();
+			}
+		);
+		
+		m_Instance.StartCoroutine(routine);
+		
+		return completionSource.Task;
+	}
+
 	public static Task Until(Func<bool> _Condition, CancellationToken _Token = default)
 	{
 		if (_Token.IsCancellationRequested)
@@ -436,6 +460,27 @@ public class UnityTask : MonoBehaviour
 	{
 		if (_Condition != null)
 			yield return new WaitWhile(_Condition);
+		
+		_Finished?.Invoke();
+	}
+
+	static IEnumerator CheckRoutine(Func<bool> _Condition, float _Delay, Action _Finished)
+	{
+		if (_Condition == null)
+		{
+			_Finished?.Invoke();
+			yield break;
+		}
+		
+		while (true)
+		{
+			bool value = _Condition.Invoke();
+			
+			if (value)
+				break;
+			
+			yield return new WaitForSeconds(_Delay);
+		}
 		
 		_Finished?.Invoke();
 	}
