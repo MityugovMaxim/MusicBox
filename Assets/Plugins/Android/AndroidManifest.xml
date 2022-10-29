@@ -12,6 +12,7 @@
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:scheme="audiobox" />
+        <data android:host="outofbounds.studio" android:scheme="https"/>
       </intent-filter>
       <meta-data android:name="com.audiobox.activity.AudioBoxActivity" android:value="true" />
     </activity>
