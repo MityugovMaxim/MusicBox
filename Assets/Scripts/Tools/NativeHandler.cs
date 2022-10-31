@@ -41,7 +41,7 @@ public class NativeHandler : MonoBehaviour
 
 	void OnApplicationFocus(bool _Focus)
 	{
-		if (_Focus)
+		if (m_AudioManager != null && _Focus)
 			m_AudioManager.SetAudioActive(true);
 	}
 

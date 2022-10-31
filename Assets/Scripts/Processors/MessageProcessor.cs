@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using Firebase.Messaging;
 using UnityEngine.Purchasing.MiniJSON;
 #if UNITY_ANDROID
@@ -22,69 +23,66 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		set => PlayerPrefs.SetString(TOPICS_LANGUAGE_KEY, value);
 	}
 
+	public static event Action<string> OnReceiveLink;
+
 	[Inject] SignalBus         m_SignalBus;
 	[Inject] LanguageProcessor m_LanguageProcessor;
-	[Inject] UrlProcessor      m_UrlProcessor;
 
 	void IInitializable.Initialize()
 	{
-		m_SignalBus.Subscribe<LanguageSelectSignal>(RegisterLanguageSelect);
+		m_SignalBus.Subscribe<LanguageSelectSignal>(LoadTopic);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_SignalBus.Unsubscribe<LanguageSelectSignal>(RegisterLanguageSelect);
+		m_SignalBus.Unsubscribe<LanguageSelectSignal>(LoadTopic);
 	}
 
-	async void RegisterLanguageSelect()
+	public async Task Load()
 	{
-		await LoadTopic();
-	}
-
-	public async Task LoadMessages(string _URL)
-	{
+		FirebaseMessaging.TokenReceived += OnTokenReceived;
+		
 		try
 		{
+			Log.Info(this, "Request permission");
+			
 			await FirebaseMessaging.RequestPermissionAsync();
 			
-			await LoadTopic();
+			LoadTopic();
 		}
 		catch (Exception exception)
 		{
-			Debug.LogError("[MessageProcessor] Process permission failed.");
-			Debug.LogException(exception);
+			Log.Exception(this, exception);
 		}
 		
-		FirebaseMessaging.TokenReceived   += OnTokenReceived;
-		FirebaseMessaging.MessageReceived += OnMessageReceived;
-		
 		LoadNotifications();
-		
-		if (string.IsNullOrEmpty(_URL))
-			return;
-		
-		await m_UrlProcessor.ProcessURL(_URL);
 	}
 
-	public async Task LoadTopic()
+	async void LoadTopic()
 	{
 		if (Topic == m_LanguageProcessor.Language)
 			return;
 		
 		Topic = m_LanguageProcessor.Language;
 		
-		List<Task> tasks = new List<Task>();
-		foreach (string language in m_LanguageProcessor.GetLanguages())
-		{
-			if (language != Topic)
-				tasks.Add(FirebaseMessaging.UnsubscribeAsync(language));
-		}
-		
-		await Task.WhenAll(tasks);
+		Log.Info(this, "Subscribe topic {0}.", Topic);
 		
 		await FirebaseMessaging.SubscribeAsync(Topic);
 		
-		Debug.Log("[MessageProcessor] Process topics complete.");
+		foreach (string language in m_LanguageProcessor.GetLanguages())
+		{
+			if (language == Topic)
+				continue;
+			
+			Log.Info(this, "Unsubscribe topic {0}.", language);
+			
+			await Task.WhenAny(
+				FirebaseMessaging.UnsubscribeAsync(language),
+				Task.Delay(15000)
+			);
+		}
+		
+		Log.Info(this, "Process topics complete.");
 	}
 
 	protected abstract void LoadNotifications();
@@ -110,26 +108,12 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 		long   _Timestamp
 	);
 
-	static void OnTokenReceived(object _Sender, TokenReceivedEventArgs _Args)
+	void OnTokenReceived(object _Sender, TokenReceivedEventArgs _Args)
 	{
-		Debug.LogFormat("[MessageProcessor] Received token: '{0}'.", _Args.Token);
+		Log.Info(this, "Received token: '{0}'.", _Args.Token);
 	}
 
-	void OnMessageReceived(object _Sender, MessageReceivedEventArgs _Args)
-	{
-		Debug.LogFormat("[MessageProcessor] Received message: '{0}'.", _Args.Message.MessageType);
-		
-		if (_Args.Message.NotificationOpened && _Args.Message.Data.TryGetValue("url", out string url))
-			OpenURL(url);
-	}
-
-	protected async void OpenURL(string _URL)
-	{
-		if (string.IsNullOrEmpty(_URL))
-			return;
-		
-		await m_UrlProcessor.ProcessURL(_URL);
-	}
+	protected static void ProcessURL(string _URL) => OnReceiveLink?.Invoke(_URL);
 }
 
 #if UNITY_ANDROID
@@ -214,7 +198,7 @@ public class AndroidMessageProcessor : MessageProcessor
 		if (string.IsNullOrEmpty(url))
 			return;
 		
-		OpenURL(url);
+		ProcessURL(url);
 	}
 
 	static void CancelNotification(string _Name)
@@ -320,7 +304,7 @@ public class iOSMessageProcessor : MessageProcessor
 		if (string.IsNullOrEmpty(url))
 			return;
 		
-		OpenURL(url);
+		ProcessURL(url);
 	}
 }
 #endif

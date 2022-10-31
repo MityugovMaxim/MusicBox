@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Firebase;
 #if UNITY_IOS
 using Unity.Advertisement.IosSupport;
 #endif
@@ -150,6 +151,7 @@ public class GameInstaller : MonoInstaller
 			.UnderTransform(transform)
 			.AsSingle();
 		
+		InstallProcessor<LocalizationProcessor>();
 		InstallProcessor<MenuProcessor>();
 		
 		InstallProcessor<SocialProcessor>();
@@ -159,7 +161,6 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<ApplicationProcessor>();
 		InstallProcessor<StorageProcessor>();
 		InstallProcessor<LanguageProcessor>();
-		InstallProcessor<LocalizationProcessor>();
 		InstallProcessor<HapticProcessor>();
 		InstallProcessor<UrlProcessor>();
 		InstallProcessor<AdsProcessor>();
@@ -174,6 +175,7 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<ScoresProcessor>();
 		InstallProcessor<RevivesProcessor>();
 		InstallProcessor<DailyProcessor>();
+		InstallProcessor<LinkProcessor>();
 		
 		InstallProcessor<NewsDescriptor>();
 		InstallProcessor<OffersDescriptor>();
@@ -220,6 +222,7 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<RevivesDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<DailyDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<LinkReceivedSignal>().OptionalSubscriber();
 		
 		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();
 	}

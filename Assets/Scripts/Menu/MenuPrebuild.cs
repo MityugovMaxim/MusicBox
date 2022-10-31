@@ -32,6 +32,7 @@ public class MenuPrebuild
 		{ typeof(UIMainMenu), MenuType.MainMenu },
 		{ typeof(UIMapsMenu), MenuType.MapsMenu },
 		{ typeof(UIPauseMenu), MenuType.PauseMenu },
+		{ typeof(UIPermissionMenu), MenuType.PermissionMenu },
 		{ typeof(UIProcessingMenu), MenuType.ProcessingMenu },
 		{ typeof(UIProductMenu), MenuType.ProductMenu },
 		{ typeof(UIResultMenu), MenuType.ResultMenu },

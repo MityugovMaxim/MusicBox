@@ -378,6 +378,15 @@ public class StatisticProcessor
 		);
 	}
 
+	public void LogLink(string _Type, string _URL)
+	{
+		LogEvent(
+			"link",
+			StatisticData.Create("type", _Type),
+			StatisticData.Create("url", _URL)
+		);
+	}
+
 	public void LogSongStart(
 		string _SongID,
 		int    _SongNumber,

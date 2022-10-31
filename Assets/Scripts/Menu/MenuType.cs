@@ -36,5 +36,6 @@ public enum MenuType
 	ColorsMenu           = 33,
 	ColorsEditMenu       = 34,
 	SongCreateMenu       = 35,
-	TransitionMenu       = 36
+	TransitionMenu       = 36,
+	PermissionMenu       = 37,
 }

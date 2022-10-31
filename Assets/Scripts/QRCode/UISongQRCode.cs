@@ -7,8 +7,7 @@ public class UISongQRCode : UIGroup
 	[SerializeField] UIQRCode    m_QRCode;
 	[SerializeField] UIGroup     m_Loader;
 
-	[Inject] SongsProcessor m_SongsProcessor;
-	[Inject] UrlProcessor   m_UrlProcessor;
+	[Inject] LinkProcessor m_LinkProcessor;
 
 	string m_SongID;
 
@@ -21,11 +20,9 @@ public class UISongQRCode : UIGroup
 
 	protected override async void OnShowStarted()
 	{
-		string hash = m_SongsProcessor.GetSongHash(m_SongID);
-		
 		m_Loader.Show(true);
 		
-		string url = await m_UrlProcessor.GenerateDynamicLink(hash);
+		string url = await m_LinkProcessor.GenerateSongLink(m_SongID);
 		
 		GUIUtility.systemCopyBuffer = url;
 		

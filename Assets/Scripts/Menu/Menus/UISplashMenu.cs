@@ -1,14 +1,21 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Facebook.Unity;
+using Unity.Services.Core;
+using Unity.Services.Core.Environments;
 using UnityEngine;
+using UnityEngine.Android;
 using Zenject;
 
 [Menu(MenuType.SplashMenu)]
+[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 public class UISplashMenu : UIMenu
 {
 	[SerializeField] UISplashLogo m_Logo;
 
-	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] LocalizationProcessor m_LocalizationProcessor;
 
 	MaxSdkBase.ConsentDialogState m_ConsentState;
 
@@ -41,11 +48,35 @@ public class UISplashMenu : UIMenu
 
 	async Task InitializeThirdParty()
 	{
+		await InitializePermissions();
+		
 		await InitializeFacebook();
 		
 		await InitializeAppLovin();
 		
 		await InitializeGDPR();
+		
+		await InitializeUGS();
+	}
+
+	async Task InitializePermissions()
+	{
+		const string notifications = "android.permission.POST_NOTIFICATIONS";
+		
+		if (Permission.HasUserAuthorizedPermission(notifications))
+			return;
+		
+		UIPermissionMenu permissionMenu = m_MenuProcessor.GetMenu<UIPermissionMenu>();
+		
+		permissionMenu.Setup(
+			Application.productName,
+			m_LocalizationProcessor.Get("PERMISSION_NOTIFICATIONS")
+		);
+		
+		bool state = await permissionMenu.Process(notifications);
+		
+		if (state)
+			Permission.RequestUserPermission(notifications);
 	}
 
 	Task InitializeFacebook()
@@ -106,5 +137,19 @@ public class UISplashMenu : UIMenu
 		await consentMenu.ProcessAsync();
 		
 		MaxSdk.SetHasUserConsent(true);
+	}
+
+	async Task InitializeUGS()
+	{
+		try
+		{
+			InitializationOptions options = new InitializationOptions().SetEnvironmentName("production");
+			
+			await UnityServices.InitializeAsync(options);
+		}
+		catch (Exception)
+		{
+			// Ignore
+		}
 	}
 }

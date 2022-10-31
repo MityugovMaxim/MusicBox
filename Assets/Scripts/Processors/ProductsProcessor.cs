@@ -42,8 +42,8 @@ public class ProductSnapshot : Snapshot
 	{
 		Active       = _Data.GetBool("active");
 		Image        = _Data.GetString("image", $"Thumbnails/Products/{ID}.jpg");
-		AppStoreID   = _Data.GetString("app_store", _Data.Key);
-		GooglePlayID = _Data.GetString("google_play", _Data.Key);
+		AppStoreID   = _Data.GetString("app_store_id", _Data.Key);
+		GooglePlayID = _Data.GetString("google_play_id", _Data.Key);
 		Type         = _Data.GetEnum<ProductType>("type");
 		Promo        = _Data.GetBool("promo");
 		Special      = _Data.GetBool("special");

@@ -1,5 +1,4 @@
 using System;
-using Firebase.DynamicLinks;
 using UnityEngine;
 using Zenject;
 
@@ -19,8 +18,8 @@ public class UIMainMenu : UIMenu
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
 
-	[Inject] SignalBus    m_SignalBus;
-	[Inject] UrlProcessor m_UrlProcessor;
+	[Inject] SignalBus     m_SignalBus;
+	[Inject] LinkProcessor m_LinkProcessor;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Songs;
 
@@ -42,7 +41,7 @@ public class UIMainMenu : UIMenu
 		m_Control.Select(m_PageType, _Instant);
 	}
 
-	protected override void OnShowStarted()
+	protected override async void OnShowStarted()
 	{
 		Refresh();
 		
@@ -55,12 +54,12 @@ public class UIMainMenu : UIMenu
 		}
 		m_Control.Select(m_PageType, true);
 		
-		Application.deepLinkActivated    += ProcessDeepLink;
-		DynamicLinks.DynamicLinkReceived += ProcessDynamicLink;
+		await m_LinkProcessor.Process(true);
 		
 		if (m_SignalBus == null)
 			return;
 		
+		m_SignalBus.Subscribe<LinkReceivedSignal>(ProcessLink);
 		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
@@ -70,12 +69,10 @@ public class UIMainMenu : UIMenu
 
 	protected override void OnHideStarted()
 	{
-		Application.deepLinkActivated    -= ProcessDeepLink;
-		DynamicLinks.DynamicLinkReceived -= ProcessDynamicLink;
-		
 		if (m_SignalBus == null)
 			return;
 		
+		m_SignalBus.Unsubscribe<LinkReceivedSignal>(ProcessLink);
 		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
@@ -89,18 +86,7 @@ public class UIMainMenu : UIMenu
 			page.Hide(m_PageType, true);
 	}
 
-	void Refresh()
-	{
-		m_Profile.Setup();
-	}
+	async void ProcessLink() => await m_LinkProcessor.Process();
 
-	async void ProcessDeepLink(string _URL)
-	{
-		await m_UrlProcessor.ProcessURL(_URL);
-	}
-
-	async void ProcessDynamicLink(object _Sender, ReceivedDynamicLinkEventArgs _Args)
-	{
-		await m_UrlProcessor.ProcessDynamicLink(_Args.ReceivedDynamicLink.Url);
-	}
+	void Refresh() => m_Profile.Setup();
 }

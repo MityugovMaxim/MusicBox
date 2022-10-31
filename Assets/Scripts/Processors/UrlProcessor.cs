@@ -2,57 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using Firebase.DynamicLinks;
 using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
+[Preserve]
 public class UrlProcessor
 {
-	const string SCHEME     = "audiobox";
-	const string URL_PREFIX = "https://audiobox.page.link";
-	const string URL_HOST   = "https://outofbounds.studio/audiobox?";
+	const string SCHEME = "audiobox";
 
 	[Inject] MenuProcessor  m_MenuProcessor;
 	[Inject] SongsProcessor m_SongsProcessor;
 	[Inject] SongsManager   m_SongsManager;
-
-	public async Task<string> GenerateDynamicLink(string _Payload = null)
-	{
-		if (_Payload == null)
-			_Payload = string.Empty;
-		
-		DynamicLinkComponents components = new DynamicLinkComponents(
-			new Uri(URL_HOST + _Payload),
-			URL_PREFIX
-		);
-		components.IOSParameters     = new IOSParameters(Application.identifier);
-		components.AndroidParameters = new AndroidParameters(Application.identifier);
-		
-		DynamicLinkOptions options = new DynamicLinkOptions();
-		options.PathLength = DynamicLinkPathLength.Short;
-		
-		ShortDynamicLink link = await DynamicLinks.GetShortLinkAsync(components, options);
-		
-		foreach (string warning in link.Warnings)
-			Log.Warning(this, warning);
-		
-		return link.Url.ToString();
-	}
-
-	public Task ProcessDynamicLink(Uri _URL, bool _Instant = false)
-	{
-		if (_URL == null)
-			return Task.CompletedTask;
-		
-		if (string.IsNullOrEmpty(_URL.Query))
-			return Task.CompletedTask;
-		
-		string url = $"{SCHEME}://{_URL.Query.Replace("audiobox?", string.Empty)}";
-		
-		return ProcessURL(url, _Instant);
-	}
 
 	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
@@ -95,19 +60,11 @@ public class UrlProcessor
 		}
 	}
 
-	public string GetSongURL(string _SongID)
-	{
-		if (string.IsNullOrEmpty(_SongID))
-			return $"{SCHEME}://";
-		
-		return $"{SCHEME}://songs?song_id={_SongID}";
-	}
-
-	static Dictionary<string, string> GetParameters(string _URL)
+	public Dictionary<string, string> GetParameters(string _Query)
 	{
 		Dictionary<string, string> parameters = new Dictionary<string, string>();
 		
-		string[] data = _URL.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+		string[] data = _Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
 		if (data.Length > 0)
 		{
 			foreach (string parameter in data)
@@ -119,6 +76,19 @@ public class UrlProcessor
 			}
 		}
 		return parameters;
+	}
+
+	public string GetQuery(Dictionary<string, string> _Parameters)
+	{
+		if (_Parameters == null || _Parameters.Count == 0)
+			return string.Empty;
+		
+		List<string> query = new List<string>();
+		
+		foreach (var entry in _Parameters)
+			query.Add($"{entry.Key}={entry.Value}");
+		
+		return string.Join('&', query);
 	}
 
 	async Task ProcessStore(Dictionary<string, string> _Parameters, bool _Instant)

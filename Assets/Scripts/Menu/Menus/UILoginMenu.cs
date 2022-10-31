@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using UnityEngine;
@@ -30,9 +29,8 @@ public class UILoginMenu : UIMenu
 	[Inject] AmbientProcessor     m_AmbientProcessor;
 	[Inject] BannersProcessor     m_BannersProcessor;
 	[Inject] StatisticProcessor   m_StatisticProcessor;
-	[Inject] UrlProcessor         m_UrlProcessor;
-	[Inject] SongsManager         m_SongsManager;
 	[Inject] DailyProcessor       m_DailyProcessor;
+	[Inject] LinkProcessor        m_LinkProcessor;
 
 	public async Task Login()
 	{
@@ -77,6 +75,8 @@ public class UILoginMenu : UIMenu
 		
 		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
 		
+		m_LinkProcessor.Load();
+		
 		try
 		{
 			await LoadAdmin();
@@ -99,6 +99,10 @@ public class UILoginMenu : UIMenu
 		
 		Log.Info(this, "Load localization complete. Language: {0}", m_LanguageProcessor.Language);
 		
+		await LoadMessages();
+		
+		Log.Info(this, "Load messages complete.");
+		
 		await LoadAmbient();
 		
 		Log.Info(this, "Load ambient complete.");
@@ -118,21 +122,7 @@ public class UILoginMenu : UIMenu
 		await LoadViews();
 	}
 
-	Task LoadAdmin()
-	{
-		#if !UNITY_EDITOR
-		string userID = m_SocialProcessor?.UserID;
-		
-		string serviceCode = !string.IsNullOrEmpty(userID)
-			? CRC32.Get(userID)
-			: null;
-		
-		if (Application.absoluteURL != "audiobox://admin" && GUIUtility.systemCopyBuffer != serviceCode)
-			return Task.CompletedTask;
-		#endif
-		
-		return m_RolesProcessor.Load();
-	}
+	Task LoadAdmin() => AdminMode.Enabled ? m_RolesProcessor.Load() : Task.CompletedTask;
 
 	Task LoadApplication()
 	{
@@ -145,6 +135,11 @@ public class UILoginMenu : UIMenu
 	Task LoadLocalization()
 	{
 		return m_LanguageProcessor.Load();
+	}
+
+	Task LoadMessages()
+	{
+		return m_MessageProcessor.Load();
 	}
 
 	Task LoadAmbient()
@@ -188,8 +183,6 @@ public class UILoginMenu : UIMenu
 
 	async Task LoadViews()
 	{
-		await m_MenuProcessor.Show(MenuType.MainMenu, true);
-		
 		await m_MenuProcessor.Show(MenuType.BannerMenu, true);
 		
 		UIBannerMenu bannerMenu = m_MenuProcessor.GetMenu<UIBannerMenu>();
@@ -200,7 +193,7 @@ public class UILoginMenu : UIMenu
 		
 		m_MenuProcessor.RemoveMenu(MenuType.BannerMenu);
 		
-		await m_MessageProcessor.LoadMessages(GetURLScheme());
+		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 		
@@ -211,17 +204,5 @@ public class UILoginMenu : UIMenu
 			"audiobox://play",
 			TimeSpan.FromHours(24)
 		);
-	}
-
-	string GetURLScheme()
-	{
-		if (!string.IsNullOrEmpty(Application.absoluteURL) || m_ProfileProcessor.Discs > 0)
-			return Application.absoluteURL;
-		
-		string songID = m_SongsManager
-			.GetLibrarySongIDs()
-			.FirstOrDefault();
-		
-		return m_UrlProcessor.GetSongURL(songID);
 	}
 }
