@@ -358,12 +358,7 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
-		SongMode mode = snapshot?.Mode ?? SongMode.Free;
-		
-		if (mode == SongMode.Ads)
-			return m_ProfileProcessor.HasNoAds() ? SongMode.Free : SongMode.Ads;
-		
-		return mode;
+		return snapshot?.Mode ?? SongMode.Free;
 	}
 
 	public SongBadge GetBadge(string _SongID)
