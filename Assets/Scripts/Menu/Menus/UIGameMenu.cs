@@ -87,6 +87,19 @@ public class UIGameMenu : UIMenu
 			m_Latency.SetActive(true);
 	}
 
+	async void OnApplicationPause(bool _Pause)
+	{
+		if (!_Pause || !Shown)
+			return;
+		
+		if (!m_SongController.Pause())
+			return;
+		
+		ProcessLatency();
+		
+		await m_MenuProcessor.Show(MenuType.PauseMenu, true);
+	}
+
 	async void OnApplicationFocus(bool _Focus)
 	{
 		if (_Focus || !Shown)
