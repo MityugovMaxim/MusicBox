@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine.Scripting;
-using Zenject;
 
 [Preserve]
 public class SongSnapshot : Snapshot
@@ -20,6 +18,7 @@ public class SongSnapshot : Snapshot
 	public SongBadge Badge             { get; }
 	public float     BPM               { get; }
 	public int       Bar               { get; }
+	public double    Origin            { get; }
 	public float     Speed             { get; }
 	public long      DefaultPayout     { get; }
 	public long      BronzePayout      { get; }
@@ -49,6 +48,7 @@ public class SongSnapshot : Snapshot
 		Badge             = SongBadge.New;
 		BPM               = 120;
 		Bar               = 4;
+		Origin            = 0;
 		Speed             = 850;
 		DefaultPayout     = 5;
 		BronzePayout      = 10;
@@ -80,6 +80,7 @@ public class SongSnapshot : Snapshot
 		Badge             = _Data.GetEnum<SongBadge>("badge");
 		BPM               = _Data.GetFloat("bpm");
 		Bar               = _Data.GetInt("bar", 4);
+		Origin            = _Data.GetDouble("origin", 0);
 		Speed             = _Data.GetFloat("speed");
 		DefaultPayout     = _Data.GetLong("default_payout");
 		BronzePayout      = _Data.GetLong("bronze_payout");
@@ -113,6 +114,7 @@ public class SongSnapshot : Snapshot
 		_Data["badge"]              = (int)Badge;
 		_Data["bpm"]                = BPM;
 		_Data["bar"]                = Bar;
+		_Data["origin"]             = Origin;
 		_Data["speed"]              = Speed;
 		_Data["default_payout"]     = DefaultPayout;
 		_Data["bronze_payout"]      = BronzePayout;
@@ -146,8 +148,6 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 	protected override string Path => "songs";
 
 	protected override bool SupportsDevelopment => true;
-
-	[Inject] ProfileProcessor m_ProfileProcessor;
 
 	public List<string> GetSongIDs(bool _IncludeInactive = false)
 	{
@@ -302,6 +302,13 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		return snapshot?.Bar ?? 0;
 	}
 
+	public double GetOrigin(string _SongID)
+	{
+		SongSnapshot snapshot = GetSnapshot(_SongID);
+		
+		return snapshot?.Origin ?? 0;
+	}
+
 	public float GetSpeed(string _SongID)
 	{
 		SongSnapshot snapshot = GetSnapshot(_SongID);
@@ -318,14 +325,17 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		
 		if (_Accuracy >= snapshot.PlatinumThreshold)
 			return ScoreRank.Platinum;
-		else if (_Accuracy >= snapshot.GoldThreshold)
+		
+		if (_Accuracy >= snapshot.GoldThreshold)
 			return ScoreRank.Gold;
-		else if (_Accuracy >= snapshot.SilverThreshold)
+		
+		if (_Accuracy >= snapshot.SilverThreshold)
 			return ScoreRank.Silver;
-		else if (_Accuracy >= snapshot.BronzeThreshold)
+		
+		if (_Accuracy >= snapshot.BronzeThreshold)
 			return ScoreRank.Bronze;
-		else
-			return ScoreRank.None;
+		
+		return ScoreRank.None;
 	}
 
 	public int GetThreshold(string _SongID, ScoreRank _Rank)
@@ -366,36 +376,5 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
-	}
-
-	public async Task Reload()
-	{
-		await DownloadSongs();
-		
-		FireSignal();
-	}
-
-	protected override Task OnFetch() => DownloadSongs();
-
-	protected override Task OnUpdate() => DownloadSongs();
-
-	Task DownloadSongs()
-	{
-		if (m_ProfileProcessor.SongIDs == null)
-			return Task.CompletedTask;
-		
-		List<string> paths = new List<string>();
-		
-		foreach (string songID in m_ProfileProcessor.SongIDs)
-		{
-			if (string.IsNullOrEmpty(songID) || Contains(songID))
-				continue;
-			
-			string path = $"maps/{songID}";
-			
-			paths.Add(path);
-		}
-		
-		return Download(paths);
 	}
 }

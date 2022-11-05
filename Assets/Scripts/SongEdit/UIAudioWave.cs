@@ -123,6 +123,8 @@ public class UIAudioWave : UIImage
 	[SerializeField] AudioClip m_AudioClip;
 	[SerializeField] Mode      m_Mode;
 
+	[SerializeField, Range(0, 1)] float m_Quality = 1; 
+
 	CancellationTokenSource m_TokenSource;
 
 	protected override Material GetMaterial()
@@ -134,7 +136,7 @@ public class UIAudioWave : UIImage
 	{
 		Rect rect = rectTransform.rect;
 		
-		return m_Mode == Mode.Horizontal ? rect.width : rect.height;
+		return (m_Mode == Mode.Horizontal ? rect.width : rect.height) * m_Quality;
 	}
 
 	double GetSPP()
@@ -312,13 +314,8 @@ public class UIAudioWave : UIImage
 		if (_AudioClip == null || _SPP < double.Epsilon * 2)
 			return Texture2D.blackTexture;
 		
-		const int chunk = 1024;
-		
 		int count = (int)(_AudioClip.samples / _SPP);
 		
-		Block block = new Block((int)_SPP * _AudioClip.channels);
-		
-		float[] buffer = new float[chunk * _AudioClip.channels];
 		
 		int size = Mathf.NextPowerOfTwo(Mathf.CeilToInt(Mathf.Sqrt(count)));
 		
@@ -335,37 +332,32 @@ public class UIAudioWave : UIImage
 			texture.SetPixel(x, y, Color.black);
 		}
 		
-		int offset = 0;
-		int index  = 0;
-		while (offset < _AudioClip.samples)
+		int length = (int)(_SPP * _AudioClip.channels);
+		
+		Block block = new Block(length);
+		
+		float[] buffer = new float[length];
+		
+		for (int i = 0; i < count; i++)
 		{
 			_Token.ThrowIfCancellationRequested();
 			
-			_AudioClip.GetData(buffer, offset);
+			int sample = (int)(i * _SPP);
+			
+			_AudioClip.GetData(buffer, sample);
 			
 			foreach (float value in buffer)
-			{
-				_Token.ThrowIfCancellationRequested();
-				
 				block.Add(value);
-				
-				if (!block.Full)
-					continue;
-				
-				int x = index % size;
-				int y = index / size;
-				
-				texture.SetPixel(x, y, block.Convert());
-				
-				block.Clear();
-				
-				index++;
-				
-				if (index % 32 == 0)
-					await Task.Yield();
-			}
 			
-			offset += chunk;
+			int x = i % size;
+			int y = i / size;
+			
+			texture.SetPixel(x, y, block.Convert());
+			
+			block.Clear();
+			
+			if (i % 256 == 0)
+				await Task.Yield();
 		}
 		
 		texture.SetPixel(0, 0, Color.black);

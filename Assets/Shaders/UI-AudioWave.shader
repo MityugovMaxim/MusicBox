@@ -37,8 +37,8 @@
 		Lighting Off
 		ZWrite Off
 		ZTest [unity_GUIZTestMode]
-		Blend [_BlendSrc] [_BlendDst]
-		ColorMask [_ColorMask]
+//		Blend [_BlendSrc] [_BlendDst]
+//		ColorMask [_ColorMask]
 
 		Blend SrcAlpha OneMinusSrcAlpha
 
@@ -143,7 +143,7 @@
 				fixed4 color = fixed4(IN.color.rgb, 0);
 				
 				// Max color
-				color.a = lerp(color.a, 1, maxThreshold);
+				color.a = lerp(color.a, 1, maxThreshold) * IN.color.a;
 				
 				// RMS color
 				color.rgb = lerp(color.rgb, IN.color * 1.5, rmsThreshold);

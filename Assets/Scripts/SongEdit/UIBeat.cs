@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AudioBox.ASF;
+using Firebase.Database;
 using UnityEngine;
 using Zenject;
 
@@ -107,7 +109,13 @@ public class UIBeat : UIEntity
 	[SerializeField] float  m_BPM;
 	[SerializeField] int    m_Bar;
 
-	[Inject] UIBeatKey.Pool m_ItemPool;
+	[Inject] ConfigProcessor m_ConfigProcessor;
+	[Inject] SongsProcessor  m_SongsProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] UIBeatKey.Pool  m_ItemPool;
+
+	string m_SongID;
+	int    m_Tick;
 
 	readonly List<UIBeatKey> m_Items     = new List<UIBeatKey>();
 	readonly List<float>     m_Keys      = new List<float>();
@@ -119,6 +127,37 @@ public class UIBeat : UIEntity
 		
 		ProcessLimits();
 		ProcessTime();
+	}
+
+	public void Setup(string _SongID)
+	{
+		m_SongID = _SongID;
+		
+		m_Duration = RectTransform.rect.height / m_SongsProcessor.GetSpeed(m_SongID);
+		m_Ratio    = m_ConfigProcessor.SongRatio;
+		m_BPM      = m_SongsProcessor.GetBPM(m_SongID);
+		m_Bar      = m_SongsProcessor.GetBar(m_SongID);
+		m_Origin   = m_SongsProcessor.GetOrigin(m_SongID);
+		m_Time     = 0;
+		m_Tick     = (int)Math.Ceiling((Time + Origin) / (60d / BPM));
+		
+		ProcessLimits();
+		ProcessTime();
+	}
+
+	public async void Upload()
+	{
+		FirebaseDatabase database = DevelopmentMode.Enabled
+			? FirebaseDatabase.GetInstance("https://audiobox-76b0e-dev.firebaseio.com/")
+			: FirebaseDatabase.DefaultInstance;
+		
+		DatabaseReference reference = database.RootReference.Child("songs").Child(m_SongID);
+		
+		await Task.WhenAll(
+			reference.Child("bpm").SetValueAsync(BPM),
+			reference.Child("bar").SetValueAsync(Bar),
+			reference.Child("origin").SetValueAsync(Origin)
+		);
 	}
 
 	public double Snap(double _Time)
@@ -135,6 +174,8 @@ public class UIBeat : UIEntity
 
 	void ProcessTime()
 	{
+		ProcessHaptic();
+		
 		ProcessKeys();
 		
 		int delta = m_Keys.Count - m_Items.Count;
@@ -156,6 +197,18 @@ public class UIBeat : UIEntity
 			m_Items[i].Position = m_Keys[i];
 			m_Items[i].Time     = m_Intervals[i];
 		}
+	}
+
+	void ProcessHaptic()
+	{
+		int tick = (int)Math.Ceiling((Time + Origin) / (60d / BPM));
+		
+		if (m_Tick == tick)
+			return;
+		
+		m_Tick = tick;
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactLight);
 	}
 
 	void ProcessKeys()

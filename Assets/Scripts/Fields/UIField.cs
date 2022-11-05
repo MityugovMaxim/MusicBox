@@ -9,6 +9,8 @@ public abstract class UIField : UIEntity
 	[Preserve]
 	public class Factory : PlaceholderFactory<object, PropertyInfo, RectTransform, UIField> { }
 
+	public event Action OnValueChanged;
+
 	protected string Name => m_Name;
 
 	object       m_Target;
@@ -68,6 +70,8 @@ public abstract class UIField : UIEntity
 			return;
 		
 		fieldInfo.SetValue(m_Target, _Value);
+		
+		OnValueChanged?.Invoke();
 	}
 
 	protected abstract void Refresh();

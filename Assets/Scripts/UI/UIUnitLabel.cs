@@ -14,6 +14,7 @@ public class UIUnitLabel : UIEntity
 		Multiplier = 2,
 		Points     = 3,
 		Coins      = 4,
+		Time       = 5,
 	}
 
 	public enum UnitPosition
@@ -93,6 +94,7 @@ public class UIUnitLabel : UIEntity
 			case UnitType.Multiplier: return string.Format(m_FormatInfo, GetMask("{0}{1:#,##0.##}", '*'), sign, _Value);
 			case UnitType.Points:     return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'p'), sign, Math.Truncate(_Value));
 			case UnitType.Coins:      return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'c'), sign, Math.Truncate(_Value));
+			case UnitType.Time:       return string.Format(m_FormatInfo, "{0}{1:#,##0.###}", sign, _Value);
 			default:                  return string.Format(m_FormatInfo, "{0}{1:#,##0.##}", sign, _Value);
 		}
 	}

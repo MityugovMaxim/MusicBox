@@ -390,6 +390,8 @@ public class UISongEditMenu : UIMenu
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
+		await m_SongsProcessor.Load();
+		
 		AudioClip music;
 		try
 		{
@@ -411,8 +413,6 @@ public class UISongEditMenu : UIMenu
 		}
 		
 		float ratio    = m_ConfigProcessor.SongRatio;
-		float bpm      = m_SongsProcessor.GetBPM(m_SongID);
-		int   bar      = m_SongsProcessor.GetBar(m_SongID);
 		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
 		float duration = RectTransform.rect.height / speed;
 		
@@ -425,11 +425,7 @@ public class UISongEditMenu : UIMenu
 		m_Background.AudioClip = music;
 		m_Background.Time      = 0;
 		
-		m_Beat.Duration = duration;
-		m_Beat.Ratio    = ratio;
-		m_Beat.BPM      = bpm;
-		m_Beat.Bar      = bar;
-		m_Beat.Time     = 0;
+		m_Beat.Setup(m_SongID);
 		
 		UIColorMenu colorMenu = m_MenuProcessor.GetMenu<UIColorMenu>();
 		
@@ -463,6 +459,47 @@ public class UISongEditMenu : UIMenu
 		m_Player.Time = 0;
 		
 		Hide();
+	}
+
+	public async void Test()
+	{
+		string artist = m_SongsProcessor.GetArtist(m_SongID);
+		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		
+		bool confirm = await m_MenuProcessor.ConfirmAsync(
+			"song_test",
+			$"TEST '{artist} - {title}'",
+			"Are you sure want to test song?\nAll unsaved changes will be lost."
+		);
+		
+		if (!confirm)
+			return;
+		
+		m_AmbientProcessor.Resume();
+		
+		m_Player.Stop();
+		m_Player.Music.UnloadAudioData();
+		m_Background.AudioClip.UnloadAudioData();
+		m_Player.Music         = null;
+		m_Background.AudioClip = null;
+		m_Player.Time          = 0;
+		
+		await m_MenuProcessor.Hide(MenuType.MapsMenu, true);
+		
+		Hide();
+		
+		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
+		
+		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
+		
+		loadingMenu.Setup(m_SongID);
+		
+		await m_MenuProcessor.Show(MenuType.LoadingMenu);
+		
+		loadingMenu.Load();
+		
+		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
+		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
 	public async void Upload()
@@ -602,7 +639,7 @@ public class UISongEditMenu : UIMenu
 	{
 		string music = m_SongsProcessor.GetMusic(m_SongID);
 		
-		return m_StorageProcessor.LoadAudioClipAsync(music);
+		return m_StorageProcessor.LoadMusicAsync(music, null);
 	}
 
 	Task<string> LoadASF()

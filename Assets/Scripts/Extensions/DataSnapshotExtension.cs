@@ -61,6 +61,18 @@ public static class DataSnapshotExtension
 		return _Default;
 	}
 
+	public static double GetDouble(this DataSnapshot _DataSnapshot)
+	{
+		return Convert.ToDouble(_DataSnapshot.Value);
+	}
+
+	public static double GetDouble(this DataSnapshot _DataSnapshot, string _Name, double _Default = 0)
+	{
+		if (_DataSnapshot.HasChild(_Name))
+			return _DataSnapshot.Child(_Name).GetDouble();
+		return _Default;
+	}
+
 	public static long GetLong(this DataSnapshot _DataSnapshot)
 	{
 		return (long)_DataSnapshot.Value;

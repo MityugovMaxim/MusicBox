@@ -12,11 +12,15 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 	[Serializable]
 	public class Repeat
 	{
-		public int Count => m_Count;
-		public int Delay => m_Delay;
+		public int  Count  => m_Count;
+		public int  Delay  => m_Delay;
+		public bool Sound  => m_Sound;
+		public bool Haptic => m_Haptic;
 
-		[SerializeField] int m_Count;
-		[SerializeField] int m_Delay;
+		[SerializeField] int  m_Count;
+		[SerializeField] int  m_Delay;
+		[SerializeField] bool m_Sound  = true;
+		[SerializeField] bool m_Haptic = true;
 	}
 
 	Animator m_Animator;
@@ -60,6 +64,21 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 		StopRepeat();
 	}
 
+	public void AddListener(UnityAction _Action)
+	{
+		m_Action.AddListener(_Action);
+	}
+
+	public void RemoveListener(UnityAction _Action)
+	{
+		m_Action.RemoveListener(_Action);
+	}
+
+	public void RemoveAllListeners()
+	{
+		m_Action.RemoveAllListeners();
+	}
+
 	void StopRepeat()
 	{
 		m_TokenSource?.Cancel();
@@ -91,9 +110,11 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 			{
 				Repeat repeat = repeats[index];
 				
-				m_HapticProcessor.Process(m_RepeatHaptic);
+				if (repeat.Haptic)
+					m_HapticProcessor.Process(m_RepeatHaptic);
 				
-				m_SoundProcessor.Play(m_RepeatSound);
+				if (repeat.Sound)
+					m_SoundProcessor.Play(m_RepeatSound);
 				
 				m_Action?.Invoke();
 				
