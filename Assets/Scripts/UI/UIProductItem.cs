@@ -22,12 +22,12 @@ public class UIProductItem : UIOverlayButton
 
 	[SerializeField, Sound] string m_PurchaseSound;
 
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ProductsProcessor  m_ProductsProcessor;
-	[Inject] StoreProcessor     m_StoreProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] ProfileProcessor m_ProfileProcessor;
+	[Inject] ProductsManager  m_ProductsManager;
+	[Inject] StoreProcessor   m_StoreProcessor;
+	[Inject] HapticProcessor  m_HapticProcessor;
+	[Inject] SoundProcessor   m_SoundProcessor;
 
 	string m_ProductID;
 
@@ -39,7 +39,7 @@ public class UIProductItem : UIOverlayButton
 		m_Badge.Setup(m_ProductID);
 		m_Price.Setup(m_ProductID);
 		
-		m_Coins.Value = m_ProductsProcessor.GetCoins(m_ProductID);
+		m_Coins.Value = m_ProductsManager.GetCoins(m_ProductID);
 		
 		m_OverlayGroup.Hide(true);
 		m_LoaderGroup.Hide(true);

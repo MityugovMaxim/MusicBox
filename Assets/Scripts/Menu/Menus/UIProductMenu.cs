@@ -204,7 +204,7 @@ public class UIProductMenu : UISlideMenu
 			}
 		}
 		
-		long coins = m_ProductsProcessor.GetCoins(m_ProductID);
+		long coins = m_ProductsManager.GetCoins(m_ProductID);
 		m_Coins.Value = coins;
 		m_Coins.gameObject.SetActive(coins != 0);
 		

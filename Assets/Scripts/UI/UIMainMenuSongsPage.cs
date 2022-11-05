@@ -401,14 +401,16 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	void CreateCoins()
 	{
-		List<string> coinsIDs = m_ProductsManager.GetAvailableProductIDs();
+		const int count = 3;
 		
-		if (coinsIDs == null || coinsIDs.Count < 3)
+		List<string> coinsIDs = m_ProductsManager.GetRecommendedProductIDs(count);
+		
+		if (coinsIDs == null || coinsIDs.Count < count)
 			return;
 		
-		VerticalGridLayout.Start(m_Content, 3, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
+		VerticalGridLayout.Start(m_Content, count, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
 		
-		foreach (string coinsID in coinsIDs.Take(3))
+		foreach (string coinsID in coinsIDs.Take(count))
 			m_Content.Add(new ProductItemEntity(coinsID, m_ProductPool));
 		
 		VerticalGridLayout.End(m_Content);

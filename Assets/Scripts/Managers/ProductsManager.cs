@@ -32,6 +32,13 @@ public class ProductsManager
 			.ToList();
 	}
 
+	public long GetCoins(string _ProductID)
+	{
+		long coins = m_ProductsProcessor.GetCoins(_ProductID);
+		
+		return m_ProfileProcessor.ApplyTicket(ProfileTicketType.ProductDiscount, coins);
+	}
+
 	public List<string> GetAvailableProductIDs()
 	{
 		return m_ProductsProcessor.GetProductIDs()
@@ -40,6 +47,27 @@ public class ProductsManager
 			.Where(IsAvailable)
 			.OrderBy(m_ProductsProcessor.GetCoins)
 			.ToList();
+	}
+
+	public List<string> GetRecommendedProductIDs(int _Count)
+	{
+		List<string> productIDs = m_ProductsProcessor.GetProductIDs()
+			.Where(_ProductID => !m_ProductsProcessor.IsPromo(_ProductID))
+			.Where(_ProductID => !m_ProductsProcessor.IsSpecial(_ProductID))
+			.Where(IsAvailable)
+			.OrderBy(GetCoins)
+			.ToList();
+		
+		int skip = 0;
+		while (skip < productIDs.Count - _Count)
+		{
+			if (GetCoins(productIDs[skip]) >= m_ProfileProcessor.Coins)
+				break;
+			
+			skip++;
+		}
+		
+		return productIDs.Skip(skip).Take(_Count).ToList();
 	}
 
 	public bool IsAvailable(string _ProductID)

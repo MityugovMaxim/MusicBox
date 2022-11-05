@@ -38,4 +38,5 @@ public enum MenuType
 	SongCreateMenu       = 35,
 	TransitionMenu       = 36,
 	PermissionMenu       = 37,
+	TicketCreateMenu     = 38,
 }

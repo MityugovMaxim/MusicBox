@@ -19,6 +19,7 @@ public class ProfileSnapshot
 	public IReadOnlyList<string>             OfferIDs     { get; }
 	public IReadOnlyList<ProfileTransaction> Transactions { get; }
 	public IReadOnlyList<ProfileTimer>       Timers       { get; }
+	public IReadOnlyList<ProfileTicket>      Tickets      { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
@@ -32,6 +33,9 @@ public class ProfileSnapshot
 			.ToList();
 		Timers = _Data.Child("timers").Children
 			.Select(_Timer => new ProfileTimer(_Timer))
+			.ToList();
+		Tickets = _Data.Child("tickets").Children
+			.Select(_Ticket => new ProfileTicket(_Ticket))
 			.ToList();
 	}
 }
@@ -76,6 +80,48 @@ public class ProfileTransaction
 		TransactionID = _Data.GetString("transaction_id");
 		ProductID     = _Data.GetString("product_id");
 		Timestamp     = _Data.GetLong("timestamp");
+	}
+}
+
+public enum ProfileTicketType
+{
+	ProductDiscount = 0,
+	SongDiscount    = 1,
+	CoinsBoost      = 2,
+	ScoreBoost      = 3,
+	DiscsBoost      = 4,
+}
+
+public class ProfileTicket
+{
+	public string            ID                  { get; }
+	public long              Amount              { get; }
+	public ProfileTicketType Type                { get; }
+	public bool              Available           { get; }
+	public long              ExpirationTimestamp { get; }
+
+	public ProfileTicket(DataSnapshot _Data)
+	{
+		ID                  = _Data.Key;
+		Amount              = _Data.GetLong("amount");
+		Type                = _Data.GetEnum<ProfileTicketType>("type");
+		Available           = _Data.GetBool("available");
+		ExpirationTimestamp = _Data.GetLong("expiration_timestamp");
+	}
+
+	public long Apply(long _Value)
+	{
+		double percent = 1.0d / Amount;
+		
+		switch (Type)
+		{
+			case ProfileTicketType.ProductDiscount: return _Value + (long)(_Value * percent);
+			case ProfileTicketType.SongDiscount:    return _Value - (long)(_Value * percent);
+			case ProfileTicketType.CoinsBoost:      return _Value + (long)(_Value * percent);
+			case ProfileTicketType.ScoreBoost:      return _Value + (long)(_Value * percent);
+			case ProfileTicketType.DiscsBoost:      return _Value + (long)(_Value * percent);
+			default:                                return _Value;
+		}
 	}
 }
 
@@ -165,6 +211,23 @@ public class ProfileProcessor : IInitializable, IDisposable
 		Pending = false;
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
+	}
+
+	public long ApplyTicket(ProfileTicketType _TicketType, long _Value)
+	{
+		if (m_Snapshot == null || m_Snapshot.Tickets == null || m_Snapshot.Tickets.Count == 0)
+			return _Value;
+		
+		long timestamp = TimeUtility.GetTimestamp();
+		
+		ProfileTicket ticket = m_Snapshot.Tickets
+			.Where(_Ticket => _Ticket != null)
+			.Where(_Ticket => _Ticket.Available)
+			.Where(_Ticket => _Ticket.ExpirationTimestamp >= timestamp)
+			.OrderByDescending(_Ticket => _Ticket.Amount)
+			.FirstOrDefault();
+		
+		return ticket != null ? ticket.Apply(_Value) : _Value;
 	}
 
 	public bool HasSong(string _SongID)
