@@ -54,6 +54,7 @@ public abstract class UIField : UIEntity
 		if (m_PropertyInfo.CanWrite)
 		{
 			m_PropertyInfo.SetValue(m_Target, _Value);
+			OnValueChanged?.Invoke();
 			return;
 		}
 		
@@ -70,7 +71,6 @@ public abstract class UIField : UIEntity
 			return;
 		
 		fieldInfo.SetValue(m_Target, _Value);
-		
 		OnValueChanged?.Invoke();
 	}
 

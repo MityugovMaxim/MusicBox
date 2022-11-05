@@ -63,22 +63,19 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	void Refresh()
 	{
 		m_Content.Clear();
-		
-		CreateAdminRoles();
-		
-		CreateAdminSongs();
-		
-		CreateAdminMaps();
-		
-		CreateAdminProgress();
-		
-		CreateAdminAmbient();
-		
-		CreateAdminRevives();
-		
-		CreateAdminLanguages();
-		
-		CreateAdminLocalizations();
+
+		if (AdminMode.Enabled)
+		{
+			CreateAdminRoles();
+			CreateAdminSongs();
+			CreateAdminMaps();
+			CreateAdminProgress();
+			CreateAdminAmbient();
+			CreateAdminRevives();
+			CreateAdminTickets();
+			CreateAdminLanguages();
+			CreateAdminLocalizations();
+		}
 		
 		CreateLibrary();
 		
@@ -182,6 +179,28 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		);
 		
 		CreateAdmin(revives);
+	}
+
+	void CreateAdminTickets()
+	{
+		if (!m_RolesProcessor.HasRolesPermission())
+			return;
+		
+		AdminElementEntity tickets = new AdminElementEntity(
+			"Create ticket",
+			m_AdminPool,
+			() =>
+			{
+				UITicketCreateMenu ticketCreateMenu = m_MenuProcessor.GetMenu<UITicketCreateMenu>();
+				
+				if (ticketCreateMenu == null)
+					return;
+				
+				ticketCreateMenu.Show();
+			}
+		);
+		
+		CreateAdmin(tickets);
 	}
 
 	void CreateAdminLanguages()
