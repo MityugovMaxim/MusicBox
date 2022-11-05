@@ -37,7 +37,9 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	{
 		Refresh();
 		
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileLevelUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileSongsUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<SongsDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
@@ -49,7 +51,9 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (m_SignalBus == null)
 			return;
 		
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileLevelUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileSongsUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);

@@ -184,8 +184,6 @@ public class UIDailyElement : UIOverlayButton
 		
 		Processing = true;
 		
-		m_ProfileProcessor.Lock();
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		m_LoaderGroup.Show();
@@ -220,8 +218,6 @@ public class UIDailyElement : UIOverlayButton
 			
 			Processing = false;
 			
-			m_ProfileProcessor.Unlock();
-			
 			return;
 		}
 		
@@ -247,8 +243,6 @@ public class UIDailyElement : UIOverlayButton
 			m_LoaderGroup.Hide();
 			
 			Processing = false;
-			
-			m_ProfileProcessor.Unlock();
 			
 			return;
 		}
@@ -303,8 +297,6 @@ public class UIDailyElement : UIOverlayButton
 		}
 		
 		Processing = false;
-		
-		m_ProfileProcessor.Unlock();
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}

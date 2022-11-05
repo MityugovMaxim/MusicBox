@@ -29,7 +29,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (m_SignalBus == null)
 			return;
 		
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 
@@ -38,7 +38,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		if (m_SignalBus == null)
 			return;
 		
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
 	}
 

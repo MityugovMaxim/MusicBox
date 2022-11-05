@@ -81,6 +81,16 @@ public class ProfileTransaction
 
 [Preserve]
 public class ProfileDataUpdateSignal { }
+[Preserve]
+public class ProfileCoinsUpdateSignal { }
+[Preserve]
+public class ProfileDiscsUpdateSignal { }
+[Preserve]
+public class ProfileLevelUpdateSignal { }
+[Preserve]
+public class ProfileProductsUpdateSignal { }
+[Preserve]
+public class ProfileSongsUpdateSignal { }
 
 [Preserve]
 public class ProfileTimerSignal { }
@@ -236,7 +246,11 @@ public class ProfileProcessor : IInitializable, IDisposable
 		
 		Debug.Log("[ProfileProcessor] Updating profile data...");
 		
+		ProfileSnapshot sourceSnapshot = m_Snapshot;
+		
 		await Fetch();
+		
+		ProfileSnapshot targetSnapshot = m_Snapshot;
 		
 		Debug.Log("[ProfileProcessor] Update profile data complete.");
 		
@@ -248,6 +262,24 @@ public class ProfileProcessor : IInitializable, IDisposable
 		}
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
+		
+		if (sourceSnapshot == null || targetSnapshot == null)
+			return;
+		
+		if (sourceSnapshot.Coins != targetSnapshot.Coins)
+			m_SignalBus.Fire<ProfileCoinsUpdateSignal>();
+		
+		if (sourceSnapshot.Discs != targetSnapshot.Discs)
+			m_SignalBus.Fire<ProfileDiscsUpdateSignal>();
+		
+		if (sourceSnapshot.Level != targetSnapshot.Level)
+			m_SignalBus.Fire<ProfileLevelUpdateSignal>();
+		
+		if (sourceSnapshot.SongIDs?.Count != targetSnapshot.SongIDs?.Count)
+			m_SignalBus.Fire<ProfileSongsUpdateSignal>();
+		
+		if (sourceSnapshot.Transactions?.Count != targetSnapshot.Transactions?.Count)
+			m_SignalBus.Fire<ProfileProductsUpdateSignal>();
 	}
 
 	async Task Fetch()
