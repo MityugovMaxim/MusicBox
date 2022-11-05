@@ -63,7 +63,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	void Refresh()
 	{
 		m_Content.Clear();
-
+		
 		if (AdminMode.Enabled)
 		{
 			CreateAdminRoles();
