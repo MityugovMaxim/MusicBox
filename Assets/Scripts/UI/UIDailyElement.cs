@@ -76,8 +76,6 @@ public class UIDailyElement : UIOverlayButton
 			m_DailyManager.GetEndTimestamp(),
 			OnTimer
 		);
-		
-		ProcessPhase(0);
 	}
 
 	async void OnTimer()
@@ -117,6 +115,8 @@ public class UIDailyElement : UIOverlayButton
 
 	void ProcessDaily()
 	{
+		ProcessPhase(0);
+		
 		List<string> dailyIDs = m_DailyManager.GetDailyIDs();
 		
 		int index = dailyIDs.IndexOf(m_DailyID);
