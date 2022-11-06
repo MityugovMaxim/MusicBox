@@ -102,11 +102,15 @@ public abstract class DataProcessor<TSnapshot> where TSnapshot : Snapshot
 		}
 		
 		m_Snapshots.Clear();
+		m_Registry.Clear();
 		
 		if (_EventArgs.Snapshot == null)
 			return;
 		
 		m_Snapshots.AddRange(_EventArgs.Snapshot.Children.Select(Create));
+		
+		foreach (TSnapshot snapshot in m_Snapshots)
+			m_Registry[snapshot.ID] = snapshot;
 		
 		await OnUpdate();
 		
