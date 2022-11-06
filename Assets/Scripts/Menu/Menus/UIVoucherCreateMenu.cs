@@ -2,17 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-[Menu(MenuType.TicketCreateMenu)]
-public class UITicketCreateMenu : UIMenu
+[Menu(MenuType.VoucherCreateMenu)]
+public class UIVoucherCreateMenu : UIMenu
 {
-	public ProfileTicketType             Type    { get; set; }
-	public TicketCreateRequest.GroupType Group   { get; set; }
-	public string                        UserID  { get; set; }
-	public string                        Region  { get; set; }
-	public long                          Amount  { get; set; }
-	public int                           Days    { get; set; }
-	public int                           Hours   { get; set; }
-	public int                           Minutes { get; set; }
+	public ProfileVoucherType             Type    { get; set; }
+	public VoucherCreateRequest.GroupType Group   { get; set; }
+	public string                         UserID  { get; set; }
+	public string                         Region  { get; set; }
+	public long                           Amount  { get; set; }
+	public int                            Days    { get; set; }
+	public int                            Hours   { get; set; }
+	public int                            Minutes { get; set; }
 
 	[SerializeField] UIEnumField    m_TypeField;
 	[SerializeField] UIEnumField    m_GroupField;
@@ -51,8 +51,8 @@ public class UITicketCreateMenu : UIMenu
 	{
 		base.OnShowStarted();
 		
-		Type    = ProfileTicketType.ProductDiscount;
-		Group   = TicketCreateRequest.GroupType.All;
+		Type    = ProfileVoucherType.ProductDiscount;
+		Group   = VoucherCreateRequest.GroupType.All;
 		UserID  = string.Empty;
 		Region  = string.Empty;
 		Amount  = 5;
@@ -75,9 +75,9 @@ public class UITicketCreateMenu : UIMenu
 	async void Create()
 	{
 		bool confirm = await m_MenuProcessor.ConfirmAsync(
-			"ticket_create",
-			"Create Ticket",
-			"Are you sure want to create new ticket?"
+			"voucher_create",
+			"Create Voucher",
+			"Are you sure want to create new voucher?"
 		);
 		
 		if (!confirm)
@@ -87,7 +87,7 @@ public class UITicketCreateMenu : UIMenu
 		
 		long expirationTimestamp = TimeUtility.GetTimestamp(Days, Hours, Minutes);
 		
-		TicketCreateRequest request = new TicketCreateRequest(
+		VoucherCreateRequest request = new VoucherCreateRequest(
 			Type,
 			Group,
 			UserID,
@@ -105,9 +105,9 @@ public class UITicketCreateMenu : UIMenu
 		else
 		{
 			await m_MenuProcessor.ErrorAsync(
-				"ticket_create",
-				"ticket_create_menu",
-				"Create ticket failed",
+				"voucher_create",
+				"voucher_create_menu",
+				"Create voucher failed",
 				"Something went wrong. Check the parameters and try again"
 			);
 		}
@@ -119,7 +119,7 @@ public class UITicketCreateMenu : UIMenu
 
 	void ProcessGroup()
 	{
-		m_UserIDField.gameObject.SetActive(Group == TicketCreateRequest.GroupType.User);
-		m_RegionField.gameObject.SetActive(Group == TicketCreateRequest.GroupType.Region);
+		m_UserIDField.gameObject.SetActive(Group == VoucherCreateRequest.GroupType.User);
+		m_RegionField.gameObject.SetActive(Group == VoucherCreateRequest.GroupType.Region);
 	}
 }

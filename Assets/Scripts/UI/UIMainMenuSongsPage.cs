@@ -72,7 +72,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 			CreateAdminProgress();
 			CreateAdminAmbient();
 			CreateAdminRevives();
-			CreateAdminTickets();
+			CreateAdminVouchers();
 			CreateAdminLanguages();
 			CreateAdminLocalizations();
 		}
@@ -181,26 +181,26 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		CreateAdmin(revives);
 	}
 
-	void CreateAdminTickets()
+	void CreateAdminVouchers()
 	{
 		if (!m_RolesProcessor.HasRolesPermission())
 			return;
 		
-		AdminElementEntity tickets = new AdminElementEntity(
-			"Create ticket",
+		AdminElementEntity vouchers = new AdminElementEntity(
+			"Create voucher",
 			m_AdminPool,
 			() =>
 			{
-				UITicketCreateMenu ticketCreateMenu = m_MenuProcessor.GetMenu<UITicketCreateMenu>();
+				UIVoucherCreateMenu voucherCreateMenu = m_MenuProcessor.GetMenu<UIVoucherCreateMenu>();
 				
-				if (ticketCreateMenu == null)
+				if (voucherCreateMenu == null)
 					return;
 				
-				ticketCreateMenu.Show();
+				voucherCreateMenu.Show();
 			}
 		);
 		
-		CreateAdmin(tickets);
+		CreateAdmin(vouchers);
 	}
 
 	void CreateAdminLanguages()

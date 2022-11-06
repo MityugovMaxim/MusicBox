@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
-public class TicketCreateRequest : FunctionRequest<bool>
+public class VoucherCreateRequest : FunctionRequest<bool>
 {
 	public enum GroupType
 	{
@@ -13,17 +11,17 @@ public class TicketCreateRequest : FunctionRequest<bool>
 		Purchasers = 4,
 	}
 
-	protected override string Command => "TicketCreate";
+	protected override string Command => "VoucherCreate";
 
-	readonly ProfileTicketType m_Type;
+	readonly ProfileVoucherType m_Type;
 	readonly GroupType         m_Group;
 	readonly string            m_UserID;
 	readonly string            m_Region;
 	readonly long              m_Amount;
 	readonly long              m_ExpirationTimestamp;
 
-	public TicketCreateRequest(
-		ProfileTicketType _Type,
+	public VoucherCreateRequest(
+		ProfileVoucherType _Type,
 		GroupType         _Group,
 		string            _UserID,
 		string            _Region,

@@ -36,7 +36,7 @@ public class ProductsManager
 	{
 		long coins = m_ProductsProcessor.GetCoins(_ProductID);
 		
-		return m_ProfileProcessor.ApplyTicket(ProfileTicketType.ProductDiscount, _ProductID, coins);
+		return m_ProfileProcessor.ApplyVoucher(ProfileVoucherType.ProductDiscount, _ProductID, coins);
 	}
 
 	public List<string> GetAvailableProductIDs()

@@ -19,7 +19,7 @@ public class ProfileSnapshot
 	public IReadOnlyList<string>             OfferIDs     { get; }
 	public IReadOnlyList<ProfileTransaction> Transactions { get; }
 	public IReadOnlyList<ProfileTimer>       Timers       { get; }
-	public IReadOnlyList<ProfileTicket>      Tickets      { get; }
+	public IReadOnlyList<ProfileVoucher>     Vouchers     { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
@@ -34,8 +34,8 @@ public class ProfileSnapshot
 		Timers = _Data.Child("timers").Children
 			.Select(_Timer => new ProfileTimer(_Timer))
 			.ToList();
-		Tickets = _Data.Child("tickets").Children
-			.Select(_Ticket => new ProfileTicket(_Ticket))
+		Vouchers = _Data.Child("vouchers").Children
+			.Select(_Voucher => new ProfileVoucher(_Voucher))
 			.ToList();
 	}
 }
@@ -83,7 +83,7 @@ public class ProfileTransaction
 	}
 }
 
-public enum ProfileTicketType
+public enum ProfileVoucherType
 {
 	ProductDiscount = 0,
 	SongDiscount    = 1,
@@ -92,20 +92,20 @@ public enum ProfileTicketType
 	DiscsBoost      = 4,
 }
 
-public class ProfileTicket
+public class ProfileVoucher
 {
 	public string            ID                  { get; }
 	public long              Amount              { get; }
 	public string            Payload             { get; }
-	public ProfileTicketType Type                { get; }
+	public ProfileVoucherType Type                { get; }
 	public bool              Available           { get; }
 	public long              ExpirationTimestamp { get; }
 
-	public ProfileTicket(DataSnapshot _Data)
+	public ProfileVoucher(DataSnapshot _Data)
 	{
 		ID                  = _Data.Key;
 		Amount              = _Data.GetLong("amount");
-		Type                = _Data.GetEnum<ProfileTicketType>("type");
+		Type                = _Data.GetEnum<ProfileVoucherType>("type");
 		Payload             = _Data.GetString("payload");
 		Available           = _Data.GetBool("available");
 		ExpirationTimestamp = _Data.GetLong("expiration_timestamp");
@@ -122,11 +122,11 @@ public class ProfileTicket
 		
 		switch (Type)
 		{
-			case ProfileTicketType.ProductDiscount: return _Value + (long)(_Value * percent);
-			case ProfileTicketType.SongDiscount:    return _Value - (long)(_Value * percent);
-			case ProfileTicketType.CoinsBoost:      return _Value + (long)(_Value * percent);
-			case ProfileTicketType.ScoreBoost:      return _Value + (long)(_Value * percent);
-			case ProfileTicketType.DiscsBoost:      return _Value + (long)(_Value * percent);
+			case ProfileVoucherType.ProductDiscount: return _Value + (long)(_Value * percent);
+			case ProfileVoucherType.SongDiscount:    return _Value - (long)(_Value * percent);
+			case ProfileVoucherType.CoinsBoost:      return _Value + (long)(_Value * percent);
+			case ProfileVoucherType.ScoreBoost:      return _Value + (long)(_Value * percent);
+			case ProfileVoucherType.DiscsBoost:      return _Value + (long)(_Value * percent);
 			default:                                return _Value;
 		}
 	}
@@ -220,35 +220,28 @@ public class ProfileProcessor : IInitializable, IDisposable
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 
-	ProfileTicket GetTicket(ProfileTicketType _TicketType, string _Payload)
+	public ProfileVoucher GetVoucher(ProfileVoucherType _VoucherType, string _Payload)
 	{
-		if (m_Snapshot == null || m_Snapshot.Tickets == null || m_Snapshot.Tickets.Count == 0)
+		if (m_Snapshot == null || m_Snapshot.Vouchers == null || m_Snapshot.Vouchers.Count == 0)
 			return null;
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
-		return m_Snapshot.Tickets
-			.Where(_Ticket => _Ticket != null)
-			.Where(_Ticket => _Ticket.Type == _TicketType)
-			.Where(_Ticket => _Ticket.Available)
-			.Where(_Ticket => _Ticket.ExpirationTimestamp == 0 || _Ticket.ExpirationTimestamp >= timestamp)
-			.Where(_Ticket => _Ticket.Payload.Contains(_Payload))
-			.OrderByDescending(_Ticket => _Ticket.Amount)
+		return m_Snapshot.Vouchers
+			.Where(_Voucher => _Voucher != null)
+			.Where(_Voucher => _Voucher.Type == _VoucherType)
+			.Where(_Voucher => _Voucher.Available)
+			.Where(_Voucher => _Voucher.ExpirationTimestamp == 0 || _Voucher.ExpirationTimestamp >= timestamp)
+			.Where(_Voucher => _Voucher.Payload.Contains(_Payload))
+			.OrderByDescending(_Voucher => _Voucher.Amount)
 			.FirstOrDefault();
 	}
 
-	public long GetTicketExpirationTimestamp(ProfileTicketType _TicketType, string _Payload)
+	public long ApplyVoucher(ProfileVoucherType _VoucherType, string _Payload, long _Value)
 	{
-		ProfileTicket ticket = GetTicket(_TicketType, _Payload);
+		ProfileVoucher voucher = GetVoucher(_VoucherType, _Payload);
 		
-		return ticket != null ? ticket.ExpirationTimestamp : 0;
-	}
-
-	public long ApplyTicket(ProfileTicketType _TicketType, string _Payload, long _Value)
-	{
-		ProfileTicket ticket = GetTicket(_TicketType, _Payload);
-		
-		return ticket != null ? ticket.Apply(_Payload, _Value) : _Value;
+		return voucher != null ? voucher.Apply(_Payload, _Value) : _Value;
 	}
 
 	public bool HasSong(string _SongID)
