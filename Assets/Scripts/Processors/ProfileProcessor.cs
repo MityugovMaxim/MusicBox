@@ -96,6 +96,7 @@ public class ProfileTicket
 {
 	public string            ID                  { get; }
 	public long              Amount              { get; }
+	public string            Payload             { get; }
 	public ProfileTicketType Type                { get; }
 	public bool              Available           { get; }
 	public long              ExpirationTimestamp { get; }
@@ -105,13 +106,19 @@ public class ProfileTicket
 		ID                  = _Data.Key;
 		Amount              = _Data.GetLong("amount");
 		Type                = _Data.GetEnum<ProfileTicketType>("type");
+		Payload             = _Data.GetString("payload");
 		Available           = _Data.GetBool("available");
 		ExpirationTimestamp = _Data.GetLong("expiration_timestamp");
 	}
 
+	public long Apply(string _Payload, long _Value)
+	{
+		return string.IsNullOrEmpty(Payload) || !string.IsNullOrEmpty(_Payload) && Payload.Contains(_Payload) ? Apply(_Value) : _Value;
+	}
+
 	public long Apply(long _Value)
 	{
-		double percent = 1.0d / Amount;
+		double percent = Amount / 100d;
 		
 		switch (Type)
 		{
@@ -213,21 +220,35 @@ public class ProfileProcessor : IInitializable, IDisposable
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 
-	public long ApplyTicket(ProfileTicketType _TicketType, long _Value)
+	ProfileTicket GetTicket(ProfileTicketType _TicketType, string _Payload)
 	{
 		if (m_Snapshot == null || m_Snapshot.Tickets == null || m_Snapshot.Tickets.Count == 0)
-			return _Value;
+			return null;
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
-		ProfileTicket ticket = m_Snapshot.Tickets
+		return m_Snapshot.Tickets
 			.Where(_Ticket => _Ticket != null)
+			.Where(_Ticket => _Ticket.Type == _TicketType)
 			.Where(_Ticket => _Ticket.Available)
-			.Where(_Ticket => _Ticket.ExpirationTimestamp >= timestamp)
+			.Where(_Ticket => _Ticket.ExpirationTimestamp == 0 || _Ticket.ExpirationTimestamp >= timestamp)
+			.Where(_Ticket => _Ticket.Payload.Contains(_Payload))
 			.OrderByDescending(_Ticket => _Ticket.Amount)
 			.FirstOrDefault();
+	}
+
+	public long GetTicketExpirationTimestamp(ProfileTicketType _TicketType, string _Payload)
+	{
+		ProfileTicket ticket = GetTicket(_TicketType, _Payload);
 		
-		return ticket != null ? ticket.Apply(_Value) : _Value;
+		return ticket != null ? ticket.ExpirationTimestamp : 0;
+	}
+
+	public long ApplyTicket(ProfileTicketType _TicketType, string _Payload, long _Value)
+	{
+		ProfileTicket ticket = GetTicket(_TicketType, _Payload);
+		
+		return ticket != null ? ticket.Apply(_Payload, _Value) : _Value;
 	}
 
 	public bool HasSong(string _SongID)
