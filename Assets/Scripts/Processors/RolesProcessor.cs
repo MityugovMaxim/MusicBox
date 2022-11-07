@@ -21,6 +21,7 @@ public class RoleSnapshot : Snapshot
 	public bool   News      { get; }
 	public bool   Products  { get; }
 	public bool   Daily     { get; }
+	public bool   Vouchers  { get; }
 
 	public RoleSnapshot() : base("new_role_user", 0)
 	{
@@ -37,6 +38,7 @@ public class RoleSnapshot : Snapshot
 		News      = false;
 		Products  = false;
 		Daily     = false;
+		Vouchers  = false;
 	}
 
 	public RoleSnapshot(DataSnapshot _Data) : base(_Data)
@@ -54,6 +56,7 @@ public class RoleSnapshot : Snapshot
 		Banners   = _Data.GetBool("permissions/banners");
 		Products  = _Data.GetBool("permissions/products");
 		Daily     = _Data.GetBool("permissions/daily");
+		Vouchers  = _Data.GetBool("permissions/vouchers");
 	}
 
 	public override void Serialize(Dictionary<string, object> _Data)
@@ -75,6 +78,7 @@ public class RoleSnapshot : Snapshot
 			{ "banners", Banners },
 			{ "products", Products },
 			{ "daily", Daily },
+			{ "vouchers", Vouchers },
 		};
 	}
 

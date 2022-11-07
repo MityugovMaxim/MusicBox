@@ -20,13 +20,14 @@ public class UIDailyElement : UIOverlayButton
 	[SerializeField] UIDailyItem[]  m_LeftItems;
 	[SerializeField] UIDailyItem[]  m_RightItems;
 	[SerializeField] UIDailyItem    m_CenterItem;
-	[SerializeField] UITimer        m_Timer;
+	[SerializeField] UIAnalogTimer  m_Timer;
 	[SerializeField] UIGroup        m_TimerGroup;
 	[SerializeField] UIGroup        m_ItemsGroup;
 	[SerializeField] UIGroup        m_LoaderGroup;
 
 	[SerializeField, Sound] string m_Sound;
 
+	[Inject] SignalBus             m_SignalBus;
 	[Inject] DailyManager          m_DailyManager;
 	[Inject] DailyProcessor        m_DailyProcessor;
 	[Inject] MenuProcessor         m_MenuProcessor;
@@ -39,10 +40,24 @@ public class UIDailyElement : UIOverlayButton
 
 	string m_DailyID;
 
-	void Update()
+	protected override void OnEnable()
 	{
-		if (m_Timer != null && !Processing)
-			m_Timer.Process();
+		base.OnEnable();
+		
+		if (m_SignalBus == null)
+			return;
+		
+		m_SignalBus.Subscribe<TimerEndSignal>(ProcessTimer);
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		if (m_SignalBus == null)
+			return;
+		
+		m_SignalBus.Unsubscribe<TimerEndSignal>(ProcessTimer);
 	}
 
 	public void Setup()
@@ -71,22 +86,19 @@ public class UIDailyElement : UIOverlayButton
 			m_TimerGroup.Show(true);
 		}
 		
-		m_Timer.Setup(
-			m_DailyManager.GetStartTimestamp(),
-			m_DailyManager.GetEndTimestamp(),
-			OnTimer
-		);
+		m_Timer.Setup(m_DailyManager.GetTimestamp());
 	}
 
-	async void OnTimer()
+	async void ProcessTimer(TimerEndSignal _Signal)
 	{
 		await UnityTask.While(() => Processing);
 		
 		string dailyID = m_DailyManager.GetDailyID();
 		
-		Processing = true;
+		if (!m_DailyManager.IsDailyAvailable(dailyID))
+			return;
 		
-		m_ProfileProcessor.ProcessTimer();
+		Processing = true;
 		
 		await m_TimerGroup.HideAsync();
 		
@@ -259,8 +271,7 @@ public class UIDailyElement : UIOverlayButton
 		
 		string dailyID = m_DailyManager.GetDailyID();
 		
-		long startTimestamp = m_DailyManager.GetStartTimestamp();
-		long endTimestamp   = m_DailyManager.GetEndTimestamp();
+		long timestamp = m_DailyManager.GetTimestamp();
 		
 		if (m_DailyID != dailyID)
 		{
@@ -269,7 +280,7 @@ public class UIDailyElement : UIOverlayButton
 				Application.productName,
 				m_LocalizationProcessor.Get("DAILY_NOTIFICATION"),
 				"audiobox://store",
-				endTimestamp
+				timestamp
 			);
 			
 			m_DailyID = dailyID;
@@ -278,11 +289,11 @@ public class UIDailyElement : UIOverlayButton
 			
 			ProcessDaily();
 			
-			m_Timer.Setup(startTimestamp, endTimestamp, OnTimer);
+			m_Timer.Setup(timestamp);
 		}
 		else
 		{
-			m_Timer.Setup(startTimestamp, endTimestamp, OnTimer);
+			m_Timer.Setup(timestamp);
 			
 			await Task.WhenAll(
 				m_ItemsGroup.HideAsync(),
@@ -301,9 +312,3 @@ public class UIDailyElement : UIOverlayButton
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 }
-
-
-
-
-
-

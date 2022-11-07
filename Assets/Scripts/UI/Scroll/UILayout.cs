@@ -61,6 +61,8 @@ public class UILayout : UIEntity
 
 	public void Clear()
 	{
+		EndLayout();
+		
 		MinIndex = -1;
 		MaxIndex = -1;
 		

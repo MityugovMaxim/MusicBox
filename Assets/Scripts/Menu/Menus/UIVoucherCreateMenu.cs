@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -5,33 +6,29 @@ using Zenject;
 [Menu(MenuType.VoucherCreateMenu)]
 public class UIVoucherCreateMenu : UIMenu
 {
-	public ProfileVoucherType             Type    { get; set; }
-	public VoucherCreateRequest.GroupType Group   { get; set; }
-	public string                         UserID  { get; set; }
-	public string                         Region  { get; set; }
-	public long                           Amount  { get; set; }
-	public int                            Days    { get; set; }
-	public int                            Hours   { get; set; }
-	public int                            Minutes { get; set; }
+	public VoucherType  Type    { get; set; }
+	public VoucherGroup Group   { get; set; }
+	public long         Amount  { get; set; }
+	public int          Days    { get; set; }
+	public int          Hours   { get; set; }
+	public int          Minutes { get; set; }
+	public List<string> IDs     { get; set; }
 
-	[SerializeField] UIEnumField    m_TypeField;
-	[SerializeField] UIEnumField    m_GroupField;
-	[SerializeField] UIStringField  m_UserIDField;
-	[SerializeField] UIStringField  m_RegionField;
-	[SerializeField] UILongField    m_AmountField;
-	[SerializeField] UIIntegerField m_DaysField;
-	[SerializeField] UIIntegerField m_HoursField;
-	[SerializeField] UIIntegerField m_MinutesField;
-	[SerializeField] Button         m_CreateButton;
-	[SerializeField] Button         m_BackButton;
+	[SerializeField] UIEnumField       m_TypeField;
+	[SerializeField] UIEnumField       m_GroupField;
+	[SerializeField] UILongField       m_AmountField;
+	[SerializeField] UIIntegerField    m_DaysField;
+	[SerializeField] UIIntegerField    m_HoursField;
+	[SerializeField] UIIntegerField    m_MinutesField;
+	[SerializeField] UIStringListField m_IDsField;
+	[SerializeField] Button            m_CreateButton;
+	[SerializeField] Button            m_BackButton;
 
 	[Inject] MenuProcessor m_MenuProcessor;
 
 	protected override void Awake()
 	{
 		base.Awake();
-		
-		m_GroupField.OnValueChanged += ProcessGroup;
 		
 		m_CreateButton.Subscribe(Create);
 		m_BackButton.Subscribe(Back);
@@ -41,8 +38,6 @@ public class UIVoucherCreateMenu : UIMenu
 	{
 		base.OnDestroy();
 		
-		m_GroupField.OnValueChanged -= ProcessGroup;
-		
 		m_CreateButton.Unsubscribe(Create);
 		m_BackButton.Unsubscribe(Back);
 	}
@@ -51,25 +46,21 @@ public class UIVoucherCreateMenu : UIMenu
 	{
 		base.OnShowStarted();
 		
-		Type    = ProfileVoucherType.ProductDiscount;
-		Group   = VoucherCreateRequest.GroupType.All;
-		UserID  = string.Empty;
-		Region  = string.Empty;
+		Type    = VoucherType.ProductDiscount;
+		Group   = VoucherGroup.All;
 		Amount  = 5;
 		Days    = 1;
 		Hours   = 6;
 		Minutes = 30;
+		IDs     = new List<string>();
 		
 		m_TypeField.Setup(this, nameof(Type));
 		m_GroupField.Setup(this, nameof(Group));
 		m_AmountField.Setup(this, nameof(Amount));
-		m_UserIDField.Setup(this, nameof(UserID));
-		m_RegionField.Setup(this, nameof(Region));
+		m_IDsField.Setup(this, nameof(IDs));
 		m_DaysField.Setup(this, nameof(Days));
 		m_HoursField.Setup(this, nameof(Hours));
 		m_MinutesField.Setup(this, nameof(Minutes));
-		
-		ProcessGroup();
 	}
 
 	async void Create()
@@ -85,15 +76,14 @@ public class UIVoucherCreateMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		long expirationTimestamp = TimeUtility.GetTimestamp(Days, Hours, Minutes);
+		long expiration = Days > 0 || Hours > 0 || Minutes > 0 ? TimeUtility.GetTimestamp(Days, Hours, Minutes) : 0;
 		
 		VoucherCreateRequest request = new VoucherCreateRequest(
 			Type,
 			Group,
-			UserID,
-			Region,
 			Amount,
-			expirationTimestamp
+			IDs,
+			expiration
 		);
 		
 		bool success = await request.SendAsync();
@@ -116,10 +106,4 @@ public class UIVoucherCreateMenu : UIMenu
 	}
 
 	void Back() => Hide();
-
-	void ProcessGroup()
-	{
-		m_UserIDField.gameObject.SetActive(Group == VoucherCreateRequest.GroupType.User);
-		m_RegionField.gameObject.SetActive(Group == VoucherCreateRequest.GroupType.Region);
-	}
 }

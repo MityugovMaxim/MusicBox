@@ -7,6 +7,7 @@ using Zenject;
 public class ProductsManager
 {
 	[Inject] ProductsProcessor m_ProductsProcessor;
+	[Inject] VouchersProcessor m_VouchersProcessor;
 	[Inject] ProfileProcessor  m_ProfileProcessor;
 
 	public List<string> GetProductIDs()
@@ -32,13 +33,6 @@ public class ProductsManager
 			.ToList();
 	}
 
-	public long GetCoins(string _ProductID)
-	{
-		long coins = m_ProductsProcessor.GetCoins(_ProductID);
-		
-		return m_ProfileProcessor.ApplyVoucher(ProfileVoucherType.ProductDiscount, _ProductID, coins);
-	}
-
 	public List<string> GetAvailableProductIDs()
 	{
 		return m_ProductsProcessor.GetProductIDs()
@@ -55,13 +49,19 @@ public class ProductsManager
 			.Where(_ProductID => !m_ProductsProcessor.IsPromo(_ProductID))
 			.Where(_ProductID => !m_ProductsProcessor.IsSpecial(_ProductID))
 			.Where(IsAvailable)
-			.OrderBy(GetCoins)
+			.OrderBy(_ProductID => m_VouchersProcessor.GetValue(VoucherType.ProductDiscount, _ProductID, m_ProductsProcessor.GetCoins(_ProductID)))
 			.ToList();
 		
 		int skip = 0;
 		while (skip < productIDs.Count - _Count)
 		{
-			if (GetCoins(productIDs[skip]) >= m_ProfileProcessor.Coins)
+			string productID = productIDs[skip];
+			
+			long coins = m_ProductsProcessor.GetCoins(productID);
+			
+			coins = m_VouchersProcessor.GetValue(VoucherType.ProductDiscount, productID, coins);
+			
+			if (coins >= m_ProfileProcessor.Coins)
 				break;
 			
 			skip++;

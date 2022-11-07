@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using Firebase;
 #if UNITY_IOS
 using Unity.Advertisement.IosSupport;
 #endif
@@ -162,6 +161,8 @@ public class GameInstaller : MonoInstaller
 		InstallProcessor<StorageProcessor>();
 		InstallProcessor<LanguageProcessor>();
 		InstallProcessor<HapticProcessor>();
+		InstallProcessor<TimersProcessor>();
+		InstallProcessor<VouchersProcessor>();
 		InstallProcessor<UrlProcessor>();
 		InstallProcessor<AdsProcessor>();
 		InstallProcessor<StatisticProcessor>();
@@ -205,6 +206,8 @@ public class GameInstaller : MonoInstaller
 	{
 		SignalBusInstaller.Install(Container);
 		
+		Container.DeclareSignal<VouchersDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<VoucherTimerSignal>().OptionalSubscriber();
 		Container.DeclareSignal<BannersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<AdsProvidersDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LanguageDataUpdateSignal>().OptionalSubscriber();
@@ -217,7 +220,9 @@ public class GameInstaller : MonoInstaller
 		Container.DeclareSignal<ProfileLevelUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileSongsUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProfileProductsUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileTimerSignal>().OptionalSubscriber();
+		Container.DeclareSignal<TimersDataUpdateSignal>().OptionalSubscriber();
+		Container.DeclareSignal<TimerStartSignal>().OptionalSubscriber();
+		Container.DeclareSignal<TimerEndSignal>().OptionalSubscriber();
 		Container.DeclareSignal<SongsDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ScoresDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<ProductsDataUpdateSignal>().OptionalSubscriber();

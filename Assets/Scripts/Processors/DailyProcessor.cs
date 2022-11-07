@@ -76,8 +76,8 @@ public class DailyProcessor : DataProcessor<DailySnapshot, DailyDataUpdateSignal
 [Preserve]
 public class DailyManager
 {
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] DailyProcessor   m_DailyProcessor;
+	[Inject] DailyProcessor  m_DailyProcessor;
+	[Inject] TimersProcessor m_TimersProcessor;
 
 	public string GetDailyID()
 	{
@@ -103,75 +103,33 @@ public class DailyManager
 		return GetDailyIDs().Any(IsDailyAvailable);
 	}
 
+	public bool IsDailyTimer(string _TimerID)
+	{
+		return m_DailyProcessor.Contains(_TimerID);
+	}
+
 	public bool IsDailyAvailable(string _DailyID)
 	{
-		ProfileTimer timer = m_ProfileProcessor.GetTimer(_DailyID);
-		
-		if (timer == null)
+		if (!m_TimersProcessor.Contains(_DailyID))
 			return true;
 		
-		long cooldown  = timer.EndTimestamp;
+		long cooldown  = m_TimersProcessor.GetEndTimestamp(_DailyID);
 		long timestamp = TimeUtility.GetTimestamp();
 		
 		return timestamp >= cooldown;
 	}
 
-	public long GetStartTimestamp()
+	public long GetTimestamp()
 	{
 		List<string> dailyIDs = GetDailyIDs();
 		long timestamp = 0;
 		foreach (string dailyID in dailyIDs)
-			timestamp = Math.Max(timestamp, GetStartTimestamp(dailyID));
+			timestamp = Math.Max(timestamp, GetTimestamp(dailyID));
 		return timestamp;
 	}
 
-	public long GetEndTimestamp()
+	public long GetTimestamp(string _DailyID)
 	{
-		List<string> dailyIDs = GetDailyIDs();
-		long timestamp = 0;
-		foreach (string dailyID in dailyIDs)
-			timestamp = Math.Max(timestamp, GetEndTimestamp(dailyID));
-		return timestamp;
-	}
-
-	public long GetStartTimestamp(string _DailyID)
-	{
-		ProfileTimer timer = m_ProfileProcessor.GetTimer(_DailyID);
-		
-		return timer?.StartTimestamp ?? 0;
-	}
-
-	public long GetEndTimestamp(string _DailyID)
-	{
-		ProfileTimer timer = m_ProfileProcessor.GetTimer(_DailyID);
-		
-		return timer?.EndTimestamp ?? 0;
-	}
-}
-
-public class DailyCollectRequest : FunctionRequest<bool>
-{
-	protected override string Command => "DailyCollect";
-
-	string DailyID { get; }
-
-	public DailyCollectRequest(string _DailyID)
-	{
-		DailyID = _DailyID;
-	}
-
-	protected override void Serialize(IDictionary<string, object> _Data)
-	{
-		_Data["daily_id"] = DailyID;
-	}
-
-	protected override bool Success(object _Data)
-	{
-		return _Data != null && (bool)_Data;
-	}
-
-	protected override bool Fail()
-	{
-		return false;
+		return m_TimersProcessor.Contains(_DailyID) ? m_TimersProcessor.GetEndTimestamp(_DailyID) : 0;
 	}
 }

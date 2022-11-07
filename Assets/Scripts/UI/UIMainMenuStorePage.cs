@@ -31,6 +31,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		m_SignalBus.Subscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<VouchersDataUpdateSignal>(Refresh);
+		m_SignalBus.Subscribe<VoucherTimerSignal>(ProcessVoucherTimer);
 	}
 
 	protected override void OnHideStarted()
@@ -40,6 +42,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		m_SignalBus.Unsubscribe<ProfileProductsUpdateSignal>(Refresh);
 		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<VouchersDataUpdateSignal>(Refresh);
+		m_SignalBus.Unsubscribe<VoucherTimerSignal>(ProcessVoucherTimer);
 	}
 
 	async void Refresh()
@@ -48,11 +52,12 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		m_Content.Clear();
 		
-		CreateAdminProducts();
-		
-		CreateAdminDaily();
-		
-		CreateAdminAds();
+		if (AdminMode.Enabled)
+		{
+			CreateAdminProducts();
+			CreateAdminDaily();
+			CreateAdminAds();
+		}
 		
 		CreateSpecial();
 		
@@ -187,5 +192,11 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		VerticalStackLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
+	}
+
+	void ProcessVoucherTimer(VoucherTimerSignal _Signal)
+	{
+		if (_Signal != null && _Signal.VoucherType == VoucherType.ProductDiscount)
+			Refresh();
 	}
 }

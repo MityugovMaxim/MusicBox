@@ -34,6 +34,13 @@ public class UIAnalogDigit : UIEntity
 
 	CancellationTokenSource m_TokenSource;
 
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		
+		Phase = 0;
+	}
+
 	#if UNITY_EDITOR
 	protected override void OnValidate()
 	{
@@ -43,18 +50,15 @@ public class UIAnalogDigit : UIEntity
 	}
 	#endif
 
-	[ContextMenu("Test")]
-	public async void Test()
-	{
-		await SetValueAsync(m_Value + 1);
-	}
-
 	public async Task SetValueAsync(int _Value, bool _Instant = false, CancellationToken _Token = default)
 	{
 		int value = Mathf.Abs(_Value) % 10;
 		
 		if (m_Value == value)
+		{
+			Phase = 0;
 			return;
+		}
 		
 		if (_Token.IsCancellationRequested || _Instant)
 		{
@@ -62,6 +66,7 @@ public class UIAnalogDigit : UIEntity
 			m_Content.SetActive(false);
 			m_Upper.sprite = m_Digits[m_Value];
 			m_Lower.sprite = m_Digits[m_Value];
+			Phase          = 0;
 			return;
 		}
 		

@@ -15,6 +15,8 @@ public class UILoginMenu : UIMenu
 	[Inject] ApplicationProcessor m_ApplicationProcessor;
 	[Inject] AdsProcessor         m_AdsProcessor;
 	[Inject] SongsProcessor       m_SongsProcessor;
+	[Inject] VouchersProcessor    m_VouchersProcessor;
+	[Inject] TimersProcessor      m_TimersProcessor;
 	[Inject] ScoresProcessor      m_ScoresProcessor;
 	[Inject] NewsProcessor        m_NewsProcessor;
 	[Inject] OffersProcessor      m_OffersProcessor;
@@ -152,9 +154,12 @@ public class UILoginMenu : UIMenu
 
 	Task LoadLibrary()
 	{
-		SongLibraryRequest request = new SongLibraryRequest();
-		
-		return request.SendAsync();
+		SongLibraryRequest    songs    = new SongLibraryRequest();
+		VoucherLibraryRequest vouchers = new VoucherLibraryRequest();
+		return Task.WhenAll(
+			songs.SendAsync(),
+			vouchers.SendAsync()
+		);
 	}
 
 	Task LoadData()
@@ -164,6 +169,8 @@ public class UILoginMenu : UIMenu
 			m_OffersProcessor.Load(),
 			m_NewsProcessor.Load(),
 			m_ProgressProcessor.Load(),
+			m_VouchersProcessor.Load(),
+			m_TimersProcessor.Load(),
 			m_SongsProcessor.Load(),
 			m_ScoresProcessor.Load(),
 			m_RevivesProcessor.Load(),

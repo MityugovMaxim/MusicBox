@@ -5,7 +5,7 @@ using Zenject;
 
 public class UIMainMenuOffersPage : UIMainMenuPage
 {
-	const float LIST_SPACING = 30;
+	const float LIST_SPACING = 20;
 
 	public override MainMenuPageType Type => MainMenuPageType.Offers;
 

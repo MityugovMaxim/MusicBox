@@ -24,6 +24,7 @@ public class UIProductMenu : UISlideMenu
 	[SerializeField, Sound] string m_PurchaseSound;
 
 	[Inject] ProductsProcessor      m_ProductsProcessor;
+	[Inject] VouchersProcessor      m_VouchersProcessor;
 	[Inject] StoreProcessor         m_StoreProcessor;
 	[Inject] ProfileProcessor       m_ProfileProcessor;
 	[Inject] ProductsManager        m_ProductsManager;
@@ -204,8 +205,8 @@ public class UIProductMenu : UISlideMenu
 			}
 		}
 		
-		long coins = m_ProductsManager.GetCoins(m_ProductID);
-		m_Coins.Value = coins;
+		long coins = m_ProductsProcessor.GetCoins(m_ProductID);
+		m_Coins.Value = m_VouchersProcessor.GetValue(VoucherType.ProductDiscount, m_ProductID, coins);
 		m_Coins.gameObject.SetActive(coins != 0);
 		
 		m_PurchaseGroup.Show(true);

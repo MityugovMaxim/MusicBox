@@ -19,6 +19,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 
 	[Inject] SignalBus          m_SignalBus;
 	[Inject] ProductsProcessor  m_ProductsProcessor;
+	[Inject] VouchersProcessor  m_VouchersProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	IStoreController   m_Controller;
@@ -288,8 +289,11 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		const string store = "GooglePlay";
 		#endif
 		
+		string voucherID = m_VouchersProcessor.GetVoucherID(VoucherType.ProductDiscount, _Product.definition.id);
+		
 		ProductPurchaseRequest request = new ProductPurchaseRequest(
 			_Product.definition.id,
+			voucherID,
 			_Product.receipt,
 			store
 		);

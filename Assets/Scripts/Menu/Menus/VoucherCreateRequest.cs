@@ -1,50 +1,38 @@
 using System.Collections.Generic;
+using System.Linq;
 
 public class VoucherCreateRequest : FunctionRequest<bool>
 {
-	public enum GroupType
-	{
-		All        = 0,
-		User       = 1,
-		Region     = 2,
-		F2P        = 3,
-		Purchasers = 4,
-	}
-
 	protected override string Command => "VoucherCreate";
 
-	readonly ProfileVoucherType m_Type;
-	readonly GroupType         m_Group;
-	readonly string            m_UserID;
-	readonly string            m_Region;
-	readonly long              m_Amount;
-	readonly long              m_ExpirationTimestamp;
+	readonly VoucherType  m_Type;
+	readonly VoucherGroup m_Group;
+	readonly long         m_Amount;
+	readonly List<string> m_IDs;
+	readonly long         m_Expiration;
 
 	public VoucherCreateRequest(
-		ProfileVoucherType _Type,
-		GroupType         _Group,
-		string            _UserID,
-		string            _Region,
-		long              _Amount,
-		long              _ExpirationTimestamp
+		VoucherType  _Type,
+		VoucherGroup _Group,
+		long         _Amount,
+		List<string> _IDs,
+		long         _Expiration
 	)
 	{
-		m_Type                = _Type;
-		m_Group               = _Group;
-		m_UserID              = _UserID;
-		m_Region              = _Region;
-		m_Amount              = _Amount;
-		m_ExpirationTimestamp = _ExpirationTimestamp;
+		m_Type       = _Type;
+		m_Group      = _Group;
+		m_Amount     = _Amount;
+		m_IDs        = _IDs;
+		m_Expiration = _Expiration;
 	}
 
 	protected override void Serialize(IDictionary<string, object> _Data)
 	{
-		_Data["type"]                 = (int)m_Type;
-		_Data["amount"]               = m_Amount;
-		_Data["expiration_timestamp"] = m_ExpirationTimestamp;
-		_Data["group"]                = (int)m_Group;
-		_Data["user_id"]              = m_UserID;
-		_Data["region"]               = m_Region;
+		_Data["type"]       = (int)m_Type;
+		_Data["group"]      = (int)m_Group;
+		_Data["amount"]     = m_Amount;
+		_Data["ids"]        = m_IDs.ToDictionary(_ID => _ID, _ => true);
+		_Data["expiration"] = m_Expiration;
 	}
 
 	protected override bool Success(object _Data)

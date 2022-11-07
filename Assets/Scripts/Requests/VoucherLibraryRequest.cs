@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 
-public class SongLibraryRequest : FunctionRequest<bool>
+public class VoucherLibraryRequest : FunctionRequest<bool>
 {
-	protected override string Command => "SongLibrary";
-
+	protected override string Command => "VoucherLibrary";
+	
 	protected override void Serialize(IDictionary<string, object> _Data) { }
 
 	protected override bool Success(object _Data)

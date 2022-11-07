@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AudioBox.Compression;
 using Firebase.Database;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -18,8 +17,6 @@ public class ProfileSnapshot
 	public IReadOnlyList<string>             SongIDs      { get; }
 	public IReadOnlyList<string>             OfferIDs     { get; }
 	public IReadOnlyList<ProfileTransaction> Transactions { get; }
-	public IReadOnlyList<ProfileTimer>       Timers       { get; }
-	public IReadOnlyList<ProfileVoucher>     Vouchers     { get; }
 
 	public ProfileSnapshot(DataSnapshot _Data)
 	{
@@ -31,40 +28,7 @@ public class ProfileSnapshot
 		Transactions = _Data.Child("transactions").Children
 			.Select(_Transaction => new ProfileTransaction(_Transaction))
 			.ToList();
-		Timers = _Data.Child("timers").Children
-			.Select(_Timer => new ProfileTimer(_Timer))
-			.ToList();
-		Vouchers = _Data.Child("vouchers").Children
-			.Select(_Voucher => new ProfileVoucher(_Voucher))
-			.ToList();
 	}
-}
-
-public class ProfileTimer
-{
-	public string ID             { [UsedImplicitly] get; }
-	public long   StartTimestamp { [UsedImplicitly] get; }
-	public long   EndTimestamp   { [UsedImplicitly] get; }
-
-	readonly Dictionary<string, object> m_Payload;
-
-	public ProfileTimer(DataSnapshot _Data)
-	{
-		ID             = _Data.Key;
-		StartTimestamp = _Data.GetLong("start_time");
-		EndTimestamp   = _Data.GetLong("end_time");
-		m_Payload      = _Data.Child("payload").GetValue(true) as Dictionary<string, object>;
-	}
-
-	public string GetString(string _Key, string _Default = null) => m_Payload.GetString(_Key, _Default);
-
-	public int GetInt(string _Key, int _Default = 0) => m_Payload.GetInt(_Key, _Default);
-
-	public float GetFloat(string _Key, float _Default = 0) => m_Payload.GetFloat(_Key, _Default);
-
-	public double GetDouble(string _Key, double _Default = 0) => m_Payload.GetDouble(_Key, _Default);
-
-	public long GetLong(string _Key, long _Default = 0) => m_Payload.GetLong(_Key, _Default);
 }
 
 public class ProfileTransaction
@@ -83,55 +47,6 @@ public class ProfileTransaction
 	}
 }
 
-public enum ProfileVoucherType
-{
-	ProductDiscount = 0,
-	SongDiscount    = 1,
-	CoinsBoost      = 2,
-	ScoreBoost      = 3,
-	DiscsBoost      = 4,
-}
-
-public class ProfileVoucher
-{
-	public string            ID                  { get; }
-	public long              Amount              { get; }
-	public string            Payload             { get; }
-	public ProfileVoucherType Type                { get; }
-	public bool              Available           { get; }
-	public long              ExpirationTimestamp { get; }
-
-	public ProfileVoucher(DataSnapshot _Data)
-	{
-		ID                  = _Data.Key;
-		Amount              = _Data.GetLong("amount");
-		Type                = _Data.GetEnum<ProfileVoucherType>("type");
-		Payload             = _Data.GetString("payload");
-		Available           = _Data.GetBool("available");
-		ExpirationTimestamp = _Data.GetLong("expiration_timestamp");
-	}
-
-	public long Apply(string _Payload, long _Value)
-	{
-		return string.IsNullOrEmpty(Payload) || !string.IsNullOrEmpty(_Payload) && Payload.Contains(_Payload) ? Apply(_Value) : _Value;
-	}
-
-	public long Apply(long _Value)
-	{
-		double percent = Amount / 100d;
-		
-		switch (Type)
-		{
-			case ProfileVoucherType.ProductDiscount: return _Value + (long)(_Value * percent);
-			case ProfileVoucherType.SongDiscount:    return _Value - (long)(_Value * percent);
-			case ProfileVoucherType.CoinsBoost:      return _Value + (long)(_Value * percent);
-			case ProfileVoucherType.ScoreBoost:      return _Value + (long)(_Value * percent);
-			case ProfileVoucherType.DiscsBoost:      return _Value + (long)(_Value * percent);
-			default:                                return _Value;
-		}
-	}
-}
-
 [Preserve]
 public class ProfileDataUpdateSignal { }
 [Preserve]
@@ -146,10 +61,7 @@ public class ProfileProductsUpdateSignal { }
 public class ProfileSongsUpdateSignal { }
 
 [Preserve]
-public class ProfileTimerSignal { }
-
-[Preserve]
-public class ProfileProcessor : IInitializable, IDisposable
+public class ProfileProcessor
 {
 	public long Coins => m_Snapshot?.Coins ?? 0;
 	public int  Discs => m_Snapshot?.Discs ?? 0;
@@ -170,16 +82,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 	ProfileSnapshot m_Snapshot;
 
 	DatabaseReference m_ProfileData;
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<SongsDataUpdateSignal>(OnSongsLibraryUpdate);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(OnSongsLibraryUpdate);
-	}
 
 	public async Task Load()
 	{
@@ -218,30 +120,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 		Pending = false;
 		
 		m_SignalBus.Fire<ProfileDataUpdateSignal>();
-	}
-
-	public ProfileVoucher GetVoucher(ProfileVoucherType _VoucherType, string _Payload)
-	{
-		if (m_Snapshot == null || m_Snapshot.Vouchers == null || m_Snapshot.Vouchers.Count == 0)
-			return null;
-		
-		long timestamp = TimeUtility.GetTimestamp();
-		
-		return m_Snapshot.Vouchers
-			.Where(_Voucher => _Voucher != null)
-			.Where(_Voucher => _Voucher.Type == _VoucherType)
-			.Where(_Voucher => _Voucher.Available)
-			.Where(_Voucher => _Voucher.ExpirationTimestamp == 0 || _Voucher.ExpirationTimestamp >= timestamp)
-			.Where(_Voucher => _Voucher.Payload.Contains(_Payload))
-			.OrderByDescending(_Voucher => _Voucher.Amount)
-			.FirstOrDefault();
-	}
-
-	public long ApplyVoucher(ProfileVoucherType _VoucherType, string _Payload, long _Value)
-	{
-		ProfileVoucher voucher = GetVoucher(_VoucherType, _Payload);
-		
-		return voucher != null ? voucher.Apply(_Payload, _Value) : _Value;
 	}
 
 	public bool HasSong(string _SongID)
@@ -283,16 +161,6 @@ public class ProfileProcessor : IInitializable, IDisposable
 			.Select(_Transaction => _Transaction.ProductID)
 			.Where(m_ProductsProcessor.IsNoAds)
 			.Any(HasProduct);
-	}
-
-	public ProfileTimer GetTimer(string _TimerID)
-	{
-		return m_Snapshot?.Timers?.FirstOrDefault(_Timer => _Timer.ID == _TimerID);
-	}
-
-	public void ProcessTimer()
-	{
-		m_SignalBus.Fire<ProfileTimerSignal>();
 	}
 
 	public async Task<bool> CheckCoins(long _Coins)
@@ -370,16 +238,5 @@ public class ProfileProcessor : IInitializable, IDisposable
 		}
 		
 		m_Snapshot = new ProfileSnapshot(profileSnapshot);
-	}
-
-	async void OnSongsLibraryUpdate()
-	{
-		SongLibraryRequest request = new SongLibraryRequest();
-		
-		await request.SendAsync();
-		
-		await Fetch();
-		
-		m_SignalBus.Fire<ProfileDataUpdateSignal>();
 	}
 }

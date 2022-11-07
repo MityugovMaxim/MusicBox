@@ -9,6 +9,7 @@ public class UnityTask : MonoBehaviour
 {
 	static          UnityTask                         m_Instance;
 	static readonly Queue<TaskCompletionSource<bool>> m_YieldTasks = new Queue<TaskCompletionSource<bool>>();
+	static readonly Queue<Action>                     m_Dispatch   = new Queue<Action>();
 
 	void Awake()
 	{
@@ -23,6 +24,17 @@ public class UnityTask : MonoBehaviour
 	void OnEnable()
 	{
 		StartCoroutine(YieldRoutine());
+	}
+
+	void LateUpdate()
+	{
+		while (m_Dispatch.Count > 0)
+			m_Dispatch.Dequeue()?.Invoke();
+	}
+
+	public static void Dispatch(Action _Action)
+	{
+		m_Dispatch.Enqueue(_Action);
 	}
 
 	public static Task Yield(CancellationToken _Token = default)

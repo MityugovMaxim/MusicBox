@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine.Scripting;
 
@@ -8,7 +9,6 @@ using UnityEngine.Scripting;
 public class SongSnapshot : Snapshot
 {
 	public bool      Active            { get; }
-	public string    Author            { get; }
 	public string    Title             { get; }
 	public string    Artist            { get; }
 	public string    Image             { get; }
@@ -70,7 +70,6 @@ public class SongSnapshot : Snapshot
 	public SongSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active            = _Data.GetBool("active");
-		Author            = _Data.GetString("author", string.Empty);
 		Title             = _Data.GetString("title", string.Empty);
 		Artist            = _Data.GetString("artist", string.Empty);
 		Image             = _Data.GetString("image", $"Thumbnails/Songs/{ID}.jpg");
@@ -104,7 +103,6 @@ public class SongSnapshot : Snapshot
 		base.Serialize(_Data);
 		
 		_Data["active"]             = Active;
-		_Data["author"]             = Author;
 		_Data["title"]              = Title;
 		_Data["artist"]             = Artist;
 		_Data["image"]              = Image;
@@ -149,6 +147,8 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 
 	protected override bool SupportsDevelopment => true;
 
+	DatabaseReference m_Registry;
+
 	public List<string> GetSongIDs(bool _IncludeInactive = false)
 	{
 		return Snapshots
@@ -192,13 +192,6 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Skin ?? "default";
-	}
-
-	public string GetAuthor(string _SongID)
-	{
-		SongSnapshot snapshot = GetSnapshot(_SongID);
-		
-		return snapshot?.Author ?? string.Empty;
 	}
 
 	public string GetArtist(string _SongID)
@@ -376,5 +369,35 @@ public class SongsProcessor : DataProcessor<SongSnapshot, SongsDataUpdateSignal>
 		SongSnapshot snapshot = GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
+	}
+
+	protected override Task OnLoad()
+	{
+		if (m_Registry == null)
+		{
+			m_Registry              =  FirebaseDatabase.DefaultInstance.RootReference.Child("songs");
+			m_Registry.ChildAdded   += ProcessSongs;
+			m_Registry.ChildRemoved += ProcessSongs;
+			m_Registry.ChildMoved   += ProcessSongs;
+			m_Registry.ChildChanged += ProcessSongs;
+		}
+		
+		return base.OnLoad();
+	}
+
+	async void ProcessSongs(object _Sender, ChildChangedEventArgs _Args)
+	{
+		if (_Args == null || _Args.Snapshot == null)
+			return;
+		
+		SongSnapshot source = GetSnapshot(_Args.Snapshot.Key);
+		SongSnapshot target = new SongSnapshot(_Args.Snapshot);
+		
+		if (source != null && source.Active || !target.Active)
+			return;
+		
+		SongLibraryRequest request = new SongLibraryRequest();
+		
+		await request.SendAsync();
 	}
 }

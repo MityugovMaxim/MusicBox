@@ -1,10 +1,13 @@
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
+[ExecuteAlways]
 public class UIAnalogTimer : UIEntity
 {
+	[SerializeField] RectTransform m_Content;
 	[SerializeField] UIAnalogDigit m_Hour1;
 	[SerializeField] UIAnalogDigit m_Hour2;
 	[SerializeField] UIAnalogDigit m_Minute1;
@@ -12,19 +15,17 @@ public class UIAnalogTimer : UIEntity
 	[SerializeField] UIAnalogDigit m_Second1;
 	[SerializeField] UIAnalogDigit m_Second2;
 
-	long m_SourceTimestamp;
-	long m_TargetTimestamp;
+	long m_Timestamp;
 
+	IEnumerator             m_TickRoutine;
 	CancellationTokenSource m_TokenSource;
 
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
-		Setup(
-			TimeUtility.GetTimestamp(),
-			TimeUtility.GetTimestamp() + 180000
-		);
+		if (!Application.isPlaying)
+			return;
 		
 		ProcessTimer(true);
 		
@@ -45,26 +46,57 @@ public class UIAnalogTimer : UIEntity
 		m_TokenSource?.Cancel();
 	}
 
-	public void Setup(long _Timestamp) => Setup(TimeUtility.GetTimestamp(), _Timestamp);
-
-	public void Setup(long _SourceTimestamp, long _TargetTimestamp)
+	protected override void OnRectTransformDimensionsChange()
 	{
-		m_SourceTimestamp = _SourceTimestamp;
-		m_TargetTimestamp = _TargetTimestamp;
+		base.OnRectTransformDimensionsChange();
 		
-		ProcessTimer(true);
+		Vector2 size = m_Content.sizeDelta;
+		
+		Rect rect = GetLocalRect();
+		
+		float scale = Mathf.Min(
+			rect.width / size.x,
+			rect.height / size.y
+		);
+		
+		m_Content.localScale = new Vector3(scale, scale, 1);
+		
+		m_Content.ForceUpdateRectTransforms();
 	}
 
-	async void TickTimer()
+	public void Setup(long _Timestamp)
 	{
-		while (true)
+		m_Timestamp = _Timestamp;
+		
+		ProcessTimer(true);
+		
+		if (gameObject.activeInHierarchy)
+			TickTimer();
+	}
+
+	void TickTimer()
+	{
+		if (m_TickRoutine != null)
+			StopCoroutine(m_TickRoutine);
+		
+		m_TickRoutine = TickRoutine();
+		
+		StartCoroutine(m_TickRoutine);
+	}
+
+	IEnumerator TickRoutine()
+	{
+		long timestamp = TimeUtility.GetTimestamp();
+		
+		while (timestamp <= m_Timestamp)
 		{
-			await Task.Delay(1000);
+			float delay = (1000 - timestamp % 1000) * 0.001f;
+			
+			yield return new WaitForSeconds(delay);
 			
 			ProcessTimer();
 			
-			if (TimeUtility.GetTimestamp() >= m_TargetTimestamp)
-				break;
+			timestamp = TimeUtility.GetTimestamp();
 		}
 		
 		ProcessTimer(true);
@@ -81,7 +113,7 @@ public class UIAnalogTimer : UIEntity
 		
 		m_TokenSource = new CancellationTokenSource();
 		
-		long timer = m_TargetTimestamp - m_SourceTimestamp - (TimeUtility.GetTimestamp() - m_SourceTimestamp);
+		long timer = m_Timestamp - TimeUtility.GetTimestamp();
 		
 		TimeSpan time = TimeSpan.FromMilliseconds(timer);
 		
