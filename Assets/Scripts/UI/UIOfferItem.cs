@@ -1,5 +1,3 @@
-using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
@@ -11,53 +9,51 @@ public class UIOfferItem : UIEntity
 	public class Pool : UIEntityPool<UIOfferItem> { }
 
 	[SerializeField] UIOfferImage m_Image;
-	[SerializeField] TMP_Text     m_Title;
-	[SerializeField] TMP_Text     m_Description;
-	[SerializeField] TMP_Text     m_Label;
-	[SerializeField] Button       m_Button;
+	[SerializeField] UIOfferLabel m_Label;
+	[SerializeField] UIOfferState m_State;
+	[SerializeField] Button       m_CollectButton;
 
-	[Inject] OffersProcessor       m_OffersProcessor;
-	[Inject] OffersManager         m_OffersManager;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] OffersManager m_OffersManager;
+	[Inject] MenuProcessor m_MenuProcessor;
 
-	string         m_OfferID;
-	Action<string> m_Process;
+	string m_OfferID;
 
-	public void Setup(string _OfferID, Action<string> _Process = null)
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_CollectButton.Subscribe(Collect);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_CollectButton.Unsubscribe(Collect);
+	}
+
+	public void Setup(string _OfferID)
 	{
 		m_OfferID = _OfferID;
-		m_Process = _Process;
 		
-		m_Image.Setup(m_OfferID);
-		
-		m_Title.text       = m_OffersProcessor.GetTitle(m_OfferID);
-		m_Description.text = m_OffersProcessor.GetDescription(m_OfferID);
-		
-		ProcessLabel();
-		
-		ProcessButton();
+		m_Image.OfferID = m_OfferID;
+		m_Label.OfferID = m_OfferID;
+		m_State.OfferID = m_OfferID;
 	}
 
-	public void Process()
+	async void Collect()
 	{
-		m_Process?.Invoke(m_OfferID);
-	}
-
-	void ProcessLabel()
-	{
-		int progress = m_OffersManager.GetProgress(m_OfferID);
-		int target   = m_OffersManager.GetTarget(m_OfferID);
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		if (m_OffersManager.IsCollected(m_OfferID))
-			m_Label.text = m_LocalizationProcessor.Get("OFFER_COLLECTED");
-		else if (progress < target)
-			m_Label.text = m_LocalizationProcessor.Format("OFFER_PROGRESS", progress, target);
-		else
-			m_Label.text = m_LocalizationProcessor.Get("OFFER_COLLECT");
-	}
-
-	void ProcessButton()
-	{
-		m_Button.interactable = m_Process != null;
+		try
+		{
+			await m_OffersManager.Collect(m_OfferID);
+		}
+		catch (UnityException)
+		{
+			await m_MenuProcessor.ErrorAsync("offer_collect");
+		}
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }

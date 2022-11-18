@@ -13,7 +13,7 @@ public class UIMapsMenu : UIMenu
 	[SerializeField] Button   m_RestoreButton;
 	[SerializeField] Button   m_ColorsButton;
 
-	[Inject] SongsProcessor    m_SongsProcessor;
+	[Inject] SongsCollection    m_SongsCollection;
 	[Inject] MenuProcessor     m_MenuProcessor;
 	[Inject] UIMapElement.Pool m_Pool;
 
@@ -59,7 +59,7 @@ public class UIMapsMenu : UIMenu
 	{
 		m_Content.Clear();
 		
-		List<string> songIDs = m_SongsProcessor.GetSongIDs(true);
+		IReadOnlyList<string> songIDs = m_SongsCollection.GetIDs();
 		
 		if (songIDs == null || songIDs.Count == 0)
 			return;

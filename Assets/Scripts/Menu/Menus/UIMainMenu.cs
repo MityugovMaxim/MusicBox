@@ -8,13 +8,12 @@ public enum MainMenuPageType
 	Store   = 1,
 	Songs   = 2,
 	Profile = 3,
-	Offers  = 4,
+	Season  = 4,
 }
 
 [Menu(MenuType.MainMenu)]
 public class UIMainMenu : UIMenu
 {
-	[SerializeField] UIProfile         m_Profile;
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
 
@@ -43,8 +42,6 @@ public class UIMainMenu : UIMenu
 
 	protected override async void OnShowStarted()
 	{
-		Refresh();
-		
 		foreach (UIMainMenuPage page in m_Pages)
 		{
 			if (page.Type == m_PageType)
@@ -60,11 +57,6 @@ public class UIMainMenu : UIMenu
 			return;
 		
 		m_SignalBus.Subscribe<LinkReceivedSignal>(ProcessLink);
-		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProgressDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideStarted()
@@ -73,11 +65,6 @@ public class UIMainMenu : UIMenu
 			return;
 		
 		m_SignalBus.Unsubscribe<LinkReceivedSignal>(ProcessLink);
-		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProgressDataUpdateSignal>(Refresh);
 	}
 
 	protected override void OnHideFinished()
@@ -87,6 +74,4 @@ public class UIMainMenu : UIMenu
 	}
 
 	async void ProcessLink() => await m_LinkProcessor.Process();
-
-	void Refresh() => m_Profile.Setup();
 }

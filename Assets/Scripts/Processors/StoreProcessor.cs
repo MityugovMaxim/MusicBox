@@ -10,16 +10,12 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class StoreDataUpdateSignal { }
-
-[Preserve]
-public class StoreProcessor : IStoreListener, IInitializable, IDisposable
+public class StoreProcessor : IStoreListener
 {
 	bool Loaded { get; set; }
 
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] ProductsProcessor  m_ProductsProcessor;
-	[Inject] VouchersProcessor  m_VouchersProcessor;
+	[Inject] ProductsManager    m_ProductsManager;
+	[Inject] VouchersManager    m_VouchersManager;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
 	IStoreController   m_Controller;
@@ -37,7 +33,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		List<string> productIDs = m_ProductsProcessor.GetProductIDs();
+		List<string> productIDs = m_ProductsManager.GetProductIDs();
 		
 		if (productIDs.Count == 0)
 		{
@@ -54,10 +50,10 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 			
 			config.AddProduct(
 				productID,
-				m_ProductsProcessor.GetType(productID) != ProductType.Subscription
+				m_ProductsManager.GetType(productID) != ProductType.Subscription
 					? ProductType.Consumable
 					: ProductType.Subscription,
-				m_ProductsProcessor.GetStoreIDs(productID)
+				m_ProductsManager.GetStoreIDs(productID)
 			);
 		}
 		
@@ -157,49 +153,6 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		return completionSource.Task;
 	}
 
-	public bool Subscribed(string _ProductID)
-	{
-		if (m_Extensions == null)
-		{
-			Log.Error(this, "Check subscription failed. Store is not initialized.");
-			return false;
-		}
-		
-		if (string.IsNullOrEmpty(_ProductID))
-		{
-			Log.Error(this, "Check subscription failed. Product ID null or empty.");
-			return false;
-		}
-		
-		Product product = GetProduct(_ProductID);
-		
-		if (product == null || product.definition.type != ProductType.Subscription)
-		{
-			Log.Error(this, "Check subscription failed. Product with ID '{0}' not found.", _ProductID);
-			return false;
-		}
-		
-		#if UNITY_IOS
-		Dictionary<string, string> prices = m_Extensions
-			.GetExtension<IAppleExtensions>()
-			.GetIntroductoryPriceDictionary();
-		
-		if (!prices.TryGetValue(product.definition.storeSpecificId, out string data))
-			return false;
-		#elif UNITY_ANDROID
-		string data = null;
-		#endif
-		
-		SubscriptionManager manager = new SubscriptionManager(product, data);
-		
-		SubscriptionInfo subscription = manager.getSubscriptionInfo();
-		
-		if (subscription == null)
-			return false;
-		
-		return subscription.isSubscribed() == Result.True;
-	}
-
 	public string GetPrice(string _ProductID, bool _Sign = true)
 	{
 		Product product = GetProduct(_ProductID);
@@ -289,7 +242,7 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		const string store = "GooglePlay";
 		#endif
 		
-		string voucherID = m_VouchersProcessor.GetVoucherID(VoucherType.ProductDiscount, _Product.definition.id);
+		string voucherID = m_VouchersManager.GetProductVoucherID(_Product.definition.id);
 		
 		ProductPurchaseRequest request = new ProductPurchaseRequest(
 			_Product.definition.id,
@@ -318,17 +271,6 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		}
 	}
 
-	async void RegisterProductDataUpdate()
-	{
-		Loaded = false;
-		
-		m_CompletionSource?.TrySetResult(false);
-		
-		await Load();
-		
-		m_SignalBus.Fire<StoreDataUpdateSignal>();
-	}
-
 	void InvokeLoadStoreFinished(bool _Success)
 	{
 		Action<bool> action = m_LoadStoreFinished;
@@ -348,16 +290,6 @@ public class StoreProcessor : IStoreListener, IInitializable, IDisposable
 		Action action = m_PurchaseCanceled;
 		m_PurchaseCanceled = null;
 		action?.Invoke();
-	}
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(RegisterProductDataUpdate);
 	}
 
 	void IStoreListener.OnInitialized(IStoreController _Controller, IExtensionProvider _Extensions)

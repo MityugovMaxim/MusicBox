@@ -27,38 +27,16 @@ public class UIDailyElement : UIOverlayButton
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] SignalBus             m_SignalBus;
-	[Inject] DailyManager          m_DailyManager;
-	[Inject] DailyProcessor        m_DailyProcessor;
-	[Inject] MenuProcessor         m_MenuProcessor;
-	[Inject] AdsProcessor          m_AdsProcessor;
-	[Inject] ProfileProcessor      m_ProfileProcessor;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
-	[Inject] MessageProcessor      m_MessageProcessor;
-	[Inject] SoundProcessor        m_SoundProcessor;
-	[Inject] HapticProcessor       m_HapticProcessor;
+	[Inject] DailyManager     m_DailyManager;
+	[Inject] DailyCollection  m_DailyCollection;
+	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AdsProcessor     m_AdsProcessor;
+	[Inject] Localization     m_Localization;
+	[Inject] MessageProcessor m_MessageProcessor;
+	[Inject] SoundProcessor   m_SoundProcessor;
+	[Inject] HapticProcessor  m_HapticProcessor;
 
 	string m_DailyID;
-
-	protected override void OnEnable()
-	{
-		base.OnEnable();
-		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Subscribe<TimerEndSignal>(ProcessTimer);
-	}
-
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<TimerEndSignal>(ProcessTimer);
-	}
 
 	public void Setup()
 	{
@@ -89,8 +67,11 @@ public class UIDailyElement : UIOverlayButton
 		m_Timer.Setup(m_DailyManager.GetTimestamp());
 	}
 
-	async void ProcessTimer(TimerEndSignal _Signal)
+	async void ProcessTimer(string _TimerID)
 	{
+		if (!m_DailyManager.IsDailyTimer(_TimerID))
+			return;
+		
 		await UnityTask.While(() => Processing);
 		
 		string dailyID = m_DailyManager.GetDailyID();
@@ -202,7 +183,7 @@ public class UIDailyElement : UIOverlayButton
 		
 		bool success = true;
 		
-		if (m_DailyProcessor.GetAds(m_DailyID))
+		if (m_DailyCollection.GetAds(m_DailyID))
 		{
 			await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 			
@@ -215,11 +196,8 @@ public class UIDailyElement : UIOverlayButton
 		{
 			Setup();
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"daily_ads",
-				"daily_element",
-				"DAILY_COLLECT_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
+			await m_MenuProcessor.RetryAsync(
+				"daily_process",
 				Collect,
 				() => { }
 			);
@@ -241,11 +219,8 @@ public class UIDailyElement : UIOverlayButton
 		{
 			Setup();
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
+			await m_MenuProcessor.RetryAsync(
 				"daily_collect",
-				"daily_element",
-				"DAILY_COLLECT_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
 				Collect,
 				() => { }
 			);
@@ -258,8 +233,6 @@ public class UIDailyElement : UIOverlayButton
 			
 			return;
 		}
-		
-		await m_ProfileProcessor.Load();
 		
 		await m_LoaderGroup.HideAsync();
 		
@@ -278,7 +251,7 @@ public class UIDailyElement : UIOverlayButton
 			m_MessageProcessor.Schedule(
 				"daily",
 				Application.productName,
-				m_LocalizationProcessor.Get("DAILY_NOTIFICATION"),
+				m_Localization.Get("DAILY_NOTIFICATION"),
 				"audiobox://store",
 				timestamp
 			);

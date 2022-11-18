@@ -3,36 +3,59 @@ using Zenject;
 
 public class UIProductDiscount : UIEntity
 {
+	public string ProductID
+	{
+		get => m_ProductID;
+		set
+		{
+			if (m_ProductID == value)
+				return;
+			
+			m_VouchersManager.Unsubscribe(DataEventType.Add, ProcessDiscount);
+			m_VouchersManager.Unsubscribe(DataEventType.Remove, ProcessDiscount);
+			m_VouchersManager.Unsubscribe(DataEventType.Change, ProcessDiscount);
+			m_ProductsManager.Collection.Unsubscribe(DataEventType.Change, m_ProductID, ProcessDiscount);
+			
+			m_ProductID = value;
+			
+			m_VouchersManager.Subscribe(DataEventType.Add, ProcessDiscount);
+			m_VouchersManager.Subscribe(DataEventType.Remove, ProcessDiscount);
+			m_VouchersManager.Subscribe(DataEventType.Change, ProcessDiscount);
+			m_ProductsManager.Collection.Subscribe(DataEventType.Change, m_ProductID, ProcessDiscount);
+			
+			ProcessDiscount();
+		}
+	}
+
+	[SerializeField] GameObject  m_Content;
 	[SerializeField] UIUnitLabel m_Discount;
 
-	[Inject] ProductsProcessor m_ProductsProcessor;
-	[Inject] VouchersProcessor m_VouchersProcessor;
+	[Inject] ProductsManager m_ProductsManager;
+	[Inject] VouchersManager m_VouchersManager;
 
 	string m_ProductID;
 
-	public void Setup(string _ProductID)
+	void ProcessDiscount()
 	{
-		m_ProductID = _ProductID;
-		
-		string voucherID = m_VouchersProcessor.GetVoucherID(VoucherType.ProductDiscount, m_ProductID);
+		string voucherID = m_VouchersManager.GetProductVoucherID(ProductID);
 		
 		if (string.IsNullOrEmpty(voucherID))
 		{
-			gameObject.SetActive(false);
+			m_Content.SetActive(false);
 			return;
 		}
 		
-		long source = m_ProductsProcessor.GetCoins(m_ProductID);
-		long target = m_VouchersProcessor.GetValue(VoucherType.ProductDiscount, m_ProductID, source);
+		long source = m_ProductsManager.GetCoins(ProductID);
+		long target = m_VouchersManager.GetProductDiscount(ProductID);
 		
 		if (source == target)
 		{
-			gameObject.SetActive(false);
+			m_Content.SetActive(false);
 			return;
 		}
 		
 		m_Discount.Value = source;
 		
-		gameObject.SetActive(true);
+		m_Content.SetActive(true);
 	}
 }

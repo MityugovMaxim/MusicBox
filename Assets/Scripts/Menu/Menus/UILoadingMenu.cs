@@ -30,16 +30,18 @@ public class UILoadingMenu : UIAnimationMenu
 	[Inject] HapticProcessor    m_HapticProcessor;
 
 	string m_SongID;
+	bool   m_Full;
 
 	CancellationTokenSource m_TokenSource;
 
-	public void Setup(string _SongID)
+	public void Setup(string _SongID, bool _Full = false)
 	{
 		m_SongID = _SongID;
+		m_Full   = _Full;
 		
 		m_Image.gameObject.SetActive(!string.IsNullOrEmpty(m_SongID));
 		
-		m_Image.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
 		
 		m_ProgressGroup.Hide(true);
 		
@@ -90,12 +92,7 @@ public class UILoadingMenu : UIAnimationMenu
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
 			await m_MenuProcessor.Show(MenuType.SongMenu, true);
 			
-			await m_MenuProcessor.ErrorLocalizedAsync(
-				"tutorial_load",
-				"loading_menu",
-				"TUTORIAL_LOAD_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE"
-			);
+			await m_MenuProcessor.ErrorAsync("tutorial_load");
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 		}
@@ -103,7 +100,7 @@ public class UILoadingMenu : UIAnimationMenu
 
 	async Task LoadSong()
 	{
-		Task<bool> load = m_SongController.Load(m_SongID, ProcessProgress);
+		Task<bool> load = m_SongController.Load(m_SongID, m_Full, ProcessProgress);
 		
 		StartProgress();
 		
@@ -134,12 +131,7 @@ public class UILoadingMenu : UIAnimationMenu
 			await m_MenuProcessor.Show(MenuType.MainMenu, true);
 			await m_MenuProcessor.Show(MenuType.SongMenu, true);
 			
-			await m_MenuProcessor.ErrorLocalizedAsync(
-				"song_load",
-				"loading_menu",
-				"SONG_LOAD_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE"
-			);
+			await m_MenuProcessor.ErrorAsync("song_load");
 			
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
 		}

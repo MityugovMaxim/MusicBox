@@ -15,12 +15,9 @@ public class UISongPlay : UIEntity
 	[SerializeField] GameObject  m_Paid;
 	[SerializeField] SongPreview m_Preview;
 
-	[Inject] SongsManager      m_SongsManager;
-	[Inject] SongsProcessor    m_SongsProcessor;
-	[Inject] ProgressProcessor m_ProgressProcessor;
-	[Inject] ProfileProcessor  m_ProfileProcessor;
-	[Inject] AdsProcessor      m_AdsProcessor;
-	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] SongsManager   m_SongsManager;
+	[Inject] CoinsParameter m_CoinsParameter;
+	[Inject] MenuProcessor  m_MenuProcessor;
 
 	string   m_SongID;
 	SongMode m_Mode;
@@ -28,30 +25,14 @@ public class UISongPlay : UIEntity
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
-		m_Mode   = m_SongsProcessor.GetMode(m_SongID);
-		
-		if (m_SongsManager.IsSongAvailable(m_SongID))
-			m_Mode = SongMode.Free;
-		else if (m_Mode == SongMode.Ads && m_ProfileProcessor.HasNoAds())
-			m_Mode = SongMode.Free;
-		else if (m_Mode == SongMode.Paid && m_ProfileProcessor.HasSong(m_SongID))
-			m_Mode = SongMode.Free;
 		
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
 		m_CompleteGroup.Hide(true);
 		
-		SetLockActive(false);
 		SetFreeActive(false);
 		SetAdsActive(false);
 		SetPaidActive(false);
-		
-		if (m_SongsManager.IsSongLockedByLevel(m_SongID))
-		{
-			SetLockActive(true);
-			
-			return;
-		}
 		
 		switch (m_Mode)
 		{
@@ -133,16 +114,7 @@ public class UISongPlay : UIEntity
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
 		
-		m_ProfileProcessor.Lock();
-		
 		bool success = false;
-		
-		if (m_ProfileProcessor.HasNoAds() || await m_AdsProcessor.Rewarded("unlock"))
-		{
-			SongUnlockRequest request = new SongUnlockRequest(songID);
-			
-			success = await request.SendAsync();
-		}
 		
 		if (success)
 		{
@@ -161,8 +133,6 @@ public class UISongPlay : UIEntity
 			
 			m_CompleteGroup.Hide(true);
 			
-			m_ProfileProcessor.Unlock();
-			
 			loadingMenu.Load();
 			
 			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
@@ -170,16 +140,11 @@ public class UISongPlay : UIEntity
 		}
 		else
 		{
-			m_ProfileProcessor.Unlock();
-			
 			await m_LoaderGroup.HideAsync();
 			await m_ControlGroup.ShowAsync();
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_play_ads",
-				"song_play_button",
-				"SONG_PLAY_ADS_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
+			await m_MenuProcessor.RetryAsync(
+				"song_play",
 				PlayAds,
 				() => { }
 			);
@@ -198,17 +163,15 @@ public class UISongPlay : UIEntity
 		
 		string songID = m_SongID;
 		
-		long coins = m_SongsProcessor.GetPrice(songID);
+		long coins = m_SongsManager.GetPrice(songID);
 		
-		if (!await m_ProfileProcessor.CheckCoins(coins))
+		if (!await m_CoinsParameter.Remove(coins))
 			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_ControlGroup.HideAsync();
 		await m_LoaderGroup.ShowAsync();
-		
-		m_ProfileProcessor.Lock();
 		
 		SongUnlockRequest request = new SongUnlockRequest(songID);
 		
@@ -231,8 +194,6 @@ public class UISongPlay : UIEntity
 			
 			m_CompleteGroup.Hide(true);
 			
-			m_ProfileProcessor.Unlock();
-			
 			loadingMenu.Load();
 			
 			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
@@ -240,16 +201,11 @@ public class UISongPlay : UIEntity
 		}
 		else
 		{
-			m_ProfileProcessor.Unlock();
-			
 			await m_LoaderGroup.HideAsync();
 			await m_ControlGroup.ShowAsync();
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_play_paid",
-				"song_play_button",
-				"SONG_PLAY_PAID_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
+			await m_MenuProcessor.RetryAsync(
+				"song_unlock",
 				PlayPaid,
 				() => { }
 			);
@@ -262,15 +218,6 @@ public class UISongPlay : UIEntity
 	{
 		if (m_Preview != null)
 			m_Preview.Stop();
-	}
-
-	void SetLockActive(bool _Value)
-	{
-		if (m_Lock != null)
-			m_Lock.SetActive(_Value);
-		
-		if (m_Level != null)
-			m_Level.Level = m_ProgressProcessor.GetSongLevel(m_SongID);
 	}
 
 	void SetFreeActive(bool _Value)
@@ -291,6 +238,6 @@ public class UISongPlay : UIEntity
 			m_Paid.SetActive(_Value);
 		
 		if (m_Coins != null)
-			m_Coins.Value = m_SongsProcessor.GetPrice(m_SongID);
+			m_Coins.Value = m_SongsManager.GetPrice(m_SongID);
 	}
 }

@@ -10,7 +10,7 @@ public class UIInputReceiver : UIEntity
 	[SerializeField] RectTransform m_InputArea;
 
 	[Inject] FXProcessor     m_FXProcessor;
-	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 
 	InputModule m_InputModule;
@@ -140,7 +140,7 @@ public class UIInputReceiver : UIEntity
 		
 		m_FXProcessor.Fail();
 		
-		m_ScoreManager.Miss();
+		m_ScoreController.Miss();
 	}
 
 	void PointerUp(int _PointerID, Vector2 _Position)

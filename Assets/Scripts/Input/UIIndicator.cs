@@ -27,13 +27,13 @@ public abstract class UIIndicator : UIOrder
 	}
 
 	protected Animator        Animator        => m_Animator;
-	protected ScoreManager    ScoreManager    => m_ScoreManager;
+	protected ScoreController ScoreController => m_ScoreController;
 	protected FXProcessor     FXProcessor     => m_FXProcessor;
 	protected HapticProcessor HapticProcessor => m_HapticProcessor;
 
 	[SerializeField] Animator m_Animator;
 
-	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 	[Inject] FXProcessor     m_FXProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
 

@@ -24,8 +24,8 @@ public class UISongScoreMilestone : UIGroup
 	[SerializeField] UIUnitLabel m_Score;
 	[SerializeField] UIDisc      m_Disc;
 
-	[Inject] ScoreManager    m_ScoreManager;
-	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] ScoreController m_ScoreController;
+	[Inject] SongsManager    m_SongsManager;
 
 	string m_SongID;
 	int    m_Accuracy;
@@ -36,7 +36,7 @@ public class UISongScoreMilestone : UIGroup
 	{
 		m_SongID = _SongID;
 		
-		m_Accuracy = m_SongsProcessor.GetThreshold(m_SongID, ScoreRank.Bronze);
+		m_Accuracy = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Bronze);
 		
 		ProcessValues();
 		
@@ -76,8 +76,8 @@ public class UISongScoreMilestone : UIGroup
 	void ProcessValues()
 	{
 		int       position = 100 - Accuracy;
-		long      score    = m_ScoreManager.GetScore(Accuracy);
-		ScoreRank rank     = m_SongsProcessor.GetRank(m_SongID, Accuracy);
+		long      score    = m_ScoreController.GetScore(Accuracy);
+		ScoreRank rank     = m_SongsManager.GetRank(m_SongID, Accuracy);
 		
 		m_Position.text = position.ToString();
 		m_Score.Value   = score;

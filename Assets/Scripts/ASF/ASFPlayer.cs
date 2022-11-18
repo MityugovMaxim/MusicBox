@@ -68,6 +68,10 @@ namespace AudioBox.ASF
 			set => m_AudioSource.clip = value;
 		}
 
+		public float  BPM    { get; set; }
+		public int    Bar    { get; set; }
+		public double Origin { get; set; }
+
 		public ASFPlayerState State { get; private set; } = ASFPlayerState.Stop;
 
 		protected IReadOnlyCollection<IASFSampler> Samplers    => m_Samplers;
@@ -212,6 +216,10 @@ namespace AudioBox.ASF
 		{
 			Dictionary<string, object> data = new Dictionary<string, object>();
 			
+			data["bpm"]    = BPM;
+			data["bar"]    = Bar;
+			data["origin"] = Origin;
+			
 			foreach (ASFTrack track in m_Tracks)
 			{
 				if (track == null)
@@ -225,9 +233,7 @@ namespace AudioBox.ASF
 				if (clips == null || clips.Count == 0)
 					continue;
 				
-				string name = track.GetType().Name;
-				
-				data[name] = clips;
+				data[track.GetType().Name] = clips;
 			}
 			
 			return data;
@@ -244,6 +250,10 @@ namespace AudioBox.ASF
 		{
 			if (_Data == null)
 				return;
+			
+			_Data.GetFloat("bpm");
+			_Data.GetInt("bar");
+			_Data.GetDouble("origin");
 			
 			foreach (string key in _Data.GetKeys())
 			{

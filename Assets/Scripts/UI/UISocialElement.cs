@@ -14,7 +14,7 @@ public class UISocialElement : UIEntity
 	[SerializeField] Button m_GoogleButton;
 	[SerializeField] Button m_FacebookButton;
 
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] Localization m_Localization;
 	[Inject] SocialProcessor       m_SocialProcessor;
 	[Inject] MenuProcessor         m_MenuProcessor;
 
@@ -52,7 +52,7 @@ public class UISocialElement : UIEntity
 
 	void SignInFacebook() => SignIn(m_SocialProcessor.AttachFacebookID);
 
-	string GetLocalization(string _Key) => m_LocalizationProcessor.Get(_Key);
+	string GetLocalization(string _Key) => m_Localization.Get(_Key);
 
 	async void SignIn(Func<Task<bool>> _SignInTask)
 	{
@@ -83,8 +83,7 @@ public class UISocialElement : UIEntity
 			if (errorMenu != null)
 			{
 				errorMenu.Setup(
-					"sign_in_error",
-					"main_menu",
+					"login",
 					GetLocalization("SIGN_IN_ERROR_TITLE"),
 					GetLocalization("COMMON_ERROR_MESSAGE")
 				);

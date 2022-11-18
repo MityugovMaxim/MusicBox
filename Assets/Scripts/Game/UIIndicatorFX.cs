@@ -26,9 +26,9 @@ public class UIIndicatorFX : UIOrder
 	[SerializeField] FX m_Good;
 	[SerializeField] FX m_Bad;
 
-	public void Play(ScoreGrade _Grade)
+	public void Play(ScoreGrade _ScoreGrade)
 	{
-		switch (_Grade)
+		switch (_ScoreGrade)
 		{
 			case ScoreGrade.Perfect:
 				m_Perfect.Play();

@@ -1,10 +1,6 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Scripting;
 using Zenject;
-
-[Preserve]
-public class AudioSourceChangedSignal { }
 
 public enum AudioOutputType
 {
@@ -16,11 +12,11 @@ public enum AudioOutputType
 
 public abstract class AudioManager : IInitializable, IDisposable
 {
+	public event Action OnSourceChange;
+
 	protected delegate void RemoteCommandHandler();
 
 	const string LATENCY_KEY = "LATENCY";
-
-	[Inject] SignalBus m_SignalBus;
 
 	void IInitializable.Initialize()
 	{
@@ -66,8 +62,5 @@ public abstract class AudioManager : IInitializable, IDisposable
 
 	string GetLatencyKey() => $"{LATENCY_KEY}_{GetAudioOutputID()}";
 
-	void InvokeAudioSourceChanged()
-	{
-		m_SignalBus.Fire<AudioSourceChangedSignal>();
-	}
+	void InvokeAudioSourceChanged() => OnSourceChange?.Invoke();
 }

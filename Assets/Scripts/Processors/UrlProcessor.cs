@@ -15,9 +15,8 @@ public class UrlProcessor
 {
 	const string SCHEME = "audiobox";
 
-	[Inject] MenuProcessor  m_MenuProcessor;
-	[Inject] SongsProcessor m_SongsProcessor;
-	[Inject] SongsManager   m_SongsManager;
+	[Inject] MenuProcessor m_MenuProcessor;
+	[Inject] SongsManager  m_SongsManager;
 
 	public async Task ProcessURL(string _URL, bool _Instant = false)
 	{
@@ -173,7 +172,7 @@ public class UrlProcessor
 
 	Task ProcessHash(string _Hash, bool _Instant)
 	{
-		string songID = m_SongsProcessor.GetSongID(_Hash);
+		string songID = m_SongsManager.GetSongID(_Hash);
 		
 		if (string.IsNullOrEmpty(songID))
 			return Task.CompletedTask;
@@ -193,7 +192,7 @@ public class UrlProcessor
 
 	Task ProcessOffers(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Offers, _Parameters, _Instant);
+		return SelectMainPage(MainMenuPageType.Season, _Parameters, _Instant);
 	}
 
 	Task ProcessProfile(Dictionary<string, string> _Parameters, bool _Instant)

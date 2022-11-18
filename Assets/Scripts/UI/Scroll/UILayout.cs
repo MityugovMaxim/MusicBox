@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class UILayout : UIEntity
@@ -57,6 +58,18 @@ public class UILayout : UIEntity
 	public void Remove(LayoutEntity _Item)
 	{
 		m_Items.Remove(_Item);
+	}
+
+	public void Refresh(string _ID)
+	{
+		LayoutEntity item = m_Items.FirstOrDefault(_Item => _Item != null && _Item.ID == _ID);
+		
+		item?.Refresh();
+	}
+
+	public bool Contains(string _ID)
+	{
+		return m_Items.Any(_Item => _Item != null && _Item.ID == _ID);
 	}
 
 	public void Clear()

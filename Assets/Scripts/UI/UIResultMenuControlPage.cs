@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -9,21 +8,15 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public override bool Valid => true;
 
-	[SerializeField] UISongImage     m_Image;
-	[SerializeField] UISongDiscs     m_Discs;
-	[SerializeField] UISongLabel     m_Label;
-	[SerializeField] UISongRating    m_Rating;
-	[SerializeField] UISongRestart   m_Restart;
-	[SerializeField] SongPreview     m_Preview;
-	[SerializeField] UISongPlatforms m_Platforms;
-	[SerializeField] UISongQRCode    m_QR;
+	[SerializeField] UISongImage  m_Image;
+	[SerializeField] UISongDiscs  m_Discs;
+	[SerializeField] UISongLabel  m_Label;
+	[SerializeField] SongPreview  m_Preview;
+	[SerializeField] UISongQRCode m_QR;
 
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ScoreManager       m_ScoreManager;
-	[Inject] ScoresProcessor    m_ScoresProcessor;
+	[Inject] ScoresManager      m_ScoresManager;
 	[Inject] SongsManager       m_SongsManager;
 	[Inject] SongController     m_SongController;
-	[Inject] AdsProcessor       m_AdsProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
@@ -33,16 +26,10 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	{
 		m_SongID = _SongID;
 		
-		int sourceRank = (int)m_ScoresProcessor.GetRank(m_SongID);
-		int targetRank = (int)m_ScoreManager.GetRank();
+		m_Discs.SongID = m_SongID;
 		
-		m_Discs.Rank = (ScoreRank)Mathf.Max(sourceRank, targetRank);
-		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
-		m_Rating.Setup(m_SongID);
-		m_Restart.Setup(m_SongID);
-		m_Platforms.Setup(m_SongID);
+		m_Image.SongID  = m_SongID;
+		m_Label.SongID  = m_SongID;
 		
 		m_Preview.Stop();
 	}
@@ -51,8 +38,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public async void Leave()
 	{
-		await ProcessLeaveAds();
-		
 		m_Preview.Stop();
 		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
@@ -72,8 +57,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 
 	public async void Next()
 	{
-		await ProcessNextAds();
-		
 		m_Preview.Stop();
 		
 		m_SongController.Complete();
@@ -127,7 +110,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 			.GetLibrarySongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 		
-		ScoreRank rank = m_ScoresProcessor.GetRank(songID);
+		ScoreRank rank = m_ScoresManager.GetRank(songID);
 		
 		if (rank < ScoreRank.Gold)
 			return songID;
@@ -149,11 +132,6 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		RequestReview();
 	}
 
-	protected override void OnHideFinished()
-	{
-		m_Rating.Execute();
-	}
-
 	void RequestReview()
 	{
 		if (UIReviewMenu.Processed)
@@ -164,32 +142,8 @@ public class UIResultMenuControlPage : UIResultMenuPage
 		if (reviewMenu == null)
 			return;
 		
-		reviewMenu.Setup(m_ScoreManager.GetRank());
+		reviewMenu.Setup(m_ScoresManager.GetRank(m_SongID));
 		
 		reviewMenu.Process();
-	}
-
-	async Task ProcessNextAds()
-	{
-		if (m_AdsProcessor.CheckUnavailable() || m_ProfileProcessor.HasNoAds())
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_AdsProcessor.Interstitial("result_next");
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
-	}
-
-	async Task ProcessLeaveAds()
-	{
-		if (m_AdsProcessor.CheckUnavailable() || m_ProfileProcessor.HasNoAds())
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_AdsProcessor.Interstitial("result_leave");
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 }

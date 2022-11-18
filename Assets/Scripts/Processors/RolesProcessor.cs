@@ -86,34 +86,15 @@ public class RoleSnapshot : Snapshot
 }
 
 [Preserve]
-public class RolesDataUpdateSignal { }
-
-[Preserve]
-public class RolesProcessor : DataProcessor<RoleSnapshot, RolesDataUpdateSignal>
+public class RolesProcessor : DataCollection<RoleSnapshot>
 {
 	protected override string Path => "roles";
-
-	protected override bool SupportsDevelopment => false;
 
 	[Inject] SocialProcessor m_SocialProcessor;
 
 	protected override Task OnFetch()
 	{
 		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
-	}
-
-	protected override Task OnUpdate()
-	{
-		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
-	}
-
-	public string GetName() => GetName(m_SocialProcessor.UserID);
-
-	public string GetName(string _RoleID)
-	{
-		RoleSnapshot snapshot = GetSnapshot(_RoleID);
-		
-		return snapshot?.Name;
 	}
 
 	public bool HasRolesPermission() => HasRolesPermission(m_SocialProcessor.UserID);

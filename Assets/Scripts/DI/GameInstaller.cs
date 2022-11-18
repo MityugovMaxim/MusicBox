@@ -28,7 +28,6 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] UINewsItem        m_NewsItem;
 	[SerializeField] UIUnlockCoinsItem m_UnlockCoinsItem;
 	[SerializeField] UIUnlockSongItem  m_UnlockSongItem;
-	[SerializeField] UIProductSongItem m_ProductSongItem;
 	[SerializeField] UILanguageItem    m_LanguageItem;
 	[SerializeField] SoundSource       m_SoundSource;
 
@@ -73,7 +72,6 @@ public class GameInstaller : MonoInstaller
 		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
 		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
 		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
-		InstallPool<UIProductSongItem, UIProductSongItem.Pool>(m_ProductSongItem);
 		
 		InstallPool<UISongHeader, UISongHeader.Pool>(m_SongHeader);
 		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
@@ -150,40 +148,38 @@ public class GameInstaller : MonoInstaller
 			.UnderTransform(transform)
 			.AsSingle();
 		
-		InstallProcessor<LocalizationProcessor>();
+		InstallProcessor<Localization>();
 		InstallProcessor<MenuProcessor>();
 		
 		InstallProcessor<SocialProcessor>();
 		InstallProcessor<ConfigProcessor>();
 		InstallProcessor<SoundProcessor>();
-		InstallProcessor<ProfileProcessor>();
-		InstallProcessor<ApplicationProcessor>();
+		InstallProcessor<ApplicationManager>();
 		InstallProcessor<StorageProcessor>();
-		InstallProcessor<LanguageProcessor>();
+		InstallProcessor<LanguagesCollection>();
 		InstallProcessor<HapticProcessor>();
-		InstallProcessor<TimersProcessor>();
-		InstallProcessor<VouchersProcessor>();
+		InstallProcessor<VouchersCollection>();
 		InstallProcessor<UrlProcessor>();
 		InstallProcessor<AdsProcessor>();
 		InstallProcessor<StatisticProcessor>();
 		InstallProcessor<BannersProcessor>();
 		InstallProcessor<StoreProcessor>();
-		InstallProcessor<NewsProcessor>();
-		InstallProcessor<ProductsProcessor>();
-		InstallProcessor<SongsProcessor>();
-		InstallProcessor<OffersProcessor>();
+		InstallProcessor<NewsCollection>();
+		InstallProcessor<ProductsCollection>();
+		InstallProcessor<SongsCollection>();
+		InstallProcessor<OffersCollection>();
 		InstallProcessor<ProgressProcessor>();
-		InstallProcessor<ScoresProcessor>();
+		InstallProcessor<ScoresCollection>();
 		InstallProcessor<RevivesProcessor>();
-		InstallProcessor<DailyProcessor>();
+		InstallProcessor<DailyCollection>();
 		InstallProcessor<LinkProcessor>();
 		
 		InstallProcessor<NewsDescriptor>();
 		InstallProcessor<OffersDescriptor>();
 		InstallProcessor<ProductsDescriptor>();
 		
-		InstallProcessor<HealthManager>();
-		InstallProcessor<ScoreManager>();
+		InstallProcessor<HealthController>();
+		InstallProcessor<ScoresManager>();
 		
 		Container.BindInterfacesAndSelfTo<SongController>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<TutorialController>().FromNew().AsSingle();
@@ -206,35 +202,8 @@ public class GameInstaller : MonoInstaller
 	{
 		SignalBusInstaller.Install(Container);
 		
-		Container.DeclareSignal<VouchersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<VoucherTimerSignal>().OptionalSubscriber();
 		Container.DeclareSignal<BannersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<AdsProvidersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<LanguageDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<LanguageSelectSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ApplicationDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<SocialDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileCoinsUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileDiscsUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileLevelUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileSongsUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProfileProductsUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<TimersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<TimerStartSignal>().OptionalSubscriber();
-		Container.DeclareSignal<TimerEndSignal>().OptionalSubscriber();
-		Container.DeclareSignal<SongsDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ScoresDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProductsDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<StoreDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<NewsDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<OffersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<ProgressDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<RevivesDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<DailyDataUpdateSignal>().OptionalSubscriber();
 		Container.DeclareSignal<LinkReceivedSignal>().OptionalSubscriber();
-		
-		Container.DeclareSignal<HealthSignal>().OptionalSubscriber();
 	}
 
 	void InstallAudioManager()
@@ -246,8 +215,6 @@ public class GameInstaller : MonoInstaller
 		#elif UNITY_ANDROID
 		Container.Bind(typeof(AudioManager), typeof(IInitializable), typeof(IDisposable)).To<AndroidAudioManager>().FromNew().AsSingle();
 		#endif
-		
-		Container.DeclareSignal<AudioSourceChangedSignal>().OptionalSubscriber();
 	}
 
 	void InstallFileManager()

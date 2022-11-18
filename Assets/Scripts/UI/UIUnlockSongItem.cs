@@ -70,8 +70,8 @@ public class UIUnlockSongItem : UIUnlockItem
 	{
 		m_SongID = _SongID;
 		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
+		m_Label.SongID = m_SongID;
 		
 		Preview = _Preview;
 		

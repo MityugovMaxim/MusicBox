@@ -6,6 +6,28 @@ using UnityEngine;
 
 public static class DataSnapshotExtension
 {
+	public static TValue GetValue<TValue>(this DataSnapshot _DataSnapshot, TValue _Default = default)
+	{
+		Type type = typeof(TValue);
+		
+		if (type == typeof(string))
+			return (TValue)(object)_DataSnapshot.GetString();
+		if (type == typeof(int))
+			return (TValue)(object)_DataSnapshot.GetInt();
+		if (type == typeof(float))
+			return (TValue)(object)_DataSnapshot.GetFloat();
+		if (type == typeof(long))
+			return (TValue)(object)_DataSnapshot.GetLong();
+		if (type == typeof(double))
+			return (TValue)(object)_DataSnapshot.GetDouble();
+		if (type == typeof(bool))
+			return (TValue)(object)_DataSnapshot.GetBool();
+		if (type == typeof(Enum))
+			return (TValue)(object)_DataSnapshot.GetEnum(type);
+		
+		return _Default;
+	}
+
 	public static string GetString(this DataSnapshot _DataSnapshot)
 	{
 		return (string)_DataSnapshot.Value;
@@ -88,6 +110,11 @@ public static class DataSnapshotExtension
 	public static T GetEnum<T>(this DataSnapshot _DataSnapshot) where T : Enum
 	{
 		return (T)Enum.Parse(typeof(T), _DataSnapshot.GetRawJsonValue());
+	}
+
+	public static Enum GetEnum(this DataSnapshot _DataSnapshot, Type _Type)
+	{
+		return (Enum)Enum.Parse(_Type, _DataSnapshot.GetRawJsonValue());
 	}
 
 	public static T GetEnum<T>(this DataSnapshot _DataSnapshot, string _Name, T _Default = default) where T : Enum

@@ -19,7 +19,7 @@ public class UISnapshotMenu : UIMenu
 
 	[Inject] UIField.Factory   m_Factory;
 	[Inject] MenuProcessor     m_MenuProcessor;
-	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] LanguagesCollection m_LanguagesCollection;
 
 	readonly List<UIField> m_Items = new List<UIField>();
 
@@ -119,7 +119,7 @@ public class UISnapshotMenu : UIMenu
 		if (string.IsNullOrEmpty(m_Descriptors))
 			return;
 		
-		List<string> languages = m_LanguageProcessor.GetLanguages(true);
+		List<string> languages = m_LanguagesCollection.GetLanguages(true);
 		foreach (string language in languages)
 		{
 			if (string.IsNullOrEmpty(language))
@@ -176,7 +176,7 @@ public class UISnapshotMenu : UIMenu
 		
 		if (!string.IsNullOrEmpty(m_Descriptors))
 		{
-			List<string> languages = m_LanguageProcessor.GetLanguages(true);
+			List<string> languages = m_LanguagesCollection.GetLanguages(true);
 			foreach (string language in languages)
 			{
 				if (string.IsNullOrEmpty(language))
@@ -261,7 +261,7 @@ public class UISnapshotMenu : UIMenu
 			.Child(m_Descriptors)
 			.GetValueAsync();
 		
-		List<string> languages = m_LanguageProcessor.GetLanguages(true);
+		List<string> languages = m_LanguagesCollection.GetLanguages(true);
 		foreach (string language in languages)
 		{
 			if (string.IsNullOrEmpty(language))
@@ -277,7 +277,7 @@ public class UISnapshotMenu : UIMenu
 			
 			m_DescriptorsRegistry[language] = descriptor;
 			
-			CreateHeader(m_LanguageProcessor.GetName(language));
+			CreateHeader(m_LanguagesCollection.GetName(language));
 			
 			CreateSnapshot(
 				descriptor,

@@ -41,11 +41,11 @@ public class TutorialPlayer : ASFPlayer
 	[SerializeField, Sound] string m_HoldSound;
 	[SerializeField, Sound] string m_BendSound;
 
-	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 	[Inject] SoundProcessor  m_SoundProcessor;
-	[Inject] HealthManager   m_HealthManager;
+	[Inject] HealthController   m_HealthController;
 
 	Action m_Finished;
 
@@ -181,12 +181,12 @@ public class TutorialPlayer : ASFPlayer
 		
 		for (int i = 0; i < 4; i++)
 		{
-			m_ScoreManager.TapFail();
+			m_ScoreController.TapFail();
 			
 			await Task.Delay(750, _Token);
 		}
 		
-		m_HealthManager.Restore();
+		m_HealthController.Restore();
 		
 		m_HealthLabel.Hide();
 		
@@ -212,7 +212,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		for (int i = 0; i < count; i++)
 		{
-			m_ScoreManager.TapHit(1);
+			m_ScoreController.TapHit(1);
 			
 			int delay = MathUtility.Lerp(sourceDelay, targetDelay, step * i);
 			
@@ -221,7 +221,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		await Task.Delay(1500, _Token);
 		
-		m_ScoreManager.Restore();
+		m_ScoreController.Restore();
 		
 		m_ComboLabel.Hide();
 		
@@ -412,7 +412,7 @@ public class TutorialPlayer : ASFPlayer
 		
 		AudioClip sound = m_SoundProcessor.GetSound(_Sound);
 		
-		void ComboChanged(int _Combo, ScoreGrade _Grade)
+		void OnComboChange(int _Combo, ScoreGrade _Grade)
 		{
 			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
 			{
@@ -425,11 +425,11 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_Input = false;
 		
-		_Token.Register(() => m_ScoreManager.OnComboChanged -= ComboChanged);
+		_Token.Register(() => m_ScoreController.OnComboChange -= OnComboChange);
 		
-		m_ScoreManager.OnComboChanged += ComboChanged;
+		m_ScoreController.OnComboChange += OnComboChange;
 		
-		m_HealthManager.Restore();
+		m_HealthController.Restore();
 		
 		await SampleAsync(Duration, _Token);
 		
@@ -452,7 +452,7 @@ public class TutorialPlayer : ASFPlayer
 			SampleAsync(maxTime + Duration, _Token)
 		);
 		
-		m_ScoreManager.OnComboChanged -= ComboChanged;
+		m_ScoreController.OnComboChange -= OnComboChange;
 		
 		m_Input = false;
 		
@@ -529,9 +529,9 @@ public class TutorialPlayer : ASFPlayer
 		
 		void Hit(ScoreType _Type, ScoreGrade _Grade) => selected = true;
 		
-		_Token.Register(() => m_ScoreManager.OnHit -= Hit);
+		_Token.Register(() => m_ScoreController.OnHit -= Hit);
 		
-		m_ScoreManager.OnHit += Hit; 
+		m_ScoreController.OnHit += Hit;
 		
 		m_Input = true;
 		
@@ -541,7 +541,7 @@ public class TutorialPlayer : ASFPlayer
 				if (!selected)
 					return false;
 				
-				m_ScoreManager.OnHit -= Hit;
+				m_ScoreController.OnHit -= Hit;
 				
 				return true;
 			},

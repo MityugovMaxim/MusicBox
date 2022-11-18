@@ -12,7 +12,6 @@ public class UIMainMenuStorePage : UIMainMenuPage
 
 	[SerializeField] UILayout m_Content;
 
-	[Inject] SignalBus             m_SignalBus;
 	[Inject] DailyManager          m_DailyManager;
 	[Inject] ProductsManager       m_ProductsManager;
 	[Inject] RolesProcessor        m_RolesProcessor;
@@ -26,30 +25,18 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	{
 		Refresh();
 		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Subscribe<ProfileProductsUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<VouchersDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<VoucherTimerSignal>(ProcessVoucherTimer);
+		m_ProductsManager.Subscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Subscribe(DataEventType.Remove, Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<ProfileProductsUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<VouchersDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<VoucherTimerSignal>(ProcessVoucherTimer);
+		m_ProductsManager.Unsubscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Unsubscribe(DataEventType.Remove, Refresh);
 	}
 
-	async void Refresh()
+	void Refresh()
 	{
-		await UnityTask.While(() => UIProductItem.Processing);
-		
 		m_Content.Clear();
 		
 		if (AdminMode.Enabled)
@@ -192,11 +179,5 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		VerticalStackLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
-	}
-
-	void ProcessVoucherTimer(VoucherTimerSignal _Signal)
-	{
-		if (_Signal != null && _Signal.VoucherType == VoucherType.ProductDiscount)
-			Refresh();
 	}
 }

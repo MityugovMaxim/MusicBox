@@ -47,7 +47,7 @@ public class UITapIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactMedium);
 		
-		ScoreManager.TapHit(_Progress);
+		ScoreController.TapHit(_Progress);
 		
 		InvokeCallback();
 	}
@@ -60,7 +60,7 @@ public class UITapIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		ScoreManager.TapFail();
+		ScoreController.TapFail();
 		
 		InvokeCallback();
 	}

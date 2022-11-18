@@ -15,7 +15,7 @@ public class UISplashMenu : UIMenu
 	[SerializeField] UISplashLogo m_Logo;
 
 	[Inject] MenuProcessor         m_MenuProcessor;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] Localization m_Localization;
 
 	MaxSdkBase.ConsentDialogState m_ConsentState;
 
@@ -70,7 +70,7 @@ public class UISplashMenu : UIMenu
 		
 		permissionMenu.Setup(
 			Application.productName,
-			m_LocalizationProcessor.Get("PERMISSION_NOTIFICATIONS")
+			m_Localization.Get("PERMISSION_NOTIFICATIONS")
 		);
 		
 		bool state = await permissionMenu.Process(notifications);

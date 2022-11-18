@@ -9,7 +9,7 @@ public class UIScoreIndicator : UIOrder
 	[SerializeField] UIUnitLabel m_ScoreLabel;
 	[SerializeField] float       m_Duration = 0.15f;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 
 	long m_Score;
 
@@ -19,19 +19,17 @@ public class UIScoreIndicator : UIOrder
 	{
 		base.Awake();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnScoreChanged += OnScoreChanged;
+		m_ScoreController.OnScoreChange += OnScoresChange;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnScoreChanged -= OnScoreChanged;
+		m_ScoreController.OnScoreChange -= OnScoresChange;
 	}
 
-	void OnScoreChanged(long _Score)
+	void OnScoresChange(long _Score)
 	{
 		m_Score = _Score;
 		

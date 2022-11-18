@@ -105,6 +105,9 @@ public class SongPlayer : ASFPlayer
 		
 		m_InputReceiver.Sample();
 		
+		if (Time >= Length - Duration && State == ASFPlayerState.Play)
+			AudioSource.volume = (float)MathUtility.Remap01Clamped(Length, Length - Duration, Time);
+		
 		if (Time >= Length && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();
 	}

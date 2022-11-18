@@ -11,11 +11,9 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 	[SerializeField] UIGroup         m_ContinueGroup;
 	[SerializeField] UIGroup         m_LoaderGroup;
 
-	[Inject] ScoreManager     m_ScoreManager;
-	[Inject] ScoresProcessor  m_ScoresProcessor;
-	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] ScoreController m_ScoreController;
+	[Inject] AdsProcessor    m_AdsProcessor;
+	[Inject] MenuProcessor   m_MenuProcessor;
 
 	string    m_SongID;
 	bool      m_Double;
@@ -62,11 +60,8 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		}
 		else
 		{
-			await m_MenuProcessor.RetryLocalizedAsync(
-				"song_double",
-				"result_menu",
-				"SONG_DOUBLE_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
+			await m_MenuProcessor.RetryAsync(
+				"double",
 				Double,
 				Continue
 			);
@@ -84,8 +79,8 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		
 		SongFinishRequest request = new SongFinishRequest(
 			m_SongID,
-			m_ScoreManager.GetScore(),
-			m_ScoreManager.GetAccuracy(),
+			m_ScoreController.GetScore(),
+			m_ScoreController.GetAccuracy(),
 			m_Double
 		);
 		
@@ -93,8 +88,6 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		
 		if (success)
 		{
-			await m_ScoresProcessor.Load();
-			
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 			
 			Next();
@@ -103,31 +96,16 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		{
 			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
+			await m_MenuProcessor.RetryAsync(
 				"song_finish",
-				"result_menu",
-				"SONG_FINISH_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
 				Continue,
 				Next
 			);
 		}
 	}
 
-	async void Next()
+	void Next()
 	{
-		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_ContinueGroup.HideAsync();
-			await m_LoaderGroup.ShowAsync();
-			
-			await m_AdsProcessor.Interstitial("reward_next");
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
-		
 		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
 		
 		resultMenu.Next();

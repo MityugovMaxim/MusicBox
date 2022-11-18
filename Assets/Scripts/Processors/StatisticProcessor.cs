@@ -449,12 +449,11 @@ public class StatisticProcessor
 		);
 	}
 
-	public void LogError(string _Type, string _Place)
+	public void LogError(string _Type)
 	{
 		LogEventImmediate(
 			"errors",
-			StatisticData.Create("type", _Type),
-			StatisticData.Create("place", _Place)
+			StatisticData.Create("type", _Type)
 		);
 	}
 

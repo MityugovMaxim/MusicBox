@@ -6,18 +6,18 @@ public class UILatencyMenu : UISlideMenu
 {
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
-	[Inject] SignalBus        m_SignalBus;
+	[Inject] AudioManager     m_AudioManager;
 	[Inject] AmbientProcessor m_AmbientProcessor;
 
 	protected override void OnShowStarted()
 	{
 		base.OnShowStarted();
 		
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-		
 		m_AmbientProcessor.Pause();
 		
 		m_LatencyIndicator.Process();
+		
+		m_AudioManager.OnSourceChange += OnSourceChange;
 	}
 
 	protected override void OnHideStarted()
@@ -26,10 +26,7 @@ public class UILatencyMenu : UISlideMenu
 		
 		m_LatencyIndicator.Complete();
 		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		m_AudioManager.OnSourceChange -= OnSourceChange;
 	}
 
 	protected override void OnHideFinished()
@@ -46,7 +43,7 @@ public class UILatencyMenu : UISlideMenu
 		return true;
 	}
 
-	void RegisterAudioSourceChanged()
+	void OnSourceChange()
 	{
 		m_LatencyIndicator.Process();
 	}

@@ -4,25 +4,49 @@ using Zenject;
 
 public class UIProductPrice : UIEntity
 {
-	[SerializeField] TMP_Text m_Price;
-
-	StoreProcessor m_StoreProcessor;
-
-	[Inject]
-	public void Construct(StoreProcessor _StoreProcessor)
+	public string ProductID
 	{
-		m_StoreProcessor = _StoreProcessor;
+		get => m_ProductID;
+		set
+		{
+			if (m_ProductID == value)
+				return;
+			
+			m_ProductID = value;
+			
+			ProcessPrice();
+		}
 	}
 
-	public void Setup(string _ProductID)
+	[SerializeField] TMP_Text m_Price;
+	[SerializeField] UIGroup  m_PriceGroup;
+	[SerializeField] UIGroup  m_LoaderGroup;
+
+	[Inject] StoreProcessor m_StoreProcessor;
+
+	string m_ProductID;
+
+	protected override void OnDisable()
 	{
-		if (m_Price == null || m_Price.font == null)
-			return;
+		base.OnDisable();
 		
-		string price = m_StoreProcessor.GetPrice(_ProductID);
+		ProductID = null;
+	}
+
+	async void ProcessPrice()
+	{
+		m_LoaderGroup.Show(true);
+		
+		await m_StoreProcessor.Load();
+		
+		await m_LoaderGroup.HideAsync();
+		
+		await m_PriceGroup.ShowAsync();
+		
+		string price = m_StoreProcessor.GetPrice(ProductID);
 		
 		if (!m_Price.font.HasCharacters(price))
-			price = m_StoreProcessor.GetPrice(_ProductID, false);
+			price = m_StoreProcessor.GetPrice(ProductID, false);
 		
 		m_Price.text = price;
 	}

@@ -370,7 +370,7 @@ public class UISongEditMenu : UIMenu
 	[SerializeField] UIBeat      m_Beat;
 
 	[Inject] StorageProcessor m_StorageProcessor;
-	[Inject] SongsProcessor   m_SongsProcessor;
+	[Inject] SongsManager     m_SongsManager;
 	[Inject] ConfigProcessor  m_ConfigProcessor;
 	[Inject] MenuProcessor    m_MenuProcessor;
 	[Inject] AudioManager     m_AudioManager;
@@ -390,7 +390,7 @@ public class UISongEditMenu : UIMenu
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		await m_SongsProcessor.Load();
+		await m_SongsManager.Load();
 		
 		AudioClip music;
 		try
@@ -413,7 +413,7 @@ public class UISongEditMenu : UIMenu
 		}
 		
 		float ratio    = m_ConfigProcessor.SongRatio;
-		float speed    = m_SongsProcessor.GetSpeed(m_SongID);
+		float speed    = m_SongsManager.GetSpeed(m_SongID);
 		float duration = RectTransform.rect.height / speed;
 		
 		m_Player.Setup(ratio, duration, music, asf);
@@ -440,8 +440,8 @@ public class UISongEditMenu : UIMenu
 
 	public async void Back()
 	{
-		string artist = m_SongsProcessor.GetArtist(m_SongID);
-		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		string artist = m_SongsManager.GetArtist(m_SongID);
+		string title  = m_SongsManager.GetTitle(m_SongID);
 		
 		bool confirm = await m_MenuProcessor.ConfirmAsync(
 			"song_edit",
@@ -463,8 +463,8 @@ public class UISongEditMenu : UIMenu
 
 	public async void Test()
 	{
-		string artist = m_SongsProcessor.GetArtist(m_SongID);
-		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		string artist = m_SongsManager.GetArtist(m_SongID);
+		string title  = m_SongsManager.GetTitle(m_SongID);
 		
 		bool confirm = await m_MenuProcessor.ConfirmAsync(
 			"song_test",
@@ -504,8 +504,8 @@ public class UISongEditMenu : UIMenu
 
 	public async void Upload()
 	{
-		string artist = m_SongsProcessor.GetArtist(m_SongID);
-		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		string artist = m_SongsManager.GetArtist(m_SongID);
+		string title  = m_SongsManager.GetTitle(m_SongID);
 		
 		bool confirm = await m_MenuProcessor.ConfirmAsync(
 			"upload",
@@ -538,8 +538,8 @@ public class UISongEditMenu : UIMenu
 
 	public async void Restore()
 	{
-		string artist = m_SongsProcessor.GetArtist(m_SongID);
-		string title  = m_SongsProcessor.GetTitle(m_SongID);
+		string artist = m_SongsManager.GetArtist(m_SongID);
+		string title  = m_SongsManager.GetTitle(m_SongID);
 		
 		bool confirm = await m_MenuProcessor.ConfirmAsync(
 			"restore",
@@ -637,7 +637,7 @@ public class UISongEditMenu : UIMenu
 
 	Task<AudioClip> LoadMusic()
 	{
-		string music = m_SongsProcessor.GetMusic(m_SongID);
+		string music = m_SongsManager.GetMusic(m_SongID);
 		
 		return m_StorageProcessor.LoadMusicAsync(music, null);
 	}

@@ -14,10 +14,9 @@ public class UIMainMenuControl : UIEntity
 	[SerializeField] UIBadge            m_NewsBadge;
 	[SerializeField] UIBadge            m_StoreBadge;
 
-	[Inject] SignalBus       m_SignalBus;
 	[Inject] OffersManager   m_OffersManager;
 	[Inject] SocialProcessor m_SocialProcessor;
-	[Inject] NewsProcessor   m_NewsProcessor;
+	[Inject] NewsManager     m_NewsManager;
 	[Inject] ProductsManager m_ProductsManager;
 	[Inject] DailyManager    m_DailyManager;
 
@@ -26,43 +25,6 @@ public class UIMainMenuControl : UIEntity
 	readonly HashSet<string> m_ProductIDs = new HashSet<string>();
 
 	MainMenuPageType m_PageType;
-
-	protected override void OnEnable()
-	{
-		base.OnEnable();
-		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Read);
-		m_SignalBus.Subscribe<TimerStartSignal>(Read);
-		m_SignalBus.Subscribe<TimerEndSignal>(Read);
-		
-		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Process);
-		m_SignalBus.Subscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
-		m_SignalBus.Subscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
-		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
-		m_SignalBus.Subscribe<DailyDataUpdateSignal>(ProcessStoreBadge);
-	}
-
-	protected override void OnDisable()
-	{
-		base.OnDestroy();
-		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Read);
-		m_SignalBus.Unsubscribe<TimerStartSignal>(Read);
-		m_SignalBus.Unsubscribe<TimerEndSignal>(Read);
-		
-		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Process);
-		m_SignalBus.Unsubscribe<OffersDataUpdateSignal>(ProcessOffersBadge);
-		m_SignalBus.Unsubscribe<NewsDataUpdateSignal>(ProcessNewsBadge);
-		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(ProcessStoreBadge);
-		m_SignalBus.Unsubscribe<DailyDataUpdateSignal>(ProcessStoreBadge);
-		
-	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant)
 	{
@@ -88,7 +50,7 @@ public class UIMainMenuControl : UIEntity
 
 	void Process()
 	{
-		if (m_PageType != MainMenuPageType.Offers)
+		if (m_PageType != MainMenuPageType.Season)
 			ProcessOffersBadge();
 		if (m_PageType != MainMenuPageType.News)
 			ProcessNewsBadge();
@@ -100,7 +62,7 @@ public class UIMainMenuControl : UIEntity
 	{
 		switch (m_PageType)
 		{
-			case MainMenuPageType.Offers:
+			case MainMenuPageType.Season:
 				ReadOffers();
 				break;
 			case MainMenuPageType.News:
@@ -114,7 +76,7 @@ public class UIMainMenuControl : UIEntity
 
 	void ProcessOffersBadge()
 	{
-		if (m_PageType == MainMenuPageType.Offers)
+		if (m_PageType == MainMenuPageType.Season)
 		{
 			ReadOffers();
 			return;
@@ -133,7 +95,7 @@ public class UIMainMenuControl : UIEntity
 			return;
 		}
 		
-		m_NewsBadge.Value = GetUnreadCount(NEWS_KEY, m_NewsProcessor.GetNewsIDs(), m_NewsIDs);
+		m_NewsBadge.Value = GetUnreadCount(NEWS_KEY, m_NewsManager.GetNewsIDs(), m_NewsIDs);
 	}
 
 	void ProcessStoreBadge()
@@ -161,7 +123,7 @@ public class UIMainMenuControl : UIEntity
 
 	void ReadNews()
 	{
-		Read(NEWS_KEY, m_NewsProcessor.GetNewsIDs(), m_NewsIDs);
+		Read(NEWS_KEY, m_NewsManager.GetNewsIDs(), m_NewsIDs);
 		
 		m_NewsBadge.Value = 0;
 	}

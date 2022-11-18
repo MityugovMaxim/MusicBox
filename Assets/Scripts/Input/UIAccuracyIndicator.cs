@@ -9,27 +9,25 @@ public class UIAccuracyIndicator : UIOrder
 	[SerializeField] Animator m_AccuracyPerfect;
 	[SerializeField] Animator m_AccuracyBad;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnComboChanged += OnComboChanged;
+		m_ScoreController.OnComboChange += OnComboChanged;
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnComboChanged -= OnComboChanged;
+		m_ScoreController.OnComboChange -= OnComboChanged;
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _Grade)
+	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
 	{
-		switch (_Grade)
+		switch (_ScoreGrade)
 		{
 			case ScoreGrade.Perfect:
 				m_AccuracyPerfect.SetTrigger(m_PlayParameterID);

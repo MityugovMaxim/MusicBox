@@ -8,20 +8,21 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class SocialDataUpdateSignal { }
-
-[Preserve]
 public class SocialProcessor : IInitializable, IDisposable
 {
-	public string Provider => m_User?.ProviderId.Replace(".com", string.Empty).ToLowerInvariant() ?? "unkwnown";
-	public bool   Guest    => m_User?.IsAnonymous ?? true;
-	public string UserID   => m_User?.UserId;
-	public string Email    => m_User?.Email;
-	public string Name     => m_User?.DisplayName;
-	public Uri    Photo    => m_User?.PhotoUrl;
+	public bool   Guest  => m_User?.IsAnonymous ?? true;
+	public string UserID => m_User?.UserId;
+	public string Email  => m_User?.Email;
+	public string Name   => m_User?.DisplayName;
+	public Uri    Photo  => m_User?.PhotoUrl;
 
-	[Inject] SignalBus             m_SignalBus;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	public event Action OnLogin;
+	public event Action OnLogout;
+	public event Action OnNameChange;
+	public event Action OnEmailChange;
+	public event Action OnPhotoChange;
+
+	[Inject] Localization m_Localization;
 
 	FirebaseAuth m_Auth;
 	FirebaseUser m_User;
@@ -43,6 +44,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			else
 				await AuthAnonymously();
 			
+			OnLogin?.Invoke();
+			
 			return true;
 		}
 		catch (Exception exception)
@@ -58,6 +61,8 @@ public class SocialProcessor : IInitializable, IDisposable
 		m_User = null;
 		
 		m_Auth.SignOut();
+		
+		OnLogout?.Invoke();
 	}
 
 	public async Task SetUsername(string _Username)
@@ -71,26 +76,7 @@ public class SocialProcessor : IInitializable, IDisposable
 		
 		await m_User.UpdateUserProfileAsync(profile);
 		
-		m_SignalBus.Fire<SocialDataUpdateSignal>();
-	}
-
-	public string GetUsername()
-	{
-		string username = Name;
-		if (!string.IsNullOrEmpty(username))
-			return username;
-		
-		string email = Email;
-		if (!string.IsNullOrEmpty(email))
-			return email.Split('@')[0];
-		
-		string device = SystemInfo.deviceName;
-		if (!string.IsNullOrEmpty(device))
-			return device;
-		
-		return Guest
-			? m_LocalizationProcessor.Get("COMMON_GUEST")
-			: SystemInfo.deviceModel;
+		OnNameChange?.Invoke();
 	}
 
 	public async Task<bool> AttachEmail(string _Email, string _Password)
@@ -108,6 +94,8 @@ public class SocialProcessor : IInitializable, IDisposable
 				m_User = await m_Auth.SignInAnonymouslyAsync();
 			
 			credential.Dispose();
+			
+			OnLogin?.Invoke();
 			
 			return true;
 		}
@@ -140,6 +128,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			await Merge(profile);
 			
 			credential.Dispose();
+			
+			OnLogin?.Invoke();
 			
 			return true;
 		}
@@ -216,6 +206,8 @@ public class SocialProcessor : IInitializable, IDisposable
 			await Merge(profile);
 			
 			credential.Dispose();
+			
+			OnLogin?.Invoke();
 			
 			return true;
 		}

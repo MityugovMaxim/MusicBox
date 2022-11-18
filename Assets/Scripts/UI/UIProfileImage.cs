@@ -1,12 +1,30 @@
-using System;
 using UnityEngine;
+using Zenject;
 
 public class UIProfileImage : UIEntity
 {
 	[SerializeField] WebGraphic m_Image;
 
-	public void Setup(Uri _Uri)
+	[Inject] SocialProcessor m_SocialProcessor;
+
+	protected override void OnEnable()
 	{
-		m_Image.Path = _Uri?.ToString() ?? string.Empty;
+		base.OnEnable();
+		
+		ProcessImage();
+		
+		m_SocialProcessor.OnPhotoChange += ProcessImage;
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		m_SocialProcessor.OnPhotoChange -= ProcessImage;
+	}
+
+	void ProcessImage()
+	{
+		m_Image.Path = m_SocialProcessor.Photo?.ToString() ?? string.Empty;
 	}
 }

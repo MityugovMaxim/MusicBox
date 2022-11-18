@@ -15,7 +15,6 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UISongPlay       m_Play;
 	[SerializeField] UISongDownload   m_Download;
 
-	[Inject] SignalBus    m_SignalBus;
 	[Inject] SongsManager m_SongsManager;
 
 	string m_SongID;
@@ -51,19 +50,14 @@ public class UISongMenu : UISlideMenu
 		}
 	}
 
-	void RegisterScoreDataUpdate()
-	{
-		Setup(m_SongID);
-	}
-
 	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
 		
-		m_Background.Setup(m_SongID);
-		m_Image.Setup(m_SongID);
-		m_Discs.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
+		m_Background.SongID = m_SongID;
+		m_Image.SongID      = m_SongID;
+		m_Discs.SongID      = m_SongID;
+		m_Label.SongID      = m_SongID;
 		m_Play.Setup(m_SongID);
 		m_Download.Setup(m_SongID);
 		
@@ -75,19 +69,14 @@ public class UISongMenu : UISlideMenu
 		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
 		
 		int index = songIDs.IndexOf(m_SongID);
+		
 		if (index >= 0 && index < songIDs.Count)
 			return songIDs[MathUtility.Repeat(index + _Offset, songIDs.Count)];
-		else if (songIDs.Count > 0)
-			return songIDs.FirstOrDefault();
-		else
-			return m_SongID;
-	}
-
-	protected override void OnShowStarted()
-	{
-		base.OnShowStarted();
 		
-		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
+		if (songIDs.Count > 0)
+			return songIDs.FirstOrDefault();
+		
+		return m_SongID;
 	}
 
 	protected override void OnShowFinished()
@@ -102,8 +91,6 @@ public class UISongMenu : UISlideMenu
 		base.OnHideStarted();
 		
 		m_Preview.Stop();
-		
-		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(RegisterScoreDataUpdate);
 	}
 
 	protected override bool OnEscape()

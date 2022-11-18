@@ -15,7 +15,7 @@ public class UISongStatistics : UIGroup
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] ScoreManager    m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 	[Inject] SoundProcessor  m_SoundProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
 
@@ -34,10 +34,10 @@ public class UISongStatistics : UIGroup
 
 	public async Task PlayAsync()
 	{
-		int bad     = m_ScoreManager.GetStatistics(ScoreGrade.Bad);
-		int good    = m_ScoreManager.GetStatistics(ScoreGrade.Good);
-		int great   = m_ScoreManager.GetStatistics(ScoreGrade.Great);
-		int perfect = m_ScoreManager.GetStatistics(ScoreGrade.Perfect);
+		int bad     = m_ScoreController.GetStatistics(ScoreGrade.Bad);
+		int good    = m_ScoreController.GetStatistics(ScoreGrade.Good);
+		int great   = m_ScoreController.GetStatistics(ScoreGrade.Great);
+		int perfect = m_ScoreController.GetStatistics(ScoreGrade.Perfect);
 		
 		int total = bad + good + great + perfect;
 		

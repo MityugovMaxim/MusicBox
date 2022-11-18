@@ -3,61 +3,53 @@ using Zenject;
 
 public class UISongDiscs : UIEntity
 {
-	public ScoreRank Rank
+	public string SongID
 	{
-		get => m_Rank;
+		get => m_SongID;
 		set
 		{
-			if (m_Rank == value)
+			if (m_SongID == value)
 				return;
 			
-			m_Rank = value;
+			m_ScoresManager.Unsubscribe(DataEventType.Add, m_SongID, ProcessDiscs);
+			m_ScoresManager.Unsubscribe(DataEventType.Remove, m_SongID, ProcessDiscs);
+			m_ScoresManager.Unsubscribe(DataEventType.Change, m_SongID, ProcessDiscs);
 			
-			ProcessRank();
+			m_SongID = value;
+			
+			m_ScoresManager.Subscribe(DataEventType.Add, m_SongID, ProcessDiscs);
+			m_ScoresManager.Subscribe(DataEventType.Remove, m_SongID, ProcessDiscs);
+			m_ScoresManager.Subscribe(DataEventType.Change, m_SongID, ProcessDiscs);
+			
+			ProcessDiscs();
 		}
 	}
 
-	[SerializeField] ScoreRank  m_Rank;
 	[SerializeField] GameObject m_BronzeRank;
 	[SerializeField] GameObject m_SilverRank;
 	[SerializeField] GameObject m_GoldRank;
 	[SerializeField] GameObject m_PlatinumRank;
 
-	[Inject] ScoresProcessor m_ScoresProcessor;
+	[Inject] ScoresManager m_ScoresManager;
 
 	string m_SongID;
 
-	protected override void OnEnable()
+	protected override void OnDisable()
 	{
-		base.OnEnable();
+		base.OnDisable();
 		
-		ProcessRank();
+		SongID = null;
 	}
 
-	#if UNITY_EDITOR
-	protected override void OnValidate()
+	void ProcessDiscs()
 	{
-		base.OnValidate();
+		ScoreRank rank = m_ScoresManager.GetRank(SongID);
 		
-		ProcessRank();
-	}
-	#endif
-
-	public void Setup(string _SongID)
-	{
-		m_SongID = _SongID;
+		gameObject.SetActive(rank >= ScoreRank.None);
 		
-		m_Rank = m_ScoresProcessor.GetRank(m_SongID);
-		
-		ProcessRank();
-	}
-
-	void ProcessRank()
-	{
-		gameObject.SetActive(Rank >= ScoreRank.None);
-		m_PlatinumRank.SetActive(Rank >= ScoreRank.Platinum);
-		m_GoldRank.SetActive(Rank >= ScoreRank.Gold);
-		m_SilverRank.SetActive(Rank >= ScoreRank.Silver);
-		m_BronzeRank.SetActive(Rank >= ScoreRank.Bronze);
+		m_PlatinumRank.SetActive(rank >= ScoreRank.Platinum);
+		m_GoldRank.SetActive(rank >= ScoreRank.Gold);
+		m_SilverRank.SetActive(rank >= ScoreRank.Silver);
+		m_BronzeRank.SetActive(rank >= ScoreRank.Bronze);
 	}
 }

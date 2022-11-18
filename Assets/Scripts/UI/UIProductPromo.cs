@@ -19,9 +19,9 @@ public class UIProductPromo : UIAnimatorButton
 	{
 		m_ProductID = _ProductID;
 		
-		m_Image.Setup(m_ProductID);
-		m_Label.Setup(m_ProductID);
-		m_Price.Setup(m_ProductID);
+		m_Image.ProductID = m_ProductID;
+		m_Label.ProductID = m_ProductID;
+		m_Price.ProductID = m_ProductID;
 	}
 
 	protected override async void OnClick()

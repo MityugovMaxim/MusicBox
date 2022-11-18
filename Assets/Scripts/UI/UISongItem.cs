@@ -20,10 +20,10 @@ public class UISongItem : UIOverlayButton
 	{
 		m_SongID = _SongID;
 		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
-		m_Discs.Setup(m_SongID);
-		m_Badge.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
+		m_Label.SongID = m_SongID;
+		m_Discs.SongID = m_SongID;
+		m_Badge.SongID = m_SongID;
 	}
 
 	protected override void OnClick()

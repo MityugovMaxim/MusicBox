@@ -45,14 +45,9 @@ public class ProgressSnapshot : Snapshot
 }
 
 [Preserve]
-public class ProgressDataUpdateSignal { }
-
-[Preserve]
-public class ProgressProcessor : DataProcessor<ProgressSnapshot, ProgressDataUpdateSignal>
+public class ProgressProcessor : DataCollection<ProgressSnapshot>
 {
 	protected override string Path => "progress";
-
-	protected override bool SupportsDevelopment => true;
 
 	public int GetSongLevel(string _SongID)
 	{

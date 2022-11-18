@@ -10,7 +10,7 @@ public class UILanguageElement : UIOverlayButton
 
 	[SerializeField] TMP_Text m_Label;
 
-	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] LanguagesCollection m_LanguagesCollection;
 	[Inject] MenuProcessor     m_MenuProcessor;
 
 	LocalizationData m_Localization;
@@ -19,7 +19,7 @@ public class UILanguageElement : UIOverlayButton
 	{
 		m_Localization = _Localization;
 		
-		m_Label.text = m_LanguageProcessor.GetName(m_Localization.Language);
+		m_Label.text = m_LanguagesCollection.GetName(m_Localization.Language);
 	}
 
 	protected override void OnClick()

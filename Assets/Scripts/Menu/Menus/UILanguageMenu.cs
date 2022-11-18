@@ -8,8 +8,7 @@ public class UILanguageMenu : UISlideMenu
 	[SerializeField] RectTransform        m_Container;
 	[SerializeField] UILanguageBackground m_Background;
 
-	[Inject] SignalBus           m_SignalBus;
-	[Inject] LanguageProcessor   m_LanguageProcessor;
+	[Inject] LanguagesManager    m_LanguagesManager;
 	[Inject] MenuProcessor       m_MenuProcessor;
 	[Inject] UILanguageItem.Pool m_ItemPool;
 
@@ -17,9 +16,9 @@ public class UILanguageMenu : UISlideMenu
 
 	string m_Language;
 
-	public void Setup(string _Language)
+	public void Setup(string _LanguageID)
 	{
-		m_Language = _Language;
+		m_Language = _LanguageID;
 		
 		m_Background.Setup(m_Language);
 	}
@@ -28,16 +27,16 @@ public class UILanguageMenu : UISlideMenu
 	{
 		base.OnShowStarted();
 		
-		m_SignalBus.Subscribe<LanguageDataUpdateSignal>(Refresh);
-		
 		Refresh();
+		
+		m_LanguagesManager.OnLanguageChange += Refresh;
 	}
 
 	protected override void OnHideStarted()
 	{
 		base.OnHideStarted();
 		
-		m_SignalBus.Unsubscribe<LanguageDataUpdateSignal>(Refresh);
+		m_LanguagesManager.OnLanguageChange -= Refresh;
 	}
 
 	protected override bool OnEscape()
@@ -47,13 +46,13 @@ public class UILanguageMenu : UISlideMenu
 		return true;
 	}
 
-	void Refresh()
+	void Refresh(object _Data = null)
 	{
 		foreach (UILanguageItem item in m_Items)
 			m_ItemPool.Despawn(item);
 		m_Items.Clear();
 		
-		List<string> languages = m_LanguageProcessor.GetLanguages();
+		List<string> languages = m_LanguagesManager.GetLanguages();
 		
 		if (languages == null || languages.Count == 0)
 			return;
@@ -76,7 +75,7 @@ public class UILanguageMenu : UISlideMenu
 
 	async void Select(string _Language)
 	{
-		if (m_LanguageProcessor.Language == _Language)
+		if (m_LanguagesManager.Language == _Language)
 		{
 			await m_MenuProcessor.Hide(MenuType.LanguageMenu);
 			return;
@@ -86,7 +85,7 @@ public class UILanguageMenu : UISlideMenu
 		
 		await m_MenuProcessor.Hide(MenuType.LanguageMenu, true);
 		
-		await m_LanguageProcessor.Select(_Language);
+		await m_LanguagesManager.Select(_Language);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 	}

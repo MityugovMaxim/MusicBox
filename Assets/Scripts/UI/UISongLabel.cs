@@ -4,18 +4,41 @@ using Zenject;
 
 public class UISongLabel : UIEntity
 {
+	public string SongID
+	{
+		get => m_SongID;
+		set
+		{
+			if (m_SongID == value)
+				return;
+			
+			m_SongsManager.Collection.Unsubscribe(DataEventType.Change, m_SongID, ProcessLabel);
+			
+			m_SongID = value;
+			
+			m_SongsManager.Collection.Subscribe(DataEventType.Change, m_SongID, ProcessLabel);
+			
+			ProcessLabel();
+		}
+	}
+
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Artist;
 
-	[Inject] SongsProcessor m_SongsProcessor;
+	[Inject] SongsManager m_SongsManager;
 
 	string m_SongID;
 
-	public void Setup(string _SongID)
+	protected override void OnDisable()
 	{
-		m_SongID = _SongID;
+		base.OnDisable();
 		
-		m_Title.text  = m_SongsProcessor.GetTitle(m_SongID);
-		m_Artist.text = m_SongsProcessor.GetArtist(m_SongID);
+		SongID = null;
+	}
+
+	void ProcessLabel()
+	{
+		m_Title.text  = m_SongsManager.GetTitle(SongID);
+		m_Artist.text = m_SongsManager.GetArtist(SongID);
 	}
 }

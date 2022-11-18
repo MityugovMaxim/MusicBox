@@ -6,13 +6,14 @@ using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
+using Object = UnityEngine.Object;
 
 [Preserve]
 public class SongController
 {
 	[Inject] AudioManager       m_AudioManager;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
-	[Inject] SongsProcessor     m_SongsProcessor;
+	[Inject] SongsManager       m_SongsManager;
 	[Inject] StorageProcessor   m_StorageProcessor;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] SongPlayer.Factory m_SongFactory;
@@ -22,8 +23,8 @@ public class SongController
 	[Inject] ProgressProcessor  m_ProgressProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
-	[Inject] HealthManager m_HealthManager;
-	[Inject] ScoreManager  m_ScoreManager;
+	[Inject] HealthController   m_HealthController;
+	[Inject] ScoreController m_ScoreController;
 
 	string        m_SongID;
 	Action<float> m_Progress;
@@ -36,7 +37,7 @@ public class SongController
 
 	CancellationTokenSource m_RewindToken;
 
-	public async Task<bool> Load(string _SongID, Action<float> _Progress)
+	public async Task<bool> Load(string _SongID, bool _Full, Action<float> _Progress)
 	{
 		m_SongID   = _SongID;
 		m_Progress = _Progress;
@@ -47,26 +48,18 @@ public class SongController
 			return false;
 		}
 		
-		string skin = m_SongsProcessor.GetSkin(m_SongID);
-		
-		if (string.IsNullOrEmpty(skin))
-		{
-			Log.Error(this, "Load failed. Skin with ID '{0}' is null or empty.", m_SongID);
-			return false;
-		}
-		
 		if (m_Player != null)
 		{
 			m_Player.Stop();
 			m_Player.Clear();
-			GameObject.Destroy(m_Player.gameObject);
+			Object.Destroy(m_Player.gameObject);
 		}
 		
 		m_Player = null;
 		
 		await ResourceManager.UnloadAsync();
 		
-		SongPlayer player = await ResourceManager.LoadAsync<SongPlayer>(skin);
+		SongPlayer player = await ResourceManager.LoadAsync<SongPlayer>("default");
 		if (ReferenceEquals(player, null))
 		{
 			Log.Error(this, "Load song failed. Player with ID '{0}' is null.", m_SongID);
@@ -81,7 +74,7 @@ public class SongController
 			return false;
 		}
 		
-		string asf = await LoadASFAsync(m_SongID);
+		string asf = await LoadASFAsync(m_SongID, _Full);
 		
 		if (string.IsNullOrEmpty(asf))
 		{
@@ -92,13 +85,13 @@ public class SongController
 		m_Progress = null;
 		
 		float ratio = m_ConfigProcessor.SongRatio;
-		float speed = m_SongsProcessor.GetSpeed(m_SongID);
+		float speed = m_SongsManager.GetSpeed(m_SongID);
 		
 		m_Player = m_SongFactory.Create(player);
 		m_Player.Setup(ratio, speed, music, asf, Finish);
 		
-		m_ScoreManager.Setup(m_SongID);
-		m_HealthManager.Setup(Death);
+		m_ScoreController.Setup(m_SongID);
+		m_HealthController.Setup(Death);
 		
 		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
 		if (gameMenu != null)
@@ -124,9 +117,9 @@ public class SongController
 		
 		m_StatisticProcessor.LogSongStart(
 			m_SongID,
-			m_SongsProcessor.GetNumber(m_SongID),
+			0,
 			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsProcessor.GetPrice(m_SongID) > 0 ? "paid" : "free"
+			m_SongsManager.GetPrice(m_SongID) > 0 ? "paid" : "free"
 		);
 		
 		return true;
@@ -147,8 +140,8 @@ public class SongController
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 		
-		m_HealthManager.Restore();
-		m_ScoreManager.Restore();
+		m_HealthController.Restore();
+		m_ScoreController.Restore();
 		
 		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
 		if (reviveMenu != null)
@@ -230,7 +223,7 @@ public class SongController
 		
 		CancellationToken token = m_RewindToken.Token;
 		
-		m_HealthManager.Restore();
+		m_HealthController.Restore();
 		
 		await Rewind(token);
 		
@@ -257,9 +250,9 @@ public class SongController
 		
 		m_StatisticProcessor.LogSongFinish(
 			m_SongID,
-			m_SongsProcessor.GetNumber(m_SongID),
+			0,
 			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsProcessor.GetPrice(m_SongID),
+			m_SongsManager.GetPrice(m_SongID),
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
@@ -270,8 +263,8 @@ public class SongController
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 		
-		m_HealthManager.Restore();
-		m_ScoreManager.Restore();
+		m_HealthController.Restore();
+		m_ScoreController.Restore();
 		
 		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
 		if (reviveMenu != null)
@@ -317,9 +310,9 @@ public class SongController
 		
 		m_StatisticProcessor.LogSongFinish(
 			m_SongID,
-			m_SongsProcessor.GetNumber(m_SongID),
+			0,
 			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsProcessor.GetPrice(m_SongID),
+			m_SongsManager.GetPrice(m_SongID),
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
@@ -351,9 +344,9 @@ public class SongController
 		
 		m_StatisticProcessor.LogSongFinish(
 			m_SongID,
-			m_SongsProcessor.GetNumber(m_SongID),
+			0,
 			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsProcessor.GetPrice(m_SongID),
+			m_SongsManager.GetPrice(m_SongID),
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
@@ -387,9 +380,9 @@ public class SongController
 		
 		m_StatisticProcessor.LogSongFinish(
 			m_SongID,
-			m_SongsProcessor.GetNumber(m_SongID),
+			0,
 			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsProcessor.GetPrice(m_SongID),
+			m_SongsManager.GetPrice(m_SongID),
 			(int)(m_Player.Time / m_Player.Length * 100),
 			m_AdsReviveCount,
 			(int)(Time.time - m_LoadTime),
@@ -454,7 +447,7 @@ public class SongController
 	{
 		const float timeout = 15;
 		
-		string path = m_SongsProcessor.GetMusic(_SongID);
+		string path = m_SongsManager.GetMusic(_SongID);
 		
 		m_Loading  = 0;
 		m_PingTime = Time.realtimeSinceStartup;
@@ -469,11 +462,11 @@ public class SongController
 		return task.IsCompletedSuccessfully ? task.Result : null;
 	}
 
-	async Task<string> LoadASFAsync(string _SongID)
+	async Task<string> LoadASFAsync(string _SongID, bool _Full)
 	{
 		const float timeout = 15;
 		
-		string path = $"Songs/{_SongID}.asf";
+		string path = _Full ? $"Songs/{_SongID}_full.asf" : $"Songs/{_SongID}.asf";
 		
 		m_Loading  = 0;
 		m_PingTime = Time.realtimeSinceStartup;

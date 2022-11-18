@@ -37,7 +37,7 @@ public class UIDailyItem : UIEntity
 	[SerializeField] float m_SourceScale = 1;
 	[SerializeField] float m_TargetScale = 1;
 
-	[Inject] DailyProcessor m_DailyProcessor;
+	[Inject] DailyCollection m_DailyCollection;
 
 	string m_DailyID;
 
@@ -58,9 +58,9 @@ public class UIDailyItem : UIEntity
 		m_DailyID = _DailyID;
 		
 		m_Content.SetActive(!string.IsNullOrEmpty(m_DailyID));
-		m_Ads.SetActive(m_DailyProcessor.GetAds(m_DailyID));
+		m_Ads.SetActive(m_DailyCollection.GetAds(m_DailyID));
 		
-		m_Coins.Value = m_DailyProcessor.GetCoins(m_DailyID);
+		m_Coins.Value = m_DailyCollection.GetCoins(m_DailyID);
 	}
 
 	public void Collect()

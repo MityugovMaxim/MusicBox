@@ -15,8 +15,6 @@ public class AdminInstaller : MonoInstaller
 	{
 		InstallProcessor<RolesProcessor>();
 		
-		Container.DeclareSignal<RolesDataUpdateSignal>().OptionalSubscriber();
-		
 		Container.BindFactory<object, PropertyInfo, RectTransform, UIField, UIField.Factory>().FromFactory<UIFieldFactory>();
 		
 		Container.BindFactory<IListField, int, RectTransform, UIListEntry, UIListEntry.Factory>().FromFactory<UIListEntryFactory>();

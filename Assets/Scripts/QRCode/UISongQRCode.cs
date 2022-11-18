@@ -28,7 +28,7 @@ public class UISongQRCode : UIGroup
 		
 		m_QRCode.gameObject.SetActive(true);
 		
-		m_Image.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
 		
 		m_QRCode.Message = url;
 		

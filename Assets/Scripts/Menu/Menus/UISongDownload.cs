@@ -129,12 +129,7 @@ public class UISongDownload : UIGroup
 			m_ProgressGroup.Hide();
 			m_CompleteGroup.Hide();
 			
-			await m_MenuProcessor.ErrorLocalizedAsync(
-				"song_download",
-				"song_menu",
-				"SONG_LOAD_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE"
-			);
+			await m_MenuProcessor.ErrorAsync("song_download");
 		}
 	}
 

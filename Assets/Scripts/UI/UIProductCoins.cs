@@ -3,19 +3,39 @@ using Zenject;
 
 public class UIProductCoins : UIEntity
 {
+	public string ProductID
+	{
+		get => m_ProductID;
+		set
+		{
+			if (m_ProductID == value)
+				return;
+			
+			m_VouchersManager.Unsubscribe(DataEventType.Add, ProcessCoins);
+			m_VouchersManager.Unsubscribe(DataEventType.Remove, ProcessCoins);
+			m_VouchersManager.Unsubscribe(DataEventType.Change, ProcessCoins);
+			m_ProductsManager.Collection.Unsubscribe(DataEventType.Change, m_ProductID, ProcessCoins);
+			
+			m_ProductID = value;
+			
+			m_VouchersManager.Subscribe(DataEventType.Add, ProcessCoins);
+			m_VouchersManager.Subscribe(DataEventType.Remove, ProcessCoins);
+			m_VouchersManager.Subscribe(DataEventType.Change, ProcessCoins);
+			m_ProductsManager.Collection.Subscribe(DataEventType.Change, m_ProductID, ProcessCoins);
+			
+			ProcessCoins();
+		}
+	}
+
 	[SerializeField] UIUnitLabel m_Coins;
 
-	[Inject] ProductsProcessor m_ProductsProcessor;
-	[Inject] VouchersProcessor m_VouchersProcessor;
+	[Inject] VouchersManager m_VouchersManager;
+	[Inject] ProductsManager m_ProductsManager;
 
 	string m_ProductID;
 
-	public void Setup(string _ProductID)
+	void ProcessCoins()
 	{
-		m_ProductID = _ProductID;
-		
-		long coins = m_ProductsProcessor.GetCoins(m_ProductID);
-		
-		m_Coins.Value = m_VouchersProcessor.GetValue(VoucherType.ProductDiscount, m_ProductID, coins);
+		m_Coins.Value = m_VouchersManager.GetProductDiscount(ProductID);
 	}
 }

@@ -106,7 +106,7 @@ public class UIHoldIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactMedium);
 		
-		ScoreManager.HoldRelease(_Progress, _Length);
+		ScoreController.HoldRelease(_Progress, _Length);
 		
 		InvokeCallback();
 	}
@@ -120,7 +120,7 @@ public class UIHoldIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		ScoreManager.HoldFail();
+		ScoreController.HoldFail();
 		
 		InvokeCallback();
 	}
@@ -133,7 +133,7 @@ public class UIHoldIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactLight);
 		
-		ScoreManager.HoldHit(_Progress);
+		ScoreController.HoldHit(_Progress);
 		
 		InvokeCallback();
 	}

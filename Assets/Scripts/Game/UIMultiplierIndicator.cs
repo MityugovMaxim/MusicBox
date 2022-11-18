@@ -11,8 +11,8 @@ public class UIMultiplierIndicator : UIOrder
 	[SerializeField, Sound] string m_MultiplierX6Sound;
 	[SerializeField, Sound] string m_MultiplierX8Sound;
 
-	[Inject] ScoreManager   m_ScoreManager;
-	[Inject] SoundProcessor m_SoundProcessor;
+	[Inject] ScoreController m_ScoreController;
+	[Inject] SoundProcessor  m_SoundProcessor;
 
 	int   m_Multiplier;
 	float m_Progress;
@@ -28,19 +28,19 @@ public class UIMultiplierIndicator : UIOrder
 		
 		m_MultiplierProgress.Progress(m_Progress, true);
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnMultiplierChanged += OnMultiplierChanged;
+		m_ScoreController.OnMultiplierChange += OnMultiplierChanged;
+		m_ScoreController.OnProgressChange   += OnProgressChange;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnMultiplierChanged -= OnMultiplierChanged;
+		m_ScoreController.OnMultiplierChange -= OnMultiplierChanged;
+		m_ScoreController.OnProgressChange   -= OnProgressChange;
 	}
 
-	void OnMultiplierChanged(int _Multiplier, float _Progress)
+	void OnMultiplierChanged(int _Multiplier)
 	{
 		if (_Multiplier > m_Multiplier)
 		{
@@ -50,17 +50,19 @@ public class UIMultiplierIndicator : UIOrder
 			
 			m_SoundProcessor.Play(multiplierSound);
 			
-			m_MultiplierProgress.Play(_Progress);
-			
 			m_MultiplierLabel.Play();
 		}
 		else if (_Multiplier < m_Multiplier)
 		{
 			m_MultiplierLabel.Restore();
 			m_MultiplierLabel.Multiplier = _Multiplier;
-			m_MultiplierProgress.Progress(_Progress, true);
 		}
 		
+		m_Multiplier = _Multiplier;
+	}
+
+	void OnProgressChange(float _Progress)
+	{
 		if (_Progress > m_Progress)
 		{
 			m_MultiplierProgress.Progress(_Progress);
@@ -70,8 +72,7 @@ public class UIMultiplierIndicator : UIOrder
 			m_MultiplierProgress.Progress(_Progress, true);
 		}
 		
-		m_Progress   = _Progress;
-		m_Multiplier = _Multiplier;
+		m_Progress = _Progress;
 	}
 
 	string GetMultiplierSound(int _Multiplier)

@@ -26,9 +26,9 @@ public class UISongScoreList : UIEntity
 	[SerializeField, Sound] string m_SilverSound;
 	[SerializeField, Sound] string m_BronzeSound;
 
-	[Inject] ScoreManager    m_ScoreManager;
-	[Inject] ScoresProcessor m_ScoreProcessor;
-	[Inject] SongsProcessor  m_SongsProcessor;
+	[Inject] ScoresManager   m_ScoresManager;
+	[Inject] ScoreController m_ScoreController;
+	[Inject] SongsManager    m_SongsManager;
 	[Inject] SoundProcessor  m_SoundProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
 
@@ -49,22 +49,23 @@ public class UISongScoreList : UIEntity
 	public void Setup(string _SongID)
 	{
 		m_SongID         = _SongID;
-		m_SourceAccuracy = m_ScoreProcessor.GetAccuracy(m_SongID);
-		m_TargetAccuracy = m_ScoreManager.GetAccuracy();
+		m_SourceAccuracy = m_ScoresManager.GetAccuracy(m_SongID);
+		m_TargetAccuracy = m_ScoreController.GetAccuracy();
 		
-		m_BronzeThreshold   = m_SongsProcessor.GetThreshold(m_SongID, ScoreRank.Bronze);
-		m_SilverThreshold   = m_SongsProcessor.GetThreshold(m_SongID, ScoreRank.Silver);
-		m_GoldThreshold     = m_SongsProcessor.GetThreshold(m_SongID, ScoreRank.Gold);
-		m_PlatinumThreshold = m_SongsProcessor.GetThreshold(m_SongID, ScoreRank.Platinum);
+		m_BronzeThreshold   = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Bronze);
+		m_SilverThreshold   = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Silver);
+		m_GoldThreshold     = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Gold);
+		m_PlatinumThreshold = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Platinum);
 		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
+		m_Label.SongID = m_SongID;
+		
 		m_Milestone.Setup(m_SongID);
 		
 		m_Score.Value = 0;
 		m_Coins.Value = 0;
 		
-		m_DiscRank  = m_ScoreProcessor.GetRank(m_SongID);
+		m_DiscRank  = m_ScoresManager.GetRank(m_SongID);
 		m_CoinsRank = ScoreRank.None;
 		
 		m_Disc.Rank = m_DiscRank;
@@ -81,7 +82,7 @@ public class UISongScoreList : UIEntity
 		await m_Statistics.PlayAsync();
 		
 		await Task.WhenAll(
-			ScoreAsync(m_ScoreManager.GetScore()),
+			ScoreAsync(m_ScoreController.GetScore()),
 			ShiftAsync()
 		);
 		
@@ -175,7 +176,7 @@ public class UISongScoreList : UIEntity
 		if (m_CoinsRank < rank)
 		{
 			m_CoinsRank   =  rank;
-			m_Coins.Value += m_SongsProcessor.GetPayout(m_SongID, ScoreRank.None);
+			m_Coins.Value += m_SongsManager.GetPayout(m_SongID, ScoreRank.None);
 		}
 		
 		if (m_DiscRank >= rank)
@@ -183,7 +184,7 @@ public class UISongScoreList : UIEntity
 		
 		m_DiscRank = rank;
 		
-		m_Coins.Value += m_SongsProcessor.GetPayout(m_SongID, m_DiscRank);
+		m_Coins.Value += m_SongsManager.GetPayout(m_SongID, m_DiscRank);
 		
 		string sound = GetDiscSound(rank);
 		
@@ -242,7 +243,7 @@ public class UISongScoreList : UIEntity
 		{
 			upper.Setup(
 				upperAccuracy,
-				m_ScoreManager.GetScore(upperAccuracy),
+				m_ScoreController.GetScore(upperAccuracy),
 				GetDisc(upperAccuracy - 1),
 				GetRank(upperAccuracy - 1),
 				upperAccuracy == m_SourceAccuracy
@@ -255,7 +256,7 @@ public class UISongScoreList : UIEntity
 		{
 			lower.Setup(
 				lowerAccuracy,
-				m_ScoreManager.GetScore(lowerAccuracy),
+				m_ScoreController.GetScore(lowerAccuracy),
 				ScoreRank.None,
 				GetRank(lowerAccuracy - 1),
 				lowerAccuracy == m_SourceAccuracy

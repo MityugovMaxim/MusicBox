@@ -10,7 +10,7 @@ public class FXProcessor : UIOrder
 	[SerializeField] UIFXHighlight   m_Flash;
 	[SerializeField] UIFXHighlight   m_Dim;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 
 	public void Setup(float _Ratio)
 	{
@@ -28,31 +28,31 @@ public class FXProcessor : UIOrder
 	{
 		int index = GetIndex(_Rect.center);
 		
-		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Tap, _Progress);
+		ScoreGrade scoreGrade = m_ScoreController.GetGrade(ScoreType.Tap, _Progress);
 		
 		Highlight(index);
 		
-		Single(index, grade);
+		Single(index, scoreGrade);
 	}
 
 	public void DoubleFX(Rect _Rect, float _Progress)
 	{
-		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Double, _Progress);
+		ScoreGrade scoreGrade = m_ScoreController.GetGrade(ScoreType.Double, _Progress);
 		
 		Flash();
 		
-		Double(grade);
+		Double(scoreGrade);
 	}
 
 	public void HoldFX(Rect _Rect, float _Progress)
 	{
 		int index = GetIndex(_Rect.center);
 		
-		ScoreGrade grade = m_ScoreManager.GetGrade(ScoreType.Hold, _Progress);
+		ScoreGrade scoreGrade = m_ScoreController.GetGrade(ScoreType.Hold, _Progress);
 		
 		Highlight(index);
 		
-		Single(index, grade);
+		Single(index, scoreGrade);
 	}
 
 	public void Fail()
@@ -88,15 +88,15 @@ public class FXProcessor : UIOrder
 		highlight.Play();
 	}
 
-	void Single(int _Index, ScoreGrade _Grade)
+	void Single(int _Index, ScoreGrade _ScoreGrade)
 	{
 		UIIndicatorFX fx = m_SingleFXs[_Index];
 		
-		fx.Play(_Grade);
+		fx.Play(_ScoreGrade);
 	}
 
-	void Double(ScoreGrade _Grade)
+	void Double(ScoreGrade _ScoreGrade)
 	{
-		m_DoubleFX.Play(_Grade);
+		m_DoubleFX.Play(_ScoreGrade);
 	}
 }

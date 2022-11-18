@@ -10,8 +10,8 @@ public class UIReviveMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
+	[Inject] CoinsParameter   m_CoinsParameter;
 	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] ProfileProcessor m_ProfileProcessor;
 	[Inject] SongController   m_SongController;
 	[Inject] RevivesProcessor m_RevivesProcessor;
 	[Inject] MenuProcessor    m_MenuProcessor;
@@ -30,7 +30,7 @@ public class UIReviveMenu : UIMenu
 	{
 		long coins = m_RevivesProcessor.GetCoins(m_Count);
 		
-		if (!await m_ProfileProcessor.CheckCoins(coins))
+		if (!await m_CoinsParameter.Remove(coins))
 			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
@@ -55,11 +55,8 @@ public class UIReviveMenu : UIMenu
 		}
 		else
 		{
-			await m_MenuProcessor.RetryLocalizedAsync(
+			await m_MenuProcessor.RetryAsync(
 				"song_revive_coins",
-				"revive_menu",
-				"REVIVE_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
 				ReviveCoins,
 				() => { }
 			);
@@ -90,11 +87,8 @@ public class UIReviveMenu : UIMenu
 		}
 		else
 		{
-			await m_MenuProcessor.RetryLocalizedAsync(
+			await m_MenuProcessor.RetryAsync(
 				"song_revive_ads",
-				"revive_menu",
-				"REVIVE_ERROR_TITLE",
-				"COMMON_ERROR_MESSAGE",
 				ReviveAds,
 				() => { }
 			);
@@ -105,15 +99,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void Restart()
 	{
-		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_AdsProcessor.Interstitial("revive_restart");
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
-		
 		m_SongController.Restart();
 		
 		await m_MenuProcessor.Show(MenuType.GameMenu, true);
@@ -123,15 +108,6 @@ public class UIReviveMenu : UIMenu
 
 	public async void Leave()
 	{
-		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_AdsProcessor.Interstitial("revive_leave");
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
 			mainMenu.Select(MainMenuPageType.Songs);
@@ -153,7 +129,7 @@ public class UIReviveMenu : UIMenu
 	{
 		m_SoundProcessor.Play(m_Sound);
 		
-		m_Image.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
 		
 		m_Coins.Value = m_RevivesProcessor.GetCoins(m_Count);
 	}

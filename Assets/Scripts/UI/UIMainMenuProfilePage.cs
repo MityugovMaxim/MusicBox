@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -7,9 +6,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 {
 	public override MainMenuPageType Type => MainMenuPageType.Profile;
 
-	[SerializeField] UIProfileImage m_Image;
-	[SerializeField] TMP_InputField m_Username;
-	[SerializeField] UILevel        m_Level;
 	[SerializeField] UIUnitLabel    m_Coins;
 	[SerializeField] UILanguageItem m_Language;
 	[SerializeField] GameObject     m_LogoutControls;
@@ -19,19 +15,17 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	[SerializeField] string         m_PrivacyPolicyURL;
 	[SerializeField] string         m_TermsOfServiceURL;
 
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] LanguageProcessor  m_LanguageProcessor;
-	[Inject] SocialProcessor    m_SocialProcessor;
-	[Inject] ProfileProcessor   m_ProfileProcessor;
-	[Inject] ProductsProcessor  m_ProductsProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
+	[Inject] SocialProcessor  m_SocialProcessor;
+	[Inject] ProductsManager  m_ProductsManager;
+	[Inject] LanguagesManager m_LanguagesManager;
+	[Inject] LevelParameter   m_LevelParameter;
+	[Inject] CoinsParameter   m_CoinsParameter;
+	[Inject] MenuProcessor    m_MenuProcessor;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		m_Username.onSubmit.AddListener(SetUsername);
 		m_ReviewButton.onClick.AddListener(Review);
 		m_TermsOfServiceButton.onClick.AddListener(TermsOfService);
 		m_PrivacyPolicyButton.onClick.AddListener(PrivacyPolicy);
@@ -41,7 +35,6 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	{
 		base.OnDestroy();
 		
-		m_Username.onSubmit.RemoveListener(SetUsername);
 		m_ReviewButton.onClick.RemoveListener(Review);
 		m_TermsOfServiceButton.onClick.RemoveListener(TermsOfService);
 		m_PrivacyPolicyButton.onClick.RemoveListener(PrivacyPolicy);
@@ -86,7 +79,7 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 
 	public async void OpenCoins()
 	{
-		string productID = m_ProductsProcessor.GetCoinsProductID(m_ProfileProcessor.Coins);
+		string productID = m_ProductsManager.GetProductID(m_CoinsParameter.Value);
 		
 		if (string.IsNullOrEmpty(productID))
 			return;
@@ -120,61 +113,32 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	{
 		Refresh();
 		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Subscribe<SocialDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<LanguageDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<LanguageSelectSignal>(Refresh);
+		m_SocialProcessor.OnLogin  += ProcessSocial;
+		m_SocialProcessor.OnLogout += ProcessSocial;
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<SocialDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProfileDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<LanguageDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<LanguageSelectSignal>(Refresh);
+		m_SocialProcessor.OnLogin  -= ProcessSocial;
+		m_SocialProcessor.OnLogout -= ProcessSocial;
 	}
 
 	void Refresh()
 	{
-		m_ReviewButton.gameObject.SetActive(!UIReviewMenu.Processed);
-		
-		m_Image.Setup(m_SocialProcessor.Photo);
-		
-		m_Level.Level   = m_ProfileProcessor.Level;
-		m_Coins.Value   = m_ProfileProcessor.Coins;
-		m_Username.text = m_SocialProcessor.GetUsername();
-		
-		m_Language.Setup(m_LanguageProcessor.Language, SetLanguage);
-		
-		#if UNITY_EDITOR
-		m_LogoutControls.SetActive(true);
-		#else
-		m_LogoutControls.SetActive(!m_SocialProcessor.Guest);
-		#endif
-	}
-
-	async void SetUsername(string _Username)
-	{
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		await m_SocialProcessor.SetUsername(_Username);
-		
-		m_HapticProcessor.Process(Haptic.Type.Success);
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
 	async void Review()
 	{
 		await m_MenuProcessor.Show(MenuType.ReviewMenu);
+	}
+
+	void ProcessSocial()
+	{
+		#if UNITY_EDITOR
+		m_LogoutControls.SetActive(true);
+		#else
+		m_LogoutControls.SetActive(!m_SocialProcessor.Guest);
+		#endif
 	}
 
 	void TermsOfService()

@@ -15,11 +15,11 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	[SerializeField] UILayout m_Content;
 
-	[Inject] SignalBus       m_SignalBus;
 	[Inject] AudioManager    m_AudioManager;
 	[Inject] SongsManager    m_SongsManager;
-	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ProductsManager m_ProductsManager;
+
+	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
@@ -37,27 +37,18 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	{
 		Refresh();
 		
-		m_SignalBus.Subscribe<ProfileLevelUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProfileSongsUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProfileProductsUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<SongsDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Refresh);
+		m_SongsManager.Collection.Subscribe(DataEventType.Add, Refresh);
+		m_SongsManager.Collection.Subscribe(DataEventType.Remove, Refresh);
+		m_ProductsManager.Collection.Subscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Collection.Subscribe(DataEventType.Remove, Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<ProfileLevelUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProfileSongsUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProfileProductsUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<SongsDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ScoresDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<ProductsDataUpdateSignal>(Refresh);
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Refresh);
+		m_SongsManager.Collection.Unsubscribe(DataEventType.Add, Refresh);
+		m_SongsManager.Collection.Unsubscribe(DataEventType.Remove, Refresh);
+		m_ProductsManager.Collection.Unsubscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Collection.Unsubscribe(DataEventType.Remove, Refresh);
 	}
 
 	void Refresh()

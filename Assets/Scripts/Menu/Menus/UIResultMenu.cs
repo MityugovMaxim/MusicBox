@@ -24,7 +24,7 @@ public class UIResultMenu : UIMenu
 		m_SongID   = _SongID;
 		m_PageType = ResultMenuPageType.Reward;
 		
-		m_Background.Setup(m_SongID);
+		m_Background.SongID = m_SongID;
 		
 		foreach (UIResultMenuPage page in m_Pages)
 			page.Setup(m_SongID);

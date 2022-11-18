@@ -1,7 +1,5 @@
-using System;
 using System.Threading.Tasks;
 using AudioBox.Logging;
-using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.LoginMenu)]
@@ -9,30 +7,12 @@ public class UILoginMenu : UIMenu
 {
 	const int LOGIN_ATTEMPT_LIMIT = 2;
 
-	[Inject] RolesProcessor       m_RolesProcessor;
-	[Inject] SocialProcessor      m_SocialProcessor;
-	[Inject] ConfigProcessor      m_ConfigProcessor;
-	[Inject] ApplicationProcessor m_ApplicationProcessor;
-	[Inject] AdsProcessor         m_AdsProcessor;
-	[Inject] SongsProcessor       m_SongsProcessor;
-	[Inject] VouchersProcessor    m_VouchersProcessor;
-	[Inject] TimersProcessor      m_TimersProcessor;
-	[Inject] ScoresProcessor      m_ScoresProcessor;
-	[Inject] NewsProcessor        m_NewsProcessor;
-	[Inject] OffersProcessor      m_OffersProcessor;
-	[Inject] ProductsProcessor    m_ProductsProcessor;
-	[Inject] RevivesProcessor     m_RevivesProcessor;
-	[Inject] StoreProcessor       m_StoreProcessor;
-	[Inject] ProgressProcessor    m_ProgressProcessor;
-	[Inject] MessageProcessor     m_MessageProcessor;
-	[Inject] ProfileProcessor     m_ProfileProcessor;
-	[Inject] MenuProcessor        m_MenuProcessor;
-	[Inject] LanguageProcessor    m_LanguageProcessor;
-	[Inject] AmbientProcessor     m_AmbientProcessor;
-	[Inject] BannersProcessor     m_BannersProcessor;
-	[Inject] StatisticProcessor   m_StatisticProcessor;
-	[Inject] DailyProcessor       m_DailyProcessor;
-	[Inject] LinkProcessor        m_LinkProcessor;
+	[Inject] SocialProcessor    m_SocialProcessor;
+	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] MenuProcessor      m_MenuProcessor;
+
+	[Inject] IDataCollection[] m_Collections;
+	[Inject] IDataObject[]     m_Objects;
 
 	public async Task Login()
 	{
@@ -56,11 +36,8 @@ public class UILoginMenu : UIMenu
 			
 			TaskCompletionSource<bool> retry = new TaskCompletionSource<bool>();
 			
-			await m_MenuProcessor.RetryLocalizedAsync(
+			await m_MenuProcessor.RetryAsync(
 				"login",
-				"login_menu",
-				"LOGIN_ERROR_TITLE",
-				"LOGIN_ERROR_MESSAGE",
 				() => retry.TrySetResult(true)
 			);
 			
@@ -77,139 +54,32 @@ public class UILoginMenu : UIMenu
 		
 		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
 		
-		m_LinkProcessor.Load();
+		await LoadProcessors(DataCollectionPriority.High);
 		
-		try
-		{
-			await LoadAdmin();
-		}
-		catch (Exception)
-		{
-			// Ignored
-		}
+		await LoadProcessors(DataCollectionPriority.Medium);
 		
-		await LoadApplication();
-		
-		Log.Info(
-			this,
-			"Load application complete. Client Version: {0}. Server Version: {1}",
-			m_ApplicationProcessor.ClientVersion,
-			m_ApplicationProcessor.ServerVersion
-		);
-		
-		await LoadLocalization();
-		
-		Log.Info(this, "Load localization complete. Language: {0}", m_LanguageProcessor.Language);
-		
-		await LoadMessages();
-		
-		Log.Info(this, "Load messages complete.");
-		
-		await LoadAmbient();
-		
-		Log.Info(this, "Load ambient complete.");
-		
-		await LoadLibrary();
-		
-		Log.Info(this, "Load library complete.");
-		
-		await LoadData();
-		
-		Log.Info(this, "Load data complete.");
-		
-		await LoadMonetization();
-		
-		Log.Info(this, "Load monetization complete.");
-		
-		await LoadViews();
-	}
-
-	Task LoadAdmin() => AdminMode.Enabled ? m_RolesProcessor.Load() : Task.CompletedTask;
-
-	Task LoadApplication()
-	{
-		return Task.WhenAll(
-			m_ConfigProcessor.Load(),
-			m_ApplicationProcessor.Load()
-		);
-	}
-
-	Task LoadLocalization()
-	{
-		return m_LanguageProcessor.Load();
-	}
-
-	Task LoadMessages()
-	{
-		return m_MessageProcessor.Load();
-	}
-
-	Task LoadAmbient()
-	{
-		return Task.WhenAny(
-			m_AmbientProcessor.Load(),
-			Task.Delay(150)
-		);
-	}
-
-	Task LoadLibrary()
-	{
-		SongLibraryRequest    songs    = new SongLibraryRequest();
-		VoucherLibraryRequest vouchers = new VoucherLibraryRequest();
-		return Task.WhenAll(
-			songs.SendAsync(),
-			vouchers.SendAsync()
-		);
-	}
-
-	Task LoadData()
-	{
-		return Task.WhenAll(
-			m_ProductsProcessor.Load(),
-			m_OffersProcessor.Load(),
-			m_NewsProcessor.Load(),
-			m_ProgressProcessor.Load(),
-			m_VouchersProcessor.Load(),
-			m_TimersProcessor.Load(),
-			m_SongsProcessor.Load(),
-			m_ScoresProcessor.Load(),
-			m_RevivesProcessor.Load(),
-			m_ProfileProcessor.Load(),
-			m_BannersProcessor.Load(),
-			m_DailyProcessor.Load()
-		);
-	}
-
-	Task LoadMonetization()
-	{
-		return Task.WhenAll(
-			m_StoreProcessor.Load(),
-			m_AdsProcessor.Load()
-		);
-	}
-
-	async Task LoadViews()
-	{
-		await m_MenuProcessor.Show(MenuType.BannerMenu, true);
-		
-		UIBannerMenu bannerMenu = m_MenuProcessor.GetMenu<UIBannerMenu>();
-		if (bannerMenu != null)
-			await bannerMenu.Process();
-		
-		await m_MenuProcessor.Hide(MenuType.BannerMenu, true);
-		
-		m_MenuProcessor.RemoveMenu(MenuType.BannerMenu);
+		await LoadObjects();
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
-		
-		m_MessageProcessor.Schedule(
-			"launch",
-			Application.productName,
-			GetLocalization("COMMON_NOTIFICATION"),
-			"audiobox://play",
-			TimeSpan.FromHours(24)
-		);
+	}
+
+	async Task LoadProcessors(DataCollectionPriority _Priority)
+	{
+		foreach (IDataCollection data in m_Collections)
+		{
+			if (data != null && data.Priority == _Priority)
+				await data.Reload();
+		}
+	}
+
+	async Task LoadObjects()
+	{
+		foreach (IDataObject data in m_Objects)
+		{
+			if (data != null)
+				await data.Reload();
+		}
 	}
 }

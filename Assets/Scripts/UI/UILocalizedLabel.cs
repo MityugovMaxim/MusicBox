@@ -42,8 +42,8 @@ public class UILocalizedLabel : UIEntity
 
 	TMP_Text m_Label;
 
-	[Inject] SignalBus             m_SignalBus;
-	[Inject] LocalizationProcessor m_LocalizationProcessor;
+	[Inject] LanguagesManager      m_LanguagesManager;
+	[Inject] Localization m_Localization;
 
 	protected override void Awake()
 	{
@@ -58,27 +58,25 @@ public class UILocalizedLabel : UIEntity
 		
 		ProcessText();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Subscribe<LanguageSelectSignal>(ProcessText);
+		m_LanguagesManager.OnLanguageChange += ProcessText;
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Unsubscribe<LanguageSelectSignal>(ProcessText);
+		m_LanguagesManager.OnLanguageChange -= ProcessText;
 	}
 
 	void ProcessText()
 	{
-		if (string.IsNullOrEmpty(Key) || m_LocalizationProcessor == null)
+		if (string.IsNullOrEmpty(Key) || m_Localization == null)
 		{
 			m_Label.text = string.Empty;
 			return;
 		}
 		
-		string text = m_LocalizationProcessor.Get(Key);
+		string text = m_Localization.Get(Key);
 		
 		text = Format(text);
 		text = Prefix(text);

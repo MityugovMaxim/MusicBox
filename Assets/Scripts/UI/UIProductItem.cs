@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -10,10 +9,7 @@ public class UIProductItem : UIOverlayButton
 	[Preserve]
 	public class Pool : UIEntityPool<UIProductItem> { }
 
-	public static bool Processing { get; private set; }
-
 	[SerializeField] UIProductImage    m_Image;
-	[SerializeField] UIProductBadge    m_Badge;
 	[SerializeField] UIProductPrice    m_Price;
 	[SerializeField] UIProductTimer    m_Timer;
 	[SerializeField] UIProductDiscount m_Discount;
@@ -24,12 +20,10 @@ public class UIProductItem : UIOverlayButton
 
 	[SerializeField, Sound] string m_PurchaseSound;
 
-	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] ProductsManager  m_ProductsManager;
-	[Inject] StoreProcessor   m_StoreProcessor;
-	[Inject] HapticProcessor  m_HapticProcessor;
-	[Inject] SoundProcessor   m_SoundProcessor;
+	[Inject] ProductsManager m_ProductsManager;
+	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
 
 	string m_ProductID;
 
@@ -37,13 +31,11 @@ public class UIProductItem : UIOverlayButton
 	{
 		m_ProductID = _ProductID;
 		
-		m_Image.Setup(m_ProductID);
-		m_Badge.Setup(m_ProductID);
-		m_Price.Setup(m_ProductID);
-		
-		m_Timer.Setup(m_ProductID);
-		m_Discount.Setup(m_ProductID);
-		m_Coins.Setup(m_ProductID);
+		m_Image.ProductID    = m_ProductID;
+		m_Price.ProductID    = m_ProductID;
+		m_Timer.ProductID    = m_ProductID;
+		m_Discount.ProductID = m_ProductID;
+		m_Coins.ProductID    = m_ProductID;
 		
 		m_OverlayGroup.Hide(true);
 		m_LoaderGroup.Hide(true);
@@ -59,79 +51,48 @@ public class UIProductItem : UIOverlayButton
 
 	async void Purchase()
 	{
-		if (Processing)
-			return;
-		
-		Processing = true;
-		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
 		await Task.WhenAll(
 			m_OverlayGroup.ShowAsync(),
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		bool success  = false;
-		bool canceled = false;
 		try
 		{
-			success = await m_StoreProcessor.Purchase(m_ProductID);
+			await m_ProductsManager.Purchase(m_ProductID);
 		}
 		catch (TaskCanceledException)
 		{
-			canceled = true;
-		}
-		catch (Exception exception)
-		{
-			Log.Exception(this, exception);
-		}
-		
-		#if UNITY_EDITOR
-		await Task.Delay(1500);
-		#endif
-		
-		if (success)
-		{
-			await m_LoaderGroup.HideAsync();
-			
-			m_HapticProcessor.Process(Haptic.Type.Success);
-			m_SoundProcessor.Play(m_PurchaseSound);
-			
-			await m_CompleteGroup.ShowAsync();
-			
-			await Task.WhenAll(
-				m_ProfileProcessor.Load(),
-				Task.Delay(1500)
-			);
-			
-			await Task.WhenAll(
-				m_OverlayGroup.HideAsync(),
-				m_CompleteGroup.HideAsync()
-			);
-		}
-		else
-		{
-			if (!canceled)
-			{
-				await m_MenuProcessor.RetryLocalizedAsync(
-					"product_purchase",
-					"main_menu",
-					"PRODUCT_PURCHASE_ERROR_TITLE",
-					"COMMON_ERROR_MESSAGE",
-					Purchase,
-					() => { }
-				);
-			}
-			
 			await Task.WhenAll(
 				m_OverlayGroup.HideAsync(),
 				m_LoaderGroup.HideAsync(),
 				m_CompleteGroup.HideAsync()
 			);
+			
+			return;
+		}
+		catch (Exception)
+		{
+			await Task.WhenAll(
+				m_OverlayGroup.HideAsync(),
+				m_LoaderGroup.HideAsync(),
+				m_CompleteGroup.HideAsync()
+			);
+			
+			await m_MenuProcessor.ErrorAsync("purchase");
+			
+			return;
 		}
 		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+		await m_LoaderGroup.HideAsync();
 		
-		Processing = false;
+		m_HapticProcessor.Process(Haptic.Type.Success);
+		m_SoundProcessor.Play(m_PurchaseSound);
+		
+		await m_CompleteGroup.ShowAsync();
+		
+		await Task.WhenAll(
+			m_OverlayGroup.HideAsync(),
+			m_CompleteGroup.HideAsync()
+		);
 	}
 }

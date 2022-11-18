@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 public class MenuProcessor : IInitializable
 {
-	readonly LocalizationProcessor          m_LocalizationProcessor;
+	readonly Localization                   m_Localization;
 	readonly Canvas                         m_Canvas;
 	readonly UIMenu.Factory                 m_MenuFactory;
 	readonly Dictionary<MenuType, UIMenu>   m_MenuCache;
@@ -17,13 +17,13 @@ public class MenuProcessor : IInitializable
 
 	[Inject]
 	public MenuProcessor(
-		LocalizationProcessor _LocalizationProcessor,
+		Localization _Localization,
 		Canvas                _Canvas,
 		MenuInfo[]            _MenuInfos,
 		UIMenu.Factory        _MenuFactory
 	)
 	{
-		m_LocalizationProcessor = _LocalizationProcessor;
+		m_Localization = _Localization;
 		m_Canvas                = _Canvas;
 		m_MenuFactory           = _MenuFactory;
 		m_MenuCache             = new Dictionary<MenuType, UIMenu>();
@@ -45,48 +45,41 @@ public class MenuProcessor : IInitializable
 		
 		return ErrorAsync(
 			"exception",
-			"application",
-			"ERROR",
+			m_Localization.Get("COMMON_ERROR_TITLE"),
 			exception.Message
 		);
 	}
 
-	public async void ErrorLocalized(string _ID, string _Place, string _TitleKey, string _MessageKey)
-	{
-		await ErrorLocalizedAsync(_ID, _Place, _TitleKey, _MessageKey);
-	}
-
-	public async void Error(string _ID, string _Place, string _Title, string _Message)
-	{
-		await ErrorAsync(_ID, _Place, _Title, _Message);
-	}
-
-	public Task ErrorLocalizedAsync(string _ID, string _Place, string _TitleKey, string _MessageKey)
-	{
-		return ErrorAsync(
-			_ID,
-			_Place,
-			m_LocalizationProcessor.Get(_TitleKey),
-			m_LocalizationProcessor.Get(_MessageKey)
-		);
-	}
-
-	public Task ErrorAsync(string _ID, string _Place, string _Title, string _Message)
+	public Task ErrorAsync(string _ID)
 	{
 		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
 		
-		if (errorMenu != null)
-			errorMenu.Setup(_ID, _Place, _Title, _Message);
+		if (errorMenu == null)
+			return Task.CompletedTask;
 		
-		return Show(MenuType.ErrorMenu);
+		errorMenu.Setup(_ID);
+		
+		return errorMenu.ShowAsync();
+	}
+
+	public Task ErrorAsync(string _ID, string _Title, string _Message)
+	{
+		UIErrorMenu errorMenu = GetMenu<UIErrorMenu>();
+		
+		if (errorMenu == null)
+			return Task.CompletedTask;
+		
+		errorMenu.Setup(_ID, _Title, _Message);
+		
+		return errorMenu.ShowAsync();
 	}
 
 	public Task ConfirmLocalizedAsync(string _ID, string _TitleKey, string _MessageKey, Action _Confirm, Action _Cancel = null)
 	{
 		return ConfirmAsync(
 			_ID,
-			m_LocalizationProcessor.Get(_TitleKey),
-			m_LocalizationProcessor.Get(_MessageKey),
+			m_Localization.Get(_TitleKey),
+			m_Localization.Get(_MessageKey),
 			_Confirm,
 			_Cancel
 		);
@@ -124,36 +117,28 @@ public class MenuProcessor : IInitializable
 		return completionSource.Task;
 	}
 
-	public async void RetryLocalized(string _ID, string _Place, string _TitleKey, string _MessageKey, Action _Retry, Action _Cancel = null)
-	{
-		await RetryLocalizedAsync(_ID, _Place, _TitleKey, _MessageKey, _Retry, _Cancel);
-	}
-
-	public async void Retry(string _ID, string _Place, string _Title, string _Message, Action _Retry, Action _Cancel = null)
-	{
-		await RetryAsync(_ID, _Place, _Title, _Message, _Retry, _Cancel);
-	}
-
-	public Task RetryLocalizedAsync(string _ID, string _Place, string _TitleKey, string _MessageKey, Action _Retry, Action _Cancel = null)
-	{
-		return RetryAsync(
-			_ID,
-			_Place,
-			m_LocalizationProcessor.Get(_TitleKey),
-			m_LocalizationProcessor.Get(_MessageKey),
-			_Retry,
-			_Cancel
-		);
-	}
-
-	public Task RetryAsync(string _ID, string _Place, string _Title, string _Message, Action _Retry, Action _Cancel = null)
+	public Task RetryAsync(string _ID, Action _Retry = null, Action _Cancel = null)
 	{
 		UIRetryMenu retryMenu = GetMenu<UIRetryMenu>();
 		
-		if (retryMenu != null)
-			retryMenu.Setup(_ID, _Place, _Title, _Message, _Retry, _Cancel);
+		if (retryMenu == null)
+			return Task.CompletedTask;
 		
-		return Show(MenuType.RetryMenu);
+		retryMenu.Setup(_ID, _Retry, _Cancel);
+		
+		return retryMenu.ShowAsync();
+	}
+
+	public Task RetryAsync(string _ID, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
+	{
+		UIRetryMenu retryMenu = GetMenu<UIRetryMenu>();
+		
+		if (retryMenu == null)
+			return Task.CompletedTask;
+		
+		retryMenu.Setup(_ID, _Title, _Message, _Retry, _Cancel);
+		
+		return retryMenu.ShowAsync();
 	}
 
 	public T GetMenu<T>(bool _Cache = false) where T : UIMenu

@@ -3,16 +3,39 @@ using Zenject;
 
 public class UINewsImage : UIEntity
 {
+	public string NewsID
+	{
+		get => m_NewsID;
+		set
+		{
+			if (m_NewsID == value)
+				return;
+			
+			m_NewsManager.Collection.Unsubscribe(DataEventType.Change, m_NewsID, ProcessImage);
+			
+			m_NewsID = value;
+			
+			m_NewsManager.Collection.Subscribe(DataEventType.Change, m_NewsID, ProcessImage);
+			
+			ProcessImage();
+		}
+	}
+
 	[SerializeField] WebImage m_Image;
 
-	[Inject] NewsProcessor m_NewsProcessor;
+	[Inject] NewsManager m_NewsManager;
 
 	string m_NewsID;
 
-	public void Setup(string _NewsID)
+	protected override void OnDisable()
 	{
-		m_NewsID = _NewsID;
+		base.OnDisable();
 		
-		m_Image.Path = m_NewsProcessor.GetImage(m_NewsID);
+		NewsID = null;
+	}
+
+	void ProcessImage()
+	{
+		m_Image.Path = m_NewsManager.GetImage(NewsID);
 	}
 }

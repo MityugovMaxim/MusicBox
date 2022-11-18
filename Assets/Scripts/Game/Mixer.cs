@@ -12,13 +12,13 @@ public class Mixer : MonoBehaviour
 	[SerializeField] AudioMixerSnapshot m_HighpassDisabledSnapshot;
 	[SerializeField] AudioMixerSnapshot m_HighpassEnabledSnapshot;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 
 	CancellationTokenSource m_TokenSource;
 
 	void Awake()
 	{
-		m_ScoreManager.OnComboChanged += OnComboChanged;
+		m_ScoreController.OnComboChange += OnComboChanged;
 	}
 
 	void OnDestroy()
@@ -27,12 +27,12 @@ public class Mixer : MonoBehaviour
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		m_ScoreManager.OnComboChanged -= OnComboChanged;
+		m_ScoreController.OnComboChange -= OnComboChanged;
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _Grade)
+	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
 	{
-		if (_Grade == ScoreGrade.Fail || _Grade == ScoreGrade.Miss)
+		if (_ScoreGrade == ScoreGrade.Fail || _ScoreGrade == ScoreGrade.Miss)
 			RegisterMiss();
 		else
 			RegisterHit();

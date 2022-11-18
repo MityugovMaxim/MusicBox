@@ -7,7 +7,7 @@ public class UISetupMenu : UIMenu
 {
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
-	[Inject] SignalBus        m_SignalBus;
+	[Inject] AudioManager     m_AudioManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
 	[Inject] AmbientProcessor m_AmbientProcessor;
 
@@ -15,14 +15,14 @@ public class UISetupMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
-		
 		m_AmbientProcessor.Pause();
+		
+		m_AudioManager.OnSourceChange += OnSourceChange;
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(RegisterAudioSourceChanged);
+		m_AudioManager.OnSourceChange -= OnSourceChange;
 	}
 
 	protected override void OnHideFinished()
@@ -52,7 +52,7 @@ public class UISetupMenu : UIMenu
 		m_CompletionSource = null;
 	}
 
-	void RegisterAudioSourceChanged()
+	void OnSourceChange()
 	{
 		m_LatencyIndicator.Process();
 	}

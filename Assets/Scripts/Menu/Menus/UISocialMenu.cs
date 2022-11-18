@@ -70,16 +70,7 @@ public class UISocialMenu : UISlideMenu
 		}
 		else
 		{
-			UIErrorMenu errorMenu = m_MenuProcessor.GetMenu<UIErrorMenu>();
-			if (errorMenu != null)
-			{
-				errorMenu.Setup(
-					"sign_in_error",
-					"social_menu",
-					GetLocalization("SIGN_IN_ERROR_TITLE"),
-					GetLocalization("COMMON_ERROR_MESSAGE")
-				);
-			}
+			await m_MenuProcessor.ErrorAsync("login");
 			
 			await m_MenuProcessor.Show(MenuType.ErrorMenu, true);
 			

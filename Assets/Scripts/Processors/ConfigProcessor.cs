@@ -151,7 +151,7 @@ public class ConfigProcessor
 	{
 		foreach (string key in m_DefaultValues.Keys.ToArray())
 			m_DefaultValues[key] = Convert.ToString(m_DefaultValues[key], CultureInfo.InvariantCulture);
-		
+
 		await FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(m_DefaultValues);
 		
 		try

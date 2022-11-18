@@ -10,7 +10,6 @@ public class UIGameMenu : UIMenu
 	[SerializeField] UITimeline  m_Timeline;
 	[SerializeField] GameObject  m_Latency;
 
-	[Inject] SignalBus      m_SignalBus;
 	[Inject] AudioManager   m_AudioManager;
 	[Inject] SongController m_SongController;
 	[Inject] MenuProcessor  m_MenuProcessor;
@@ -21,7 +20,7 @@ public class UIGameMenu : UIMenu
 	{
 		m_SongID = _SongID;
 		
-		m_Label.Setup(m_SongID);
+		m_Label.SongID = m_SongID;
 		
 		ProcessLatency();
 	}
@@ -60,7 +59,7 @@ public class UIGameMenu : UIMenu
 		
 		ProcessLatency();
 		
-		m_SignalBus.Subscribe<AudioSourceChangedSignal>(Pause);
+		m_AudioManager.OnSourceChange += Pause;
 	}
 
 	protected override void OnHideStarted()
@@ -69,7 +68,7 @@ public class UIGameMenu : UIMenu
 		
 		ProcessLatency();
 		
-		m_SignalBus.Unsubscribe<AudioSourceChangedSignal>(Pause);
+		m_AudioManager.OnSourceChange -= Pause;
 	}
 
 	protected override bool OnEscape()

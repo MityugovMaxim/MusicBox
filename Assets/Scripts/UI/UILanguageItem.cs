@@ -12,7 +12,7 @@ public class UILanguageItem : UIEntity
 	[SerializeField] UILanguageImage m_Image;
 	[SerializeField] TMP_Text        m_Label;
 
-	[Inject] LanguageProcessor m_LanguageProcessor;
+	[Inject] LanguagesCollection m_LanguagesCollection;
 
 	string         m_Language;
 	Action<string> m_Select;
@@ -24,7 +24,7 @@ public class UILanguageItem : UIEntity
 		
 		m_Image.Setup(_Language);
 		
-		m_Label.text = m_LanguageProcessor.GetName(m_Language);
+		m_Label.text = m_LanguagesCollection.GetName(m_Language);
 	}
 
 	public void Select()

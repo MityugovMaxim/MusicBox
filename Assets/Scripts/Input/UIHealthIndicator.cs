@@ -5,7 +5,7 @@ public class UIHealthIndicator : UIOrder
 {
 	[SerializeField] UIHealthHandle[] m_Handles;
 
-	[Inject] SignalBus m_SignalBus;
+	[Inject] HealthController m_HealthController;
 
 	int m_Health;
 
@@ -13,21 +13,16 @@ public class UIHealthIndicator : UIOrder
 	{
 		base.Awake();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Subscribe<HealthSignal>(RegisterHealth);
+		m_HealthController.OnDamage  += ProcessHealth;
+		m_HealthController.OnRestore += ProcessHealth;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		if (m_SignalBus != null)
-			m_SignalBus.Unsubscribe<HealthSignal>(RegisterHealth);
-	}
-
-	void RegisterHealth(HealthSignal _Signal)
-	{
-		ProcessHealth(_Signal.Health);
+		m_HealthController.OnDamage  -= ProcessHealth;
+		m_HealthController.OnRestore -= ProcessHealth;
 	}
 
 	void ProcessHealth(int _Health)

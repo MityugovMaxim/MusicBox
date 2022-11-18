@@ -22,31 +22,17 @@ public class UIBeat : UIEntity
 		}
 	}
 
-	public double Origin
-	{
-		get => m_Origin;
-		set
-		{
-			if (Math.Abs(m_Origin - value) < double.Epsilon * 2)
-				return;
-			
-			m_Origin = value;
-			
-			ProcessTime();
-		}
-	}
-
 	public double Step => 60.0 / BPM / Bar;
 
 	public float BPM
 	{
-		get => m_BPM;
+		get => m_Player.BPM;
 		set
 		{
-			if (Mathf.Approximately(m_BPM, value))
+			if (Mathf.Approximately(m_Player.BPM, value))
 				return;
 			
-			m_BPM = value;
+			m_Player.BPM = value;
 			
 			ProcessTime();
 		}
@@ -54,13 +40,27 @@ public class UIBeat : UIEntity
 
 	public int Bar
 	{
-		get => m_Bar;
+		get => m_Player.Bar;
 		set
 		{
-			if (m_Bar == value)
+			if (m_Player.Bar == value)
 				return;
 			
-			m_Bar = value;
+			m_Player.Bar = value;
+			
+			ProcessTime();
+		}
+	}
+
+	public double Origin
+	{
+		get => m_Player.Origin;
+		set
+		{
+			if (Math.Abs(m_Player.Origin - value) < double.Epsilon * 2)
+				return;
+			
+			m_Player.Origin = value;
 			
 			ProcessTime();
 		}
@@ -83,13 +83,13 @@ public class UIBeat : UIEntity
 
 	public float Ratio
 	{
-		get => m_Ratio;
+		get => m_Player.Ratio;
 		set
 		{
-			if (Mathf.Approximately(m_Ratio, value))
+			if (Mathf.Approximately(m_Player.Ratio, value))
 				return;
 			
-			m_Ratio = value;
+			m_Player.Ratio = value;
 			
 			ProcessLimits();
 			ProcessTime();
@@ -102,15 +102,11 @@ public class UIBeat : UIEntity
 
 	public double MaxTime { get; private set; }
 
-	[SerializeField] double m_Origin;
 	[SerializeField] double m_Time;
 	[SerializeField] float  m_Duration;
-	[SerializeField] float  m_Ratio;
-	[SerializeField] float  m_BPM;
-	[SerializeField] int    m_Bar;
 
-	[Inject] ConfigProcessor m_ConfigProcessor;
-	[Inject] SongsProcessor  m_SongsProcessor;
+	[Inject] UIPlayer        m_Player;
+	[Inject] SongsManager    m_SongsManager;
 	[Inject] HapticProcessor m_HapticProcessor;
 	[Inject] UIBeatKey.Pool  m_ItemPool;
 
@@ -133,11 +129,7 @@ public class UIBeat : UIEntity
 	{
 		m_SongID = _SongID;
 		
-		m_Duration = RectTransform.rect.height / m_SongsProcessor.GetSpeed(m_SongID);
-		m_Ratio    = m_ConfigProcessor.SongRatio;
-		m_BPM      = m_SongsProcessor.GetBPM(m_SongID);
-		m_Bar      = m_SongsProcessor.GetBar(m_SongID);
-		m_Origin   = m_SongsProcessor.GetOrigin(m_SongID);
+		m_Duration = RectTransform.rect.height / m_SongsManager.GetSpeed(m_SongID);
 		m_Time     = 0;
 		m_Tick     = (int)Math.Ceiling((Time + Origin) / (60d / BPM));
 		

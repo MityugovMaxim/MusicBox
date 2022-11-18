@@ -11,6 +11,7 @@ public class UIErrorMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
+	[Inject] Localization       m_Localization;
 	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 	[Inject] SoundProcessor     m_SoundProcessor;
@@ -18,9 +19,19 @@ public class UIErrorMenu : UIMenu
 
 	Action m_Action;
 
-	public void Setup(string _ID, string _Place, string _Title, string _Message, Action _Action = null)
+	public void Setup(string _ID, Action _Action = null)
 	{
-		m_StatisticProcessor.LogError(_ID, _Place);
+		Setup(
+			_ID,
+			m_Localization.Get("COMMON_ERROR_TITLE"),
+			m_Localization.Get("COMMON_ERROR_MESSAGE"),
+			_Action
+		);
+	}
+
+	public void Setup(string _ID, string _Title, string _Message, Action _Action = null)
+	{
+		m_StatisticProcessor.LogError(_ID);
 		
 		m_Title.text   = _Title;
 		m_Message.text = _Message;

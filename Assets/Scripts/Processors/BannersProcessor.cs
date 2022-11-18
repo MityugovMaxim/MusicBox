@@ -48,23 +48,11 @@ public class BannerSnapshot : Snapshot
 public class BannersDataUpdateSignal { }
 
 [Preserve]
-public class BannersProcessor : DataProcessor<BannerSnapshot, BannersDataUpdateSignal>, IInitializable, IDisposable
+public class BannersProcessor : DataCollection<BannerSnapshot>
 {
-	protected override string Path => $"banners/{m_LanguageProcessor.Language}";
+	protected override string Path => $"banners/{m_LanguagesManager.Language}";
 
-	protected override bool SupportsDevelopment => true;
-
-	[Inject] LanguageProcessor m_LanguageProcessor;
-
-	void IInitializable.Initialize()
-	{
-		SignalBus.Subscribe<LanguageSelectSignal>(OnLanguageSelect);
-	}
-
-	void IDisposable.Dispose()
-	{
-		SignalBus.Unsubscribe<LanguageSelectSignal>(OnLanguageSelect);
-	}
+	[Inject] LanguagesManager m_LanguagesManager;
 
 	public List<string> GetBannerIDs()
 	{
@@ -106,14 +94,5 @@ public class BannersProcessor : DataProcessor<BannerSnapshot, BannersDataUpdateS
 		}
 		
 		return snapshot.Permanent;
-	}
-
-	async void OnLanguageSelect()
-	{
-		Unload();
-		
-		await Load();
-		
-		SignalBus.Fire<BannersDataUpdateSignal>();
 	}
 }

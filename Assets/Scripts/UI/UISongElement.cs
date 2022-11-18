@@ -13,9 +13,7 @@ public class UISongElement : UIOverlayButton
 	[SerializeField] UISongBadge m_Badge;
 	[SerializeField] UISongPlay  m_Play;
 
-	[Inject] MenuProcessor   m_MenuProcessor;
-	[Inject] SongsManager    m_SongsManager;
-	[Inject] ScoresProcessor m_ScoresProcessor;
+	[Inject] MenuProcessor m_MenuProcessor;
 
 	string m_SongID;
 
@@ -23,23 +21,12 @@ public class UISongElement : UIOverlayButton
 	{
 		m_SongID = _SongID;
 		
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
-		m_Badge.Setup(m_SongID);
-		m_Discs.Setup(m_SongID);
-		m_Play.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
+		m_Label.SongID = m_SongID;
+		m_Badge.SongID = m_SongID;
+		m_Discs.SongID = m_SongID;
 		
-		ScoreRank rank = m_ScoresProcessor.GetRank(m_SongID);
-		if (m_SongsManager.IsSongAvailable(m_SongID) && rank > ScoreRank.None)
-		{
-			m_Discs.gameObject.SetActive(true);
-			m_Play.gameObject.SetActive(false);
-		}
-		else
-		{
-			m_Play.gameObject.SetActive(true);
-			m_Discs.gameObject.SetActive(false);
-		}
+		m_Play.Setup(m_SongID);
 	}
 
 	protected override async void OnClick()

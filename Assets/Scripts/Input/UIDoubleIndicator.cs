@@ -32,7 +32,7 @@ public class UIDoubleIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactHeavy);
 		
-		ScoreManager.DoubleHit(_Progress);
+		ScoreController.DoubleHit(_Progress);
 		
 		InvokeCallback();
 	}
@@ -45,7 +45,7 @@ public class UIDoubleIndicator : UIIndicator
 		
 		HapticProcessor.Process(Haptic.Type.ImpactSoft);
 		
-		ScoreManager.DoubleFail();
+		ScoreController.DoubleFail();
 		
 		InvokeCallback();
 	}

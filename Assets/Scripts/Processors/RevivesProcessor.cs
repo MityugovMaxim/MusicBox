@@ -36,14 +36,9 @@ public class ReviveSnapshot : Snapshot
 }
 
 [Preserve]
-public class RevivesDataUpdateSignal { }
-
-[Preserve]
-public class RevivesProcessor : DataProcessor<ReviveSnapshot, RevivesDataUpdateSignal>
+public class RevivesProcessor : DataCollection<ReviveSnapshot>
 {
 	protected override string Path => "revives";
-
-	protected override bool SupportsDevelopment => true;
 
 	public long GetCoins(int _Count)
 	{

@@ -89,18 +89,9 @@ public class UIVoucherCreateMenu : UIMenu
 		bool success = await request.SendAsync();
 		
 		if (success)
-		{
 			await HideAsync();
-		}
 		else
-		{
-			await m_MenuProcessor.ErrorAsync(
-				"voucher_create",
-				"voucher_create_menu",
-				"Create voucher failed",
-				"Something went wrong. Check the parameters and try again"
-			);
-		}
+			await m_MenuProcessor.ErrorAsync("voucher_create");
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}

@@ -11,7 +11,7 @@ public class UIBannerMenu : UIMenu
 	[Inject] SocialProcessor      m_SocialProcessor;
 	[Inject] BannersProcessor     m_BannersProcessor;
 	[Inject] UrlProcessor         m_UrlProcessor;
-	[Inject] ApplicationProcessor m_ApplicationProcessor;
+	[Inject] ApplicationManager m_ApplicationManager;
 
 	readonly HashSet<string> m_BannerIDs = new HashSet<string>();
 
@@ -61,7 +61,7 @@ public class UIBannerMenu : UIMenu
 
 	bool CheckBanner(string _BannerID)
 	{
-		if (m_BannersProcessor.IsPermanent(_BannerID) && m_ApplicationProcessor.ClientVersion == m_ApplicationProcessor.ServerVersion)
+		if (m_BannersProcessor.IsPermanent(_BannerID) && m_ApplicationManager.ClientVersion == m_ApplicationManager.ServerVersion)
 			return true;
 		
 		string userID = m_SocialProcessor.UserID;

@@ -10,4 +10,6 @@ public abstract class LayoutEntity
 	public abstract void Create(RectTransform _Container);
 
 	public abstract void Remove();
+
+	public virtual void Refresh() { }
 }

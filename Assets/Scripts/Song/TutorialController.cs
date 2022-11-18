@@ -12,8 +12,8 @@ public class TutorialController
 
 	[Inject] ConfigProcessor        m_ConfigProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
-	[Inject] ScoreManager           m_ScoreManager;
-	[Inject] HealthManager          m_HealthManager;
+	[Inject] ScoreController        m_ScoreController;
+	[Inject] HealthController          m_HealthController;
 	[Inject] TutorialPlayer.Factory m_TutorialFactory;
 	[Inject] StatisticProcessor     m_StatisticProcessor;
 
@@ -48,8 +48,8 @@ public class TutorialController
 		m_Player = m_TutorialFactory.Create(player);
 		m_Player.Setup(ratio, speed, Finish);
 		
-		m_ScoreManager.Setup(m_SongID);
-		m_HealthManager.Setup(null);
+		m_ScoreController.Setup(m_SongID);
+		m_HealthController.Setup(null);
 		
 		UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>();
 		if (tutorialMenu != null)
@@ -75,8 +75,8 @@ public class TutorialController
 			return;
 		}
 		
-		m_HealthManager.Restore();
-		m_ScoreManager.Restore();
+		m_HealthController.Restore();
+		m_ScoreController.Restore();
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Process();

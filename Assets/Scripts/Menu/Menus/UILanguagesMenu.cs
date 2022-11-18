@@ -22,7 +22,7 @@ public class UILanguagesMenu : UIMenu
 	[SerializeField] Button   m_SyncButton;
 
 	[Inject] UILanguageElement.Pool m_Pool;
-	[Inject] LanguageProcessor      m_LanguageProcessor;
+	[Inject] LanguagesCollection      m_LanguagesCollection;
 	[Inject] StorageProcessor       m_StorageProcessor;
 	[Inject] MenuProcessor          m_MenuProcessor;
 
@@ -170,7 +170,7 @@ public class UILanguagesMenu : UIMenu
 		
 		m_Localizations.Clear();
 		
-		List<string> languages = m_LanguageProcessor.GetLanguages(true);
+		List<string> languages = m_LanguagesCollection.GetLanguages(true);
 		
 		foreach (string language in languages)
 		{
@@ -220,6 +220,6 @@ public class UILanguagesMenu : UIMenu
 			await reference.PutBytesAsync(encode);
 		}
 		
-		await m_LanguageProcessor.Reload();
+		await m_LanguagesCollection.Reload();
 	}
 }

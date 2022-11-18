@@ -170,14 +170,9 @@ public class AdsProviderSnapshot : Snapshot
 }
 
 [Preserve]
-public class AdsProvidersDataUpdateSignal { }
-
-[Preserve]
-public class AdsProcessor : DataProcessor<AdsProviderSnapshot, AdsProvidersDataUpdateSignal>
+public class AdsProcessor : DataCollection<AdsProviderSnapshot>
 {
 	protected override string Path => "ads_providers";
-
-	protected override bool SupportsDevelopment => false;
 
 	[Inject] IAdsProvider[]  m_AdsProviders;
 	[Inject] AudioManager    m_AudioManager;

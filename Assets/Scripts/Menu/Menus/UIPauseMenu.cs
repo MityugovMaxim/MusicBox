@@ -8,10 +8,9 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UISongLabel  m_Label;
 	[SerializeField] UISongQRCode m_QR;
 
-	[Inject] ProfileProcessor m_ProfileProcessor;
-	[Inject] SongController   m_SongController;
-	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] SongController m_SongController;
+	[Inject] AdsProcessor   m_AdsProcessor;
+	[Inject] MenuProcessor  m_MenuProcessor;
 
 	string m_SongID;
 
@@ -22,15 +21,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Restart()
 	{
-		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_AdsProcessor.Interstitial("pause_restart");
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
@@ -47,15 +37,6 @@ public class UIPauseMenu : UIMenu
 
 	public async void Leave()
 	{
-		if (m_AdsProcessor.CheckAvailable() && !m_ProfileProcessor.HasNoAds())
-		{
-			await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-			
-			await m_AdsProcessor.Interstitial("pause_leave");
-			
-			await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-		}
-		
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
 			mainMenu.Select(MainMenuPageType.Songs);
@@ -108,8 +89,8 @@ public class UIPauseMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
-		m_Image.Setup(m_SongID);
-		m_Label.Setup(m_SongID);
+		m_Image.SongID = m_SongID;
+		m_Label.SongID = m_SongID;
 		
 		m_QR.Hide(true);
 	}

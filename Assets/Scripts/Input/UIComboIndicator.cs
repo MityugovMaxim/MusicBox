@@ -18,28 +18,26 @@ public class UIComboIndicator : UIOrder
 	[SerializeField] Vector2     m_TargetPosition = Vector2.zero;
 	[SerializeField] float       m_Duration       = 0.2f;
 
-	[Inject] ScoreManager m_ScoreManager;
+	[Inject] ScoreController m_ScoreController;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnComboChanged += OnComboChanged;
+		m_ScoreController.OnComboChange += OnComboChanged;
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		if (m_ScoreManager != null)
-			m_ScoreManager.OnComboChanged -= OnComboChanged;
+		m_ScoreController.OnComboChange -= OnComboChanged;
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _Grade)
+	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
 	{
 		Color color;
-		switch (_Grade)
+		switch (_ScoreGrade)
 		{
 			case ScoreGrade.Perfect:
 				color = m_PerfectColor;

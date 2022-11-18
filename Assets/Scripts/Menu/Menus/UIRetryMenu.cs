@@ -1,17 +1,20 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 [Menu(MenuType.RetryMenu)]
 public class UIRetryMenu : UIMenu
 {
-	[SerializeField] TMP_Text   m_Title;
-	[SerializeField] TMP_Text   m_Message;
-	[SerializeField] GameObject m_CancelButton;
+	[SerializeField] TMP_Text m_Title;
+	[SerializeField] TMP_Text m_Message;
+	[SerializeField] Button   m_RetryButton;
+	[SerializeField] Button   m_CancelButton;
 
 	[SerializeField, Sound] string m_Sound;
 
+	[Inject] Localization       m_Localization;
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
@@ -19,20 +22,63 @@ public class UIRetryMenu : UIMenu
 	Action m_Retry;
 	Action m_Cancel;
 
-	public void Setup(string _ID, string _Place, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
+	protected override void Awake()
 	{
-		m_StatisticProcessor.LogError(_ID, _Place);
+		base.Awake();
 		
-		m_Retry  = _Retry;
-		m_Cancel = _Cancel;
+		m_RetryButton.Subscribe(Retry);
+		m_CancelButton.Subscribe(Cancel);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_RetryButton.Unsubscribe(Retry);
+		m_CancelButton.Unsubscribe(Cancel);
+	}
+
+	public void Setup(string _ID, Action _Retry = null, Action _Cancel = null)
+	{
+		Setup(
+			_ID,
+			m_Localization.Get("COMMON_ERROR_TITLE"),
+			m_Localization.Get("COMMON_ERROR_MESSAGE"),
+			_Retry,
+			_Cancel
+		);
+	}
+
+	public void Setup(
+		string _ID,
+		string _Title,
+		string _Message,
+		Action _Retry = null,
+		Action _Cancel = null)
+	{
+		m_StatisticProcessor.LogError(_ID);
 		
 		m_Title.text   = _Title;
 		m_Message.text = _Message;
 		
-		m_CancelButton.SetActive(m_Cancel != null);
+		m_Retry  = _Retry;
+		m_Cancel = _Cancel;
+		
+		if (m_Retry == null)
+			m_CancelButton.gameObject.SetActive(true);
+		else if (m_Cancel == null)
+			m_CancelButton.gameObject.SetActive(false);
+		else
+			m_CancelButton.gameObject.SetActive(true);
 	}
 
-	public void Retry()
+	protected override void OnShowStarted()
+	{
+		m_HapticProcessor.Process(Haptic.Type.Failure);
+		m_SoundProcessor.Play(m_Sound);
+	}
+
+	void Retry()
 	{
 		Hide();
 		
@@ -42,7 +88,7 @@ public class UIRetryMenu : UIMenu
 		action?.Invoke();
 	}
 
-	public void Cancel()
+	void Cancel()
 	{
 		Hide();
 		
@@ -50,11 +96,5 @@ public class UIRetryMenu : UIMenu
 		m_Retry  = null;
 		m_Cancel = null;
 		action?.Invoke();
-	}
-
-	protected override void OnShowStarted()
-	{
-		m_HapticProcessor.Process(Haptic.Type.Failure);
-		m_SoundProcessor.Play(m_Sound);
 	}
 }

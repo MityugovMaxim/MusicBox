@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public abstract class MessageProcessor : IInitializable, IDisposable
+public abstract class MessageProcessor
 {
 	const string TOPICS_LANGUAGE_KEY = "TOPICS_LANGUAGE";
 
@@ -25,18 +25,7 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 
 	public static event Action<string> OnReceiveLink;
 
-	[Inject] SignalBus         m_SignalBus;
-	[Inject] LanguageProcessor m_LanguageProcessor;
-
-	void IInitializable.Initialize()
-	{
-		m_SignalBus.Subscribe<LanguageSelectSignal>(LoadTopic);
-	}
-
-	void IDisposable.Dispose()
-	{
-		m_SignalBus.Unsubscribe<LanguageSelectSignal>(LoadTopic);
-	}
+	[Inject] LanguagesManager m_LanguagesManager;
 
 	public async Task Load()
 	{
@@ -60,16 +49,16 @@ public abstract class MessageProcessor : IInitializable, IDisposable
 
 	async void LoadTopic()
 	{
-		if (Topic == m_LanguageProcessor.Language)
+		if (Topic == m_LanguagesManager.Language)
 			return;
 		
-		Topic = m_LanguageProcessor.Language;
+		Topic = m_LanguagesManager.Language;
 		
 		Log.Info(this, "Subscribe topic {0}.", Topic);
 		
 		await FirebaseMessaging.SubscribeAsync(Topic);
 		
-		foreach (string language in m_LanguageProcessor.GetLanguages())
+		foreach (string language in m_LanguagesManager.GetLanguages())
 		{
 			if (language == Topic)
 				continue;
