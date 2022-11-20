@@ -268,7 +268,7 @@ namespace MAXHelper {
                 CustomSettings = (MAXCustomSettings)Obj;
             } else {
                 Debug.Log("CustomSettings file doesn't exist, creating a new one...");
-                var Instance = MAXCustomSettings.CreateInstance("MAXCustomSettings");
+                var Instance = MAXCustomSettings.CreateInstance(@"MAXCustomSettings");
                 AssetDatabase.CreateAsset(Instance, CONFIGS_PATH);
             }
         }
