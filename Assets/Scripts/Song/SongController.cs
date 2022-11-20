@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.ASF;
@@ -14,30 +15,19 @@ public class SongController
 	[Inject] AudioManager       m_AudioManager;
 	[Inject] ConfigProcessor    m_ConfigProcessor;
 	[Inject] SongsManager       m_SongsManager;
-	[Inject] StorageProcessor   m_StorageProcessor;
-	[Inject] MenuProcessor      m_MenuProcessor;
+	[Inject] AudioClipProvider  m_AudioClipProvider;
+	[Inject] ASFProvider        m_ASFProvider;
 	[Inject] SongPlayer.Factory m_SongFactory;
-	[Inject] SoundProcessor     m_SoundProcessor;
-	[Inject] AmbientProcessor   m_AmbientProcessor;
-	[Inject] PreviewProcessor   m_PreviewProcessor;
-	[Inject] ProgressProcessor  m_ProgressProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
-
 	[Inject] HealthController   m_HealthController;
-	[Inject] ScoreController m_ScoreController;
+	[Inject] ScoreController    m_ScoreController;
 
 	string        m_SongID;
 	Action<float> m_Progress;
-	float         m_Loading;
-	float         m_PingTime;
 	SongPlayer    m_Player;
-
-	float m_LoadTime;
-	int   m_AdsReviveCount;
 
 	CancellationTokenSource m_RewindToken;
 
-	public async Task<bool> Load(string _SongID, bool _Full, Action<float> _Progress)
+	public async Task<bool> Load(string _SongID, Action<float> _Progress)
 	{
 		m_SongID   = _SongID;
 		m_Progress = _Progress;
@@ -74,9 +64,9 @@ public class SongController
 			return false;
 		}
 		
-		string asf = await LoadASFAsync(m_SongID, _Full);
+		Dictionary<string, object> asf = await LoadASFAsync(m_SongID);
 		
-		if (string.IsNullOrEmpty(asf))
+		if (asf == null)
 		{
 			Log.Error(this, "Load song failed. ASF with ID '{0}' is null.", m_SongID);
 			return false;
@@ -93,34 +83,10 @@ public class SongController
 		m_ScoreController.Setup(m_SongID);
 		m_HealthController.Setup(Death);
 		
-		UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
-		if (gameMenu != null)
-			gameMenu.Setup(m_SongID);
-		
-		UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
-		if (pauseMenu != null)
-			pauseMenu.Setup(m_SongID);
-		
-		await m_MenuProcessor.Show(MenuType.GameMenu, true);
-		
-		m_Player.AddSampler(gameMenu.Sampler);
-		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Sample();
 		
 		await UnityTask.Yield();
-		
-		m_LoadTime       = Time.time;
-		m_AdsReviveCount = 0;
-		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongStart);
-		
-		m_StatisticProcessor.LogSongStart(
-			m_SongID,
-			0,
-			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsManager.GetPrice(m_SongID) > 0 ? "paid" : "free"
-		);
 		
 		return true;
 	}
@@ -143,14 +109,8 @@ public class SongController
 		m_HealthController.Restore();
 		m_ScoreController.Restore();
 		
-		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
-		if (reviveMenu != null)
-			reviveMenu.Setup(m_SongID);
-		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Play(GetLatency());
-		
-		DisableAudio();
 		
 		return true;
 	}
@@ -171,8 +131,6 @@ public class SongController
 		m_RewindToken = null;
 		
 		m_Player.Stop();
-		
-		DisableAudio();
 		
 		return true;
 	}
@@ -199,22 +157,17 @@ public class SongController
 		
 		m_Player.Play(GetLatency());
 		
-		DisableAudio();
-		
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 	}
 
-	public async void Revive(bool _Ads)
+	public async void Revive()
 	{
 		if (m_Player == null)
 		{
 			Log.Error(this, "Revive failed. Player is null.");
 			return;
 		}
-		
-		if (_Ads)
-			m_AdsReviveCount++;
 		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
@@ -232,8 +185,6 @@ public class SongController
 		
 		m_Player.Play(GetLatency());
 		
-		DisableAudio();
-		
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 	}
@@ -246,19 +197,6 @@ public class SongController
 			return;
 		}
 		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongRestart);
-		
-		m_StatisticProcessor.LogSongFinish(
-			m_SongID,
-			0,
-			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsManager.GetPrice(m_SongID),
-			(int)(m_Player.Time / m_Player.Length * 100),
-			m_AdsReviveCount,
-			(int)(Time.time - m_LoadTime),
-			"restart"
-		);
-		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
@@ -266,15 +204,9 @@ public class SongController
 		m_HealthController.Restore();
 		m_ScoreController.Restore();
 		
-		UIReviveMenu reviveMenu = m_MenuProcessor.GetMenu<UIReviveMenu>();
-		if (reviveMenu != null)
-			reviveMenu.Setup(m_SongID);
-		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Clear();
 		m_Player.Play(GetLatency());
-		
-		DisableAudio();
 	}
 
 	public void Complete()
@@ -291,11 +223,9 @@ public class SongController
 		
 		m_Player.Stop();
 		
-		GameObject.Destroy(m_Player.gameObject);
+		Object.Destroy(m_Player.gameObject);
 		
 		m_Player = null;
-		
-		EnableAudio();
 	}
 
 	public void Leave()
@@ -306,33 +236,18 @@ public class SongController
 			return;
 		}
 		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongLeave);
-		
-		m_StatisticProcessor.LogSongFinish(
-			m_SongID,
-			0,
-			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsManager.GetPrice(m_SongID),
-			(int)(m_Player.Time / m_Player.Length * 100),
-			m_AdsReviveCount,
-			(int)(Time.time - m_LoadTime),
-			"leave"
-		);
-		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 		
 		m_Player.Stop();
 		
-		GameObject.Destroy(m_Player.gameObject);
+		Object.Destroy(m_Player.gameObject);
 		
 		m_Player = null;
-		
-		EnableAudio();
 	}
 
-	async void Death()
+	void Death()
 	{
 		if (m_Player == null)
 		{
@@ -340,35 +255,14 @@ public class SongController
 			return;
 		}
 		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongLose);
-		
-		m_StatisticProcessor.LogSongFinish(
-			m_SongID,
-			0,
-			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsManager.GetPrice(m_SongID),
-			(int)(m_Player.Time / m_Player.Length * 100),
-			m_AdsReviveCount,
-			(int)(Time.time - m_LoadTime),
-			"lose"
-		);
-		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 		
 		m_Player.Stop();
-		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await Task.Delay(400);
-		
-		await m_MenuProcessor.Show(MenuType.ReviveMenu);
-		
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	async void Finish()
+	void Finish()
 	{
 		if (m_Player == null)
 		{
@@ -376,36 +270,11 @@ public class SongController
 			return;
 		}
 		
-		m_StatisticProcessor.LogTechnicalStep(TechnicalStepType.SongFinish);
-		
-		m_StatisticProcessor.LogSongFinish(
-			m_SongID,
-			0,
-			m_ProgressProcessor.GetSongLevel(m_SongID),
-			m_SongsManager.GetPrice(m_SongID),
-			(int)(m_Player.Time / m_Player.Length * 100),
-			m_AdsReviveCount,
-			(int)(Time.time - m_LoadTime),
-			"win"
-		);
-		
 		m_RewindToken?.Cancel();
 		m_RewindToken?.Dispose();
 		m_RewindToken = null;
 		
 		m_Player.Stop();
-		
-		EnableAudio();
-		
-		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
-		
-		if (resultMenu != null)
-			resultMenu.Setup(m_SongID);
-		
-		await Task.WhenAll(
-			m_MenuProcessor.Show(MenuType.ResultMenu),
-			m_MenuProcessor.Show(MenuType.TransitionMenu)
-		);
 	}
 
 	Task Rewind(CancellationToken _Token = default)
@@ -426,8 +295,6 @@ public class SongController
 		
 		try
 		{
-			m_SoundProcessor.Play("Rewind");
-			
 			return UnityTask.Phase(
 				_Phase => m_Player.Time = EaseFunction.EaseOutQuad.Get(source, target, _Phase),
 				duration,
@@ -443,52 +310,22 @@ public class SongController
 		return null;
 	}
 
-	async Task<AudioClip> LoadMusicAsync(string _SongID)
+	Task<AudioClip> LoadMusicAsync(string _SongID)
 	{
-		const float timeout = 15;
-		
 		string path = m_SongsManager.GetMusic(_SongID);
 		
-		m_Loading  = 0;
-		m_PingTime = Time.realtimeSinceStartup;
-		
-		Task<AudioClip> task = m_StorageProcessor.LoadMusicAsync(path, ProcessMusicProgress);
-		
-		await Task.WhenAny(
-			task,
-			UnityTask.While(() => Time.realtimeSinceStartup - m_PingTime < timeout)
-		);
-		
-		return task.IsCompletedSuccessfully ? task.Result : null;
+		return m_AudioClipProvider.DownloadAsync(path, ProcessMusicProgress);
 	}
 
-	async Task<string> LoadASFAsync(string _SongID, bool _Full)
+	Task<Dictionary<string, object>> LoadASFAsync(string _SongID)
 	{
-		const float timeout = 15;
+		string path = m_SongsManager.GetASF(_SongID);
 		
-		string path = _Full ? $"Songs/{_SongID}_full.asf" : $"Songs/{_SongID}.asf";
-		
-		m_Loading  = 0;
-		m_PingTime = Time.realtimeSinceStartup;
-		
-		Task<string> task = m_StorageProcessor.LoadJson(path, true, ProcessASFProgress);
-		
-		await Task.WhenAny(
-			task,
-			UnityTask.While(() => Time.realtimeSinceStartup - m_PingTime < timeout)
-		);
-		
-		return task.IsCompletedSuccessfully ? task.Result : null;
+		return m_ASFProvider.DownloadAsync(path, ProcessASFProgress);
 	}
 
 	void ProcessMusicProgress(float _Progress)
 	{
-		if (m_Loading < _Progress)
-		{
-			m_Loading  = _Progress;
-			m_PingTime = Time.realtimeSinceStartup;
-		}
-		
 		float progress = MathUtility.Remap(_Progress, 0, 1, 0, 0.95f);
 		
 		m_Progress?.Invoke(progress);
@@ -496,12 +333,6 @@ public class SongController
 
 	void ProcessASFProgress(float _Progress)
 	{
-		if (m_Loading < _Progress)
-		{
-			m_Loading  = _Progress;
-			m_PingTime = Time.realtimeSinceStartup;
-		}
-		
 		float progress = MathUtility.Remap(_Progress, 0, 1, 0.95f, 1);
 		
 		m_Progress?.Invoke(progress);
@@ -516,20 +347,5 @@ public class SongController
 			return m_ConfigProcessor.BluetoothLatency;
 		
 		return 0;
-	}
-
-	void DisableAudio()
-	{
-		m_PreviewProcessor.Stop();
-		m_AmbientProcessor.Unlock();
-		m_AmbientProcessor.Pause();
-		m_AmbientProcessor.Lock();
-	}
-
-	void EnableAudio()
-	{
-		m_PreviewProcessor.Stop();
-		m_AmbientProcessor.Unlock();
-		m_AmbientProcessor.Resume();
 	}
 }

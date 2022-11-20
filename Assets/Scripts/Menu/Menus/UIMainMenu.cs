@@ -17,8 +17,8 @@ public class UIMainMenu : UIMenu
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
 
-	[Inject] SignalBus     m_SignalBus;
-	[Inject] LinkProcessor m_LinkProcessor;
+	[Inject] LinkProcessor  m_LinkProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Songs;
 
@@ -53,24 +53,28 @@ public class UIMainMenu : UIMenu
 		
 		await m_LinkProcessor.Process(true);
 		
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Subscribe<LinkReceivedSignal>(ProcessLink);
+		m_LinkProcessor.Subscribe(ProcessLink);
 	}
 
 	protected override void OnHideStarted()
 	{
-		if (m_SignalBus == null)
-			return;
-		
-		m_SignalBus.Unsubscribe<LinkReceivedSignal>(ProcessLink);
+		m_LinkProcessor.Unsubscribe(ProcessLink);
 	}
 
 	protected override void OnHideFinished()
 	{
 		foreach (UIMainMenuPage page in m_Pages)
 			page.Hide(m_PageType, true);
+	}
+
+	public override void OnFocusGain()
+	{
+		m_AmbientManager.Play();
+	}
+
+	public override void OnFocusLose()
+	{
+		m_AmbientManager.Pause();
 	}
 
 	async void ProcessLink() => await m_LinkProcessor.Process();

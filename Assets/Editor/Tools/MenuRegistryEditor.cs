@@ -65,10 +65,16 @@ public class MenuRegistryEditor : Editor
 			EditorGUI.LabelField(indexRect, _Index.ToString());
 			
 			SerializedProperty entryProperty = m_RegistryList.serializedProperty.GetArrayElementAtIndex(_Index);
+			
 			if (entryProperty == null)
 				return;
 			
 			EditorGUI.PropertyField(entryRect, entryProperty, GUIContent.none);
+			
+			MenuInfo menuInfo = entryProperty.objectReferenceValue as MenuInfo;
+			
+			if (menuInfo != null && menuInfo.Focusable)
+				EditorGUI.DrawRect(new Rect(_Rect.x + 20, _Rect.y + 2, 2, _Rect.height - 4), new Color(0.25f, 1, 0.5f));
 		};
 		
 		m_RegistryList.onSelectCallback += _List =>

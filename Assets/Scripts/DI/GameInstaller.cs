@@ -14,8 +14,6 @@ public class GameInstaller : MonoInstaller
 
 	[SerializeField] UISocialElement m_SocialElement;
 
-	[SerializeField] UIDailyElement m_DailyElement;
-
 	[SerializeField] UISongHeader  m_SongHeader;
 	[SerializeField] UISongItem    m_SongItem;
 	[SerializeField] UISongElement m_SongElement;
@@ -23,12 +21,9 @@ public class GameInstaller : MonoInstaller
 	[SerializeField] UIProductPromo   m_ProductPromo;
 	[SerializeField] UIProductSpecial m_ProductSpecial;
 	[SerializeField] UIProductItem    m_ProductItem;
-
-	[SerializeField] UIOfferItem       m_OfferItem;
-	[SerializeField] UINewsItem        m_NewsItem;
+	
 	[SerializeField] UIUnlockCoinsItem m_UnlockCoinsItem;
 	[SerializeField] UIUnlockSongItem  m_UnlockSongItem;
-	[SerializeField] UILanguageItem    m_LanguageItem;
 	[SerializeField] SoundSource       m_SoundSource;
 
 	public override void InstallBindings()
@@ -67,8 +62,6 @@ public class GameInstaller : MonoInstaller
 		
 		InstallPool<UISocialElement, UISocialElement.Pool>(m_SocialElement, 1);
 		
-		InstallPool<UIDailyElement, UIDailyElement.Pool>(m_DailyElement, 1);
-		
 		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
 		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
 		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
@@ -80,11 +73,7 @@ public class GameInstaller : MonoInstaller
 		InstallPool<UIUnlockCoinsItem, UIUnlockCoinsItem.Pool>(m_UnlockCoinsItem, 1);
 		InstallPool<UIUnlockSongItem, UIUnlockSongItem.Pool>(m_UnlockSongItem);
 		
-		InstallPool<UILanguageItem, UILanguageItem.Pool>(m_LanguageItem);
-		
-		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem);
-		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem);
-		
+
 		InstallPool<SoundSource, SoundSource.Pool>(m_SoundSource);
 	}
 
@@ -141,44 +130,37 @@ public class GameInstaller : MonoInstaller
 			.UnderTransform(transform)
 			.AsSingle();
 		
-		Container.Bind<AmbientProcessor>()
-			.To<AmbientProcessor>()
-			.FromNewComponentOnNewGameObject()
-			.WithGameObjectName("AmbientProcessor")
-			.UnderTransform(transform)
-			.AsSingle();
-		
-		InstallProcessor<Localization>();
 		InstallProcessor<MenuProcessor>();
+		
+		InstallProcessor<DiscsParameter>();
+		InstallProcessor<LevelParameter>();
+		InstallProcessor<CoinsParameter>();
+		
+		InstallProcessor<VouchersManager>();
+		
+		InstallProcessor<VouchersCollection>();
+		InstallProcessor<ProductsCollection>();
+		InstallProcessor<SongsCollection>();
+		InstallProcessor<ScoresCollection>();
 		
 		InstallProcessor<SocialProcessor>();
 		InstallProcessor<ConfigProcessor>();
 		InstallProcessor<SoundProcessor>();
 		InstallProcessor<ApplicationManager>();
-		InstallProcessor<StorageProcessor>();
-		InstallProcessor<LanguagesCollection>();
 		InstallProcessor<HapticProcessor>();
-		InstallProcessor<VouchersCollection>();
 		InstallProcessor<UrlProcessor>();
 		InstallProcessor<AdsProcessor>();
 		InstallProcessor<StatisticProcessor>();
 		InstallProcessor<BannersProcessor>();
 		InstallProcessor<StoreProcessor>();
-		InstallProcessor<NewsCollection>();
-		InstallProcessor<ProductsCollection>();
-		InstallProcessor<SongsCollection>();
-		InstallProcessor<OffersCollection>();
 		InstallProcessor<ProgressProcessor>();
-		InstallProcessor<ScoresCollection>();
 		InstallProcessor<RevivesProcessor>();
-		InstallProcessor<DailyCollection>();
 		InstallProcessor<LinkProcessor>();
 		
-		InstallProcessor<NewsDescriptor>();
-		InstallProcessor<OffersDescriptor>();
 		InstallProcessor<ProductsDescriptor>();
 		
 		InstallProcessor<HealthController>();
+		InstallProcessor<ScoreController>();
 		InstallProcessor<ScoresManager>();
 		
 		Container.BindInterfacesAndSelfTo<SongController>().FromNew().AsSingle();
@@ -193,9 +175,7 @@ public class GameInstaller : MonoInstaller
 	void InstallManagers()
 	{
 		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<OffersManager>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<ProductsManager>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<DailyManager>().FromNew().AsSingle();
 	}
 
 	void InstallSignals()
@@ -203,7 +183,6 @@ public class GameInstaller : MonoInstaller
 		SignalBusInstaller.Install(Container);
 		
 		Container.DeclareSignal<BannersDataUpdateSignal>().OptionalSubscriber();
-		Container.DeclareSignal<LinkReceivedSignal>().OptionalSubscriber();
 	}
 
 	void InstallAudioManager()

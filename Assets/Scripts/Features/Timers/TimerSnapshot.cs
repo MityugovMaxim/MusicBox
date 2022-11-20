@@ -3,14 +3,14 @@ using AudioBox.Compression;
 using Firebase.Database;
 using JetBrains.Annotations;
 
-public class TimerSnapshot
+public class TimerSnapshot : Snapshot
 {
 	public long StartTimestamp { [UsedImplicitly] get; }
 	public long EndTimestamp   { [UsedImplicitly] get; }
 
 	readonly Dictionary<string, object> m_Payload;
 
-	public TimerSnapshot(DataSnapshot _Data)
+	public TimerSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		StartTimestamp = _Data.GetLong("start_time");
 		EndTimestamp   = _Data.GetLong("end_time");

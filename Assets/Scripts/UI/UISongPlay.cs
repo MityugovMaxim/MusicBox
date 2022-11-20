@@ -7,9 +7,7 @@ public class UISongPlay : UIEntity
 	[SerializeField] UIGroup     m_ControlGroup;
 	[SerializeField] UIGroup     m_LoaderGroup;
 	[SerializeField] UIGroup     m_CompleteGroup;
-	[SerializeField] UILevel     m_Level;
 	[SerializeField] UIUnitLabel m_Coins;
-	[SerializeField] GameObject  m_Lock;
 	[SerializeField] GameObject  m_Free;
 	[SerializeField] GameObject  m_Ads;
 	[SerializeField] GameObject  m_Paid;
@@ -39,9 +37,6 @@ public class UISongPlay : UIEntity
 			case SongMode.Free:
 				SetFreeActive(true);
 				break;
-			case SongMode.Ads:
-				SetAdsActive(true);
-				break;
 			case SongMode.Paid:
 				SetPaidActive(true);
 				break;
@@ -58,9 +53,6 @@ public class UISongPlay : UIEntity
 			case SongMode.Free:
 				PlayFree();
 				break;
-			case SongMode.Ads:
-				PlayAds();
-				break;
 			case SongMode.Paid:
 				PlayPaid();
 				break;
@@ -74,11 +66,7 @@ public class UISongPlay : UIEntity
 	{
 		if (!m_SongsManager.IsSongAvailable(m_SongID))
 		{
-			if (m_SongsManager.IsSongLockedByAds(m_SongID))
-				PlayAds();
-			else if (m_SongsManager.IsSongLockedByCoins(m_SongID))
-				PlayPaid();
-			
+			PlayPaid();
 			return;
 		}
 		
@@ -96,60 +84,6 @@ public class UISongPlay : UIEntity
 		
 		await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
-		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-	}
-
-	async void PlayAds()
-	{
-		if (m_SongsManager.IsSongAvailable(m_SongID))
-		{
-			PlayFree();
-			return;
-		}
-		
-		string songID = m_SongID;
-		
-		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
-		
-		await m_ControlGroup.HideAsync();
-		await m_LoaderGroup.ShowAsync();
-		
-		bool success = false;
-		
-		if (success)
-		{
-			await m_LoaderGroup.HideAsync();
-			await m_CompleteGroup.ShowAsync();
-			
-			await Task.Delay(500);
-			
-			StopPreview();
-			
-			UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
-			
-			loadingMenu.Setup(songID);
-			
-			await m_MenuProcessor.Show(MenuType.LoadingMenu);
-			
-			m_CompleteGroup.Hide(true);
-			
-			loadingMenu.Load();
-			
-			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
-			await m_MenuProcessor.Hide(MenuType.SongMenu, true);
-		}
-		else
-		{
-			await m_LoaderGroup.HideAsync();
-			await m_ControlGroup.ShowAsync();
-			
-			await m_MenuProcessor.RetryAsync(
-				"song_play",
-				PlayAds,
-				() => { }
-			);
-		}
-		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 

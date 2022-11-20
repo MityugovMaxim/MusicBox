@@ -176,7 +176,7 @@ public class UISongScoreList : UIEntity
 		if (m_CoinsRank < rank)
 		{
 			m_CoinsRank   =  rank;
-			m_Coins.Value += m_SongsManager.GetPayout(m_SongID, ScoreRank.None);
+			m_Coins.Value += m_SongsManager.GetCoins(m_SongID, ScoreRank.None);
 		}
 		
 		if (m_DiscRank >= rank)
@@ -184,7 +184,7 @@ public class UISongScoreList : UIEntity
 		
 		m_DiscRank = rank;
 		
-		m_Coins.Value += m_SongsManager.GetPayout(m_SongID, m_DiscRank);
+		m_Coins.Value += m_SongsManager.GetCoins(m_SongID, m_DiscRank);
 		
 		string sound = GetDiscSound(rank);
 		

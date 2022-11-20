@@ -180,13 +180,6 @@ public class AdsProcessor : DataCollection<AdsProviderSnapshot>
 
 	float m_Time;
 
-	protected override Task OnFetch()
-	{
-		InitializeAdsProviders();
-		
-		return Task.CompletedTask;
-	}
-
 	async void InitializeAdsProviders()
 	{
 		List<Task<bool>> tasks = new List<Task<bool>>();

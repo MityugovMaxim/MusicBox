@@ -21,7 +21,7 @@ public class UIPlayer : ASFPlayer
 
 	float m_Length;
 
-	public void Setup(float _Ratio, float _Duration, AudioClip _Music, string _ASF)
+	public void Setup(float _Ratio, float _Duration, AudioClip _Music, Dictionary<string, object> _ASF)
 	{
 		Clear();
 		ClearTracks();

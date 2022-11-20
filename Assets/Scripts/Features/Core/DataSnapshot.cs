@@ -6,8 +6,6 @@ public class DataSnapshot<TValue> : Snapshot
 
 	public DataSnapshot(DataSnapshot _Data) : base(_Data)
 	{
-		Value = Parse(_Data);
+		Value = _Data.GetValue<TValue>();
 	}
-
-	protected virtual TValue Parse(DataSnapshot _Data) => _Data.GetValue<TValue>();
 }

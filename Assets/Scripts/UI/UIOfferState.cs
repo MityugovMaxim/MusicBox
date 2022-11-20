@@ -16,9 +16,9 @@ public class UIOfferState : UIEntity
 			
 			m_OfferID = value;
 			
-			m_OffersManager.SubscribeCollect(m_OfferID, ProcessState);
-			
 			ProcessState();
+			
+			m_OffersManager.SubscribeCollect(m_OfferID, ProcessState);
 		}
 	}
 
@@ -38,10 +38,10 @@ public class UIOfferState : UIEntity
 
 	void ProcessState()
 	{
-		int source = m_OffersManager.GetSource(m_OfferID);
-		int target = m_OffersManager.GetTarget(m_OfferID);
+		int source = m_OffersManager.GetSource(OfferID);
+		int target = m_OffersManager.GetTarget(OfferID);
 		
-		if (m_OffersManager.Contains(m_OfferID))
+		if (m_OffersManager.Contains(OfferID))
 			m_State.text = m_Localization.Get("OFFER_COLLECTED");
 		else if (source < target)
 			m_State.text = m_Localization.Format("OFFER_PROGRESS", source, target);

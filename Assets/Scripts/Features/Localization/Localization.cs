@@ -1,83 +1,51 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
-using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class Localization : IInitializable
+public class Localization
 {
-	[Inject] StorageProcessor m_StorageProcessor;
+	public bool Loaded { get; private set; }
+
+	[Inject] LocalizationProvider m_LocalizationProvider;
 
 	readonly Dictionary<string, string> m_BuiltIn      = new Dictionary<string, string>();
 	readonly Dictionary<string, string> m_Localization = new Dictionary<string, string>();
 
 	string m_Language;
 
-	CancellationTokenSource m_TokenSource;
-
-	void IInitializable.Initialize()
-	{
-		LoadBuiltIn();
-	}
+	Task m_Loading;
 
 	public async Task Load(string _Language)
 	{
-		if (m_Language == _Language)
+		if (Loaded && m_Language == _Language)
 			return;
 		
-		m_TokenSource?.Cancel();
-		m_TokenSource?.Dispose();
+		if (m_Loading != null)
+		{
+			await m_Loading;
+			return;
+		}
 		
-		m_TokenSource = new CancellationTokenSource();
+		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
-		CancellationToken token = m_TokenSource.Token;
+		m_Loading = completionSource.Task;
+		
+		LocalizationRegistry.Load(m_BuiltIn);
 		
 		m_Language = _Language;
 		
 		m_Localization.Clear();
 		
-		string json = null;
-		try
-		{
-			json = await m_StorageProcessor.LoadJson(
-				$"Localization/{m_Language}.lang",
-				true,
-				Encoding.Unicode,
-				null,
-				token
-			);
-		}
-		catch (TaskCanceledException)
-		{
-			Debug.LogFormat("[LocalizationProcessor] Load localization canceled. Language: {0}.", m_Language);
-		}
-		catch (Exception exception)
-		{
-			Debug.LogException(exception);
-			Debug.LogErrorFormat("[LocalizationProcessor] Load localization failed. Language: {0}.", m_Language);
-		}
+		Loaded = await Fetch();
 		
-		if (token.IsCancellationRequested)
-			return;
+		completionSource.TrySetResult(true);
 		
-		if (Json.Deserialize(json) is Dictionary<string, object> data)
-		{
-			foreach (string key in data.Keys)
-				m_Localization[key] = data.GetString(key);
-		}
-		
-		m_TokenSource?.Dispose();
-		m_TokenSource = null;
-	}
-
-	public void LoadBuiltIn()
-	{
-		LocalizationRegistry.Load(m_BuiltIn);
+		m_Loading = null;
 	}
 
 	public Task Reload(string _Language)
@@ -85,6 +53,15 @@ public class Localization : IInitializable
 		m_Language = null;
 		
 		return Load(_Language);
+	}
+
+	public void Unload()
+	{
+		Loaded = false;
+		
+		m_Language = null;
+		
+		m_Localization.Clear();
 	}
 
 	public string Format(string _Key, object _Arg)
@@ -191,5 +168,26 @@ public class Localization : IInitializable
 			return value ?? $"[{m_Language}] NULL";
 		
 		return _Default ?? (string.IsNullOrEmpty(_Key) ? $"[{m_Language}] NULL" : $"[{m_Language}] {_Key}");
+	}
+
+	async Task<bool> Fetch()
+	{
+		m_Localization.Clear();
+		
+		try
+		{
+			Dictionary<string, string> localization = await m_LocalizationProvider.DownloadAsync($"Localization/{m_Language}.lang");
+			
+			foreach (var entry in localization)
+				m_Localization[entry.Key] = entry.Value;
+			
+			return true;
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+			
+			return false;
+		}
 	}
 }

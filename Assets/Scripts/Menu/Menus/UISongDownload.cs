@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using UnityEngine;
@@ -7,8 +8,19 @@ using Zenject;
 
 public class UISongDownload : UIGroup
 {
-	string MusicPath => !string.IsNullOrEmpty(m_SongID) ? $"Songs/{m_SongID}.ogg" : string.Empty;
-	string ASFPath   => !string.IsNullOrEmpty(m_SongID) ? $"Songs/{m_SongID}.asf" : string.Empty;
+	public string SongID
+	{
+		get => m_SongID;
+		set
+		{
+			if (m_SongID == value)
+				return;
+			
+			m_SongID = value;
+			
+			ProcessState();
+		}
+	}
 
 	[SerializeField] UIGroup    m_DownloadGroup;
 	[SerializeField] UIGroup    m_ProgressGroup;
@@ -16,10 +28,14 @@ public class UISongDownload : UIGroup
 	[SerializeField] Button     m_DownloadButton;
 	[SerializeField] UIProgress m_Progress;
 
-	[Inject] StorageProcessor m_StorageProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
+	[Inject] AudioClipProvider m_AudioClipProvider;
+	[Inject] ASFProvider       m_ASFProvider;
+	[Inject] SongsManager      m_SongsManager;
+	[Inject] MenuProcessor     m_MenuProcessor;
 
 	string m_SongID;
+
+	CancellationTokenSource m_TokenSource;
 
 	protected override void Awake()
 	{
@@ -39,71 +55,36 @@ public class UISongDownload : UIGroup
 	{
 		base.OnDisable();
 		
-		m_StorageProcessor.Unsubscribe(MusicPath, ProcessMusicProgress);
-		m_StorageProcessor.Unsubscribe(ASFPath, ProcessASFProgress);
+		SongID = null;
 		
-		m_SongID = null;
-	}
-
-	public void Setup(string _SongID)
-	{
-		m_StorageProcessor.Unsubscribe(MusicPath, ProcessMusicProgress);
-		m_StorageProcessor.Unsubscribe(ASFPath, ProcessASFProgress);
-		
-		m_SongID = _SongID;
-		
-		RestoreProgress();
-		
-		if (m_StorageProcessor.IsLoaded(MusicPath) && m_StorageProcessor.IsLoaded(ASFPath))
-		{
-			Hide(true);
-			
-			m_CompleteGroup.Hide(true);
-			m_ProgressGroup.Hide(true);
-			m_DownloadGroup.Hide(true);
-		}
-		else if (m_StorageProcessor.IsLoading(MusicPath) || m_StorageProcessor.IsLoading(ASFPath))
-		{
-			m_StorageProcessor.Subscribe(MusicPath, ProcessMusicProgress);
-			m_StorageProcessor.Subscribe(ASFPath, ProcessASFProgress);
-			
-			Show(true);
-			
-			m_ProgressGroup.Show(true);
-			
-			m_CompleteGroup.Hide(true);
-			m_DownloadGroup.Hide(true);
-		}
-		else
-		{
-			Show(true);
-			
-			m_DownloadGroup.Show(true);
-			
-			m_CompleteGroup.Hide(true);
-			m_ProgressGroup.Hide(true);
-		}
+		m_TokenSource?.Cancel();
 	}
 
 	async void Download()
 	{
-		RestoreProgress();
+		m_TokenSource?.Cancel();
 		
-		string musicPath = MusicPath;
-		string asfPath   = ASFPath;
+		m_TokenSource = new CancellationTokenSource();
+		
+		CancellationToken token = m_TokenSource.Token;
+		
+		string songID = SongID;
+		string music  = m_SongsManager.GetMusic(SongID);
+		string asf    = m_SongsManager.GetASF(SongID);
 		
 		try
 		{
 			m_ProgressGroup.Show();
-			
 			m_DownloadGroup.Hide();
 			m_CompleteGroup.Hide();
 			
-			await m_StorageProcessor.LoadMusicAsync(musicPath, ProcessMusicProgress);
+			await m_AudioClipProvider.DownloadAsync(music, ProcessMusicProgress, token);
 			
-			await m_StorageProcessor.LoadJson(asfPath, true, ProcessASFProgress);
+			await m_ASFProvider.DownloadAsync(asf, ProcessASFProgress, token);
 			
-			if (musicPath != MusicPath || asfPath != ASFPath)
+			token.ThrowIfCancellationRequested();
+			
+			if (songID != SongID)
 				return;
 			
 			m_DownloadGroup.Hide();
@@ -111,15 +92,9 @@ public class UISongDownload : UIGroup
 			
 			await m_CompleteGroup.ShowAsync();
 			
-			await Task.Delay(1000);
+			await Task.Delay(1000, token);
 			
 			Hide();
-		}
-		catch (TaskCanceledException)
-		{
-			m_DownloadGroup.Show();
-			m_ProgressGroup.Hide();
-			m_CompleteGroup.Hide();
 		}
 		catch (Exception exception)
 		{
@@ -133,9 +108,41 @@ public class UISongDownload : UIGroup
 		}
 	}
 
-	void RestoreProgress()
+	void ProcessState()
 	{
+		m_TokenSource?.Cancel();
+		
 		m_Progress.Progress = 0;
+		
+		string music = m_SongsManager.GetMusic(SongID);
+		string asf   = m_SongsManager.GetASF(SongID);
+		
+		if (m_AudioClipProvider.IsDownloaded(music) && m_ASFProvider.IsDownloaded(asf))
+		{
+			Hide(true);
+			
+			m_CompleteGroup.Hide(true);
+			m_ProgressGroup.Hide(true);
+			m_DownloadGroup.Hide(true);
+		}
+		else if (m_AudioClipProvider.IsDownloading(music) || m_ASFProvider.IsDownloading(asf))
+		{
+			Download();
+			
+			Show(true);
+			
+			m_ProgressGroup.Show(true);
+			m_CompleteGroup.Hide(true);
+			m_DownloadGroup.Hide(true);
+		}
+		else
+		{
+			Show(true);
+			
+			m_DownloadGroup.Show(true);
+			m_CompleteGroup.Hide(true);
+			m_ProgressGroup.Hide(true);
+		}
 	}
 
 	void ProcessMusicProgress(float _Progress)

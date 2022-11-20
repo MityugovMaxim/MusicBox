@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AudioBox.Compression;
 using Firebase.Storage;
 using UnityEngine;
-using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine.UI;
 using Zenject;
 
@@ -21,9 +20,9 @@ public class UILocalizationMenu : UIMenu
 	[SerializeField] Button   m_AddButton;
 	[SerializeField] Button   m_SortButton;
 
-	[Inject] StorageProcessor           m_StorageProcessor;
+	[Inject] LocalizationProvider       m_LocalizationProvider;
 	[Inject] MenuProcessor              m_MenuProcessor;
-	[Inject] LanguagesCollection          m_LanguagesCollection;
+	[Inject] LanguagesCollection        m_LanguagesCollection;
 	[Inject] UILocalizationElement.Pool m_Pool;
 
 	LocalizationData m_Localization;
@@ -188,20 +187,7 @@ public class UILocalizationMenu : UIMenu
 		if (string.IsNullOrEmpty(language))
 			return;
 		
-		string json = await m_StorageProcessor.LoadJson(
-			$"Localization/{language}.lang",
-			true,
-			Encoding.Unicode,
-			null
-		);
-		
-		Dictionary<string, string> localization = new Dictionary<string, string>();
-		
-		if (Json.Deserialize(json) is Dictionary<string, object> data)
-		{
-			foreach (string key in data.Keys)
-				localization[key] = data.GetString(key);
-		}
+		Dictionary<string, string> localization = await m_LocalizationProvider.DownloadAsync($"Localization/{language}.lang");
 		
 		m_Localization.Rebuild(localization);
 	}

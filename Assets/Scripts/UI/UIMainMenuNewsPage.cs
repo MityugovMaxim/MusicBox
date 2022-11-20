@@ -9,6 +9,8 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.News;
 
 	[SerializeField] UILayout m_Content;
+	[SerializeField] UIGroup  m_ContentGroup;
+	[SerializeField] UIGroup  m_LoaderGroup;
 
 	[Inject] RolesProcessor      m_RolesProcessor;
 	[Inject] NewsManager         m_NewsManager;
@@ -17,8 +19,24 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	[Inject] UINewsItem.Pool     m_NewsPool;
 	[Inject] UIOfferItem.Pool    m_OffersPool;
 
-	protected override void OnShowStarted()
+	protected override async void OnShowStarted()
 	{
+		m_ContentGroup.Hide(true);
+		m_LoaderGroup.Show(true);
+		
+		int frame = Time.frameCount;
+		
+		await m_NewsManager.Preload();
+		await m_OffersManager.Preload();
+		
+		if (!Shown)
+			return;
+		
+		bool instant = frame == Time.frameCount;
+		
+		m_ContentGroup.Show(instant);
+		m_LoaderGroup.Hide(instant);
+		
 		Refresh();
 		
 		m_NewsManager.Collection.Subscribe(DataEventType.Add, Refresh);
@@ -41,11 +59,11 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
-		CreateAdminOffers();
+		//CreateAdminOffers();
 		
-		CreateAdminNews();
+		//CreateAdminNews();
 		
-		CreateAdminBanners();
+		//CreateAdminBanners();
 		
 		CreateAvailableOffers();
 		

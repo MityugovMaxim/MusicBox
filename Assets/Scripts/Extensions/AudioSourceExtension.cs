@@ -4,13 +4,12 @@ using UnityEngine;
 
 public static class AudioSourceExtension
 {
-	public static Task SetVolumeAsync(this AudioSource _AudioSource, float _Volume, float _Duration, CancellationToken _Token)
+	public static Task SetVolumeAsync(this AudioSource _AudioSource, float _Volume, float _Duration, CancellationToken _Token = default)
 	{
-		if (_AudioSource == null)
-			return Task.CompletedTask;
+		_Token.ThrowIfCancellationRequested();
 		
-		if (_Token.IsCancellationRequested)
-			return Task.FromCanceled(_Token);
+		if (_AudioSource == null || _AudioSource.clip == null)
+			return Task.CompletedTask;
 		
 		float source = _AudioSource.volume;
 		float target = Mathf.Clamp01(_Volume);

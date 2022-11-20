@@ -1,47 +1,122 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
 public class DailyManager
 {
+	public DailyCollection Collection => m_DailyCollection;
+
+	[Inject] AdsProcessor    m_AdsProcessor;
 	[Inject] DailyCollection m_DailyCollection;
 	[Inject] TimersManager   m_TimersManager;
+	[Inject] MenuProcessor   m_MenuProcessor;
 
-	public string GetDailyID()
+	readonly DataEventHandler m_CollectHandler = new DataEventHandler();
+
+	public Task Preload() => m_DailyCollection.Load();
+
+	public void SubscribeCollect(Action _Action) => m_CollectHandler.AddListener(_Action);
+
+	public void SubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.AddListener(_DailyID, _Action);
+
+	public void UnsubscribeCollect(Action _Action) => m_CollectHandler.RemoveListener(_Action);
+
+	public void UnsubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.RemoveListener(_DailyID, _Action);
+
+	public void SubscribeRestore(string _DailyID, Action _Action)
 	{
-		List<string> dailyIDs = m_DailyCollection.GetDailyIDs();
-		string       dailyID  = dailyIDs.LastOrDefault();
-		for (int i = dailyIDs.Count - 1; i >= 0; i--)
-		{
-			if (!IsDailyAvailable(dailyIDs[i]))
-				break;
-			
-			dailyID = dailyIDs[i];
-		}
-		return dailyID;
+		m_TimersManager.SubscribeCancel(_DailyID, _Action);
+		m_TimersManager.SubscribeEnd(_DailyID, _Action);
 	}
 
-	public List<string> GetDailyIDs()
+	public void UnsubscribeRestore(string _DailyID, Action _Action)
 	{
-		return m_DailyCollection.GetDailyIDs();
-	}
-
-	public bool HasDailyAvailable()
-	{
-		return GetDailyIDs().Any(IsDailyAvailable);
-	}
-
-	public bool IsDailyTimer(string _TimerID)
-	{
-		return m_DailyCollection.Contains(_TimerID);
+		m_TimersManager.UnsubscribeCancel(_DailyID, _Action);
+		m_TimersManager.UnsubscribeEnd(_DailyID, _Action);
 	}
 
 	public bool IsDailyAvailable(string _DailyID)
 	{
-		if (!m_TimersManager.Contains(_DailyID))
+		string dailyID = GetDailyID();
+		
+		if (string.IsNullOrEmpty(dailyID))
+			return false;
+		
+		int sourceOrder = Collection.GetOrder(_DailyID);
+		int targetOrder = Collection.GetOrder(dailyID);
+		
+		return sourceOrder >= targetOrder;
+	}
+
+	public List<string> GetDailyIDs()
+	{
+		return Collection.GetIDs()
+			.Where(IsActive)
+			.ToList();
+	}
+
+	public long GetCoins(string _DailyID)
+	{
+		DailySnapshot snapshot = Collection.GetSnapshot(_DailyID);
+		
+		return snapshot?.Coins ?? 0;
+	}
+
+	public bool IsAds(string _DailyID)
+	{
+		DailySnapshot snapshot = Collection.GetSnapshot(_DailyID);
+		
+		return snapshot?.Ads ?? false;
+	}
+
+	public bool IsFree(string _DailyID) => !IsAds(_DailyID);
+
+	public async Task Collect()
+	{
+		string dailyID = GetDailyID();
+		
+		if (!IsDailyAvailable(dailyID))
+			return;
+		
+		DailyCollectRequest request = new DailyCollectRequest(dailyID);
+		
+		bool process = IsFree(dailyID) || await m_AdsProcessor.Rewarded("daily");
+		
+		if (!process)
+		{
+			await m_MenuProcessor.ErrorAsync("daily_ads");
+			return;
+		}
+		
+		bool success = await request.SendAsync();
+		
+		if (!success)
+		{
+			await m_MenuProcessor.ErrorAsync("daily_collect");
+			return;
+		}
+		
+		m_CollectHandler.Invoke(dailyID);
+	}
+
+	string GetDailyID()
+	{
+		return Collection.GetIDs()
+			.Where(IsActive)
+			.Where(IsAvailable)
+			.FirstOrDefault();
+	}
+
+	bool IsAvailable(string _DailyID)
+	{
+		if (string.IsNullOrEmpty(_DailyID))
+			return false;
+		
+		if (!m_TimersManager.ContainsTimer(_DailyID))
 			return true;
 		
 		long cooldown  = m_TimersManager.GetEndTimestamp(_DailyID);
@@ -50,17 +125,22 @@ public class DailyManager
 		return timestamp >= cooldown;
 	}
 
-	public long GetTimestamp()
+	bool IsUnavailable(string _DailyID) => !IsAvailable(_DailyID);
+
+	bool IsActive(string _DailyID)
 	{
-		List<string> dailyIDs = GetDailyIDs();
-		long timestamp = 0;
-		foreach (string dailyID in dailyIDs)
-			timestamp = Math.Max(timestamp, GetTimestamp(dailyID));
-		return timestamp;
+		DailySnapshot snapshot = Collection.GetSnapshot(_DailyID);
+		
+		return snapshot?.Active ?? false;
 	}
 
-	public long GetTimestamp(string _DailyID)
+	public long GetTimestamp()
 	{
-		return m_TimersManager.Contains(_DailyID) ? m_TimersManager.GetEndTimestamp(_DailyID) : 0;
+		return Collection.GetIDs()
+			.Where(IsActive)
+			.Where(IsUnavailable)
+			.Select(m_TimersManager.GetEndTimestamp)
+			.DefaultIfEmpty(0)
+			.Max();
 	}
 }

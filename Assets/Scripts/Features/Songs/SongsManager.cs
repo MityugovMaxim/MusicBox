@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class SongsManager : ProfileCollection<long>
+public class SongsManager : ProfileCollection<DataSnapshot<long>>
 {
 	public SongsCollection Collection => m_SongsCollection;
 
@@ -12,22 +12,17 @@ public class SongsManager : ProfileCollection<long>
 
 	[Inject] SongsCollection m_SongsCollection;
 
+	[Inject] DifficultyManager m_DifficultyManager;
 	[Inject] ProgressProcessor m_ProgressProcessor;
 	[Inject] ScoresManager     m_ScoresManager;
 	[Inject] LevelParameter    m_LevelParameter;
 
 	public List<string> GetLibrarySongIDs()
 	{
-		IEnumerable<string> availableSongIDs = m_SongsCollection.GetIDs()
+		IEnumerable<string> freeSongIDs = m_SongsCollection.GetIDs()
 			.Where(IsSongAvailable)
 			.OrderBy(m_ScoresManager.GetRank)
 			.ThenBy(m_ProgressProcessor.GetSongLevel)
-			.ThenBy(GetSpeed)
-			.ThenBy(m_SongsCollection.GetOrder);
-		
-		IEnumerable<string> adsSongIDs = m_SongsCollection.GetIDs()
-			.Where(IsSongLockedByAds)
-			.OrderBy(m_ProgressProcessor.GetSongLevel)
 			.ThenBy(GetSpeed)
 			.ThenBy(m_SongsCollection.GetOrder);
 		
@@ -38,11 +33,7 @@ public class SongsManager : ProfileCollection<long>
 			.ThenBy(GetSpeed)
 			.ThenBy(m_SongsCollection.GetOrder);
 		
-		return availableSongIDs
-			.Union(adsSongIDs)
-			.Union(paidSongIDs)
-			.Distinct()
-			.ToList();
+		return freeSongIDs.Union(paidSongIDs).Distinct().ToList();
 	}
 
 	public Dictionary<int, List<string>> GetLockedSongIDs()
@@ -95,18 +86,7 @@ public class SongsManager : ProfileCollection<long>
 		return currentLevel >= requiredLevel && GetMode(_SongID) == SongMode.Paid;
 	}
 
-	public bool IsSongLockedByAds(string _SongID)
-	{
-		if (IsSongAvailable(_SongID))
-			return false;
-		
-		int currentLevel  = m_LevelParameter.Value;
-		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
-		
-		return currentLevel >= requiredLevel && GetMode(_SongID) == SongMode.Ads;
-	}
-
-		public string GetArtist(string _SongID)
+	public string GetArtist(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
@@ -141,22 +121,27 @@ public class SongsManager : ProfileCollection<long>
 		return snapshot?.Music ?? string.Empty;
 	}
 
-	public long GetPayout(string _SongID, ScoreRank _Rank)
+	public string GetASF(string _SongID)
+	{
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
+		
+		return snapshot?.ASF ?? string.Empty;
+	}
+
+	public float GetSpeed(string _SongID) => m_DifficultyManager.GetSpeed(GetDifficulty(_SongID));
+
+	public DifficultyType GetDifficulty(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
-		if (snapshot == null)
-			return 0;
-		
-		switch (_Rank)
-		{
-			case ScoreRank.Bronze:   return snapshot.BronzePayout;
-			case ScoreRank.Silver:   return snapshot.SilverPayout;
-			case ScoreRank.Gold:     return snapshot.GoldPayout;
-			case ScoreRank.Platinum: return snapshot.PlatinumPayout;
-			default:                 return snapshot.DefaultPayout;
-		}
+		return snapshot?.Difficulty ?? DifficultyType.Casual;
 	}
+
+	public long GetCoins(string _SongID, ScoreRank _ScoreRank) => m_DifficultyManager.GetCoins(GetDifficulty(_SongID), _ScoreRank);
+
+	public int GetThreshold(string _SongID, ScoreRank _ScoreRank) => m_DifficultyManager.GetThreshold(GetDifficulty(_SongID), _ScoreRank);
+
+	public ScoreRank GetRank(string _SongID, int _Accuracy) => m_DifficultyManager.GetRank(GetDifficulty(_SongID), _Accuracy);
 
 	public long GetPrice(string _SongID)
 	{
@@ -184,61 +169,6 @@ public class SongsManager : ProfileCollection<long>
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
 		return snapshot?.Origin ?? 0;
-	}
-
-	public float GetSpeed(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot?.Speed ?? 0;
-	}
-
-	public ScoreRank GetRank(string _SongID, int _Accuracy)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		if (snapshot == null)
-			return ScoreRank.None;
-		
-		if (_Accuracy >= snapshot.PlatinumThreshold)
-			return ScoreRank.Platinum;
-		
-		if (_Accuracy >= snapshot.GoldThreshold)
-			return ScoreRank.Gold;
-		
-		if (_Accuracy >= snapshot.SilverThreshold)
-			return ScoreRank.Silver;
-		
-		if (_Accuracy >= snapshot.BronzeThreshold)
-			return ScoreRank.Bronze;
-		
-		return ScoreRank.None;
-	}
-
-	public int GetThreshold(string _SongID, ScoreRank _Rank)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		if (snapshot == null)
-			return 0;
-		
-		switch (_Rank)
-		{
-			case ScoreRank.Platinum:
-				return snapshot.PlatinumThreshold;
-			
-			case ScoreRank.Gold:
-				return snapshot.GoldThreshold;
-			
-			case ScoreRank.Silver:
-				return snapshot.SilverThreshold;
-			
-			case ScoreRank.Bronze:
-				return snapshot.BronzeThreshold;
-			
-			default:
-				return 0;
-		}
 	}
 
 	public SongMode GetMode(string _SongID)

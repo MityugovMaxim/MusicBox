@@ -61,6 +61,11 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		
 		Loaded = await Fetch();
 		
+		if (Loaded)
+			await OnLoad();
+		
+		completionSource.TrySetResult(true);
+		
 		m_Loading = null;
 	}
 
@@ -136,8 +141,6 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 			m_IDs.Add(snapshot.ID);
 			m_Registry[snapshot.ID] = snapshot;
 		}
-		
-		await OnFetch();
 		
 		return true;
 	}
@@ -325,7 +328,7 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 
 	public bool Contains(string _ID)
 	{
-		return m_Registry.ContainsKey(_ID);
+		return !string.IsNullOrEmpty(_ID) && m_Registry.ContainsKey(_ID);
 	}
 
 	public bool Contains(Func<TSnapshot, bool> _Predicate)
@@ -333,7 +336,7 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		return _Predicate != null && m_Snapshots.Where(_Snapshot => _Snapshot != null).Any(_Predicate);
 	}
 
-	protected virtual Task OnFetch() => Task.CompletedTask;
+	protected virtual Task OnLoad() => Task.CompletedTask;
 
 	protected virtual Query Filter(DatabaseReference _Data)
 	{

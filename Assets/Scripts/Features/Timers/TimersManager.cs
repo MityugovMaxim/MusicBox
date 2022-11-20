@@ -2,52 +2,53 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.Scripting;
+using Zenject;
 
-public class TimersManager : ProfileCollection<TimerSnapshot>
+[Preserve]
+public class TimersManager : IInitializable, IDisposable
 {
-	protected override string Name => "timers";
+	public TimersCollection Collection => m_TimersCollection;
+
+	[Inject] TimersCollection m_TimersCollection;
+
+	readonly Dictionary<string, CancellationTokenSource> m_TimersStart = new Dictionary<string, CancellationTokenSource>();
+	readonly Dictionary<string, CancellationTokenSource> m_TimersEnd   = new Dictionary<string, CancellationTokenSource>();
 
 	readonly DataEventHandler m_StartHandler  = new DataEventHandler(DataEventType.None);
 	readonly DataEventHandler m_EndHandler    = new DataEventHandler(DataEventType.None);
 	readonly DataEventHandler m_CancelHandler = new DataEventHandler(DataEventType.None);
 
-	readonly Dictionary<string, CancellationTokenSource> m_TimersStart = new Dictionary<string, CancellationTokenSource>();
-	readonly Dictionary<string, CancellationTokenSource> m_TimersEnd   = new Dictionary<string, CancellationTokenSource>();
+	void IInitializable.Initialize()
+	{
+		Collection.Subscribe(DataEventType.Add, ProcessTimer);
+		Collection.Subscribe(DataEventType.Remove, ProcessTimer);
+		Collection.Subscribe(DataEventType.Change, ProcessTimer);
+	}
+
+	void IDisposable.Dispose()
+	{
+		Collection.Unsubscribe(DataEventType.Add, ProcessTimer);
+		Collection.Unsubscribe(DataEventType.Remove, ProcessTimer);
+		Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
+	}
+
+	public Task Preload() => Collection.Load();
 
 	public void SubscribeStart(string _TimerID, Action _Action) => m_StartHandler.AddListener(_TimerID, _Action);
 
 	public void SubscribeEnd(string _TimerID, Action _Action) => m_EndHandler.AddListener(_TimerID, _Action);
 
-	public void SubscribeCancel(string _TimerID, Action _Action) => m_EndHandler.AddListener(_TimerID, _Action);
+	public void SubscribeCancel(string _TimerID, Action _Action) => m_CancelHandler.AddListener(_TimerID, _Action);
 
 	public void UnsubscribeStart(string _TimerID, Action _Action) => m_StartHandler.RemoveListener(_TimerID, _Action);
 
 	public void UnsubscribeEnd(string _TimerID, Action _Action) => m_EndHandler.RemoveListener(_TimerID, _Action);
 
-	public void UnsubscribeCancel(string _TimerID, Action _Action) => m_EndHandler.RemoveListener(_TimerID, _Action);
+	public void UnsubscribeCancel(string _TimerID, Action _Action) => m_CancelHandler.RemoveListener(_TimerID, _Action);
 
-	protected override Task OnFetch()
-	{
-		foreach (string timerID in GetIDs())
-			ProcessTimer(timerID);
-		
-		return base.OnFetch();
-	}
-
-	protected override void OnSnapshotAdd(string _TimerID)
-	{
-		ProcessTimer(_TimerID);
-	}
-
-	protected override void OnSnapshotRemove(string _TimerID)
-	{
-		CancelTimer(_TimerID);
-	}
-
-	protected override void OnSnapshotChange(string _TimerID)
-	{
-		ProcessTimer(_TimerID);
-	}
+	public bool ContainsTimer(string _TimerID) => Collection.Contains(_TimerID);
 
 	void CompleteTimerStart(string _TimerID)
 	{
@@ -107,7 +108,7 @@ public class TimersManager : ProfileCollection<TimerSnapshot>
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
 		if (snapshot == null || snapshot.StartTimestamp < timestamp && snapshot.EndTimestamp < timestamp)
 			return;
@@ -146,50 +147,50 @@ public class TimersManager : ProfileCollection<TimerSnapshot>
 
 	public long GetStartTimestamp(string _TimerID)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
 		return snapshot?.StartTimestamp ?? 0;
 	}
 
 	public long GetEndTimestamp(string _TimerID)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
 		return snapshot?.EndTimestamp ?? 0;
 	}
 
 	public int GetInteger(string _TimerID, string _Key, int _Default = 0)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
-		return snapshot != null ? snapshot.GetInteger(_Key, _Default) : _Default;
+		return snapshot?.GetInteger(_Key, _Default) ?? _Default;
 	}
 
 	public float GetFloat(string _TimerID, string _Key, float _Default = 0)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
-		return snapshot != null ? snapshot.GetFloat(_Key, _Default) : _Default;
+		return snapshot?.GetFloat(_Key, _Default) ?? _Default;
 	}
 
 	public long GetLong(string _TimerID, string _Key, long _Default = 0)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
-		return snapshot != null ? snapshot.GetLong(_Key, _Default) : _Default;
+		return snapshot?.GetLong(_Key, _Default) ?? _Default;
 	}
 
 	public double GetDouble(string _TimerID, string _Key, double _Default = 0)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
-		return snapshot != null ? snapshot.GetDouble(_Key, _Default) : _Default;
+		return snapshot?.GetDouble(_Key, _Default) ?? _Default;
 	}
 
 	public string GetString(string _TimerID, string _Key, string _Default = null)
 	{
-		TimerSnapshot snapshot = GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
 		
-		return snapshot != null ? snapshot.GetString(_Key, _Default) : _Default;
+		return snapshot?.GetString(_Key, _Default) ?? _Default;
 	}
 }

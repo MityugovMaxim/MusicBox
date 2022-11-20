@@ -1,32 +1,18 @@
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine.Scripting;
 
 [Preserve]
-public class DailyCollection : DataCollection<DailySnapshot>
+public class DailyCollection : DataCollection<DailySnapshot>, IDataCollection
 {
+	public DataCollectionPriority Priority => DataCollectionPriority.Low;
+
 	protected override string Path => "daily";
 
-	public List<string> GetDailyIDs()
+	protected override Task OnLoad()
 	{
-		return Snapshots
-			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
-			.Select(_Snapshot => _Snapshot.ID)
-			.ToList();
-	}
-
-	public long GetCoins(string _DailyID)
-	{
-		DailySnapshot snapshot = GetSnapshot(_DailyID);
+		Log.Info(this, "Daily loaded.");
 		
-		return snapshot?.Coins ?? 0;
-	}
-
-	public bool GetAds(string _DailyID)
-	{
-		DailySnapshot snapshot = GetSnapshot(_DailyID);
-		
-		return snapshot?.Ads ?? false;
+		return base.OnLoad();
 	}
 }

@@ -9,13 +9,13 @@ public class UISetupMenu : UIMenu
 
 	[Inject] AudioManager     m_AudioManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] AmbientProcessor m_AmbientProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	TaskCompletionSource<bool> m_CompletionSource;
 
 	protected override void OnShowStarted()
 	{
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 		
 		m_AudioManager.OnSourceChange += OnSourceChange;
 	}
@@ -29,7 +29,7 @@ public class UISetupMenu : UIMenu
 	{
 		m_MenuProcessor.RemoveMenu(MenuType.SetupMenu);
 		
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 	}
 
 	public Task Process()

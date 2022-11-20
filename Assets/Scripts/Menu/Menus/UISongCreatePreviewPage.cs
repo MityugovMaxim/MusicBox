@@ -23,7 +23,7 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 
 	[Inject] IFileManager     m_FileManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] AmbientProcessor m_AmbientProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	AudioClip m_Preview;
 
@@ -129,7 +129,7 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		
 		m_StopButton.gameObject.SetActive(true);
 		
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 		
 		try
 		{
@@ -168,7 +168,7 @@ public class UISongCreatePreviewPage : UISongCreateMenuPage
 		
 		m_PlayButton.gameObject.SetActive(true);
 		
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 	}
 
 	void Cancel()

@@ -36,7 +36,10 @@ public class DataEventHandler
 		if (string.IsNullOrEmpty(_ID))
 			return;
 		
-		m_RegularListeners[_ID] += _Action;
+		if (m_RegularListeners.ContainsKey(_ID))
+			m_RegularListeners[_ID] += _Action;
+		else
+			m_RegularListeners[_ID] = _Action;
 	}
 
 	public void AddListener(string _ID, Action<string> _Action)
@@ -44,7 +47,10 @@ public class DataEventHandler
 		if (string.IsNullOrEmpty(_ID))
 			return;
 		
-		m_DynamicListeners[_ID] += _Action;
+		if (m_DynamicListeners.ContainsKey(_ID))
+			m_DynamicListeners[_ID] += _Action;
+		else
+			m_DynamicListeners[_ID] = _Action;
 	}
 
 	public void RemoveListener(Action _Action)

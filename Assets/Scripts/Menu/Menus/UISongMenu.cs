@@ -58,8 +58,9 @@ public class UISongMenu : UISlideMenu
 		m_Image.SongID      = m_SongID;
 		m_Discs.SongID      = m_SongID;
 		m_Label.SongID      = m_SongID;
+		m_Download.SongID   = m_SongID;
+		
 		m_Play.Setup(m_SongID);
-		m_Download.Setup(m_SongID);
 		
 		m_QR.Hide(true);
 	}

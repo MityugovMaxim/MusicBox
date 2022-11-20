@@ -19,10 +19,10 @@ public class SoundProcessor
 	[Inject]
 	public SoundProcessor(SoundSource.Pool _SourcePool, SoundInfo[] _SoundInfos)
 	{
-		m_SourcePool    = _SourcePool;
-		m_SoundInfos    = _SoundInfos.ToDictionary(_SoundInfo => _SoundInfo.ID, _SoundInfo => _SoundInfo);
-		m_SoundCache    = new Dictionary<string, AudioClip>();
-		m_SoundSources  = new Dictionary<string, SoundSource>();
+		m_SourcePool        = _SourcePool;
+		m_SoundInfos        = _SoundInfos.ToDictionary(_SoundInfo => _SoundInfo.ID, _SoundInfo => _SoundInfo);
+		m_SoundCache        = new Dictionary<string, AudioClip>();
+		m_SoundSources      = new Dictionary<string, SoundSource>();
 		m_PersistentSources = new Dictionary<string, SoundSource>();
 	}
 

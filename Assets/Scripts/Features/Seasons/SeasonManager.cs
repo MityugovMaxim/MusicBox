@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zenject;
 
-public class SeasonManager : ProfileCollection<long>
+public class SeasonManager : ProfileCollection<DataSnapshot<long>>
 {
 	protected override string Name => "season";
 

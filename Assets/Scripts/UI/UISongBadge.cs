@@ -23,7 +23,6 @@ public class UISongBadge : UIEntity
 
 	[SerializeField] GameObject m_NewBadge;
 	[SerializeField] GameObject m_HotBadge;
-	[SerializeField] GameObject m_HardBadge;
 
 	[Inject] SongsManager m_SongsManager;
 
@@ -42,6 +41,5 @@ public class UISongBadge : UIEntity
 		
 		m_NewBadge.SetActive(badge == SongBadge.New);
 		m_HotBadge.SetActive(badge == SongBadge.Hot);
-		m_HardBadge.SetActive(badge == SongBadge.Hard);
 	}
 }

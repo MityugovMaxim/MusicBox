@@ -108,9 +108,6 @@ public class UIMainMenuControl : UIEntity
 		
 		int count = GetUnreadCount(STORE_KEY, m_ProductsManager.GetProductIDs(), m_ProductIDs);
 		
-		if (m_DailyManager.HasDailyAvailable())
-			count += 1;
-		
 		m_StoreBadge.Value = count;
 	}
 
@@ -132,7 +129,7 @@ public class UIMainMenuControl : UIEntity
 	{
 		Read(STORE_KEY, m_ProductsManager.GetProductIDs(), m_ProductIDs);
 		
-		m_StoreBadge.Value = m_DailyManager.HasDailyAvailable() ? 1 : 0;
+		m_StoreBadge.Value = 0;
 	}
 
 	int GetUnreadCount(string _Key, IEnumerable<string> _IDs, HashSet<string> _CachedIDs)

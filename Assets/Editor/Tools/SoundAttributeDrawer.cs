@@ -103,7 +103,7 @@ public class SoundAttributeDrawer : PropertyDrawer
 		Type type = assembly.GetType("UnityEditor.AudioUtil");
 		
 		m_PlayMethodInfo = type.GetMethod(
-			"PlayClip",
+			"PlayPreviewClip",
 			BindingFlags.Static | BindingFlags.Public,
 			null,
 			new Type[]
@@ -131,7 +131,7 @@ public class SoundAttributeDrawer : PropertyDrawer
 		Type type = assembly.GetType("UnityEditor.AudioUtil");
 		
 		m_StopMethodInfo = type.GetMethod(
-			"StopAllClips",
+			"StopAllPreviewClips",
 			BindingFlags.Static | BindingFlags.Public
 		);
 		

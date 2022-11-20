@@ -7,13 +7,13 @@ public class UILatencyMenu : UISlideMenu
 	[SerializeField] UILatencyIndicator m_LatencyIndicator;
 
 	[Inject] AudioManager     m_AudioManager;
-	[Inject] AmbientProcessor m_AmbientProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	protected override void OnShowStarted()
 	{
 		base.OnShowStarted();
 		
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 		
 		m_LatencyIndicator.Process();
 		
@@ -33,7 +33,7 @@ public class UILatencyMenu : UISlideMenu
 	{
 		base.OnHideFinished();
 		
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 	}
 
 	protected override bool OnEscape()

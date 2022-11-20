@@ -63,6 +63,8 @@ public class UILoginMenu : UIMenu
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
+		
+		await LoadProcessors(DataCollectionPriority.Low);
 	}
 
 	async Task LoadProcessors(DataCollectionPriority _Priority)

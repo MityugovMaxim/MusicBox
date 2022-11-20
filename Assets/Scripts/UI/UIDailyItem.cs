@@ -1,9 +1,34 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 public class UIDailyItem : UIEntity
 {
-	public float Phase
+	public string DailyID
+	{
+		get => m_DailyID;
+		set
+		{
+			if (m_DailyID == value)
+				return;
+			
+			m_DailyManager.UnsubscribeCollect(m_DailyID, CollectDaily);
+			m_DailyManager.UnsubscribeRestore(m_DailyID, RestoreDaily);
+			m_DailyManager.Collection.Unsubscribe(DataEventType.Change, m_DailyID, ProcessDaily);
+			
+			m_DailyID = value;
+			
+			ProcessDaily();
+			
+			m_DailyManager.SubscribeCollect(m_DailyID, CollectDaily);
+			m_DailyManager.SubscribeRestore(m_DailyID, RestoreDaily);
+			m_DailyManager.Collection.Subscribe(DataEventType.Change, m_DailyID, ProcessDaily);
+		}
+	}
+
+	float Phase
 	{
 		get => m_Phase;
 		set
@@ -19,27 +44,35 @@ public class UIDailyItem : UIEntity
 
 	[SerializeField, Range(0, 1)] float m_Phase;
 
-	[SerializeField] GameObject  m_Content;
 	[SerializeField] GameObject  m_Ads;
 	[SerializeField] UIUnitLabel m_Coins;
 	[SerializeField] UIFlare     m_Flare;
-	[SerializeField] CanvasGroup m_CanvasGroup;
+	[SerializeField] float       m_Duration;
 
-	[Header("Alpha")]
-	[SerializeField] float m_SourceAlpha = 0;
-	[SerializeField] float m_TargetAlpha = 1;
+	[SerializeField] float m_SourceWidth;
+	[SerializeField] float m_TargetWidth;
+	[SerializeField] float m_CollectDelay;
+	[SerializeField] float m_RestoreDelay;
 
-	[Header("Position")]
-	[SerializeField] float m_SourcePosition = 0;
-	[SerializeField] float m_TargetPosition = 0;
+	[SerializeField]        Haptic.Type m_Haptic;
+	[SerializeField, Sound] string      m_Sound;
 
-	[Header("Scale")]
-	[SerializeField] float m_SourceScale = 1;
-	[SerializeField] float m_TargetScale = 1;
+	[Inject] DailyManager    m_DailyManager;
+	[Inject] HapticProcessor m_HapticProcessor;
+	[Inject] SoundProcessor  m_SoundProcessor;
 
-	[Inject] DailyCollection m_DailyCollection;
+	CancellationTokenSource m_TokenSource;
 
 	string m_DailyID;
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		
+		DailyID = null;
+		
+		m_TokenSource?.Cancel();
+	}
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -53,31 +86,80 @@ public class UIDailyItem : UIEntity
 	}
 	#endif
 
-	public void Setup(string _DailyID)
+	async void CollectDaily()
 	{
-		m_DailyID = _DailyID;
+		m_TokenSource?.Cancel();
 		
-		m_Content.SetActive(!string.IsNullOrEmpty(m_DailyID));
-		m_Ads.SetActive(m_DailyCollection.GetAds(m_DailyID));
+		m_TokenSource = new CancellationTokenSource();
 		
-		m_Coins.Value = m_DailyCollection.GetCoins(m_DailyID);
+		m_Flare.Play();
+		
+		m_HapticProcessor.Process(m_Haptic);
+		m_SoundProcessor.Play(m_Sound);
+		
+		try
+		{
+			await UnityTask.Phase(
+				_Phase => Phase = 1 - _Phase,
+				m_CollectDelay,
+				m_Duration,
+				EaseFunction.EaseOutCubic,
+				m_TokenSource.Token
+			);
+		}
+		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
+		finally
+		{
+			m_TokenSource.Dispose();
+			m_TokenSource = null;
+		}
 	}
 
-	public void Collect()
+	async void RestoreDaily()
 	{
-		m_Flare.Play();
+		m_TokenSource?.Cancel();
+		
+		m_TokenSource = new CancellationTokenSource();
+		
+		bool available = m_DailyManager.IsDailyAvailable(DailyID);
+		
+		float source = Phase;
+		float target = available ? 1 : 0;
+		
+		try
+		{
+			await UnityTask.Phase(
+				_Phase => Phase = Mathf.Lerp(source, target, _Phase),
+				m_RestoreDelay,
+				m_Duration,
+				EaseFunction.EaseOutCubic,
+				m_TokenSource.Token
+			);
+		}
+		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
+		finally
+		{
+			m_TokenSource.Dispose();
+			m_TokenSource = null;
+		}
+	}
+
+	void ProcessDaily()
+	{
+		bool available = m_DailyManager.IsDailyAvailable(DailyID);
+		
+		Phase         = available ? 1 : 0;
+		
+		m_Coins.Value = m_DailyManager.GetCoins(DailyID);
+		m_Ads.SetActive(m_DailyManager.IsAds(m_DailyID));
 	}
 
 	void ProcessPhase()
 	{
-		if (m_CanvasGroup != null)
-			m_CanvasGroup.alpha = Mathf.LerpUnclamped(m_SourceAlpha, m_TargetAlpha, Phase);
-		
-		Vector2 position = RectTransform.anchoredPosition;
-		position.x                     = Mathf.LerpUnclamped(m_SourcePosition, m_TargetPosition, Phase);
-		RectTransform.anchoredPosition = position;
-		
-		float scale = Mathf.LerpUnclamped(m_SourceScale, m_TargetScale, Phase);
-		RectTransform.localScale = new Vector3(scale, scale, 1);
+		Vector2 size = RectTransform.sizeDelta;
+		size.x = Mathf.Lerp(m_SourceWidth, m_TargetWidth, Phase);
+		RectTransform.sizeDelta = size;
 	}
 }

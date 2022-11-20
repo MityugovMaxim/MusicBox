@@ -100,7 +100,7 @@ public class UILoadingMenu : UIAnimationMenu
 
 	async Task LoadSong()
 	{
-		Task<bool> load = m_SongController.Load(m_SongID, m_Full, ProcessProgress);
+		Task<bool> load = m_SongController.Load(m_SongID, ProcessProgress);
 		
 		StartProgress();
 		

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using AudioBox.Compression;
-using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine;
 
 namespace AudioBox.ASF
@@ -239,14 +238,7 @@ namespace AudioBox.ASF
 			return data;
 		}
 
-		public void Deserialize(string _ASF)
-		{
-			Dictionary<string, object> asf = Json.Deserialize(_ASF) as Dictionary<string, object>;
-			
-			Deserialize(asf);
-		}
-
-		protected void Deserialize(IDictionary<string, object> _Data)
+		public void Deserialize(IDictionary<string, object> _Data)
 		{
 			if (_Data == null)
 				return;

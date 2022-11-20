@@ -26,4 +26,16 @@ public static class ButtonExtension
 		if (_Button != null)
 			_Button.onClick.RemoveListener(_Action);
 	}
+
+	public static void Subscribe(this Toggle _Toggle, UnityAction<bool> _Action)
+	{
+		if (_Toggle != null)
+			_Toggle.onValueChanged.AddListener(_Action);
+	}
+
+	public static void Unsubscribe(this Toggle _Toggle, UnityAction<bool> _Action)
+	{
+		if (_Toggle != null)
+			_Toggle.onValueChanged.RemoveListener(_Action);
+	}
 }

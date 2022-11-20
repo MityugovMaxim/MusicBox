@@ -46,7 +46,7 @@ public abstract class RemoteImage : UIEntity
 	[SerializeField, HideInInspector] int     m_Width     = 512;
 	[SerializeField, HideInInspector] int     m_Height    = 512;
 
-	[Inject] StorageProcessor m_StorageProcessor;
+	[Inject] TextureProvider m_TextureProvider;
 
 	Atlas                   m_Atlas;
 	CancellationTokenSource m_TokenSource;
@@ -198,8 +198,8 @@ public abstract class RemoteImage : UIEntity
 			return Task.FromResult<Texture2D>(null);
 		
 		return CheckOptions(Options.URL)
-			? m_StorageProcessor.LoadTextureAsync(new Uri(Path), null, CancellationToken.None)
-			: m_StorageProcessor.LoadTextureAsync(Path, null, CancellationToken.None);
+			? m_TextureProvider.DownloadAsync(new Uri(Path), CancellationToken.None)
+			: m_TextureProvider.DownloadAsync(Path, null, CancellationToken.None);
 	}
 
 	void CreateAtlas()

@@ -7,11 +7,6 @@ using UnityEngine.Networking;
 
 public static class WebRequest
 {
-	public static Task<AudioClip> LoadAudioClipFile(string _Path, CancellationToken _Token = default)
-	{
-		return LoadAudioClip($"file://{_Path}", AudioType.OGGVORBIS, _Token);
-	}
-
 	public static Task<AudioClip> LoadAudioClipFile(string _Path, AudioType _AudioType, CancellationToken _Token = default)
 	{
 		return LoadAudioClip($"file://{_Path}", _AudioType, _Token);
@@ -42,19 +37,19 @@ public static class WebRequest
 			}
 			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				Log.Error(typeof(WebRequest), "Load audio clip failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load audio clip failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				Log.Error(typeof(WebRequest), "Load audio clip failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load audio clip failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.DataProcessingError)
 			{
-				Log.Error(typeof(WebRequest), "Load audio clip failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load audio clip failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
@@ -64,7 +59,7 @@ public static class WebRequest
 				
 				if (handler == null)
 				{
-					Log.Error(typeof(WebRequest), "Load audio clip failed. Download handler is null. URL: '{0}'.", _URL);
+					Log.Error(nameof(WebRequest), "Load audio clip failed. Download handler is null. URL: '{0}'.", _URL);
 					completionSource.TrySetCanceled();
 					request.Dispose();
 					return;
@@ -75,7 +70,7 @@ public static class WebRequest
 				
 				if (audioClip == null)
 				{
-					Log.Error(typeof(WebRequest), "Load audio clip failed. Audio clip is null. URL: '{0}'.", _URL);
+					Log.Error(nameof(WebRequest), "Load audio clip failed. Audio clip is null. URL: '{0}'.", _URL);
 					completionSource.TrySetCanceled();
 					request.Dispose();
 					return;
@@ -103,7 +98,7 @@ public static class WebRequest
 	{
 		if (string.IsNullOrEmpty(_URL))
 		{
-			Log.Error(typeof(WebRequest), "Load texture failed. URL is null or empty.");
+			Log.Error(nameof(WebRequest), "Load texture failed. URL is null or empty.");
 			return null;
 		}
 		
@@ -130,19 +125,19 @@ public static class WebRequest
 			}
 			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				Log.Error(typeof(WebRequest), "Load texture failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load texture failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				Log.Error(typeof(WebRequest), "Load texture failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load texture failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.DataProcessingError)
 			{
-				Log.Error(typeof(WebRequest), "Load texture failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load texture failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
@@ -152,7 +147,7 @@ public static class WebRequest
 				
 				if (handler == null)
 				{
-					Log.Error(typeof(WebRequest), "Load texture failed. Download handler is null. URL: '{0}'.", _URL);
+					Log.Error(nameof(WebRequest), "Load texture failed. Download handler is null. URL: '{0}'.", _URL);
 					completionSource.TrySetCanceled();
 					request.Dispose();
 					return;
@@ -162,7 +157,7 @@ public static class WebRequest
 				
 				if (texture == null)
 				{
-					Log.Error(typeof(WebRequest), "Load texture failed. Texture is null. URL: '{0}'.", _URL);
+					Log.Error(nameof(WebRequest), "Load texture failed. Texture is null. URL: '{0}'.", _URL);
 					completionSource.TrySetCanceled();
 					request.Dispose();
 					return;
@@ -181,16 +176,11 @@ public static class WebRequest
 		return completionSource.Task;
 	}
 
-	public static Task<byte[]> LoadDataFile(string _Path, CancellationToken _Token = default)
-	{
-		return LoadData($"file://{_Path}", _Token);
-	}
-
 	public static Task<byte[]> LoadData(string _URL, CancellationToken _Token = default)
 	{
 		if (string.IsNullOrEmpty(_URL))
 		{
-			Log.Error(typeof(WebRequest), "Load text failed. URL is null or empty.");
+			Log.Error(nameof(WebRequest), "Load text failed. URL is null or empty.");
 			return null;
 		}
 		
@@ -215,19 +205,19 @@ public static class WebRequest
 			}
 			else if (request.result == UnityWebRequest.Result.ConnectionError)
 			{
-				Log.Error(typeof(WebRequest), "Load data failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load data failed. Connection error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.ProtocolError)
 			{
-				Log.Error(typeof(WebRequest), "Load data failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load data failed. Protocol error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}
 			else if (request.result == UnityWebRequest.Result.DataProcessingError)
 			{
-				Log.Error(typeof(WebRequest), "Load data failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
+				Log.Error(nameof(WebRequest), "Load data failed. Data processing error. Error: {0}. URL: '{1}'.", request.error, _URL);
 				completionSource.TrySetCanceled();
 				request.Dispose();
 			}

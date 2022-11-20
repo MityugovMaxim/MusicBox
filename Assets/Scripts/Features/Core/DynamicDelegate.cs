@@ -7,6 +7,9 @@ public class DynamicDelegate<T0, T1>
 
 	public static DynamicDelegate<T0, T1> operator +(DynamicDelegate<T0, T1> _Delegate, Action _Action)
 	{
+		if (_Delegate == null)
+			_Delegate = new DynamicDelegate<T0, T1>();
+		
 		_Delegate.AddListener(_Action);
 		
 		return _Delegate;
@@ -14,6 +17,9 @@ public class DynamicDelegate<T0, T1>
 
 	public static DynamicDelegate<T0, T1> operator +(DynamicDelegate<T0, T1> _Delegate, Action<T0, T1> _Action)
 	{
+		if (_Delegate == null)
+			_Delegate = new DynamicDelegate<T0, T1>();
+		
 		_Delegate.AddListener(_Action);
 		
 		return _Delegate;
@@ -21,6 +27,9 @@ public class DynamicDelegate<T0, T1>
 
 	public static DynamicDelegate<T0, T1> operator -(DynamicDelegate<T0, T1> _Delegate, Action _Action)
 	{
+		if (_Delegate == null)
+			return null;
+		
 		_Delegate.RemoveListener(_Action);
 		
 		return _Delegate;
@@ -28,6 +37,9 @@ public class DynamicDelegate<T0, T1>
 
 	public static DynamicDelegate<T0, T1> operator -(DynamicDelegate<T0, T1> _Delegate, Action<T0, T1> _Action)
 	{
+		if (_Delegate == null)
+			return null;
+		
 		_Delegate.RemoveListener(_Action);
 		
 		return _Delegate;

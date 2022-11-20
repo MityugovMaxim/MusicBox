@@ -51,7 +51,7 @@ public class UIReviveMenu : UIMenu
 			
 			await Task.Delay(500);
 			
-			m_SongController.Revive(false);
+			m_SongController.Revive();
 		}
 		else
 		{
@@ -83,7 +83,7 @@ public class UIReviveMenu : UIMenu
 			
 			await Task.Delay(500);
 			
-			m_SongController.Revive(true);
+			m_SongController.Revive();
 		}
 		else
 		{

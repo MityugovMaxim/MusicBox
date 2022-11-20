@@ -22,8 +22,8 @@ public class UILanguagesMenu : UIMenu
 	[SerializeField] Button   m_SyncButton;
 
 	[Inject] UILanguageElement.Pool m_Pool;
-	[Inject] LanguagesCollection      m_LanguagesCollection;
-	[Inject] StorageProcessor       m_StorageProcessor;
+	[Inject] LanguagesCollection    m_LanguagesCollection;
+	[Inject] LocalizationProvider   m_LocalizationProvider;
 	[Inject] MenuProcessor          m_MenuProcessor;
 
 	readonly List<LocalizationData> m_Localizations = new List<LocalizationData>();
@@ -170,24 +170,11 @@ public class UILanguagesMenu : UIMenu
 		
 		m_Localizations.Clear();
 		
-		List<string> languages = m_LanguagesCollection.GetLanguages(true);
+		IReadOnlyList<string> languages = m_LanguagesCollection.GetIDs();
 		
 		foreach (string language in languages)
 		{
-			string json = await m_StorageProcessor.LoadJson(
-				$"Localization/{language}.lang",
-				true,
-				Encoding.Unicode,
-				null
-			);
-			
-			Dictionary<string, string> localization = new Dictionary<string, string>();
-			
-			if (Json.Deserialize(json) is Dictionary<string, object> data)
-			{
-				foreach (string key in data.Keys)
-					localization[key] = data.GetString(key);
-			}
+			Dictionary<string, string> localization = await m_LocalizationProvider.DownloadAsync($"Localization/{language}.lang");
 			
 			LocalizationData item = new LocalizationData(language, localization);
 			

@@ -8,7 +8,7 @@ public class SongPreview : MonoBehaviour
 	public event Action<string> OnStop;
 
 	[Inject] PreviewProcessor m_PreviewProcessor;
-	[Inject] AmbientProcessor m_AmbientProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	string m_SongID;
 
@@ -17,7 +17,7 @@ public class SongPreview : MonoBehaviour
 		m_SongID = _SongID;
 		
 		m_PreviewProcessor.Play(m_SongID);
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 		
 		OnPlay?.Invoke(m_SongID);
 	}
@@ -25,7 +25,7 @@ public class SongPreview : MonoBehaviour
 	public void Stop()
 	{
 		m_PreviewProcessor.Stop();
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 		
 		OnStop?.Invoke(m_SongID);
 	}

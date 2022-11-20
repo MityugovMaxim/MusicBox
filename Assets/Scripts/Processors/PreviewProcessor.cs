@@ -10,8 +10,8 @@ public class PreviewProcessor : MonoBehaviour
 	const float PLAY_FADE_DURATION = 0.5f;
 	const float STOP_FADE_DURATION = 0.5f;
 
-	[Inject] SongsManager     m_SongsManager;
-	[Inject] StorageProcessor m_StorageProcessor;
+	[Inject] SongsManager      m_SongsManager;
+	[Inject] AudioClipProvider m_AudioClipProvider;
 
 	AudioSource m_AudioSource;
 	string      m_SongID;
@@ -65,7 +65,7 @@ public class PreviewProcessor : MonoBehaviour
 		
 		try
 		{
-			AudioClip audioClip = await m_StorageProcessor.LoadAudioClipAsync(path, null, CancellationToken.None);
+			AudioClip audioClip = await m_AudioClipProvider.LoadAsync(path, token);
 			
 			if (token.IsCancellationRequested)
 				return;

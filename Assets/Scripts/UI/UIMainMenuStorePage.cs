@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -11,9 +12,13 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	public override MainMenuPageType Type => MainMenuPageType.Store;
 
 	[SerializeField] UILayout m_Content;
+	[SerializeField] UIGroup  m_ContentGroup;
+	[SerializeField] UIGroup  m_LoaderGroup;
 
-	[Inject] DailyManager          m_DailyManager;
-	[Inject] ProductsManager       m_ProductsManager;
+	[Inject] ProductsManager m_ProductsManager;
+	[Inject] TimersManager   m_TimersManager;
+	[Inject] DailyManager    m_DailyManager;
+
 	[Inject] RolesProcessor        m_RolesProcessor;
 	[Inject] UIAdminElement.Pool   m_AdminPool;
 	[Inject] UIDailyElement.Pool   m_DailyPool;
@@ -21,8 +26,23 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	[Inject] UIProductPromo.Pool   m_PromoPool;
 	[Inject] UIProductItem.Pool    m_ItemPool;
 
-	protected override void OnShowStarted()
+	protected override async void OnShowStarted()
 	{
+		m_ContentGroup.Hide(true);
+		m_LoaderGroup.Show(true);
+		
+		int frame = Time.frameCount;
+		
+		await Task.WhenAll(
+			m_TimersManager.Preload(),
+			m_DailyManager.Preload()
+		);
+		
+		bool instant = frame == Time.frameCount;
+		
+		m_LoaderGroup.Hide(instant);
+		m_ContentGroup.Show(instant);
+		
 		Refresh();
 		
 		m_ProductsManager.Subscribe(DataEventType.Add, Refresh);
@@ -46,13 +66,13 @@ public class UIMainMenuStorePage : UIMainMenuPage
 			CreateAdminAds();
 		}
 		
-		CreateSpecial();
+		//CreateSpecial();
 		
-		CreatePromo();
+		//CreatePromo();
 		
 		CreateDaily();
 		
-		CreateItems();
+		//CreateItems();
 		
 		m_Content.Reposition();
 	}
@@ -116,11 +136,6 @@ public class UIMainMenuStorePage : UIMainMenuPage
 
 	void CreateDaily()
 	{
-		List<string> dailyIDs = m_DailyManager.GetDailyIDs();
-		
-		if (dailyIDs == null || dailyIDs.Count == 0)
-			return;
-		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		m_Content.Add(new DailyElementEntity(m_DailyPool));

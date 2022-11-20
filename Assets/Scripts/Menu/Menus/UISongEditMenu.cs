@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AudioBox.ASF;
-using UnityEngine.Purchasing.MiniJSON;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.MusicTheory;
@@ -369,14 +368,15 @@ public class UISongEditMenu : UIMenu
 	[SerializeField] UIAudioWave m_Background;
 	[SerializeField] UIBeat      m_Beat;
 
-	[Inject] StorageProcessor m_StorageProcessor;
-	[Inject] SongsManager     m_SongsManager;
-	[Inject] ConfigProcessor  m_ConfigProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] AudioManager     m_AudioManager;
-	[Inject] AmbientProcessor m_AmbientProcessor;
-	[Inject] IFileManager     m_FileManager;
-	[Inject] UIRecordHandle   m_RecordHandle;
+	[Inject] AudioClipProvider m_AudioClipProvider;
+	[Inject] ASFProvider       m_ASFProvider;
+	[Inject] SongsManager      m_SongsManager;
+	[Inject] ConfigProcessor   m_ConfigProcessor;
+	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] AudioManager      m_AudioManager;
+	[Inject] AmbientManager  m_AmbientManager;
+	[Inject] IFileManager      m_FileManager;
+	[Inject] UIRecordHandle    m_RecordHandle;
 
 	string m_SongID;
 	double m_Time;
@@ -402,14 +402,14 @@ public class UISongEditMenu : UIMenu
 			music = null;
 		}
 		
-		string asf;
+		Dictionary<string, object> asf;
 		try
 		{
 			asf = await LoadASF();
 		}
 		catch (Exception)
 		{
-			asf = string.Empty;
+			asf = null;
 		}
 		
 		float ratio    = m_ConfigProcessor.SongRatio;
@@ -452,7 +452,7 @@ public class UISongEditMenu : UIMenu
 		if (!confirm)
 			return;
 		
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 		
 		m_Player.Stop();
 		
@@ -475,7 +475,7 @@ public class UISongEditMenu : UIMenu
 		if (!confirm)
 			return;
 		
-		m_AmbientProcessor.Resume();
+		m_AmbientManager.Play();
 		
 		m_Player.Stop();
 		m_Player.Music.UnloadAudioData();
@@ -518,15 +518,13 @@ public class UISongEditMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		Dictionary<string, object> data = m_Player.Serialize();
+		Dictionary<string, object> asf = m_Player.Serialize();
 		
-		string path = $"Songs/{m_SongID}.asf";
-		
-		string asf = Json.Serialize(data);
+		string path = m_SongsManager.GetASF(m_SongID);
 		
 		try
 		{
-			await m_StorageProcessor.UploadJson(path, asf, Encoding.UTF8);
+			await m_ASFProvider.UploadAsync(path, asf, Encoding.UTF8);
 		}
 		catch (Exception exception)
 		{
@@ -554,7 +552,7 @@ public class UISongEditMenu : UIMenu
 		
 		try
 		{
-			string asf = await LoadASF();
+			Dictionary<string, object> asf = await LoadASF();
 			
 			m_Player.Clear();
 			m_Player.Deserialize(asf);
@@ -632,20 +630,20 @@ public class UISongEditMenu : UIMenu
 	{
 		await m_MenuProcessor.Hide(MenuType.SongMenu, true);
 		
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 	}
 
 	Task<AudioClip> LoadMusic()
 	{
-		string music = m_SongsManager.GetMusic(m_SongID);
+		string path = m_SongsManager.GetMusic(m_SongID);
 		
-		return m_StorageProcessor.LoadMusicAsync(music, null);
+		return m_AudioClipProvider.DownloadAsync(path);
 	}
 
-	Task<string> LoadASF()
+	Task<Dictionary<string, object>> LoadASF()
 	{
 		string path = $"Songs/{m_SongID}.asf";
 		
-		return m_StorageProcessor.LoadJson(path, true);
+		return m_ASFProvider.DownloadAsync(path);
 	}
 }

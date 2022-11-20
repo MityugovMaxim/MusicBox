@@ -20,9 +20,21 @@ public class UIMenu : UIGroup
 	[Preserve]
 	public class Factory : PlaceholderFactory<UIMenu, UIMenu> { }
 
-	[Inject] Localization m_Localization;
+	[Inject] Localization  m_Localization;
+	[Inject] MenuProcessor m_MenuProcessor;
 
 	[SerializeField] UIBlur m_Blur;
+
+	public virtual void OnFocusGain() { }
+
+	public virtual void OnFocusLose() { }
+
+	protected override void OnShowStarted()
+	{
+		base.OnShowStarted();
+		
+		m_MenuProcessor.ProcessFocus();
+	}
 
 	protected override void OnShowFinished()
 	{
@@ -38,6 +50,13 @@ public class UIMenu : UIGroup
 		
 		NativeHandler.UnregisterParameters(OnParameters);
 		NativeHandler.UnregisterEscape(OnEscape);
+	}
+
+	protected override void OnHideFinished()
+	{
+		base.OnHideFinished();
+		
+		m_MenuProcessor.ProcessFocus();
 	}
 
 	protected virtual bool OnParameters() => false;

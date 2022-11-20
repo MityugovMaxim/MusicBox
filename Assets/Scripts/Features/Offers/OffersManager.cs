@@ -9,19 +9,28 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class OffersManager : ProfileCollection<long>
+public class OffersManager : ProfileCollection<DataSnapshot<long>>
 {
 	public OffersCollection Collection => m_OffersCollection;
-
-	readonly DataEventHandler m_CollectHandler = new DataEventHandler(DataEventType.None);
+	public OffersDescriptor Descriptor => m_OffersDescriptor;
 
 	protected override string Name => "offers";
+
+	readonly DataEventHandler m_CollectHandler = new DataEventHandler();
 
 	[Inject] OffersCollection m_OffersCollection;
 	[Inject] OffersDescriptor m_OffersDescriptor;
 	[Inject] AdsProcessor     m_AdsProcessor;
 
 	readonly Dictionary<string, int> m_Progress = new Dictionary<string, int>();
+
+	public Task Preload()
+	{
+		return Task.WhenAll(
+			m_OffersCollection.Load(),
+			m_OffersDescriptor.Load()
+		);
+	}
 
 	public void SubscribeCollect(string _OfferID, Action _Action)
 	{

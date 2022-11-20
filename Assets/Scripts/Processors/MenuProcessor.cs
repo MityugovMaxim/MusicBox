@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 using Object = UnityEngine.Object;
@@ -14,26 +15,48 @@ public class MenuProcessor : IInitializable
 	readonly Dictionary<MenuType, UIMenu>   m_MenuCache;
 	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos;
 	readonly List<MenuType>                 m_MenuOrder;
+	readonly List<MenuType>                 m_MenuFocus;
+
+	MenuType m_FocusedMenu;
 
 	[Inject]
 	public MenuProcessor(
-		Localization _Localization,
-		Canvas                _Canvas,
-		MenuInfo[]            _MenuInfos,
-		UIMenu.Factory        _MenuFactory
+		Localization   _Localization,
+		Canvas         _Canvas,
+		MenuInfo[]     _MenuInfos,
+		UIMenu.Factory _MenuFactory
 	)
 	{
 		m_Localization = _Localization;
-		m_Canvas                = _Canvas;
-		m_MenuFactory           = _MenuFactory;
-		m_MenuCache             = new Dictionary<MenuType, UIMenu>();
-		m_MenuInfos             = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
-		m_MenuOrder             = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
+		m_Canvas       = _Canvas;
+		m_MenuFactory  = _MenuFactory;
+		m_MenuCache    = new Dictionary<MenuType, UIMenu>();
+		m_MenuInfos    = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
+		m_MenuOrder    = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
+		m_MenuFocus    = _MenuInfos.Where(_MenuInfo => _MenuInfo.Focusable).Select(_MenuInfo => _MenuInfo.Type).ToList();
 	}
 
 	async void IInitializable.Initialize()
 	{
 		await Show(MenuType.SplashMenu, true);
+	}
+
+	public void ProcessFocus()
+	{
+		MenuType menuType = m_MenuFocus.FirstOrDefault(_MenuType => m_MenuCache.ContainsKey(_MenuType) && m_MenuCache[_MenuType].Shown);
+		
+		if (menuType == m_FocusedMenu)
+			return;
+		
+		UIMenu source = GetMenu<UIMenu>(m_FocusedMenu, true);
+		if (source != null)
+			source.OnFocusLose();
+		
+		UIMenu target = GetMenu<UIMenu>(menuType, true);
+		if (target != null)
+			target.OnFocusGain();
+		
+		m_FocusedMenu = menuType;
 	}
 
 	public Task ExceptionAsync(Exception _Exception)
@@ -145,7 +168,7 @@ public class MenuProcessor : IInitializable
 	{
 		if (!MenuPrebuild.TryGetMenuType<T>(out MenuType menuType))
 		{
-			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu type '{0}' not found.", typeof(T).Name);
+			Log.Error(this, "Get menu failed. Menu type '{0}' not found.", typeof(T).Name);
 			return null;
 		}
 		
@@ -162,7 +185,7 @@ public class MenuProcessor : IInitializable
 		
 		if (!m_MenuInfos.ContainsKey(_MenuType))
 		{
-			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu '{0}' not found.", _MenuType);
+			Log.Error(this, "Get menu failed. Menu '{0}' not found.", _MenuType);
 			return null;
 		}
 		
@@ -170,7 +193,7 @@ public class MenuProcessor : IInitializable
 		
 		if (menuInfo == null)
 		{
-			Debug.LogErrorFormat("[MenuProcessor] Get menu failed. Menu info for '{0}' is null.", _MenuType);
+			Log.Error(this, "Get menu failed. Menu info for '{0}' is null.", _MenuType);
 			return null;
 		}
 		

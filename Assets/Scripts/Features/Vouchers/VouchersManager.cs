@@ -7,7 +7,7 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class VouchersManager : ProfileCollection<bool>
+public class VouchersManager : ProfileCollection<DataSnapshot<bool>>
 {
 	protected override string Name => "vouchers";
 
@@ -93,7 +93,7 @@ public class VouchersManager : ProfileCollection<bool>
 		
 		return GetIDs()
 			.Where(_VoucherID => !string.IsNullOrEmpty(_VoucherID))
-			.Where(GetSnapshot)
+			.Where(GetValue)
 			.Select(m_Vouchers.GetSnapshot)
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Type == _VoucherType)
@@ -101,7 +101,14 @@ public class VouchersManager : ProfileCollection<bool>
 			.Where(_Snapshot => _Snapshot.Expiration == 0 || _Snapshot.Expiration >= timestamp)
 			.OrderByDescending(_Snapshot => Math.Abs(_Snapshot.Amount))
 			.Select(_Snapshot => _Snapshot.ID)
-			.FirstOrDefault(GetSnapshot);
+			.FirstOrDefault(GetValue);
+	}
+
+	bool GetValue(string _VoucherID)
+	{
+		DataSnapshot<bool> snapshot = GetSnapshot(_VoucherID);
+		
+		return snapshot?.Value ?? false;
 	}
 
 	void CancelTimer(string _VoucherID)

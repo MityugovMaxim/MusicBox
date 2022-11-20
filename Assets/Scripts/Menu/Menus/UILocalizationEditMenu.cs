@@ -20,9 +20,9 @@ public class UILocalizationEditMenu : UIMenu
 	[SerializeField] Button              m_RestoreButton;
 	[SerializeField] Button              m_UploadButton;
 
-	[Inject] StorageProcessor  m_StorageProcessor;
-	[Inject] LanguagesCollection m_LanguagesCollection;
-	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] LocalizationProvider m_LocalizationProvider;
+	[Inject] LanguagesCollection  m_LanguagesCollection;
+	[Inject] MenuProcessor        m_MenuProcessor;
 
 	string           m_Key;
 	LocalizationData m_Localization;
@@ -139,20 +139,7 @@ public class UILocalizationEditMenu : UIMenu
 		if (string.IsNullOrEmpty(language))
 			return null;
 		
-		string json = await m_StorageProcessor.LoadJson(
-			$"Localization/{language}.lang",
-			true,
-			Encoding.Unicode,
-			null
-		);
-		
-		Dictionary<string, string> localization = new Dictionary<string, string>();
-		
-		if (Json.Deserialize(json) is Dictionary<string, object> data)
-		{
-			foreach (string key in data.Keys)
-				localization[key] = data.GetString(key);
-		}
+		Dictionary<string, string> localization = await m_LocalizationProvider.DownloadAsync($"Localization/{language}.lang");
 		
 		return new LocalizationData(m_Localization.Language, localization);
 	}

@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
@@ -91,11 +89,6 @@ public class RolesProcessor : DataCollection<RoleSnapshot>
 	protected override string Path => "roles";
 
 	[Inject] SocialProcessor m_SocialProcessor;
-
-	protected override Task OnFetch()
-	{
-		return FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true);
-	}
 
 	public bool HasRolesPermission() => HasRolesPermission(m_SocialProcessor.UserID);
 

@@ -11,9 +11,6 @@ using Zenject;
 using Object = UnityEngine.Object;
 
 [Preserve]
-public class LinkReceivedSignal { }
-
-[Preserve]
 public class LinkProcessor
 {
 	const string SCHEME     = "audiobox";
@@ -25,12 +22,14 @@ public class LinkProcessor
 	[Inject] UrlProcessor       m_UrlProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
+
 	string m_AbsoluteLink;
 	string m_DeepLink;
 	string m_PushLink;
 	string m_DynamicLink;
 	string m_MessageLink;
 	bool   m_Processing;
+	Action m_LinkAction;
 
 	public void Load()
 	{
@@ -44,6 +43,10 @@ public class LinkProcessor
 		ProcessAdminMode();
 		ProcessDevelopmentMode();
 	}
+
+	public void Subscribe(Action _Action) => m_LinkAction += _Action;
+
+	public void Unsubscribe(Action _Action) => m_LinkAction -= _Action;
 
 	public Task<string> GenerateSongLink(string _SongID)
 	{
@@ -88,21 +91,21 @@ public class LinkProcessor
 	{
 		m_PushLink = _Args?.Message?.Link?.OriginalString;
 		
-		m_SignalBus.Fire<LinkReceivedSignal>();
+		m_LinkAction?.Invoke();
 	}
 
 	void OnDynamicLink(object _Sender, ReceivedDynamicLinkEventArgs _Args)
 	{
 		m_DynamicLink = _Args?.ReceivedDynamicLink?.Url?.OriginalString;
 		
-		m_SignalBus.Fire<LinkReceivedSignal>();
+		m_LinkAction?.Invoke();
 	}
 
 	void OnDeepLink(string _URL)
 	{
 		m_DeepLink = _URL;
 		
-		m_SignalBus.Fire<LinkReceivedSignal>();
+		m_LinkAction?.Invoke();
 	}
 
 	void OnMessageLink(string _URL)

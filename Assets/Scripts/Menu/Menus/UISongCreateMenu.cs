@@ -277,9 +277,7 @@ public class UISongCreateMenu : UIMenu
 		MetadataChange metadata = new MetadataChange();
 		metadata.ContentType = _ContentType;
 		
-		StorageUpload process = new StorageUpload(_Progress);
-		
-		await reference.PutFileAsync(_File, metadata, process);
+		await reference.PutFileAsync(_File, metadata);
 		
 		return true;
 	}

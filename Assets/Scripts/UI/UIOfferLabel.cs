@@ -12,10 +12,16 @@ public class UIOfferLabel : UIEntity
 			if (m_OfferID == value)
 				return;
 			
+			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Add, m_OfferID, ProcessLabel);
+			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Remove, m_OfferID, ProcessLabel);
+			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Change, m_OfferID, ProcessLabel);
 			m_OffersManager.Collection.Unsubscribe(DataEventType.Change, m_OfferID, ProcessLabel);
 			
 			m_OfferID = value;
 			
+			m_OffersManager.Descriptor.Subscribe(DataEventType.Add, m_OfferID, ProcessLabel);
+			m_OffersManager.Descriptor.Subscribe(DataEventType.Remove, m_OfferID, ProcessLabel);
+			m_OffersManager.Descriptor.Subscribe(DataEventType.Change, m_OfferID, ProcessLabel);
 			m_OffersManager.Collection.Subscribe(DataEventType.Change, m_OfferID, ProcessLabel);
 			
 			ProcessLabel();

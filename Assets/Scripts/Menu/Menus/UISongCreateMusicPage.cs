@@ -20,7 +20,7 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 
 	[Inject] IFileManager     m_FileManager;
 	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] AmbientProcessor m_AmbientProcessor;
+	[Inject] AmbientManager m_AmbientManager;
 
 	AudioClip m_Music;
 
@@ -98,7 +98,7 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		
 		m_StopButton.gameObject.SetActive(true);
 		
-		m_AmbientProcessor.Pause();
+		m_AmbientManager.Pause();
 		
 		try
 		{
@@ -114,7 +114,7 @@ public class UISongCreateMusicPage : UISongCreateMenuPage
 		}
 		finally
 		{
-			m_AmbientProcessor.Resume();
+			m_AmbientManager.Play();
 			
 			m_PlayButton.gameObject.SetActive(true);
 			
