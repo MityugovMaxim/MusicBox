@@ -41,7 +41,7 @@ public class UIOfferState : UIEntity
 		int source = m_OffersManager.GetSource(OfferID);
 		int target = m_OffersManager.GetTarget(OfferID);
 		
-		if (m_OffersManager.Contains(OfferID))
+		if (m_OffersManager.IsCollected(OfferID))
 			m_State.text = m_Localization.Get("OFFER_COLLECTED");
 		else if (source < target)
 			m_State.text = m_Localization.Format("OFFER_PROGRESS", source, target);

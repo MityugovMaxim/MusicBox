@@ -2,8 +2,7 @@ using UnityEngine;
 
 public class NewsInstaller : FeatureInstaller
 {
-	[SerializeField] UINewsItem m_NewsItem;
-	[SerializeField] int        m_Capacity = 1;
+	[SerializeField] UINewsElement m_NewsElement;
 
 	public override void InstallBindings()
 	{
@@ -13,6 +12,6 @@ public class NewsInstaller : FeatureInstaller
 		
 		InstallSingleton<NewsManager>();
 		
-		InstallPool<UINewsItem, UINewsItem.Pool>(m_NewsItem, m_Capacity);
+		InstallPool<UINewsElement, UINewsElement.Pool>(m_NewsElement, 3);
 	}
 }

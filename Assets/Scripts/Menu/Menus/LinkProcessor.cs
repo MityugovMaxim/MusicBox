@@ -18,7 +18,7 @@ public class LinkProcessor
 	const string URL_HOST   = "https://outofbounds.studio/audiobox?";
 
 	[Inject] SignalBus          m_SignalBus;
-	[Inject] DiscsParameter     m_DiscsParameter;
+	[Inject] ProfileDiscsParameter     m_ProfileDiscs;
 	[Inject] UrlProcessor       m_UrlProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
 
@@ -162,7 +162,7 @@ public class LinkProcessor
 		
 		m_Processing = true;
 		
-		int discs = m_DiscsParameter.Value?.Count ?? 0;
+		int discs = m_ProfileDiscs.Value?.Count ?? 0;
 		
 		(string type, string link)[] links =
 		{

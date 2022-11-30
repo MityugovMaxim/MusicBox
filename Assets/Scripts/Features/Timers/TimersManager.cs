@@ -7,11 +7,12 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class TimersManager : IInitializable, IDisposable
+public class TimersManager : IDataManager, IInitializable, IDisposable
 {
-	public TimersCollection Collection => m_TimersCollection;
+	public bool          Activated { get; private set; }
+	public ProfileTimers Profile   => m_ProfileTimers;
 
-	[Inject] TimersCollection m_TimersCollection;
+	[Inject] ProfileTimers m_ProfileTimers;
 
 	readonly Dictionary<string, CancellationTokenSource> m_TimersStart = new Dictionary<string, CancellationTokenSource>();
 	readonly Dictionary<string, CancellationTokenSource> m_TimersEnd   = new Dictionary<string, CancellationTokenSource>();
@@ -20,21 +21,35 @@ public class TimersManager : IInitializable, IDisposable
 	readonly DataEventHandler m_EndHandler    = new DataEventHandler(DataEventType.None);
 	readonly DataEventHandler m_CancelHandler = new DataEventHandler(DataEventType.None);
 
+	public async Task<bool> Activate()
+	{
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Profile.Load();
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
+	}
+
 	void IInitializable.Initialize()
 	{
-		Collection.Subscribe(DataEventType.Add, ProcessTimer);
-		Collection.Subscribe(DataEventType.Remove, ProcessTimer);
-		Collection.Subscribe(DataEventType.Change, ProcessTimer);
+		Profile.Subscribe(DataEventType.Add, ProcessTimer);
+		Profile.Subscribe(DataEventType.Remove, ProcessTimer);
+		Profile.Subscribe(DataEventType.Change, ProcessTimer);
 	}
 
 	void IDisposable.Dispose()
 	{
-		Collection.Unsubscribe(DataEventType.Add, ProcessTimer);
-		Collection.Unsubscribe(DataEventType.Remove, ProcessTimer);
-		Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
+		Profile.Unsubscribe(DataEventType.Add, ProcessTimer);
+		Profile.Unsubscribe(DataEventType.Remove, ProcessTimer);
+		Profile.Unsubscribe(DataEventType.Change, ProcessTimer);
 	}
 
-	public Task Preload() => Collection.Load();
+	public Task Preload() => Profile.Load();
 
 	public void SubscribeStart(string _TimerID, Action _Action) => m_StartHandler.AddListener(_TimerID, _Action);
 
@@ -48,7 +63,7 @@ public class TimersManager : IInitializable, IDisposable
 
 	public void UnsubscribeCancel(string _TimerID, Action _Action) => m_CancelHandler.RemoveListener(_TimerID, _Action);
 
-	public bool ContainsTimer(string _TimerID) => Collection.Contains(_TimerID);
+	public bool ContainsTimer(string _TimerID) => Profile.Contains(_TimerID);
 
 	void CompleteTimerStart(string _TimerID)
 	{
@@ -108,7 +123,7 @@ public class TimersManager : IInitializable, IDisposable
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		if (snapshot == null || snapshot.StartTimestamp < timestamp && snapshot.EndTimestamp < timestamp)
 			return;
@@ -147,49 +162,49 @@ public class TimersManager : IInitializable, IDisposable
 
 	public long GetStartTimestamp(string _TimerID)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.StartTimestamp ?? 0;
 	}
 
 	public long GetEndTimestamp(string _TimerID)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.EndTimestamp ?? 0;
 	}
 
 	public int GetInteger(string _TimerID, string _Key, int _Default = 0)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.GetInteger(_Key, _Default) ?? _Default;
 	}
 
 	public float GetFloat(string _TimerID, string _Key, float _Default = 0)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.GetFloat(_Key, _Default) ?? _Default;
 	}
 
 	public long GetLong(string _TimerID, string _Key, long _Default = 0)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.GetLong(_Key, _Default) ?? _Default;
 	}
 
 	public double GetDouble(string _TimerID, string _Key, double _Default = 0)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.GetDouble(_Key, _Default) ?? _Default;
 	}
 
 	public string GetString(string _TimerID, string _Key, string _Default = null)
 	{
-		TimerSnapshot snapshot = Collection.GetSnapshot(_TimerID);
+		TimerSnapshot snapshot = Profile.GetSnapshot(_TimerID);
 		
 		return snapshot?.GetString(_Key, _Default) ?? _Default;
 	}

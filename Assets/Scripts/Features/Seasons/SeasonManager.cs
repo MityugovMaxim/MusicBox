@@ -6,21 +6,7 @@ public class SeasonManager : ProfileCollection<DataSnapshot<long>>
 {
 	protected override string Name => "season";
 
-	[Inject] SeasonCollection m_SeasonCollection;
-
-	public List<SeasonItem> GetFreeItems(string _BattlePassID)
-	{
-		SeasonSnapshot snapshot = m_SeasonCollection.GetSnapshot(_BattlePassID);
-		
-		return snapshot?.FreeItems ?? new List<SeasonItem>();
-	}
-
-	public List<SeasonItem> GetPaidItems(string _BattlePassID)
-	{
-		SeasonSnapshot snapshot = m_SeasonCollection.GetSnapshot(_BattlePassID);
-		
-		return snapshot?.PaidItems ?? new List<SeasonItem>();
-	}
+	[Inject] SeasonsCollection m_SeasonsCollection;
 
 	public bool IsFreeItemCollected(string _BattlePassID, int _Level)
 	{
@@ -55,7 +41,7 @@ public class SeasonManager : ProfileCollection<DataSnapshot<long>>
 
 	bool IsAvailable(string _BattlePassID)
 	{
-		SeasonSnapshot snapshot = m_SeasonCollection.GetSnapshot(_BattlePassID);
+		SeasonSnapshot snapshot = m_SeasonsCollection.GetSnapshot(_BattlePassID);
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		
@@ -64,7 +50,7 @@ public class SeasonManager : ProfileCollection<DataSnapshot<long>>
 
 	bool IsUnavailable(string _BattlePassID)
 	{
-		SeasonSnapshot snapshot = m_SeasonCollection.GetSnapshot(_BattlePassID);
+		SeasonSnapshot snapshot = m_SeasonsCollection.GetSnapshot(_BattlePassID);
 		
 		long timestamp = TimeUtility.GetTimestamp();
 		

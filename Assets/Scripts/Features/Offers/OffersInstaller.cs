@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class OffersInstaller : FeatureInstaller
 {
-	[SerializeField] UIOfferItem m_OfferItem;
+	[SerializeField] UIOfferElement m_OfferElement;
 	[SerializeField] int         m_Capacity = 1;
 
 	public override void InstallBindings()
@@ -13,6 +13,6 @@ public class OffersInstaller : FeatureInstaller
 		
 		InstallSingleton<OffersManager>();
 		
-		InstallPool<UIOfferItem, UIOfferItem.Pool>(m_OfferItem, m_Capacity);
+		InstallPool<UIOfferElement, UIOfferElement.Pool>(m_OfferElement, m_Capacity);
 	}
 }

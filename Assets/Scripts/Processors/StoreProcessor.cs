@@ -6,89 +6,98 @@ using System.Threading.Tasks;
 using AudioBox.Logging;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Rendering;
 using UnityEngine.Scripting;
-using Zenject;
 
 [Preserve]
 public class StoreProcessor : IStoreListener
 {
 	bool Loaded { get; set; }
 
-	[Inject] ProductsManager    m_ProductsManager;
-	[Inject] VouchersManager    m_VouchersManager;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	IStoreController     m_Controller;
+	IExtensionProvider   m_Extensions;
+	Action<bool>         m_LoadFinished;
+	Action<RequestState> m_PurchaseFinished;
 
-	IStoreController   m_Controller;
-	IExtensionProvider m_Extensions;
-	Action<bool>       m_LoadStoreFinished;
-	Action<bool>       m_PurchaseFinished;
-	Action             m_PurchaseCanceled;
+	Task m_Loading;
 
-	TaskCompletionSource<bool> m_CompletionSource;
+	readonly Dictionary<string, string> m_VoucherIDs = new SerializedDictionary<string, string>();
 
-	public Task Load()
+	Action m_StoreHandler;
+
+	public void Subscribe(Action _Action) => m_StoreHandler += _Action;
+
+	public void Unsubscribe(Action _Action) => m_StoreHandler -= _Action;
+
+	public Task Load(StoreProduct[] _Products)
 	{
-		if (Loaded || m_CompletionSource != null)
-			return m_CompletionSource?.Task ?? Task.CompletedTask;
+		if (Loaded)
+			return Task.CompletedTask;
 		
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		if (m_Loading != null)
+			return m_Loading;
 		
-		List<string> productIDs = m_ProductsManager.GetProductIDs();
+		if (_Products == null || _Products.Length == 0)
+			return Task.FromResult(false);
 		
-		if (productIDs.Count == 0)
-		{
-			completionSource.TrySetResult(false);
-			
-			return completionSource.Task;
-		}
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
+		
+		m_Loading = source.Task;
 		
 		ConfigurationBuilder config = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 		
-		foreach (string productID in productIDs)
+		foreach (StoreProduct product in _Products)
 		{
-			Log.Info(this, "Initialize product with ID '{0}'.", productID);
+			if (product == null)
+				continue;
+			
+			Log.Info(this, "Initialize product with ID '{0}'.", product.ProductID);
 			
 			config.AddProduct(
-				productID,
-				m_ProductsManager.GetType(productID) != ProductType.Subscription
-					? ProductType.Consumable
-					: ProductType.Subscription,
-				m_ProductsManager.GetStoreIDs(productID)
+				product.ProductID,
+				UnityEngine.Purchasing.ProductType.Consumable,
+				product.StoreIDs
 			);
 		}
 		
-		m_CompletionSource = completionSource;
-		
-		m_LoadStoreFinished = _Success =>
+		m_LoadFinished = _Success =>
 		{
 			Loaded = true;
 			
-			m_CompletionSource.TrySetResult(_Success);
+			m_Loading = null;
 			
-			m_CompletionSource = null;
+			source.TrySetResult(_Success);
 		};
 		
 		UnityPurchasing.Initialize(this, config);
 		
-		return completionSource.Task;
+		return source.Task;
+	}
+
+	public void Unload()
+	{
+		Loaded = false;
+		
+		m_Controller = null;
+		m_Extensions = null;
 	}
 
 	public Task<bool> Restore()
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
 		
 		if (m_Extensions == null)
 		{
 			Debug.LogError("[StoreProcessor] Restore purchases failed. Store not initialized.");
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
+			source.TrySetResult(false);
+			return source.Task;
 		}
 		
 		if (Application.platform != RuntimePlatform.IPhonePlayer && Application.platform != RuntimePlatform.OSXPlayer)
 		{
 			Debug.LogWarning("[StoreProcessor] Restore purchases is not supported.");
-			completionSource.TrySetResult(true);
-			return completionSource.Task;
+			source.TrySetResult(true);
+			return source.Task;
 		}
 		
 		IAppleExtensions apple = m_Extensions.GetExtension<IAppleExtensions>();
@@ -96,8 +105,8 @@ public class StoreProcessor : IStoreListener
 		if (apple == null)
 		{
 			Debug.LogError("[StoreProcessor] Restore purchases failed. Apple AppStore not found.");
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
+			source.TrySetResult(false);
+			return source.Task;
 		}
 		
 		Debug.Log("[StoreProcessor] Restoring...");
@@ -109,48 +118,50 @@ public class StoreProcessor : IStoreListener
 				{
 					Debug.Log("[StoreProcessor] Restore purchases complete.");
 					
-					completionSource.TrySetResult(true);
+					source.TrySetResult(true);
 				}
 				else
 				{
 					Debug.LogError("[StoreProcessor] Restore purchases failed.");
 					
-					completionSource.TrySetResult(false);
+					source.TrySetResult(false);
 				}
 			}
 		);
 		
-		return completionSource.Task;
+		return source.Task;
 	}
 
-	public Task<bool> Purchase(string _ProductID)
+	public Task<RequestState> Purchase(string _ProductID, string _VoucherID)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
+		if (string.IsNullOrEmpty(_ProductID))
+			return Task.FromResult(RequestState.Fail);
 		
 		Product product = GetProduct(_ProductID);
 		
 		if (product == null)
 		{
-			Debug.LogErrorFormat("[StoreProcessor] Purchase failed. Product with ID '{0}' not found.", _ProductID);
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
+			Log.Error(this, "Purchase failed. Product with ID '{0}' not found.", _ProductID);
+			return Task.FromResult(RequestState.Fail);
 		}
 		
 		if (!product.availableToPurchase)
 		{
-			Debug.LogErrorFormat("[StoreProcessor] Purchase failed. Product with ID '{0}' not available to purchase.", _ProductID);
-			completionSource.TrySetResult(false);
-			return completionSource.Task;
+			Log.Error(this, "Purchase failed. Product with ID '{0}' not available.", _ProductID);
+			return Task.FromResult(RequestState.Fail);
 		}
 		
-		Debug.Log("[StoreProcessor] Purchasing...");
+		TaskCompletionSource<RequestState> source = new TaskCompletionSource<RequestState>();
 		
-		m_PurchaseFinished = _Success => completionSource.TrySetResult(_Success);
-		m_PurchaseCanceled = () => completionSource.TrySetCanceled();
+		Log.Info(this, "Purchasing product with ID '{0}'...", _ProductID);
+		
+		m_VoucherIDs[_ProductID] = _VoucherID;
+		
+		m_PurchaseFinished = _State => source.TrySetResult(_State);
 		
 		m_Controller.InitiatePurchase(product);
 		
-		return completionSource.Task;
+		return source.Task;
 	}
 
 	public string GetPrice(string _ProductID, bool _Sign = true)
@@ -159,7 +170,7 @@ public class StoreProcessor : IStoreListener
 		
 		if (product == null)
 		{
-			Debug.LogErrorFormat("[StoreProcessor] Get price failed. Product with ID '{0}' not found.", _ProductID);
+			Log.Error(this, "Get price failed. Product with ID '{0}' not found.", _ProductID);
 			return "-";
 		}
 		
@@ -216,20 +227,20 @@ public class StoreProcessor : IStoreListener
 	{
 		if (string.IsNullOrEmpty(_ProductID))
 		{
-			Debug.LogError("[StoreProcessor] Get product failed. Product ID is null or empty.");
+			Log.Error(this, "Get product failed. Product ID is null or empty.");
 			return null;
 		}
 		
 		if (m_Controller == null)
 		{
-			Debug.LogError("[StoreProcessor] Get product failed. Store is not loaded.");
+			Log.Error(this, "Get product failed. Store is not loaded.");
 			return null;
 		}
 		
 		Product product = m_Controller.products.WithID(_ProductID);
 		
 		if (product == null)
-			Debug.LogErrorFormat("[StoreProcessor] Get product failed. Product with ID '{0}' is null.", _ProductID);
+			Log.Error(this, "Get product failed. Product with ID '{0}' is null.", _ProductID);
 		
 		return product;
 	}
@@ -242,10 +253,14 @@ public class StoreProcessor : IStoreListener
 		const string store = "GooglePlay";
 		#endif
 		
-		string voucherID = m_VouchersManager.GetProductVoucherID(_Product.definition.id);
+		string productID = _Product.definition.id;
+		
+		string voucherID = m_VoucherIDs.ContainsKey(productID)
+			? m_VoucherIDs[productID]
+			: null;
 		
 		ProductPurchaseRequest request = new ProductPurchaseRequest(
-			_Product.definition.id,
+			productID,
 			voucherID,
 			_Product.receipt,
 			store
@@ -257,12 +272,6 @@ public class StoreProcessor : IStoreListener
 		{
 			m_Controller.ConfirmPendingPurchase(_Product);
 			
-			m_StatisticProcessor.LogPurchase(
-				_Product.definition.storeSpecificId,
-				_Product.metadata.isoCurrencyCode,
-				_Product.metadata.localizedPrice
-			);
-			
 			InvokePurchaseFinished(true);
 		}
 		else
@@ -273,28 +282,30 @@ public class StoreProcessor : IStoreListener
 
 	void InvokeLoadStoreFinished(bool _Success)
 	{
-		Action<bool> action = m_LoadStoreFinished;
-		m_LoadStoreFinished = null;
+		Action<bool> action = m_LoadFinished;
+		m_LoadFinished = null;
 		action?.Invoke(_Success);
+		
+		m_StoreHandler?.Invoke();
 	}
 
 	void InvokePurchaseFinished(bool _Success)
 	{
-		Action<bool> action = m_PurchaseFinished;
+		Action<RequestState> action = m_PurchaseFinished;
 		m_PurchaseFinished = null;
-		action?.Invoke(_Success);
+		action?.Invoke(_Success ? RequestState.Success : RequestState.Fail);
 	}
 
 	void InvokePurchaseCanceled()
 	{
-		Action action = m_PurchaseCanceled;
-		m_PurchaseCanceled = null;
-		action?.Invoke();
+		Action<RequestState> action = m_PurchaseFinished;
+		m_PurchaseFinished = null;
+		action?.Invoke(RequestState.Cancel);
 	}
 
 	void IStoreListener.OnInitialized(IStoreController _Controller, IExtensionProvider _Extensions)
 	{
-		Debug.Log("[StoreProcessor] Initialize store complete.");
+		Log.Info(this, "Initialize store complete.");
 		
 		m_Controller = _Controller;
 		m_Extensions = _Extensions;
@@ -304,7 +315,7 @@ public class StoreProcessor : IStoreListener
 
 	void IStoreListener.OnInitializeFailed(InitializationFailureReason _Reason)
 	{
-		Debug.LogErrorFormat("[StoreProcessor] Initialize store failed. Reason: {0}.", _Reason);
+		Log.Error(this, "Initialize store failed. Reason: {0}.", _Reason);
 		
 		m_Controller = null;
 		m_Extensions = null;
@@ -323,7 +334,7 @@ public class StoreProcessor : IStoreListener
 	{
 		string productID = _Product.definition.id;
 		
-		Debug.LogErrorFormat("[StoreProcessor] Purchase failed. Product ID: '{0}'. Reason: {1}.", productID, _Reason);
+		Log.Error(this, "Purchase failed. Product ID: '{0}'. Reason: {1}.", productID, _Reason);
 		
 		if (_Reason== PurchaseFailureReason.UserCancelled)
 			InvokePurchaseCanceled();

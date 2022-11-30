@@ -59,15 +59,14 @@ public class UISongMenu : UISlideMenu
 		m_Discs.SongID      = m_SongID;
 		m_Label.SongID      = m_SongID;
 		m_Download.SongID   = m_SongID;
-		
-		m_Play.Setup(m_SongID);
+		m_Play.SongID       = m_SongID;
 		
 		m_QR.Hide(true);
 	}
 
 	string GetSongID(int _Offset)
 	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
+		List<string> songIDs = m_SongsManager.GetAvailableSongIDs();
 		
 		int index = songIDs.IndexOf(m_SongID);
 		

@@ -11,7 +11,7 @@ public class LanguagesManager : IDataCollection
 {
 	const string LANGUAGE_KEY = "LANGUAGE";
 
-	public DataCollectionPriority Priority => DataCollectionPriority.High;
+	public DataPriority Priority => DataPriority.High;
 
 	public bool Loaded => Collection.Loaded && Localization.Loaded;
 

@@ -1,42 +1,29 @@
 using UnityEngine;
-using Zenject;
 
-public class UISongPrice : UIEntity
+public class UISongPrice : UISongEntity
 {
-	public string SongID
-	{
-		get => m_SongID;
-		set
-		{
-			if (m_SongID == value)
-				return;
-			
-			m_SongsManager.Unsubscribe(DataEventType.Add, m_SongID, ProcessPrice);
-			m_SongsManager.Unsubscribe(DataEventType.Remove, m_SongID, ProcessPrice);
-			m_SongsManager.Collection.Unsubscribe(DataEventType.Change, m_SongID, ProcessPrice);
-			
-			m_SongID = value;
-			
-			m_SongsManager.Subscribe(DataEventType.Add, m_SongID, ProcessPrice);
-			m_SongsManager.Subscribe(DataEventType.Remove, m_SongID, ProcessPrice);
-			m_SongsManager.Collection.Subscribe(DataEventType.Change, m_SongID, ProcessPrice);
-			
-			ProcessPrice();
-		}
-	}
-
 	[SerializeField] UIUnitLabel m_Coins;
 
-	[Inject] SongsManager m_SongsManager;
-
-	string m_SongID;
-
-	void ProcessPrice()
+	protected override void Subscribe()
 	{
-		long coins = m_SongsManager.GetPrice(SongID);
+		SongsManager.Profile.Subscribe(DataEventType.Add, SongID, ProcessData);
+		SongsManager.Profile.Subscribe(DataEventType.Remove, SongID, ProcessData);
+		SongsManager.Collection.Subscribe(DataEventType.Change, SongID, ProcessData);
+	}
+
+	protected override void Unsubscribe()
+	{
+		SongsManager.Profile.Unsubscribe(DataEventType.Add, SongID, ProcessData);
+		SongsManager.Profile.Unsubscribe(DataEventType.Remove, SongID, ProcessData);
+		SongsManager.Collection.Unsubscribe(DataEventType.Change, SongID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		long coins = SongsManager.GetPrice(SongID);
 		
 		m_Coins.Value = coins;
 		
-		gameObject.SetActive(coins > 0 && !m_SongsManager.Contains(SongID));
+		gameObject.SetActive(SongsManager.IsUnavailable(SongID) && coins > 0);
 	}
 }

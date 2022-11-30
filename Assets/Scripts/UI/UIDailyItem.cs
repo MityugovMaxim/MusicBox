@@ -1,33 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using Zenject;
 
-public class UIDailyItem : UIEntity
+public class UIDailyItem : UIDailyEntity
 {
-	public string DailyID
-	{
-		get => m_DailyID;
-		set
-		{
-			if (m_DailyID == value)
-				return;
-			
-			m_DailyManager.UnsubscribeCollect(m_DailyID, CollectDaily);
-			m_DailyManager.UnsubscribeRestore(m_DailyID, RestoreDaily);
-			m_DailyManager.Collection.Unsubscribe(DataEventType.Change, m_DailyID, ProcessDaily);
-			
-			m_DailyID = value;
-			
-			ProcessDaily();
-			
-			m_DailyManager.SubscribeCollect(m_DailyID, CollectDaily);
-			m_DailyManager.SubscribeRestore(m_DailyID, RestoreDaily);
-			m_DailyManager.Collection.Subscribe(DataEventType.Change, m_DailyID, ProcessDaily);
-		}
-	}
-
 	float Phase
 	{
 		get => m_Phase;
@@ -44,10 +20,11 @@ public class UIDailyItem : UIEntity
 
 	[SerializeField, Range(0, 1)] float m_Phase;
 
-	[SerializeField] GameObject  m_Ads;
-	[SerializeField] UIUnitLabel m_Coins;
-	[SerializeField] UIFlare     m_Flare;
-	[SerializeField] float       m_Duration;
+	[SerializeField] UIDailyCoins m_Coins;
+	[SerializeField] UIDailyAds   m_Ads;
+
+	[SerializeField] UIFlare m_Flare;
+	[SerializeField] float   m_Duration;
 
 	[SerializeField] float m_SourceWidth;
 	[SerializeField] float m_TargetWidth;
@@ -57,22 +34,10 @@ public class UIDailyItem : UIEntity
 	[SerializeField]        Haptic.Type m_Haptic;
 	[SerializeField, Sound] string      m_Sound;
 
-	[Inject] DailyManager    m_DailyManager;
 	[Inject] HapticProcessor m_HapticProcessor;
 	[Inject] SoundProcessor  m_SoundProcessor;
 
-	CancellationTokenSource m_TokenSource;
-
-	string m_DailyID;
-
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		DailyID = null;
-		
-		m_TokenSource?.Cancel();
-	}
+	IEnumerator m_ToggleRoutine;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -86,80 +51,93 @@ public class UIDailyItem : UIEntity
 	}
 	#endif
 
-	async void CollectDaily()
+	public override void Subscribe()
 	{
-		m_TokenSource?.Cancel();
+		DailyManager.SubscribeCollect(DailyID, CollectDaily);
+		DailyManager.SubscribeRestore(DailyID, RestoreDaily);
+	}
+
+	public override void Unsubscribe()
+	{
+		DailyManager.UnsubscribeCollect(DailyID, CollectDaily);
+		DailyManager.UnsubscribeRestore(DailyID, RestoreDaily);
+	}
+
+	public override void ProcessData()
+	{
+		m_Coins.DailyID = DailyID;
+		m_Ads.DailyID   = DailyID;
 		
-		m_TokenSource = new CancellationTokenSource();
+		Phase = DailyManager.IsDailyAvailable(DailyID) ? 1 : 0;
 		
+		ProcessPhase();
+	}
+
+	void CollectDaily()
+	{
 		m_Flare.Play();
 		
 		m_HapticProcessor.Process(m_Haptic);
 		m_SoundProcessor.Play(m_Sound);
 		
-		try
-		{
-			await UnityTask.Phase(
-				_Phase => Phase = 1 - _Phase,
-				m_CollectDelay,
-				m_Duration,
-				EaseFunction.EaseOutCubic,
-				m_TokenSource.Token
-			);
-		}
-		catch (TaskCanceledException) { }
-		catch (OperationCanceledException) { }
-		finally
-		{
-			m_TokenSource.Dispose();
-			m_TokenSource = null;
-		}
+		Toggle(false);
 	}
 
-	async void RestoreDaily()
+	void RestoreDaily()
 	{
-		m_TokenSource?.Cancel();
-		
-		m_TokenSource = new CancellationTokenSource();
-		
-		bool available = m_DailyManager.IsDailyAvailable(DailyID);
-		
-		float source = Phase;
-		float target = available ? 1 : 0;
-		
-		try
-		{
-			await UnityTask.Phase(
-				_Phase => Phase = Mathf.Lerp(source, target, _Phase),
-				m_RestoreDelay,
-				m_Duration,
-				EaseFunction.EaseOutCubic,
-				m_TokenSource.Token
-			);
-		}
-		catch (TaskCanceledException) { }
-		catch (OperationCanceledException) { }
-		finally
-		{
-			m_TokenSource.Dispose();
-			m_TokenSource = null;
-		}
-	}
-
-	void ProcessDaily()
-	{
-		bool available = m_DailyManager.IsDailyAvailable(DailyID);
-		
-		Phase         = available ? 1 : 0;
-		
-		m_Coins.Value = m_DailyManager.GetCoins(DailyID);
-		m_Ads.SetActive(m_DailyManager.IsAds(m_DailyID));
+		Toggle(true);
 	}
 
 	void ProcessPhase()
 	{
 		Vector2 size = RectTransform.sizeDelta;
-		size.x = Mathf.Lerp(m_SourceWidth, m_TargetWidth, Phase);
+		size.x                  = Mathf.Lerp(m_SourceWidth, m_TargetWidth, Phase);
 		RectTransform.sizeDelta = size;
+	}
+
+	void Toggle(bool _Value, bool _Instant = false)
+	{
+		if (m_ToggleRoutine != null)
+		{
+			StopCoroutine(m_ToggleRoutine);
+			m_ToggleRoutine = null;
+		}
+		
+		float phase = _Value ? 1 : 0;
+		float delay = _Value ? m_RestoreDelay : m_CollectDelay;
+		
+		if (gameObject.activeInHierarchy && !_Instant)
+		{
+			m_ToggleRoutine = ToggleRoutine(phase, delay);
+			StartCoroutine(m_ToggleRoutine);
+		}
+		else
+		{
+			Phase = phase;
+		}
+	}
+
+	IEnumerator ToggleRoutine(float _Phase, float _Delay)
+	{
+		float source = Phase;
+		float target = Mathf.Clamp01(_Phase);
+		
+		if (_Delay > float.Epsilon)
+			yield return new WaitForSeconds(_Delay);
+		
+		if (!Mathf.Approximately(source, target))
+		{
+			float time = 0;
+			while (time < m_Duration)
+			{
+				yield return null;
+				
+				time += Time.deltaTime;
+				
+				Phase = Mathf.Lerp(source, target, EaseFunction.EaseOutCubic.Get(time / m_Duration));
+			}
+		}
+		
+		Phase = target;
 	}
 }

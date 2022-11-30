@@ -132,16 +132,11 @@ public class GameInstaller : MonoInstaller
 		
 		InstallProcessor<MenuProcessor>();
 		
-		InstallProcessor<DiscsParameter>();
-		InstallProcessor<LevelParameter>();
-		InstallProcessor<CoinsParameter>();
-		
 		InstallProcessor<VouchersManager>();
 		
 		InstallProcessor<VouchersCollection>();
 		InstallProcessor<ProductsCollection>();
 		InstallProcessor<SongsCollection>();
-		InstallProcessor<ScoresCollection>();
 		
 		InstallProcessor<SocialProcessor>();
 		InstallProcessor<ConfigProcessor>();

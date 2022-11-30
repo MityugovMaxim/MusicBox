@@ -19,11 +19,7 @@ public class DailyManager
 
 	public Task Preload() => m_DailyCollection.Load();
 
-	public void SubscribeCollect(Action _Action) => m_CollectHandler.AddListener(_Action);
-
 	public void SubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.AddListener(_DailyID, _Action);
-
-	public void UnsubscribeCollect(Action _Action) => m_CollectHandler.RemoveListener(_Action);
 
 	public void UnsubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.RemoveListener(_DailyID, _Action);
 

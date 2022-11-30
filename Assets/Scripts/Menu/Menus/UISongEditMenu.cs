@@ -390,8 +390,6 @@ public class UISongEditMenu : UIMenu
 	{
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		await m_SongsManager.Load();
-		
 		AudioClip music;
 		try
 		{

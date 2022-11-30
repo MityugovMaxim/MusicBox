@@ -10,7 +10,7 @@ public class UIReviveMenu : UIMenu
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] CoinsParameter   m_CoinsParameter;
+	[Inject] ProfileCoinsParameter   m_ProfileCoins;
 	[Inject] AdsProcessor     m_AdsProcessor;
 	[Inject] SongController   m_SongController;
 	[Inject] RevivesProcessor m_RevivesProcessor;
@@ -30,7 +30,7 @@ public class UIReviveMenu : UIMenu
 	{
 		long coins = m_RevivesProcessor.GetCoins(m_Count);
 		
-		if (!await m_CoinsParameter.Remove(coins))
+		if (!await m_ProfileCoins.Remove(coins))
 			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);

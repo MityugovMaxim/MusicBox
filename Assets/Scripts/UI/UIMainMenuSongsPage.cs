@@ -15,8 +15,8 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	[SerializeField] UILayout m_Content;
 
-	[Inject] AudioManager    m_AudioManager;
-	[Inject] SongsManager    m_SongsManager;
+	[Inject] AudioManager        m_AudioManager;
+	[Inject] SongsManager        m_SongsManager;
 	[Inject] ProductsManager m_ProductsManager;
 
 	[Inject] RolesProcessor  m_RolesProcessor;
@@ -28,7 +28,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] UISocialElement.Pool     m_SocialPool;
 	[Inject] UISongHeader.Pool        m_HeaderPool;
 	[Inject] UIProductItem.Pool       m_ProductPool;
-	[Inject] UIProductPromo.Pool      m_PromoPool;
 	[Inject] UISongItem.Pool          m_ItemPool;
 	[Inject] UISongElement.Pool       m_ElementPool;
 	[Inject] UILatencyElement.Factory m_LatencyFactory;
@@ -70,7 +69,9 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateLibrary();
 		
-		CreateLevelLocked();
+		CreatePaidSongs();
+		
+		CreateChestSongs();
 		
 		m_Content.Reposition();
 	}
@@ -244,7 +245,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 
 	void CreateLibrary()
 	{
-		List<string> songIDs = m_SongsManager.GetLibrarySongIDs();
+		List<string> songIDs = m_SongsManager.GetAvailableSongIDs();
 		
 		if (songIDs == null || songIDs.Count == 0)
 			return;
@@ -259,10 +260,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		position += CreateGrid(songIDs, position, group);
 		
-		position += CreateList(songIDs, position, 2);
-		
-		CreatePromo();
-		
 		position += CreateList(songIDs, position, 4);
 		
 		CreateCoins();
@@ -270,28 +267,32 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		CreateList(songIDs, position);
 	}
 
-	void CreateLevelLocked()
+	void CreatePaidSongs()
 	{
-		Dictionary<int, List<string>> groups = m_SongsManager.GetLockedSongIDs();
+		List<string> songIDs = m_SongsManager.GetPaidSongIDs();
 		
-		if (groups == null || groups.Count == 0)
+		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
-		foreach (var group in groups)
-		{
-			if (group.Value == null || group.Value.Count == 0)
-				continue;
-			
-			string title = GetLocalization("SONG_GROUP_LEVEL", $"<sprite name=level_{group.Key}>");
-			
-			CreateHeader(title, ColorMode.Red);
-			
-			int position = 0;
-			
-			position += CreateGrid(group.Value, position, 2);
-			
-			CreateList(group.Value, position);
-		}
+		string title = GetLocalization("SONGS_GROUP_PAID");
+		
+		CreateHeader(title, ColorMode.Blue);
+		
+		CreateList(songIDs);
+	}
+
+	void CreateChestSongs()
+	{
+		List<string> songIDs = m_SongsManager.GetChestSongIDs();
+		
+		if (songIDs == null || songIDs.Count == 0)
+			return;
+		
+		string title = GetLocalization("SONGS_GROUP_CHEST");
+		
+		CreateHeader(title, ColorMode.Grey);
+		
+		CreateList(songIDs);
 	}
 
 	void CreateSocial()
@@ -391,22 +392,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 			m_Content.Space(LIST_SPACING);
 		
 		return count;
-	}
-
-	void CreatePromo()
-	{
-		string promoID = m_ProductsManager.GetPromoProductIDs().FirstOrDefault();
-		
-		if (string.IsNullOrEmpty(promoID))
-			return;
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		m_Content.Add(new ProductPromoEntity(promoID, m_PromoPool));
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateCoins()

@@ -7,6 +7,20 @@ using UnityEngine;
 [ExecuteAlways]
 public class UIAnalogTimer : UIEntity
 {
+	public long Timestamp
+	{
+		get => m_Timestamp;
+		set
+		{
+			if (m_Timestamp == value)
+				return;
+			
+			m_Timestamp = value;
+			
+			ProcessTimer(true);
+		}
+	}
+
 	[SerializeField] RectTransform m_Content;
 	[SerializeField] UIAnalogDigit m_Hour1;
 	[SerializeField] UIAnalogDigit m_Hour2;
@@ -66,9 +80,7 @@ public class UIAnalogTimer : UIEntity
 
 	public void Setup(long _Timestamp)
 	{
-		m_Timestamp = _Timestamp;
-		
-		ProcessTimer(true);
+		Timestamp = _Timestamp;
 		
 		if (gameObject.activeInHierarchy)
 			TickTimer();

@@ -68,7 +68,7 @@ Shader "UI/Glow"
 			{
 				float4 vertex : SV_POSITION;
 				fixed4 color  : COLOR;
-				float2 uv     : TEXCOORD0;
+				float2 grid     : TEXCOORD0;
 				half4  mask   : TEXCOORD1;
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
@@ -83,7 +83,7 @@ Shader "UI/Glow"
 				fragData OUT;
 				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
-				OUT.uv = IN.uv;
+				OUT.grid = IN.uv;
 				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				return OUT;
@@ -91,7 +91,7 @@ Shader "UI/Glow"
 
 			fixed4 frag(const fragData IN) : SV_Target
 			{
-				half4 color = IN.color * (tex2D(_MainTex, IN.uv) + _TextureSampleAdd);
+				half4 color = IN.color * (tex2D(_MainTex, IN.grid) + _TextureSampleAdd);
 				
 				color.rgb *= color.rgb;
 				color.rgb *= _Power;

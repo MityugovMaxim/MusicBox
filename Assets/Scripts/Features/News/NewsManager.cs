@@ -2,24 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class NewsManager
+public class NewsManager : IDataManager
 {
+	public bool           Activated  { get; private set; }
 	public NewsCollection Collection => m_NewsCollection;
 	public NewsDescriptor Descriptor => m_NewsDescriptor;
 
 	[Inject] NewsCollection m_NewsCollection;
 	[Inject] NewsDescriptor m_NewsDescriptor;
 
-	public Task Preload()
+	public async Task<bool> Activate()
 	{
-		return Task.WhenAll(
-			m_NewsCollection.Load(),
-			m_NewsDescriptor.Load()
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Task.WhenAll(
+			Collection.Load(),
+			Descriptor.Load()
 		);
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
 	}
 
 	public List<string> GetNewsIDs()

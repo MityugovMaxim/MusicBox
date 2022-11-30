@@ -1,18 +1,18 @@
-using System.Collections.Generic;
 using Firebase.Database;
 
-public class SeasonItem
+public class SeasonItem : Snapshot
 {
-	public int          Level      { get; }
-	public long         Coins      { get; }
-	public List<string> SongIDs    { get; }
-	public List<string> VoucherIDs { get; }
+	public long   Coins     { get; }
+	public string SongID    { get; }
+	public string VoucherID { get; }
+	public string ChestID   { get; }
+	public string FrameID   { get; }
 
-	public SeasonItem(DataSnapshot _Data)
+	public SeasonItem(DataSnapshot _Data) : base(_Data)
 	{
-		Level      = _Data.GetInt("level");
-		Coins      = _Data.GetLong("coins");
-		SongIDs    = _Data.GetChildKeys("song_ids");
-		VoucherIDs = _Data.GetChildKeys("voucher_ids");
+		Coins     = _Data.GetLong("coins");
+		SongID    = _Data.GetString("song_id");
+		VoucherID = _Data.GetString("voucher_id");
+		ChestID   = _Data.GetString("chest_id");
 	}
 }

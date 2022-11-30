@@ -8,7 +8,7 @@ public class UIProfileCoins : UIEntity
 	[SerializeField] UIUnitLabel m_Coins;
 	[SerializeField] float       m_Duration = 0.4f;
 
-	[Inject] CoinsParameter m_CoinsParameter;
+	[Inject] ProfileCoinsParameter m_ProfileCoins;
 
 	IEnumerator m_CoinsRoutine;
 
@@ -16,16 +16,16 @@ public class UIProfileCoins : UIEntity
 	{
 		base.OnEnable();
 		
-		SetCoins(m_CoinsParameter.Value, true);
+		SetCoins(m_ProfileCoins.Value, true);
 		
-		m_CoinsParameter.Subscribe(ProcessCoins);
+		m_ProfileCoins.Subscribe(ProcessCoins);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_CoinsParameter.Unsubscribe(ProcessCoins);
+		m_ProfileCoins.Unsubscribe(ProcessCoins);
 	}
 
 	void ProcessCoins(long _Coins) => SetCoins(_Coins);

@@ -1,44 +1,24 @@
 using TMPro;
 using UnityEngine;
-using Zenject;
 
-public class UISongLabel : UIEntity
+public class UISongLabel : UISongEntity
 {
-	public string SongID
-	{
-		get => m_SongID;
-		set
-		{
-			if (m_SongID == value)
-				return;
-			
-			m_SongsManager.Collection.Unsubscribe(DataEventType.Change, m_SongID, ProcessLabel);
-			
-			m_SongID = value;
-			
-			m_SongsManager.Collection.Subscribe(DataEventType.Change, m_SongID, ProcessLabel);
-			
-			ProcessLabel();
-		}
-	}
-
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Artist;
 
-	[Inject] SongsManager m_SongsManager;
-
-	string m_SongID;
-
-	protected override void OnDisable()
+	protected override void Subscribe()
 	{
-		base.OnDisable();
-		
-		SongID = null;
+		SongsManager.Collection.Subscribe(DataEventType.Change, SongID, ProcessData);
 	}
 
-	void ProcessLabel()
+	protected override void Unsubscribe()
 	{
-		m_Title.text  = m_SongsManager.GetTitle(SongID);
-		m_Artist.text = m_SongsManager.GetArtist(SongID);
+		SongsManager.Collection.Unsubscribe(DataEventType.Change, SongID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		m_Title.text  = SongsManager.GetTitle(SongID);
+		m_Artist.text = SongsManager.GetArtist(SongID);
 	}
 }

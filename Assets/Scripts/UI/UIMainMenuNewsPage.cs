@@ -16,23 +16,20 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	[Inject] NewsManager         m_NewsManager;
 	[Inject] OffersManager       m_OffersManager;
 	[Inject] UIAdminElement.Pool m_AdminPool;
-	[Inject] UINewsItem.Pool     m_NewsPool;
-	[Inject] UIOfferItem.Pool    m_OffersPool;
+	[Inject] UINewsElement.Pool     m_NewsPool;
+	[Inject] UIOfferElement.Pool    m_OffersPool;
 
 	protected override async void OnShowStarted()
 	{
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
-		int frame = Time.frameCount;
+		bool instant = true;
+		instant &= await m_NewsManager.Activate();
+		instant &= await m_OffersManager.Activate();
 		
-		await m_NewsManager.Preload();
-		await m_OffersManager.Preload();
-		
-		if (!Shown)
+		if (!IsActive)
 			return;
-		
-		bool instant = frame == Time.frameCount;
 		
 		m_ContentGroup.Show(instant);
 		m_LoaderGroup.Hide(instant);
@@ -148,7 +145,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string offerID in offerIDs)
-			m_Content.Add(new OfferItemEntity(offerID, m_OffersPool));
+			m_Content.Add(new OfferElementEntity(offerID, m_OffersPool));
 		
 		m_Content.Space(LIST_SPACING);
 	}
@@ -163,7 +160,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string offerID in offerIDs)
-			m_Content.Add(new OfferItemEntity(offerID, m_OffersPool));
+			m_Content.Add(new OfferElementEntity(offerID, m_OffersPool));
 		
 		m_Content.Space(LIST_SPACING);
 	}
@@ -178,7 +175,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string newsID in newsIDs)
-			m_Content.Add(new NewsItemEntity(newsID, m_NewsPool));
+			m_Content.Add(new NewsElementEntity(newsID, m_NewsPool));
 		
 		VerticalStackLayout.End(m_Content);
 		

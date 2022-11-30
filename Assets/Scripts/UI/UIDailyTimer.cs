@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -7,20 +8,29 @@ public class UIDailyTimer : UIEntity
 
 	[Inject] DailyManager m_DailyManager;
 
+	readonly List<string> m_DailyIDs = new List<string>();
+
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
 		ProcessTimer();
 		
-		m_DailyManager.SubscribeCollect(ProcessTimer);
+		m_DailyIDs.Clear();
+		m_DailyIDs.AddRange(m_DailyManager.GetDailyIDs());
+		
+		foreach (string dailyID in m_DailyIDs)
+			m_DailyManager.SubscribeCollect(dailyID, ProcessTimer);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_DailyManager.UnsubscribeCollect(ProcessTimer);
+		foreach (string dailyID in m_DailyIDs)
+			m_DailyManager.UnsubscribeCollect(dailyID, ProcessTimer);
+		
+		m_DailyIDs.Clear();
 	}
 
 	void ProcessTimer()

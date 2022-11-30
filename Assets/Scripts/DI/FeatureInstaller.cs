@@ -16,7 +16,7 @@ public class FeatureInstaller : MonoInstaller
 			.AsSingle();
 	}
 
-	protected void InstallPool<TItem, TPool>(TItem _Prefab, int _Capacity = 5) where TItem : Object where TPool : IMemoryPool
+	protected void InstallPool<TItem, TPool>(TItem _Prefab, int _Capacity = 1) where TItem : Object where TPool : IMemoryPool
 	{
 		Container.BindMemoryPool<TItem, TPool>()
 			.WithInitialSize(_Capacity)

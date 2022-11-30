@@ -6,7 +6,7 @@ using UnityEngine.Scripting;
 [Preserve]
 public class DifficultyCollection : DataCollection<DifficultySnapshot>, IDataCollection
 {
-	public DataCollectionPriority Priority => DataCollectionPriority.Medium;
+	public DataPriority Priority => DataPriority.Medium;
 
 	protected override string Path => "difficulty";
 

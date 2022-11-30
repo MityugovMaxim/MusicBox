@@ -9,8 +9,6 @@ public class UIAmbientLabel : UIEntity
 
 	[Inject] AmbientManager m_AmbientManager;
 
-	string m_AmbientID;
-
 	protected override void OnEnable()
 	{
 		base.OnEnable();
@@ -31,7 +29,10 @@ public class UIAmbientLabel : UIEntity
 
 	async void ProcessLabel()
 	{
-		await m_AmbientManager.Preload();
+		await m_AmbientManager.Activate();
+		
+		if (!IsActive)
+			return;
 		
 		m_Title.text  = m_AmbientManager.GetTitle();
 		m_Artist.text = m_AmbientManager.GetArtist();

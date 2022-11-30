@@ -1,15 +1,27 @@
-using Zenject;
+using UnityEngine;
 
-public class UISongLock : UIEntity
+public class UISongLock : UISongEntity
 {
-	[Inject] SongsManager m_SongsManager;
+	[SerializeField] GameObject m_Content;
 
-	string m_SongID;
-
-	public void Setup(string _SongID)
+	protected override void Subscribe()
 	{
-		m_SongID = _SongID;
-		
-		gameObject.SetActive(m_SongsManager.IsSongLockedByLevel(m_SongID));
+		SongsManager.Profile.Subscribe(DataEventType.Add, SongID, ProcessData);
+		SongsManager.Profile.Subscribe(DataEventType.Remove, SongID, ProcessData);
+		SongsManager.Profile.Subscribe(DataEventType.Change, SongID, ProcessData);
+		SongsManager.Collection.Subscribe(DataEventType.Change, SongID, ProcessData);
+	}
+
+	protected override void Unsubscribe()
+	{
+		SongsManager.Profile.Unsubscribe(DataEventType.Add, SongID, ProcessData);
+		SongsManager.Profile.Unsubscribe(DataEventType.Remove, SongID, ProcessData);
+		SongsManager.Profile.Unsubscribe(DataEventType.Change, SongID, ProcessData);
+		SongsManager.Collection.Unsubscribe(DataEventType.Change, SongID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		m_Content.SetActive(SongsManager.IsAvailable(SongID) || SongsManager.IsPaid(SongID));
 	}
 }

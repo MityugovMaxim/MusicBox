@@ -77,7 +77,7 @@ Shader "UI/OutlineStroke"
 			{
 				float4 vertex : SV_POSITION;
 				fixed4 color  : COLOR;
-				float2 uv     : TEXCOORD0;
+				float2 grid     : TEXCOORD0;
 				half4  mask   : TEXCOORD1;
 				float2 progress : TEXCOORD2;
 				float2 size : TEXCOORD3;
@@ -106,7 +106,7 @@ Shader "UI/OutlineStroke"
 			{
 				fragData OUT;
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
-				OUT.uv = IN.uv;
+				OUT.grid = IN.uv;
 				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				OUT.progress = IN.progress;
@@ -123,7 +123,7 @@ Shader "UI/OutlineStroke"
 				const float size = IN.size.y;
 				const float position = size * IN.progress.y;
 				
-				fixed4 color = tex2D(_MainTex, IN.uv);
+				fixed4 color = tex2D(_MainTex, IN.grid);
 				color *= IN.color;
 				color *= getGradient(phase);
 				color.a *= smoothstep(0, fade, position) * smoothstep(size, size - fade, position);

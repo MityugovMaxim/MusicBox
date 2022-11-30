@@ -282,6 +282,9 @@ public class UnityTask : MonoBehaviour
 		if (_Token.IsCancellationRequested)
 			return Task.FromCanceled(_Token);
 		
+		if (_Condition != null && _Condition.Invoke())
+			return Task.CompletedTask;
+		
 		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
 		
 		IEnumerator routine = UntilRoutine(_Condition, () => completionSource.SetResult(true));

@@ -1,43 +1,41 @@
 using UnityEngine;
-using Zenject;
 
-public class UIProductDiscount : UIEntity
+public class UIProductDiscount : UIProductEntity
 {
-	public string ProductID
-	{
-		get => m_ProductID;
-		set
-		{
-			if (m_ProductID == value)
-				return;
-			
-			m_VouchersManager.Unsubscribe(DataEventType.Add, ProcessDiscount);
-			m_VouchersManager.Unsubscribe(DataEventType.Remove, ProcessDiscount);
-			m_VouchersManager.Unsubscribe(DataEventType.Change, ProcessDiscount);
-			m_ProductsManager.Collection.Unsubscribe(DataEventType.Change, m_ProductID, ProcessDiscount);
-			
-			m_ProductID = value;
-			
-			m_VouchersManager.Subscribe(DataEventType.Add, ProcessDiscount);
-			m_VouchersManager.Subscribe(DataEventType.Remove, ProcessDiscount);
-			m_VouchersManager.Subscribe(DataEventType.Change, ProcessDiscount);
-			m_ProductsManager.Collection.Subscribe(DataEventType.Change, m_ProductID, ProcessDiscount);
-			
-			ProcessDiscount();
-		}
-	}
-
 	[SerializeField] GameObject  m_Content;
 	[SerializeField] UIUnitLabel m_Discount;
 
-	[Inject] ProductsManager m_ProductsManager;
-	[Inject] VouchersManager m_VouchersManager;
-
-	string m_ProductID;
-
-	void ProcessDiscount()
+	protected override void Subscribe()
 	{
-		string voucherID = m_VouchersManager.GetProductVoucherID(ProductID);
+		ProductsManager.Profile.Subscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Profile.Subscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Profile.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.SubscribeCancel(ProcessData);
+		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.Collection.Subscribe(DataEventType.Change, ProcessData);
+	}
+
+	protected override void Unsubscribe()
+	{
+		ProductsManager.Profile.Unsubscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.UnsubscribeCancel(ProcessData);
+		ProductsManager.Vouchers.UnsubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.Collection.Unsubscribe(DataEventType.Change, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		string voucherID = ProductsManager.GetVoucherID(ProductID);
 		
 		if (string.IsNullOrEmpty(voucherID))
 		{
@@ -45,8 +43,8 @@ public class UIProductDiscount : UIEntity
 			return;
 		}
 		
-		long source = m_ProductsManager.GetCoins(ProductID);
-		long target = m_VouchersManager.GetProductDiscount(ProductID);
+		long source = ProductsManager.GetCoins(ProductID);
+		long target = ProductsManager.GetDiscount(ProductID);
 		
 		if (source == target)
 		{

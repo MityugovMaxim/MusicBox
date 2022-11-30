@@ -9,8 +9,9 @@ using Zenject;
 using Random = UnityEngine.Random;
 
 [Preserve]
-public class AmbientManager : IInitializable
+public class AmbientManager : IDataManager
 {
+	public bool              Activated     { get; private set; }
 	public AmbientCollection Collection => m_AmbientCollection;
 
 	public bool Playing { get; private set; }
@@ -28,9 +29,23 @@ public class AmbientManager : IInitializable
 
 	readonly List<string> m_Playlist = new List<string>();
 
-	Task m_Loading;
-
-	public Task Preload() => m_Loading ?? Task.CompletedTask;
+	public async Task<bool> Activate()
+	{
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Collection.Load();
+		
+		CreatePlaylist();
+		
+		Play();
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
+	}
 
 	public string GetTitle() => GetTitle(GetAmbientID());
 
@@ -58,34 +73,20 @@ public class AmbientManager : IInitializable
 
 	public void UnsubscribePause(Action _Action) => m_PauseHandler.RemoveListener(_Action);
 
-	async void IInitializable.Initialize()
-	{
-		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
-		
-		m_Loading = source.Task;
-		
-		await Collection.Load();
-		
-		ProcessPlaylist();
-		
-		Play();
-		
-		m_Loading = null;
-		
-		source.TrySetResult(true);
-	}
-
 	string GetAmbientID()
 	{
 		if (m_Playlist == null || m_Playlist.Count == 0)
+		{
+			Debug.LogError("---> PLAYLIST IS EMPTY");
 			return null;
+		}
 		
 		int index = MathUtility.Repeat(m_AmbientIndex, m_Playlist.Count);
 		
 		return m_Playlist[index];
 	}
 
-	void ProcessPlaylist()
+	void CreatePlaylist()
 	{
 		m_Playlist.Clear();
 		

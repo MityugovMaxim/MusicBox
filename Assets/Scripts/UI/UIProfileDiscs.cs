@@ -8,7 +8,7 @@ public class UIProfileDiscs : UIEntity
 	[SerializeField] UIUnitLabel m_GoldDiscs;
 	[SerializeField] UIUnitLabel m_PlatinumDiscs;
 
-	[Inject] DiscsParameter m_DiscsParameter;
+	[Inject] ProfileDiscsParameter m_ProfileDiscs;
 
 	protected override void OnEnable()
 	{
@@ -16,21 +16,21 @@ public class UIProfileDiscs : UIEntity
 		
 		ProcessDiscs();
 		
-		m_DiscsParameter.Subscribe(ProcessDiscs);
+		m_ProfileDiscs.Subscribe(ProcessDiscs);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_DiscsParameter.Unsubscribe(ProcessDiscs);
+		m_ProfileDiscs.Unsubscribe(ProcessDiscs);
 	}
 
 	void ProcessDiscs()
 	{
-		m_BronzeDiscs.Value   = m_DiscsParameter.Value?.Bronze ?? 0;
-		m_SilverDiscs.Value   = m_DiscsParameter.Value?.Silver ?? 0;
-		m_GoldDiscs.Value     = m_DiscsParameter.Value?.Gold ?? 0;
-		m_PlatinumDiscs.Value = m_DiscsParameter.Value?.Platinum ?? 0;
+		m_BronzeDiscs.Value   = m_ProfileDiscs.Value?.Bronze ?? 0;
+		m_SilverDiscs.Value   = m_ProfileDiscs.Value?.Silver ?? 0;
+		m_GoldDiscs.Value     = m_ProfileDiscs.Value?.Gold ?? 0;
+		m_PlatinumDiscs.Value = m_ProfileDiscs.Value?.Platinum ?? 0;
 	}
 }

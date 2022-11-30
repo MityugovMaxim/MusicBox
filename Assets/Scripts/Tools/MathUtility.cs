@@ -294,6 +294,11 @@ public static class MathUtility
 		return (_Value - _Low) / (_High - _Low);
 	}
 
+	public static float Remap01(long _Value, long _Low, long _High)
+	{
+		return Remap01((double)_Value, _Low, _High);
+	}
+
 	public static float Remap01(double _Value, double _Low, double _High)
 	{
 		return (float)((_Value - _Low) / (_High - _Low));
@@ -417,6 +422,14 @@ public static class MathUtility
 	public static int Lerp(int _Source, int _Target, float _Phase)
 	{
 		return _Source + (int)((_Target - _Source) * _Phase);
+	}
+
+	public static Rect Lerp(Rect _Source, Rect _Target, float _Phase)
+	{
+		return new Rect(
+			Vector2.Lerp(_Source.position, _Target.position, _Phase),
+			Vector2.Lerp(_Source.size, _Target.size, _Phase)
+		);
 	}
 
 	public static long Lerp(long _Source, long _Target, float _Phase)

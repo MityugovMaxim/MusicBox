@@ -1,41 +1,40 @@
 using UnityEngine;
-using Zenject;
 
-public class UIProductTimer : UIEntity
+public class UIProductTimer : UIProductEntity
 {
-	public string ProductID
-	{
-		get => m_ProductID;
-		set
-		{
-			if (m_ProductID == value)
-				return;
-			
-			string voucherID = m_VouchersManager.GetProductVoucherID(m_ProductID);
-			
-			m_VouchersManager.Unsubscribe(DataEventType.Add, ProcessTimer);
-			m_VouchersManager.Unsubscribe(DataEventType.Remove, ProcessTimer);
-			m_VouchersManager.Unsubscribe(DataEventType.Change, voucherID, ProcessTimer);
-			m_VouchersManager.UnsubscribeExpiration(voucherID, ProcessTimer);
-			
-			m_ProductID = value;
-			
-			m_VouchersManager.Subscribe(DataEventType.Add, ProcessTimer);
-			m_VouchersManager.Subscribe(DataEventType.Remove, ProcessTimer);
-			m_VouchersManager.Subscribe(DataEventType.Change, voucherID, ProcessTimer);
-			m_VouchersManager.SubscribeExpiration(voucherID, ProcessTimer);
-		}
-	}
-
 	[SerializeField] UIAnalogTimer m_Timer;
 
-	[Inject] VouchersManager m_VouchersManager;
-
-	string m_ProductID;
-
-	void ProcessTimer()
+	protected override void Subscribe()
 	{
-		string voucherID = m_VouchersManager.GetProductVoucherID(m_ProductID);
+		ProductsManager.Profile.Subscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Profile.Subscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Profile.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.SubscribeCancel(ProcessData);
+		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.Collection.Subscribe(DataEventType.Change, ProcessData);
+	}
+
+	protected override void Unsubscribe()
+	{
+		ProductsManager.Profile.Unsubscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.UnsubscribeCancel(ProcessData);
+		ProductsManager.Vouchers.UnsubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Add, ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
+		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.Collection.Unsubscribe(DataEventType.Change, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		string voucherID = ProductsManager.GetVoucherID(ProductID);
 		
 		if (string.IsNullOrEmpty(voucherID))
 		{
@@ -44,7 +43,7 @@ public class UIProductTimer : UIEntity
 		}
 		
 		long timestamp  = TimeUtility.GetTimestamp();
-		long expiration = m_VouchersManager.GetExpiration(voucherID);
+		long expiration = ProductsManager.Vouchers.GetExpiration(voucherID);
 		
 		if (expiration == 0 || expiration < timestamp)
 		{

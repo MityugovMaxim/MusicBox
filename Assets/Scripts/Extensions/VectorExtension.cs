@@ -2,6 +2,16 @@ using UnityEngine;
 
 public static class VectorExtension
 {
+	public static Vector4 ToVector(this RectOffset _Offset)
+	{
+		return new Vector4(
+			_Offset.left,
+			_Offset.right,
+			_Offset.top,
+			_Offset.bottom
+		);
+	}
+
 	public static Quaternion ToRotation(this Vector2 _Vector, float _Offset = 0)
 	{
 		float angle = Vector2.SignedAngle(_Vector, Vector2.left);

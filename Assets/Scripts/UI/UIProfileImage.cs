@@ -3,7 +3,7 @@ using Zenject;
 
 public class UIProfileImage : UIEntity
 {
-	[SerializeField] WebGraphic m_Image;
+	[SerializeField] WebImage m_Image;
 
 	[Inject] SocialProcessor m_SocialProcessor;
 

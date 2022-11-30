@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 [Preserve]
 public class AmbientCollection : DataCollection<AmbientSnapshot>, IDataCollection
 {
-	public DataCollectionPriority Priority => DataCollectionPriority.Low;
+	public DataPriority Priority => DataPriority.Low;
 
 	protected override string Path => "ambient";
 

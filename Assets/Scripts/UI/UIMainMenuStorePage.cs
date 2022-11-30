@@ -45,14 +45,14 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		
 		Refresh();
 		
-		m_ProductsManager.Subscribe(DataEventType.Add, Refresh);
-		m_ProductsManager.Subscribe(DataEventType.Remove, Refresh);
+		m_ProductsManager.Profile.Subscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Profile.Subscribe(DataEventType.Remove, Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
-		m_ProductsManager.Unsubscribe(DataEventType.Add, Refresh);
-		m_ProductsManager.Unsubscribe(DataEventType.Remove, Refresh);
+		m_ProductsManager.Profile.Unsubscribe(DataEventType.Add, Refresh);
+		m_ProductsManager.Profile.Unsubscribe(DataEventType.Remove, Refresh);
 	}
 
 	void Refresh()
@@ -66,13 +66,9 @@ public class UIMainMenuStorePage : UIMainMenuPage
 			CreateAdminAds();
 		}
 		
-		//CreateSpecial();
-		
-		//CreatePromo();
-		
 		CreateDaily();
 		
-		//CreateItems();
+		CreateItems();
 		
 		m_Content.Reposition();
 	}
@@ -145,43 +141,9 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		m_Content.Space(LIST_SPACING);
 	}
 
-	void CreateSpecial()
-	{
-		List<string> productIDs = m_ProductsManager.GetSpecialProductIDs();
-		
-		if (productIDs == null || productIDs.Count == 0)
-			return;
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		foreach (string productID in productIDs)
-			m_Content.Add(new ProductSpecialEntity(productID, m_SpecialPool));
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
-	}
-
-	void CreatePromo()
-	{
-		List<string> productIDs = m_ProductsManager.GetPromoProductIDs();
-		
-		if (productIDs == null || productIDs.Count == 0)
-			return;
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		foreach (string productID in productIDs)
-			m_Content.Add(new ProductPromoEntity(productID, m_PromoPool));
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
-	}
-
 	void CreateItems()
 	{
-		List<string> productIDs = m_ProductsManager.GetAvailableProductIDs();
+		List<string> productIDs = m_ProductsManager.GetProductIDs(ProductType.Coins);
 		
 		if (productIDs == null || productIDs.Count == 0)
 			return;

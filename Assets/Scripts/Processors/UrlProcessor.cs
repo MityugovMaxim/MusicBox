@@ -126,7 +126,7 @@ public class UrlProcessor
 	Task ProcessPlay(Dictionary<string, string> _Parameters, bool _Instant)
 	{
 		string songID = m_SongsManager
-			.GetLibrarySongIDs()
+			.GetAvailableSongIDs()
 			.FirstOrDefault();
 		
 		if (string.IsNullOrEmpty(songID))

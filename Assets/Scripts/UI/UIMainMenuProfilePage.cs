@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 public class UIMainMenuProfilePage : UIMainMenuPage
 {
 	const float LIST_SPACING = 15;
+	const float GRID_SPACING = 6;
 
 	public override MainMenuPageType Type => MainMenuPageType.Profile;
 
@@ -11,18 +13,19 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	[SerializeField] UIGroup  m_ContentGroup;
 	[SerializeField] UIGroup  m_LoaderGroup;
 
-	[Inject] UIAmbientElement.Pool m_AmbientPool;
+	[Inject] FramesManager m_FramesManager;
 
-	protected override void OnShowStarted()
+	[Inject] UIProfileElement.Pool      m_ProfilePool;
+	[Inject] UIProfileDiscsElement.Pool m_ProfileDiscsPool;
+	[Inject] UIAmbientElement.Pool      m_AmbientPool;
+	[Inject] UIFrameElement.Pool        m_FramesPool;
+
+	protected override async void OnShowStarted()
 	{
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
-		int frame = Time.frameCount;
-		
-		// TODO: Preload
-		
-		bool instant = frame == Time.frameCount;
+		bool instant = await m_FramesManager.Activate();
 		
 		m_ContentGroup.Show(instant);
 		m_LoaderGroup.Hide(instant);
@@ -34,18 +37,52 @@ public class UIMainMenuProfilePage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
-		CreateAmbient();
+		CreateContent();
+		
+		CreateFrames();
 		
 		m_Content.Reposition();
 	}
 
-	void CreateAmbient()
+	void CreateContent()
 	{
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(new ProfileElementEntity(m_ProfilePool));
+		
+		m_Content.Space(LIST_SPACING);
+		
+		m_Content.Add(new ProfileDiscsElementEntity(m_ProfileDiscsPool));
+		
+		m_Content.Space(LIST_SPACING);
 		
 		m_Content.Add(new AmbientElementEntity(m_AmbientPool));
 		
 		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
+	}
+
+	void CreateFrames()
+	{
+		List<string> frameIDs = m_FramesManager.GetFrameIDs();
+		
+		if (frameIDs == null || frameIDs.Count < 2)
+			return;
+		
+		int count = Mathf.Min(frameIDs.Count, 4);
+		
+		VerticalGridLayout.Start(m_Content, count, 1, GRID_SPACING, GRID_SPACING);
+		
+		foreach (string frameID in frameIDs)
+		{
+			if (string.IsNullOrEmpty(frameID))
+				continue;
+			
+			m_Content.Add(new FrameElementEntity(frameID, m_FramesPool));
+		}
+		
+		VerticalGridLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
 	}

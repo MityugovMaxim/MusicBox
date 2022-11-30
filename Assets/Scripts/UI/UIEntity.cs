@@ -25,6 +25,8 @@ public class UIEntity : UIBehaviour
 		}
 	}
 
+	public bool IsActive => gameObject.activeSelf;
+
 	protected bool IsInstanced => gameObject.scene.isLoaded;
 
 	[NonSerialized] RectTransform m_RectTransform;

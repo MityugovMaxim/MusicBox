@@ -107,7 +107,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 	string GetNextSongID()
 	{
 		string songID = m_SongsManager
-			.GetLibrarySongIDs()
+			.GetAvailableSongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 		
 		ScoreRank rank = m_ScoresManager.GetRank(songID);
@@ -116,7 +116,7 @@ public class UIResultMenuControlPage : UIResultMenuPage
 			return songID;
 		
 		return m_SongsManager
-			.GetLibrarySongIDs()
+			.GetAvailableSongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 	}
 

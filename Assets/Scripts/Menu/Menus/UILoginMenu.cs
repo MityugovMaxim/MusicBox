@@ -54,20 +54,21 @@ public class UILoginMenu : UIMenu
 		
 		Log.Info(this, "Login complete. User ID: {0}.", m_SocialProcessor.UserID);
 		
-		await LoadProcessors(DataCollectionPriority.High);
-		
-		await LoadProcessors(DataCollectionPriority.Medium);
-		
 		await LoadObjects();
+		
+		await LoadProcessors(DataPriority.High);
+		
+		await LoadProcessors(DataPriority.Medium);
+		
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 		
-		await LoadProcessors(DataCollectionPriority.Low);
+		await LoadProcessors(DataPriority.Low);
 	}
 
-	async Task LoadProcessors(DataCollectionPriority _Priority)
+	async Task LoadProcessors(DataPriority _Priority)
 	{
 		foreach (IDataCollection data in m_Collections)
 		{

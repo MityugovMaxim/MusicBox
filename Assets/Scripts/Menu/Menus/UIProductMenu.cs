@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AudioBox.Logging;
 using UnityEngine;
 using Zenject;
 
@@ -20,12 +16,11 @@ public class UIProductMenu : UISlideMenu
 
 	[SerializeField, Sound] string m_PurchaseSound;
 
-	[Inject] VouchersManager    m_VouchersManager;
-	[Inject] StoreProcessor     m_StoreProcessor;
-	[Inject] ProductsManager    m_ProductsManager;
-	[Inject] MenuProcessor      m_MenuProcessor;
-	[Inject] HapticProcessor    m_HapticProcessor;
-	[Inject] SoundProcessor     m_SoundProcessor;
+	[Inject] VouchersManager     m_VouchersManager;
+	[Inject] ProductsManager m_ProductsManager;
+	[Inject] MenuProcessor       m_MenuProcessor;
+	[Inject] HapticProcessor     m_HapticProcessor;
+	[Inject] SoundProcessor      m_SoundProcessor;
 
 	string m_ProductID;
 
@@ -37,10 +32,6 @@ public class UIProductMenu : UISlideMenu
 		m_Image.ProductID      = m_ProductID;
 		m_Label.ProductID      = m_ProductID;
 		m_Price.ProductID      = m_ProductID;
-		
-		m_Image.RectTransform.sizeDelta = m_ProductsManager.IsSpecial(m_ProductID)
-			? new Vector2(600, 300)
-			: new Vector2(350, 350);
 		
 		Refresh();
 	}
@@ -54,26 +45,13 @@ public class UIProductMenu : UISlideMenu
 			m_LoaderGroup.ShowAsync()
 		);
 		
-		bool success  = false;
-		bool canceled = false;
-		try
-		{
-			success = await m_StoreProcessor.Purchase(m_ProductID);
-		}
-		catch (TaskCanceledException)
-		{
-			canceled = true;
-		}
-		catch (Exception exception)
-		{
-			Log.Exception(this, exception);
-		}
+		RequestState state = await m_ProductsManager.Purchase(m_ProductID);
 		
 		#if UNITY_EDITOR
 		await Task.Delay(1500);
 		#endif
 		
-		if (success)
+		if (state == RequestState.Success)
 		{
 			await m_LoaderGroup.HideAsync();
 			
@@ -84,48 +62,23 @@ public class UIProductMenu : UISlideMenu
 			
 			await m_MenuProcessor.Hide(MenuType.ProductMenu);
 		}
-		else
+		else if (state == RequestState.Fail)
 		{
-			if (!canceled)
-			{
-				await m_MenuProcessor.RetryAsync(
-					"product_purchase",
-					Purchase,
-					() => { }
-				);
-			}
-			
-			await Task.WhenAll(
-				m_PurchaseGroup.ShowAsync(),
-				m_CompleteGroup.HideAsync(),
-				m_LoaderGroup.HideAsync(),
-				m_CompleteGroup.HideAsync()
+			await m_MenuProcessor.RetryAsync(
+				"product_purchase",
+				Purchase,
+				() => { }
 			);
 		}
 		
+		await Task.WhenAll(
+			m_PurchaseGroup.ShowAsync(),
+			m_CompleteGroup.HideAsync(),
+			m_LoaderGroup.HideAsync(),
+			m_CompleteGroup.HideAsync()
+		);
+		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
-	}
-
-	public void Next()
-	{
-		Setup(GetProductID(1));
-	}
-
-	public void Previous()
-	{
-		Setup(GetProductID(-1));
-	}
-
-	string GetProductID(int _Offset)
-	{
-		List<string> productIDs = m_ProductsManager.GetProductIDs();
-		int index = productIDs.IndexOf(m_ProductID);
-		if (index >= 0 && index < productIDs.Count)
-			return productIDs[MathUtility.Repeat(index + _Offset, productIDs.Count)];
-		else if (productIDs.Count > 0)
-			return productIDs.FirstOrDefault();
-		else
-			return m_ProductID;
 	}
 
 	protected override void OnShowStarted()

@@ -1,47 +1,71 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine.Purchasing;
+using AudioBox.Logging;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class ProductsManager : ProfileCollection<PurchaseSnapshot>
+public class ProductsManager : IDataManager
 {
-	public ProductsCollection Collection => m_ProductsCollection;
-	public ProductsDescriptor Descriptor => m_ProductsDescriptor;
+	public bool Activated { get; private set; }
 
-	protected override string Name => "products";
+	public ProductsCollection  Collection => m_ProductsCollection;
+	public ProductsDescriptor  Descriptor => m_ProductsDescriptor;
+	public ProfileTransactions Profile    => m_ProfileTransactions;
+	public VouchersManager     Vouchers   => m_VouchersManager;
+	public StoreProcessor      Store      => m_StoreProcessor;
 
-	bool Processing { get; set; }
+	[Inject] ProductsCollection    m_ProductsCollection;
+	[Inject] ProductsDescriptor    m_ProductsDescriptor;
+	[Inject] ProfileTransactions   m_ProfileTransactions;
+	[Inject] ProfileCoinsParameter m_CoinsParameter;
+	[Inject] StoreProcessor        m_StoreProcessor;
+	[Inject] VouchersManager       m_VouchersManager;
+	[Inject] MenuProcessor         m_MenuProcessor;
 
-	[Inject] ProductsCollection m_ProductsCollection;
-	[Inject] ProductsDescriptor m_ProductsDescriptor;
-	[Inject] StoreProcessor     m_StoreProcessor;
-	[Inject] VouchersManager    m_VouchersManager;
-	[Inject] CoinsParameter     m_CoinsParameter;
-	[Inject] MenuProcessor      m_MenuProcessor;
-
-	public async Task Purchase(string _ProductID)
+	public async Task<bool> Activate()
 	{
-		if (Processing)
-			return;
+		if (Activated)
+			return true;
 		
-		Processing = true;
+		int frame = Time.frameCount;
 		
-		#if UNITY_EDITOR
-		await Task.Delay(1500);
-		#else
+		await Task.WhenAll(
+			m_ProductsCollection.Load(),
+			m_ProductsDescriptor.Load()
+		);
+		
+		await m_StoreProcessor.Load(GetStoreProducts());
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
+	}
+
+	public async Task<RequestState> Purchase(string _ProductID)
+	{
 		try
 		{
-			await m_StoreProcessor.Purchase(_ProductID);
+			string voucherID = GetVoucherID(_ProductID);
+			
+			return await m_StoreProcessor.Purchase(_ProductID, voucherID);
 		}
-		finally
+		catch (Exception exception)
 		{
-			Processing = false;
+			Log.Exception(this, exception);
+			
+			await m_MenuProcessor.ExceptionAsync(exception);
 		}
-		#endif
+		
+		return RequestState.Fail;
 	}
+
+	public bool ContainsProduct(string _ProductID) => Profile.ContainsProduct(_ProductID);
+
+	public string GetVoucherID(string _ProductID) => m_VouchersManager.GetProductVoucherID(_ProductID);
 
 	public string GetProductID(long _Coins)
 	{
@@ -63,41 +87,26 @@ public class ProductsManager : ProfileCollection<PurchaseSnapshot>
 
 	public List<string> GetProductIDs()
 	{
-		return m_ProductsCollection.GetIDs()
+		return Collection.GetIDs()
+			.Where(IsActive)
 			.Where(IsAvailable)
 			.ToList();
 	}
 
-	public List<string> GetSpecialProductIDs()
+	public List<string> GetProductIDs(ProductType _ProductType)
 	{
-		return m_ProductsCollection.GetIDs()
+		return Collection.GetIDs()
+			.Where(IsActive)
 			.Where(IsAvailable)
-			.Where(IsSpecial)
+			.Where(_ProductID => GetType(_ProductID) == _ProductType)
 			.ToList();
 	}
 
-	public List<string> GetPromoProductIDs()
-	{
-		return m_ProductsCollection.GetIDs()
-			.Where(IsAvailable)
-			.Where(IsPromo)
-			.ToList();
-	}
+	public List<string> GetRecommendedProductIDs(int _Count) => GetRecommendedProductIDs(_Count, m_CoinsParameter.Value);
 
-	public List<string> GetAvailableProductIDs()
+	public List<string> GetRecommendedProductIDs(int _Count, long _Coins)
 	{
-		return m_ProductsCollection.GetIDs()
-			.Where(IsAvailable)
-			.Where(IsRegular)
-			.OrderBy(GetCoins)
-			.ToList();
-	}
-
-	public List<string> GetRecommendedProductIDs(int _Count)
-	{
-		List<string> productIDs = m_ProductsCollection.GetIDs()
-			.Where(IsAvailable)
-			.Where(IsRegular)
+		List<string> productIDs = GetProductIDs(ProductType.Coins)
 			.OrderBy(m_VouchersManager.GetProductDiscount)
 			.ToList();
 		
@@ -108,7 +117,7 @@ public class ProductsManager : ProfileCollection<PurchaseSnapshot>
 			
 			long coins = m_VouchersManager.GetProductDiscount(productID);
 			
-			if (coins >= m_CoinsParameter.Value)
+			if (coins >= _Coins)
 				break;
 			
 			skip++;
@@ -117,18 +126,32 @@ public class ProductsManager : ProfileCollection<PurchaseSnapshot>
 		return productIDs.Skip(skip).Take(_Count).ToList();
 	}
 
-	public IDs GetStoreIDs(string _ProductID)
+	public StoreProduct[] GetStoreProducts()
+	{
+		return Collection.GetIDs()
+			.Where(IsActive)
+			.Select(
+				_ProductID => new StoreProduct(
+					_ProductID,
+					GetAppStoreID(_ProductID),
+					GetGooglePlayID(_ProductID)
+				)
+			)
+			.ToArray();
+	}
+
+	public string GetAppStoreID(string _ProductID)
 	{
 		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
 		
-		if (snapshot == null)
-			return null;
+		return snapshot?.AppStoreID ?? string.Empty;
+	}
+
+	public string GetGooglePlayID(string _ProductID)
+	{
+		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
 		
-		return new IDs()
-		{
-			{ snapshot.AppStoreID, AppleAppStore.Name },
-			{ snapshot.GooglePlayID, GooglePlay.Name },
-		};
+		return snapshot?.GooglePlayID ?? string.Empty;
 	}
 
 	public string GetImage(string _ProductID)
@@ -142,67 +165,51 @@ public class ProductsManager : ProfileCollection<PurchaseSnapshot>
 
 	public string GetDescription(string _ProductID) => m_ProductsDescriptor.GetDescription(_ProductID);
 
-	public ProductType GetType(string _ProductID)
-	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
-		
-		return snapshot?.Type ?? ProductType.Consumable;
-	}
-
-	public long GetCoins(string _ProductID)
+	public long GetDiscount(string _ProductID)
 	{
 		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
 		
 		return snapshot?.Coins ?? 0;
 	}
 
+	public long GetCoins(string _ProductID) => m_VouchersManager.GetProductDiscount(_ProductID);
+
+	public string GetPriceSign(string _ProductID) => m_StoreProcessor.GetPrice(_ProductID);
+
+	public string GetPriceCode(string _ProductID) => m_StoreProcessor.GetPrice(_ProductID, false);
+
+	public string GetSeasonID(string _ProductID)
+	{
+		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
+		
+		return snapshot?.SeasonID ?? string.Empty;
+	}
+
 	public List<string> GetSongIDs(string _ProductID)
 	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
 		
-		return snapshot?.SongIDs != null
-			? snapshot.SongIDs.ToList()
-			: new List<string>();
+		return snapshot?.SongIDs ?? new List<string>();
 	}
 
-	public bool IsRegular(string _ProductID)
+	ProductType GetType(string _ProductID)
 	{
 		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
 		
-		return snapshot != null && !snapshot.Promo && !snapshot.Special;
+		return snapshot?.Type ?? ProductType.None;
 	}
 
-	public bool IsPromo(string _ProductID)
+	bool IsActive(string _ProductID)
 	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
 		
-		return snapshot?.Promo ?? false;
-	}
-
-	public bool IsSpecial(string _ProductID)
-	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
-		
-		return snapshot?.Special ?? false;
-	}
-
-	public bool IsBattlePass(string _ProductID)
-	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
-		
-		return snapshot?.BattlePass ?? false;
+		return snapshot?.Active ?? false;
 	}
 
 	bool IsAvailable(string _ProductID)
 	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
+		ProductType productType = GetType(_ProductID);
 		
-		if (snapshot == null || !snapshot.Active)
-			return false;
-		
-		if (snapshot.Type == ProductType.NonConsumable)
-			return !Contains(_ProductID);
-		
-		return true;
+		return productType == ProductType.Coins || !Profile.ContainsProduct(_ProductID);
 	}
 }

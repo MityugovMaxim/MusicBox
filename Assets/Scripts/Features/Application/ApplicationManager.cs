@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Scripting;
 
 [Preserve]
-public class ApplicationManager : DataObject<ApplicationObject>, IDataCollection
+public class ApplicationManager : DataObject<ApplicationObject>, IDataObject
 {
 	protected override string Path => "application";
 
@@ -25,8 +25,6 @@ public class ApplicationManager : DataObject<ApplicationObject>, IDataCollection
 	DatabaseReference m_Data;
 
 	ApplicationObject m_Object;
-
-	public DataCollectionPriority Priority { get; }
 
 	public async Task Load()
 	{
@@ -46,6 +44,8 @@ public class ApplicationManager : DataObject<ApplicationObject>, IDataCollection
 		return m_Snapshot?.GooglePlayReviewURL;
 		#endif
 	}
+
+	protected override ApplicationObject Create(DataSnapshot _Data) => new ApplicationObject(_Data);
 
 	async Task Fetch()
 	{

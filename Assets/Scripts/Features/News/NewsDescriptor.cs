@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 [Preserve]
 public class NewsDescriptor : DescriptorsCollection, IDataCollection
 {
-	public DataCollectionPriority Priority => DataCollectionPriority.Low;
+	public DataPriority Priority => DataPriority.Low;
 
 	protected override string Name => "news_descriptors";
 

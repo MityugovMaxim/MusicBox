@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 [Preserve]
 public class DailyCollection : DataCollection<DailySnapshot>, IDataCollection
 {
-	public DataCollectionPriority Priority => DataCollectionPriority.Low;
+	public DataPriority Priority => DataPriority.Low;
 
 	protected override string Path => "daily";
 

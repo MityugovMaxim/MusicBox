@@ -7,7 +7,7 @@ using UnityEngine.UI;
 [AddComponentMenu("Layout/Aspect Ratio Scaler")]
 [RequireComponent(typeof(RectTransform))]
 [DisallowMultipleComponent]
-public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
+public class AspectRatioScaler : UIEntity, ILayoutSelfController
 {
 	public enum AspectMode
 	{
@@ -16,22 +16,10 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 		Fill
 	}
 
-	RectTransform RectTransform
-	{
-		get
-		{
-			if (m_RectTransform == null)
-				m_RectTransform = GetComponent<RectTransform>();
-			return m_RectTransform;
-		}
-	}
-
 	[SerializeField] AspectMode    m_AspectMode;
 	[SerializeField] float         m_Scale = 1;
 	[SerializeField] bool          m_Limit;
 	[NonSerialized]  RectTransform m_RectTransform;
-
-	bool m_DelayedUpdateScale;
 
 	protected AspectRatioScaler() { }
 
@@ -54,23 +42,14 @@ public class AspectRatioScaler : UIBehaviour, ILayoutSelfController
 	}
 
 	#if UNITY_EDITOR
-	protected override void OnValidate()
-	{
-		base.OnValidate();
-		
-		m_DelayedUpdateScale = true;
-	}
-	#endif
-
 	void Update()
 	{
-		if (m_DelayedUpdateScale)
-		{
-			m_DelayedUpdateScale = false;
-			
-			UpdateScale();
-		}
+		if (Application.isPlaying || !IsInstanced)
+			return;
+		
+		UpdateScale();
 	}
+	#endif
 
 	protected override void OnRectTransformDimensionsChange()
 	{

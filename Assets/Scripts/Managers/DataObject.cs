@@ -18,9 +18,7 @@ public abstract class DataObject<TValue>
 			
 			m_Value = value;
 			
-			m_RegularAction?.Invoke();
-			
-			m_DynamicAction?.Invoke(m_Value);
+			m_ChangeAction?.Invoke(m_Value);
 		}
 	}
 
@@ -28,8 +26,7 @@ public abstract class DataObject<TValue>
 
 	DatabaseReference m_Data;
 
-	Action         m_RegularAction;
-	Action<TValue> m_DynamicAction;
+	readonly DynamicDelegate<TValue> m_ChangeAction = new DynamicDelegate<TValue>();
 
 	public async Task Load()
 	{
@@ -47,12 +44,11 @@ public abstract class DataObject<TValue>
 		Loaded = true;
 	}
 
-	public async Task Reload()
+	public Task Reload()
 	{
-		if (!Loaded || m_Data == null)
-			return;
+		Unload();
 		
-		await Fetch();
+		return Load();
 	}
 
 	public void Unload()
@@ -69,20 +65,15 @@ public abstract class DataObject<TValue>
 		Loaded = false;
 	}
 
-	public void Subscribe(Action _Action) => m_RegularAction += _Action;
+	public void Subscribe(Action _Action) => m_ChangeAction.AddListener(_Action);
 
-	public void Subscribe(Action<TValue> _Action) => m_DynamicAction += _Action;
+	public void Subscribe(Action<TValue> _Action) => m_ChangeAction.AddListener(_Action);
 
-	public void Unsubscribe(Action _Action) => m_RegularAction -= _Action;
+	public void Unsubscribe(Action _Action) => m_ChangeAction.RemoveListener(_Action);
 
-	public void Unsubscribe(Action<TValue> _Action) => m_DynamicAction -= _Action;
+	public void Unsubscribe(Action<TValue> _Action) => m_ChangeAction.RemoveListener(_Action);
 
-	protected bool TryParse(DataSnapshot _Data, out TValue _Value)
-	{
-		_Value = default;
-		
-		return false;
-	}
+	protected abstract TValue Create(DataSnapshot _Data);
 
 	async Task Fetch()
 	{
@@ -93,7 +84,7 @@ public abstract class DataObject<TValue>
 		if (snapshot == null)
 			return;
 		
-		Value = TryParse(snapshot, out TValue value) ? value : snapshot.GetValue<TValue>();
+		Value = Create(snapshot);
 	}
 
 	void OnDataChange(object _Sender, ValueChangedEventArgs _Args)
@@ -105,6 +96,6 @@ public abstract class DataObject<TValue>
 		if (snapshot == null)
 			return;
 		
-		Value = TryParse(snapshot, out TValue value) ? value : snapshot.GetValue<TValue>();
+		Value = Create(snapshot);
 	}
 }

@@ -5,7 +5,7 @@ public class UIProfileLevel : UIEntity
 {
 	[SerializeField] UILevel m_Level;
 
-	[Inject] LevelParameter m_LevelParameter;
+	[Inject] ProfileLevelParameter m_ProfileLevel;
 
 	protected override void OnEnable()
 	{
@@ -13,18 +13,18 @@ public class UIProfileLevel : UIEntity
 		
 		ProcessLevel();
 		
-		m_LevelParameter.Subscribe(ProcessLevel);
+		m_ProfileLevel.Subscribe(ProcessLevel);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_LevelParameter.Unsubscribe(ProcessLevel);
+		m_ProfileLevel.Unsubscribe(ProcessLevel);
 	}
 
 	void ProcessLevel()
 	{
-		m_Level.Level = m_LevelParameter.Value;
+		m_Level.Level = m_ProfileLevel.Value;
 	}
 }

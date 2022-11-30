@@ -4,32 +4,44 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using Features.Offers;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class OffersManager : ProfileCollection<DataSnapshot<long>>
+public class OffersManager : IDataManager
 {
+	public bool             Activated     { get; private set; }
 	public OffersCollection Collection => m_OffersCollection;
 	public OffersDescriptor Descriptor => m_OffersDescriptor;
-
-	protected override string Name => "offers";
+	public ProfileOffers    Profile    => m_ProfileOffers;
 
 	readonly DataEventHandler m_CollectHandler = new DataEventHandler();
 
 	[Inject] OffersCollection m_OffersCollection;
 	[Inject] OffersDescriptor m_OffersDescriptor;
+	[Inject] ProfileOffers    m_ProfileOffers;
 	[Inject] AdsProcessor     m_AdsProcessor;
 
 	readonly Dictionary<string, int> m_Progress = new Dictionary<string, int>();
 
-	public Task Preload()
+	public async Task<bool> Activate()
 	{
-		return Task.WhenAll(
-			m_OffersCollection.Load(),
-			m_OffersDescriptor.Load()
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Task.WhenAll(
+			Collection.Load(),
+			Descriptor.Load(),
+			Profile.Load()
 		);
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
 	}
 
 	public void SubscribeCollect(string _OfferID, Action _Action)
@@ -102,6 +114,11 @@ public class OffersManager : ProfileCollection<DataSnapshot<long>>
 		return snapshot?.AdsCount ?? 0;
 	}
 
+	public bool IsCollected(string _OfferID)
+	{
+		return Profile.Contains(_OfferID);
+	}
+
 	public List<string> GetAvailableOfferIDs()
 	{
 		return m_OffersCollection.GetIDs()
@@ -112,7 +129,7 @@ public class OffersManager : ProfileCollection<DataSnapshot<long>>
 	public List<string> GetCollectedOfferIDs()
 	{
 		return m_OffersCollection.GetIDs()
-			.Where(Contains)
+			.Where(IsCollected)
 			.ToList();
 	}
 
@@ -121,7 +138,7 @@ public class OffersManager : ProfileCollection<DataSnapshot<long>>
 		if (string.IsNullOrEmpty(_OfferID))
 			throw new UnityException();
 		
-		if (Contains(_OfferID))
+		if (IsCollected(_OfferID))
 			return;
 		
 		bool progress = await m_AdsProcessor.Rewarded("offer");
@@ -171,7 +188,7 @@ public class OffersManager : ProfileCollection<DataSnapshot<long>>
 	{
 		OfferSnapshot snapshot = m_OffersCollection.GetSnapshot(_OfferID);
 		
-		return snapshot != null && snapshot.Active && !Contains(_OfferID);
+		return snapshot != null && snapshot.Active && !IsCollected(_OfferID);
 	}
 
 	static int LoadProgress(string _OfferID)

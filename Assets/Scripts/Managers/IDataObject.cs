@@ -7,6 +7,4 @@ public interface IDataObject
 	Task Reload();
 
 	void Unload();
-
-	T GetValue<T>();
 }

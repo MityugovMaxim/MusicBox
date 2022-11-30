@@ -1,36 +1,76 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class VouchersManager : ProfileCollection<DataSnapshot<bool>>
+public class VouchersManager : IDataManager, IInitializable, IDisposable
 {
-	protected override string Name => "vouchers";
+	public bool Activated { get; private set; }
 
-	[Inject] VouchersCollection m_Vouchers;
-	[Inject] ProductsCollection m_Products;
-	[Inject] SongsCollection    m_Songs;
+	public VouchersCollection Collection => m_VouchersCollection;
 
-	readonly DataEventHandler m_ExpirationHandler = new DataEventHandler(DataEventType.None);
-	readonly DataEventHandler m_CancelHandler     = new DataEventHandler(DataEventType.None);
+	public ProfileVouchers Profile => m_ProfileVouchers;
 
-	readonly Dictionary<string, CancellationTokenSource> m_Timers = new Dictionary<string, CancellationTokenSource>();
+	[Inject] VouchersCollection m_VouchersCollection;
+	[Inject] ProfileVouchers    m_ProfileVouchers;
+	[Inject] ProductsCollection m_ProductsCollection;
+	[Inject] SongsCollection    m_SongsCollection;
+	[Inject] ScheduleProcessor  m_ScheduleProcessor;
 
-	public void SubscribeExpiration(string _TimerID, Action _Action) => m_ExpirationHandler.AddListener(_TimerID, _Action);
+	readonly DataEventHandler m_ExpirationHandler = new DataEventHandler();
+	readonly DataEventHandler m_CancelHandler     = new DataEventHandler();
 
-	public void SubscribeCancel(string _TimerID, Action _Action) => m_CancelHandler.AddListener(_TimerID, _Action);
+	void IInitializable.Initialize()
+	{
+		Collection.Subscribe(DataEventType.Add, ProcessTimer);
+		Collection.Subscribe(DataEventType.Remove, CancelTimer);
+		Collection.Subscribe(DataEventType.Change, ProcessTimer);
+	}
 
-	public void UnsubscribeExpiration(string _TimerID, Action _Action) => m_ExpirationHandler.RemoveListener(_TimerID, _Action);
+	void IDisposable.Dispose()
+	{
+		Collection.Unsubscribe(DataEventType.Add, ProcessTimer);
+		Collection.Unsubscribe(DataEventType.Remove, CancelTimer);
+		Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
+	}
 
-	public void UnsubscribeCancel(string _TimerID, Action _Action) => m_CancelHandler.RemoveListener(_TimerID, _Action);
+	public async Task<bool> Activate()
+	{
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Task.WhenAll(
+			m_VouchersCollection.Load(),
+			m_ProfileVouchers.Load(),
+			m_ProductsCollection.Load(),
+			m_SongsCollection.Load()
+		);
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
+	}
+
+	public void SubscribeExpiration(Action _Action) => m_ExpirationHandler.AddListener(_Action);
+	public void SubscribeExpiration(string _VoucherID, Action _Action) => m_ExpirationHandler.AddListener(_VoucherID, _Action);
+
+	public void SubscribeCancel(Action _Action) => m_CancelHandler.AddListener(_Action);
+	public void SubscribeCancel(string _VoucherID, Action _Action) => m_CancelHandler.AddListener(_VoucherID, _Action);
+
+	public void UnsubscribeExpiration(Action _Action) => m_ExpirationHandler.RemoveListener(_Action);
+	public void UnsubscribeExpiration(string _VoucherID, Action _Action) => m_ExpirationHandler.RemoveListener(_VoucherID, _Action);
+
+	public void UnsubscribeCancel(Action _Action) => m_CancelHandler.RemoveListener(_Action);
+	public void UnsubscribeCancel(string _VoucherID, Action _Action) => m_CancelHandler.RemoveListener(_VoucherID, _Action);
 
 	public long GetProductDiscount(string _ProductID)
 	{
-		ProductSnapshot snapshot = m_Products.GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
 		
 		string voucherID = GetProductVoucherID(_ProductID);
 		
@@ -39,9 +79,16 @@ public class VouchersManager : ProfileCollection<DataSnapshot<bool>>
 		return GetDiscount(voucherID, coins);
 	}
 
+	public VoucherType GetType(string _VoucherID)
+	{
+		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
+		
+		return snapshot?.Type ?? VoucherType.None;
+	}
+
 	public long GetSongDiscount(string _SongID)
 	{
-		SongSnapshot snapshot = m_Songs.GetSnapshot(_SongID);
+		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
 		string voucherID = GetSongVoucherID(_SongID);
 		
@@ -65,14 +112,14 @@ public class VouchersManager : ProfileCollection<DataSnapshot<bool>>
 
 	public double GetAmount(string _VoucherID)
 	{
-		VoucherSnapshot snapshot = m_Vouchers.GetSnapshot(_VoucherID);
+		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
 		
 		return snapshot?.Amount ?? 0;
 	}
 
 	public long GetExpiration(string _VoucherID)
 	{
-		VoucherSnapshot snapshot = m_Vouchers.GetSnapshot(_VoucherID);
+		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
 		
 		return snapshot?.Expiration ?? 0;
 	}
@@ -91,79 +138,20 @@ public class VouchersManager : ProfileCollection<DataSnapshot<bool>>
 	{
 		long timestamp = TimeUtility.GetTimestamp();
 		
-		return GetIDs()
+		return Profile.GetIDs()
 			.Where(_VoucherID => !string.IsNullOrEmpty(_VoucherID))
-			.Where(GetValue)
-			.Select(m_Vouchers.GetSnapshot)
+			.Where(Profile.Contains)
+			.Select(Collection.GetSnapshot)
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Type == _VoucherType)
 			.Where(_Snapshot => _Snapshot.IDs == null || _Snapshot.IDs.Count > 0 && _Snapshot.IDs.Contains(_ID))
 			.Where(_Snapshot => _Snapshot.Expiration == 0 || _Snapshot.Expiration >= timestamp)
 			.OrderByDescending(_Snapshot => Math.Abs(_Snapshot.Amount))
 			.Select(_Snapshot => _Snapshot.ID)
-			.FirstOrDefault(GetValue);
+			.FirstOrDefault();
 	}
 
-	bool GetValue(string _VoucherID)
-	{
-		DataSnapshot<bool> snapshot = GetSnapshot(_VoucherID);
-		
-		return snapshot?.Value ?? false;
-	}
+	void CancelTimer(string _VoucherID) => m_ScheduleProcessor.Cancel(_VoucherID);
 
-	void CancelTimer(string _VoucherID)
-	{
-		if (!m_Timers.TryGetValue(_VoucherID, out CancellationTokenSource tokenSource) || tokenSource == null)
-			return;
-		
-		tokenSource.Cancel();
-		tokenSource.Dispose();
-		
-		m_Timers.Remove(_VoucherID);
-	}
-
-	void CompleteTimer(string _VoucherID)
-	{
-		if (!m_Timers.TryGetValue(_VoucherID, out CancellationTokenSource tokenSource) || tokenSource == null)
-			return;
-		
-		tokenSource.Dispose();
-		
-		m_Timers.Remove(_VoucherID);
-		
-		m_CancelHandler.Invoke(_VoucherID);
-	}
-
-	void ProcessTimer(string _VoucherID)
-	{
-		if (string.IsNullOrEmpty(_VoucherID))
-			return;
-		
-		CancelTimer(_VoucherID);
-		
-		VoucherSnapshot snapshot = m_Vouchers.GetSnapshot(_VoucherID);
-		
-		if (snapshot == null)
-			return;
-		
-		long timestamp = TimeUtility.GetTimestamp();
-		
-		long expiration = snapshot.Expiration;
-		
-		if (expiration > 0 && expiration < timestamp)
-			return;
-		
-		int timer = (int)(expiration - timestamp) + 1000;
-		
-		m_Timers[_VoucherID] = new CancellationTokenSource();
-		
-		Task.Delay(timer, m_Timers[_VoucherID].Token).Dispatch(
-			_Task =>
-			{
-				CompleteTimer(_VoucherID);
-				if (_Task.IsCompletedSuccessfully)
-					m_ExpirationHandler.Invoke(_VoucherID);
-			}
-		);
-	}
+	void ProcessTimer(string _VoucherID) => m_ScheduleProcessor.Schedule(_VoucherID, GetExpiration(_VoucherID), m_ExpirationHandler, m_CancelHandler);
 }

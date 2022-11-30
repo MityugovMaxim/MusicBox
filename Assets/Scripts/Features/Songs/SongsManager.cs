@@ -4,45 +4,45 @@ using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class SongsManager : ProfileCollection<DataSnapshot<long>>
+public class SongsManager
 {
 	public SongsCollection Collection => m_SongsCollection;
 
-	protected override string Name => "songs";
+	public ProfileSongs Profile => m_ProfileSongs;
 
-	[Inject] SongsCollection m_SongsCollection;
-
+	[Inject] SongsCollection   m_SongsCollection;
+	[Inject] ProfileSongs      m_ProfileSongs;
 	[Inject] DifficultyManager m_DifficultyManager;
-	[Inject] ProgressProcessor m_ProgressProcessor;
 	[Inject] ScoresManager     m_ScoresManager;
-	[Inject] LevelParameter    m_LevelParameter;
 
-	public List<string> GetLibrarySongIDs()
-	{
-		IEnumerable<string> freeSongIDs = m_SongsCollection.GetIDs()
-			.Where(IsSongAvailable)
-			.OrderBy(m_ScoresManager.GetRank)
-			.ThenBy(m_ProgressProcessor.GetSongLevel)
-			.ThenBy(GetSpeed)
-			.ThenBy(m_SongsCollection.GetOrder);
-		
-		IEnumerable<string> paidSongIDs = m_SongsCollection.GetIDs()
-			.Where(IsSongLockedByCoins)
-			.OrderBy(GetPrice)
-			.ThenBy(m_ProgressProcessor.GetSongLevel)
-			.ThenBy(GetSpeed)
-			.ThenBy(m_SongsCollection.GetOrder);
-		
-		return freeSongIDs.Union(paidSongIDs).Distinct().ToList();
-	}
-
-	public Dictionary<int, List<string>> GetLockedSongIDs()
+	public List<string> GetAvailableSongIDs()
 	{
 		return m_SongsCollection.GetIDs()
-			.Where(IsSongLockedByLevel)
-			.GroupBy(m_ProgressProcessor.GetSongLevel)
-			.OrderBy(_LevelIDs => _LevelIDs.Key)
-			.ToDictionary(_LevelIDs => _LevelIDs.Key, _LevelIDs => _LevelIDs.ToList());
+			.Where(IsAvailable)
+			.OrderBy(m_ScoresManager.GetRank)
+			.ThenBy(GetDifficulty)
+			.ThenBy(m_SongsCollection.GetOrder)
+			.ToList();
+	}
+
+	public List<string> GetPaidSongIDs()
+	{
+		return m_SongsCollection.GetIDs()
+			.Where(IsPaid)
+			.OrderBy(GetPrice)
+			.ThenBy(GetDifficulty)
+			.ThenBy(m_SongsCollection.GetOrder)
+			.ToList();
+	}
+
+	public List<string> GetChestSongIDs()
+	{
+		return m_SongsCollection.GetIDs()
+			.Where(IsChest)
+			.OrderBy(GetPrice)
+			.ThenBy(GetDifficulty)
+			.ThenBy(m_SongsCollection.GetOrder)
+			.ToList();
 	}
 
 	public string GetSongID(string _SongHash)
@@ -64,27 +64,13 @@ public class SongsManager : ProfileCollection<DataSnapshot<long>>
 		return null;
 	}
 
-	public bool IsSongLockedByLevel(string _SongID)
-	{
-		if (IsSongAvailable(_SongID))
-			return false;
-		
-		int currentLevel  = m_LevelParameter.Value;
-		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
-		
-		return currentLevel < requiredLevel;
-	}
+	public bool IsAvailable(string _SongID) => Profile.Contains(_SongID) || GetMode(_SongID) == SongMode.Free;
 
-	public bool IsSongLockedByCoins(string _SongID)
-	{
-		if (IsSongAvailable(_SongID))
-			return false;
-		
-		int currentLevel  = m_LevelParameter.Value;
-		int requiredLevel = m_ProgressProcessor.GetSongLevel(_SongID);
-		
-		return currentLevel >= requiredLevel && GetMode(_SongID) == SongMode.Paid;
-	}
+	public bool IsUnavailable(string _SongID) => !IsAvailable(_SongID);
+
+	public bool IsPaid(string _SongID) => IsUnavailable(_SongID) && GetMode(_SongID) == SongMode.Paid;
+
+	public bool IsChest(string _SongID) => IsUnavailable(_SongID) && GetMode(_SongID) == SongMode.Chest;
 
 	public string GetArtist(string _SongID)
 	{
@@ -150,6 +136,7 @@ public class SongsManager : ProfileCollection<DataSnapshot<long>>
 		return snapshot?.Price ?? 0;
 	}
 
+	// TODO: Remove
 	public float GetBPM(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
@@ -157,6 +144,7 @@ public class SongsManager : ProfileCollection<DataSnapshot<long>>
 		return snapshot?.BPM ?? 0;
 	}
 
+	// TODO: Remove
 	public int GetBar(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
@@ -164,6 +152,7 @@ public class SongsManager : ProfileCollection<DataSnapshot<long>>
 		return snapshot?.Bar ?? 0;
 	}
 
+	// TODO: Remove
 	public double GetOrigin(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
@@ -183,12 +172,5 @@ public class SongsManager : ProfileCollection<DataSnapshot<long>>
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
-	}
-
-	public bool IsSongAvailable(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot != null && snapshot.Active && Contains(_SongID);
 	}
 }

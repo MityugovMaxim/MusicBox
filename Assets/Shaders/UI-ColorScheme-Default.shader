@@ -68,7 +68,7 @@ Shader "UI/ColorScheme/Default"
 			{
 				float4 vertex : SV_POSITION;
 				fixed4 color  : COLOR;
-				float2 uv     : TEXCOORD0;
+				float2 grid     : TEXCOORD0;
 				half4  mask   : TEXCOORD1;
 			};
 
@@ -82,7 +82,7 @@ Shader "UI/ColorScheme/Default"
 				fragData OUT;
 				UNITY_SETUP_INSTANCE_ID(IN);
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
-				OUT.uv = IN.uv;
+				OUT.grid = IN.uv;
 				OUT.mask = getUIMask(IN.vertex, OUT.vertex);
 				OUT.color = IN.color * _Color;
 				return OUT;
@@ -90,7 +90,7 @@ Shader "UI/ColorScheme/Default"
 
 			fixed4 frag(const fragData IN) : SV_Target
 			{
-				half4 color = tex2D(_MainTex, IN.uv) * IN.color;
+				half4 color = tex2D(_MainTex, IN.grid) * IN.color;
 				
 				#ifdef BACKGROUND_SCHEME
 				color.rgb *= BACKGROUND_BY_RANGE(color, 0.15, 0.8);

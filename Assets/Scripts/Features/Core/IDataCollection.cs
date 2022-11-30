@@ -4,7 +4,7 @@ public interface IDataCollection
 {
 	bool Loaded { get; }
 
-	DataCollectionPriority Priority { get; }
+	DataPriority Priority { get; }
 
 	Task Load();
 

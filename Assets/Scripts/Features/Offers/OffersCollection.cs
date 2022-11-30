@@ -3,7 +3,7 @@ using UnityEngine.Scripting;
 [Preserve]
 public class OffersCollection : DataCollection<OfferSnapshot>, IDataCollection
 {
-	public DataCollectionPriority Priority => DataCollectionPriority.Low;
+	public DataPriority Priority => DataPriority.Low;
 
 	protected override string Path => "offers";
 }

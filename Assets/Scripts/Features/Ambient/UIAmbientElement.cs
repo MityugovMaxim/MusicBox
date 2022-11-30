@@ -80,11 +80,10 @@ public class UIAmbientElement : UIEntity
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
-		int frame = Time.frameCount;
+		bool instant = await m_AmbientManager.Activate();
 		
-		await m_AmbientManager.Preload();
-		
-		bool instant = frame == Time.frameCount;
+		if (!IsActive)
+			return;
 		
 		m_ContentGroup.Show(instant);
 		m_LoaderGroup.Hide(instant);
