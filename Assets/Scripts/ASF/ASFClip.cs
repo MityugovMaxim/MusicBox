@@ -34,10 +34,6 @@ namespace AudioBox.ASF
 			ProcessExit(_Time);
 		}
 
-		public abstract object Serialize();
-
-		public abstract void Deserialize(IDictionary<string, object> _Data);
-
 		void ProcessEnter(double _Time)
 		{
 			if (_Time >= MinTime && State == ASFClipState.ExitMin)

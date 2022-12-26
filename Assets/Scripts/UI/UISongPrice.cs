@@ -24,6 +24,6 @@ public class UISongPrice : UISongEntity
 		
 		m_Coins.Value = coins;
 		
-		gameObject.SetActive(SongsManager.IsUnavailable(SongID) && coins > 0);
+		gameObject.SetActive(SongsManager.IsPaid(SongID) && coins > 0);
 	}
 }

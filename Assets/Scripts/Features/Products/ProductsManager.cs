@@ -2,56 +2,49 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioBox.Compression;
 using AudioBox.Logging;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
 public class ProductsManager : IDataManager
 {
-	public bool Activated { get; private set; }
-
-	public ProductsCollection  Collection => m_ProductsCollection;
-	public ProductsDescriptor  Descriptor => m_ProductsDescriptor;
-	public ProfileTransactions Profile    => m_ProfileTransactions;
-	public VouchersManager     Vouchers   => m_VouchersManager;
-	public StoreProcessor      Store      => m_StoreProcessor;
+	public ProductsCollection Collection => m_ProductsCollection;
+	public ProductsDescriptor Descriptor => m_ProductsDescriptor;
+	public ProfileProducts    Profile    => m_ProfileProducts;
+	public VouchersManager    Vouchers   => m_VouchersManager;
 
 	[Inject] ProductsCollection    m_ProductsCollection;
 	[Inject] ProductsDescriptor    m_ProductsDescriptor;
-	[Inject] ProfileTransactions   m_ProfileTransactions;
+	[Inject] ProfileProducts       m_ProfileProducts;
 	[Inject] ProfileCoinsParameter m_CoinsParameter;
-	[Inject] StoreProcessor        m_StoreProcessor;
 	[Inject] VouchersManager       m_VouchersManager;
+	[Inject] StoreManager          m_StoreManager;
 	[Inject] MenuProcessor         m_MenuProcessor;
 
-	public async Task<bool> Activate()
+	public Task<bool> Activate()
 	{
-		if (Activated)
-			return true;
-		
-		int frame = Time.frameCount;
-		
-		await Task.WhenAll(
-			m_ProductsCollection.Load(),
-			m_ProductsDescriptor.Load()
+		return GroupTask.ProcessAsync(
+			this,
+			m_ProductsCollection.Load,
+			m_ProductsDescriptor.Load,
+			m_ProfileProducts.Load,
+			m_CoinsParameter.Load,
+			m_StoreManager.Activate,
+			m_VouchersManager.Activate
 		);
-		
-		await m_StoreProcessor.Load(GetStoreProducts());
-		
-		Activated = true;
-		
-		return frame == Time.frameCount;
 	}
 
 	public async Task<RequestState> Purchase(string _ProductID)
 	{
 		try
 		{
+			string storeID = GetStoreID(_ProductID);
+			
 			string voucherID = GetVoucherID(_ProductID);
 			
-			return await m_StoreProcessor.Purchase(_ProductID, voucherID);
+			return await m_StoreManager.Purchase(storeID, _ProductID, voucherID);
 		}
 		catch (Exception exception)
 		{
@@ -63,26 +56,13 @@ public class ProductsManager : IDataManager
 		return RequestState.Fail;
 	}
 
-	public bool ContainsProduct(string _ProductID) => Profile.ContainsProduct(_ProductID);
-
 	public string GetVoucherID(string _ProductID) => m_VouchersManager.GetProductVoucherID(_ProductID);
 
 	public string GetProductID(long _Coins)
 	{
-		return m_ProductsCollection.GetIDs()
-			.OrderByDescending(m_VouchersManager.GetProductDiscount)
-			.Select(m_ProductsCollection.GetSnapshot)
-			.Where(_Snapshot => _Snapshot != null)
-			.Where(_Snapshot => _Snapshot.Active)
-			.Select(_Snapshot => _Snapshot.ID)
-			.Aggregate(
-				(_A, _B) =>
-				{
-					long aCoins = m_VouchersManager.GetProductDiscount(_A);
-					long bCoins = m_VouchersManager.GetProductDiscount(_B);
-					return aCoins >= _Coins && aCoins < bCoins ? _A : _B;
-				}
-			);
+		return Collection.GetIDs()
+			.Where(IsActive)
+			.GreaterMin(m_VouchersManager.GetProductDiscount, _Coins);
 	}
 
 	public List<string> GetProductIDs()
@@ -126,32 +106,25 @@ public class ProductsManager : IDataManager
 		return productIDs.Skip(skip).Take(_Count).ToList();
 	}
 
-	public StoreProduct[] GetStoreProducts()
-	{
-		return Collection.GetIDs()
-			.Where(IsActive)
-			.Select(
-				_ProductID => new StoreProduct(
-					_ProductID,
-					GetAppStoreID(_ProductID),
-					GetGooglePlayID(_ProductID)
-				)
-			)
-			.ToArray();
-	}
-
-	public string GetAppStoreID(string _ProductID)
+	public string GetStoreID(string _ProductID)
 	{
 		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
 		
-		return snapshot?.AppStoreID ?? string.Empty;
+		return snapshot?.StoreID ?? string.Empty;
 	}
 
-	public string GetGooglePlayID(string _ProductID)
+	public string GetPriceSign(string _ProductID)
 	{
-		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
+		string storeID = GetStoreID(_ProductID);
 		
-		return snapshot?.GooglePlayID ?? string.Empty;
+		return m_StoreManager.GetPriceSign(storeID);
+	}
+
+	public string GetPriceCode(string _ProductID)
+	{
+		string storeID = GetStoreID(_ProductID);
+		
+		return m_StoreManager.GetPriceCode(storeID);
 	}
 
 	public string GetImage(string _ProductID)
@@ -173,10 +146,6 @@ public class ProductsManager : IDataManager
 	}
 
 	public long GetCoins(string _ProductID) => m_VouchersManager.GetProductDiscount(_ProductID);
-
-	public string GetPriceSign(string _ProductID) => m_StoreProcessor.GetPrice(_ProductID);
-
-	public string GetPriceCode(string _ProductID) => m_StoreProcessor.GetPrice(_ProductID, false);
 
 	public string GetSeasonID(string _ProductID)
 	{
@@ -210,6 +179,6 @@ public class ProductsManager : IDataManager
 	{
 		ProductType productType = GetType(_ProductID);
 		
-		return productType == ProductType.Coins || !Profile.ContainsProduct(_ProductID);
+		return productType == ProductType.Coins || !Profile.Contains(_ProductID);
 	}
 }

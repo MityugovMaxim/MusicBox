@@ -144,22 +144,6 @@ public class UIColorMenu : UIMenu
 
 	void SelectLibrary(ColorsSnapshot _Snapshot)
 	{
-		if (_Snapshot == null)
-			return;
-		
-		ColorsSnapshot snapshot = new ColorsSnapshot(
-			_Snapshot.ID,
-			_Snapshot.Order,
-			_Snapshot.BackgroundPrimary,
-			_Snapshot.BackgroundSecondary,
-			_Snapshot.ForegroundPrimary,
-			_Snapshot.ForegroundSecondary
-		);
-		
-		snapshot = GetSnapshot(snapshot);
-		
-		if (!m_SchemeSnapshots.Contains(snapshot))
-			m_SchemeSnapshots.Add(snapshot);
 	}
 
 	void SelectScheme(ColorsSnapshot _Snapshot)
@@ -292,23 +276,7 @@ public class UIColorMenu : UIMenu
 
 	void SaveScheme()
 	{
-		Dictionary<string, object> data = new Dictionary<string, object>();
 		
-		foreach (ColorsSnapshot snapshot in m_SchemeSnapshots)
-		{
-			if (snapshot == null)
-				continue;
-			
-			Dictionary<string, object> entry = new Dictionary<string, object>();
-			
-			snapshot.Serialize(entry);
-			
-			data[snapshot.ID] = entry;
-		}
-		
-		string json = Json.Serialize(data);
-		
-		PlayerPrefs.SetString(ColorSchemeKey, json);
 	}
 
 	async void FetchLibrary()
@@ -335,46 +303,10 @@ public class UIColorMenu : UIMenu
 		if (data == null)
 			return;
 		
-		foreach (var entry in data)
-		{
-			ColorsSnapshot snapshot = new ColorsSnapshot(
-				entry.Key,
-				entry.Value as Dictionary<string, object>
-			);
-			
-			m_SchemeSnapshots.Add(snapshot);
-		}
+		
 	}
 
 	void ScanScheme()
 	{
-		if (m_Track == null || m_Track.Clips == null)
-			return;
-		
-		foreach (ASFColorClip clip in m_Track.Clips)
-		{
-			ColorsSnapshot snapshot = new ColorsSnapshot(
-				string.Empty,
-				0,
-				clip.BackgroundPrimary,
-				clip.BackgroundSecondary,
-				clip.ForegroundPrimary,
-				clip.ForegroundSecondary
-			);
-			
-			snapshot = GetSnapshot(snapshot);
-			
-			if (!m_SchemeSnapshots.Contains(snapshot))
-				m_SchemeSnapshots.Add(snapshot);
-			
-			m_Registry[clip] = snapshot;
-		}
-	}
-
-	ColorsSnapshot GetSnapshot(ColorsSnapshot _SchemeSnapshot)
-	{
-		ColorsSnapshot snapshot = m_SchemeSnapshots.FirstOrDefault(_Snapshot => ColorsSnapshot.Equals(_Snapshot, _SchemeSnapshot));
-		
-		return snapshot ?? _SchemeSnapshot;
 	}
 }

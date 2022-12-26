@@ -1,50 +1,30 @@
 using TMPro;
 using UnityEngine;
-using Zenject;
 
-public class UIOfferLabel : UIEntity
+public class UIOfferLabel : UIOfferEntity
 {
-	public string OfferID
-	{
-		get => m_OfferID;
-		set
-		{
-			if (m_OfferID == value)
-				return;
-			
-			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Add, m_OfferID, ProcessLabel);
-			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Remove, m_OfferID, ProcessLabel);
-			m_OffersManager.Descriptor.Unsubscribe(DataEventType.Change, m_OfferID, ProcessLabel);
-			m_OffersManager.Collection.Unsubscribe(DataEventType.Change, m_OfferID, ProcessLabel);
-			
-			m_OfferID = value;
-			
-			m_OffersManager.Descriptor.Subscribe(DataEventType.Add, m_OfferID, ProcessLabel);
-			m_OffersManager.Descriptor.Subscribe(DataEventType.Remove, m_OfferID, ProcessLabel);
-			m_OffersManager.Descriptor.Subscribe(DataEventType.Change, m_OfferID, ProcessLabel);
-			m_OffersManager.Collection.Subscribe(DataEventType.Change, m_OfferID, ProcessLabel);
-			
-			ProcessLabel();
-		}
-	}
-
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Description;
 
-	[Inject] OffersManager m_OffersManager;
-
-	string m_OfferID;
-
-	protected override void OnDisable()
+	protected override void Subscribe()
 	{
-		base.OnDisable();
-		
-		OfferID = null;
+		OffersManager.Descriptor.Subscribe(DataEventType.Add, OfferID, ProcessData);
+		OffersManager.Descriptor.Subscribe(DataEventType.Remove, OfferID, ProcessData);
+		OffersManager.Descriptor.Subscribe(DataEventType.Change, OfferID, ProcessData);
+		OffersManager.Collection.Subscribe(DataEventType.Change, OfferID, ProcessData);
 	}
 
-	void ProcessLabel()
+	protected override void Unsubscribe()
 	{
-		m_Title.text       = m_OffersManager.GetTitle(OfferID);
-		m_Description.text = m_OffersManager.GetDescription(OfferID);
+		OffersManager.Descriptor.Unsubscribe(DataEventType.Add, OfferID, ProcessData);
+		OffersManager.Descriptor.Unsubscribe(DataEventType.Remove, OfferID, ProcessData);
+		OffersManager.Descriptor.Unsubscribe(DataEventType.Change, OfferID, ProcessData);
+		OffersManager.Collection.Unsubscribe(DataEventType.Change, OfferID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		m_Title.text       = OffersManager.GetTitle(OfferID);
+		m_Description.text = OffersManager.GetDescription(OfferID);
 	}
 }

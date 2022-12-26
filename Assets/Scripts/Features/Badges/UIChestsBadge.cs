@@ -4,41 +4,35 @@ using Zenject;
 
 public class UIChestsBadge : UIBadge
 {
-	public const string CHESTS_GROUP = "chests";
-
-	[Inject] ChestsManager m_ChestsManager;
-
-	List<string> m_ChestIDs;
+	[Inject] ChestsInventory m_ChestsInventory;
 
 	protected override void Subscribe()
 	{
-		m_ChestIDs = m_ChestsManager.GetChestIDs();
-		
-		m_ChestsManager.Profile.Subscribe(DataEventType.Add, Process);
-		m_ChestsManager.Profile.Subscribe(DataEventType.Remove, Process);
-		m_ChestsManager.Profile.Subscribe(DataEventType.Change, Process);
-		
-		if (m_ChestIDs == null)
-			return;
-		
-		foreach (string chestID in m_ChestIDs)
-		{
-			m_ChestsManager.SubscribeStart(chestID, Process);
-			m_ChestsManager.SubscribeEnd(chestID, Process);
-		}
+		BadgeManager.SubscribeChests(Process);
+		m_ChestsInventory.SubscribeEnd(Process);
+		m_ChestsInventory.SubscribeStart(Process);
+		m_ChestsInventory.SubscribeCancel(Process);
+		m_ChestsInventory.Profile.Subscribe(DataEventType.Add, Process);
+		m_ChestsInventory.Profile.Subscribe(DataEventType.Remove, Process);
+		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, Process);
 	}
 
 	protected override void Unsubscribe()
 	{
-		m_ChestsManager.Profile.Unsubscribe(DataEventType.Add, Process);
-		m_ChestsManager.Profile.Unsubscribe(DataEventType.Remove, Process);
-		m_ChestsManager.Profile.Unsubscribe(DataEventType.Change, Process);
+		BadgeManager.UnsubscribeChests(Process);
+		m_ChestsInventory.UnsubscribeEnd(Process);
+		m_ChestsInventory.UnsubscribeStart(Process);
+		m_ChestsInventory.UnsubscribeCancel(Process);
+		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Add, Process);
+		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Remove, Process);
+		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, Process);
+	}
+
+	protected override async void Preload()
+	{
+		await m_ChestsInventory.Activate();
 		
-		if (m_ChestIDs == null)
-			return;
-		
-		foreach (string chestID in m_ChestIDs)
-			m_ChestsManager.UnsubscribeEnd(chestID, Process);
+		Process();
 	}
 
 	protected override void Process()
@@ -46,22 +40,22 @@ public class UIChestsBadge : UIBadge
 		int value = 0;
 		
 		value += GetAvailableChestsCount();
-		value += GetSelectedChestsCount();
+		value += GetReadyChestsCount();
 		
 		SetValue(value);
 	}
 
 	int GetAvailableChestsCount()
 	{
-		List<string> chestIDs = m_ChestsManager.GetAvailableChestIDs();
+		List<string> chestIDs = m_ChestsInventory.GetAvailableChestIDs();
 		
-		return chestIDs?.Count(_ChestID => BadgeManager.IsUnread(CHESTS_GROUP, _ChestID)) ?? 0;
+		return chestIDs?.Count(_ChestID => BadgeManager.IsChestUnread(_ChestID)) ?? 0;
 	}
 
-	int GetSelectedChestsCount()
+	int GetReadyChestsCount()
 	{
-		List<string> chestIDs = m_ChestsManager.GetSelectedChestIDs();
+		List<string> chestIDs = m_ChestsInventory.GetSelectedChestIDs();
 		
-		return chestIDs?.Count(_ChestID => m_ChestsManager.IsEnded(_ChestID)) ?? 0;
+		return chestIDs?.Count(m_ChestsInventory.IsReady) ?? 0;
 	}
 }

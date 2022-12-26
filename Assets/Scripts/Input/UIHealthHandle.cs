@@ -27,14 +27,14 @@ public class UIHealthHandle : UIOrder
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		m_Animator.RegisterComplete("damage", InvokeDamageFinished);
+		m_Animator.SubscribeComplete("damage", InvokeDamageFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_Animator.UnregisterComplete("damage", InvokeDamageFinished);
+		m_Animator.UnsubscribeComplete("damage", InvokeDamageFinished);
 	}
 
 	public void Restore()

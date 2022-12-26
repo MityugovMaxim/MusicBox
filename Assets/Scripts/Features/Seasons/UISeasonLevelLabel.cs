@@ -1,9 +1,9 @@
-using TMPro;
 using UnityEngine;
 
 public class UISeasonLevelLabel : UISeasonLevelEntity
 {
-	[SerializeField] TMP_Text m_Label;
+	[SerializeField] UIUnitLabel m_LevelLeft;
+	[SerializeField] UIUnitLabel m_LevelRight;
 
 	protected override void Subscribe()
 	{
@@ -17,6 +17,7 @@ public class UISeasonLevelLabel : UISeasonLevelEntity
 
 	protected override void ProcessData()
 	{
-		m_Label.text = Level.ToString();
+		m_LevelLeft.Value  = Level;
+		m_LevelRight.Value = Level;
 	}
 }

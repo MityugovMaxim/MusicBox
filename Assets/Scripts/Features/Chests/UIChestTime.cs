@@ -1,36 +1,39 @@
 using UnityEngine;
-using Zenject;
 
-public class UIChestTime : UIEntity
+public class UIChestTime : UIChestEntity
 {
-	public string ChestID
+	[SerializeField] UIAnalogTimer m_Time;
+	[SerializeField] UIGroup       m_TimeGroup;
+
+	protected override void Subscribe()
 	{
-		get => m_ChestID;
-		set
-		{
-			if (m_ChestID == value)
-				return;
-			
-			m_ChestsManager.Profile.Unsubscribe(DataEventType.Change, m_ChestID, ProcessTime);
-			m_ChestsManager.Collection.Unsubscribe(DataEventType.Change, ProcessTime);
-			
-			m_ChestID = value;
-			
-			ProcessTime();
-			
-			m_ChestsManager.Profile.Subscribe(DataEventType.Change, m_ChestID, ProcessTime);
-			m_ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessTime);
-		}
+		ChestsInventory.SubscribeStart(ChestID, ProcessData);
+		ChestsInventory.SubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.SubscribeEnd(ChestID, ProcessData);
+		ChestsInventory.Profile.Subscribe(DataEventType.Change, ChestID, ProcessData);
 	}
 
-	[SerializeField] UIAnalogTimer m_Timer;
-
-	[Inject] ChestsManager m_ChestsManager;
-
-	string m_ChestID;
-
-	void ProcessTime()
+	protected override void Unsubscribe()
 	{
-		m_Timer.Timestamp = m_ChestsManager.GetOpenTime(ChestID);
+		ChestsInventory.UnsubscribeStart(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeEnd(ChestID, ProcessData);
+		ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ChestID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		if (!ChestsInventory.IsSelected(ChestID) || ChestsInventory.IsProcessing(ChestID) || ChestsInventory.IsReady(ChestID))
+		{
+			m_TimeGroup.Hide();
+			return;
+		}
+		
+		m_TimeGroup.Show();
+		
+		long startTimestamp = ChestsInventory.GetStartTimestamp(ChestID);
+		long endTimestamp   = ChestsInventory.GetEndTimestamp(ChestID);
+		
+		m_Time.SetTime(startTimestamp, endTimestamp);
 	}
 }

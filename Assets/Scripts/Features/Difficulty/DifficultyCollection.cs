@@ -10,9 +10,9 @@ public class DifficultyCollection : DataCollection<DifficultySnapshot>, IDataCol
 
 	protected override string Path => "difficulty";
 
-	public DifficultySnapshot GetSnapshot(DifficultyType _DifficultyType)
+	public DifficultySnapshot GetSnapshot(RankType _SongType)
 	{
-		return Snapshots.FirstOrDefault(_Snapshot => _Snapshot.Type == _DifficultyType);
+		return Snapshots.FirstOrDefault(_Snapshot => _Snapshot.Type == _SongType);
 	}
 
 	protected override Task OnLoad()

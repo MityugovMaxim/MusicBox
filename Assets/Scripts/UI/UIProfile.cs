@@ -29,6 +29,6 @@ public class UIProfile : UIEntity
 		if (mainMenu == null)
 			return;
 		
-		mainMenu.Select(MainMenuPageType.Profile);
+		mainMenu.Select(MainMenuPageType.Chests);
 	}
 }

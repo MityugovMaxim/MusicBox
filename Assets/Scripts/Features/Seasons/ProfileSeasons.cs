@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using AudioBox.Logging;
+using UnityEngine.Scripting;
 
+[Preserve]
 public class ProfileSeasons : ProfileCollection<ProfileSeason>, IDataCollection
 {
 	public DataPriority Priority => DataPriority.Low;

@@ -9,11 +9,6 @@ public class UIComboIndicator : UIOrder
 
 	[SerializeField] UIUnitLabel m_Label;
 	[SerializeField] Graphic     m_Graphic;
-	[SerializeField] Color       m_DefaultColor;
-	[SerializeField] Color       m_PerfectColor;
-	[SerializeField] Color       m_GoodColor;
-	[SerializeField] Color       m_BadColor;
-	[SerializeField] Color       m_FailColor;
 	[SerializeField] Vector2     m_SourcePosition = new Vector2(0, -30);
 	[SerializeField] Vector2     m_TargetPosition = Vector2.zero;
 	[SerializeField] float       m_Duration       = 0.2f;
@@ -24,84 +19,51 @@ public class UIComboIndicator : UIOrder
 	{
 		base.Awake();
 		
-		m_ScoreController.OnComboChange += OnComboChanged;
+		m_ScoreController.OnComboChange.AddListener(OnComboChange);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_ScoreController.OnComboChange -= OnComboChanged;
+		m_ScoreController.OnComboChange.RemoveListener(OnComboChange);
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
+	void OnComboChange(int _Combo)
 	{
-		Color color;
-		switch (_ScoreGrade)
-		{
-			case ScoreGrade.Perfect:
-				color = m_PerfectColor;
-				break;
-			case ScoreGrade.Good:
-				color = m_GoodColor;
-				break;
-			case ScoreGrade.Bad:
-				color = m_BadColor;
-				break;
-			case ScoreGrade.Fail:
-				color = m_FailColor;
-				break;
-			default:
-				color = m_DefaultColor;
-				break;
-		}
-		
-		if (m_Label.Value < _Combo)
-			Increment(color);
+		if (_Combo > m_Label.Value)
+			Increment();
 		else
-			Decrement(color);
+			Decrement();
 		
 		m_Label.Value = _Combo;
 	}
 
-	IEnumerator m_ColorRoutine;
-	IEnumerator m_PositionRoutine;
+	IEnumerator m_ComboRoutine;
 
-	void Increment(Color _Color)
+	void Increment()
 	{
-		if (m_ColorRoutine != null)
-			StopCoroutine(m_ColorRoutine);
-		
-		if (m_PositionRoutine != null)
-			StopCoroutine(m_PositionRoutine);
+		if (m_ComboRoutine != null)
+			StopCoroutine(m_ComboRoutine);
 		
 		if (!gameObject.activeInHierarchy)
 			return;
 		
-		m_ColorRoutine = UnityRoutine.ColorRoutine(m_Graphic, _Color, m_DefaultColor, m_Duration, EaseFunction.Linear);
+		m_ComboRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_SourcePosition, m_TargetPosition, m_Duration, EaseFunction.EaseOutBack);
 		
-		m_PositionRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_SourcePosition, m_TargetPosition, m_Duration, EaseFunction.EaseOutBack);
-		
-		StartCoroutine(m_ColorRoutine);
-		StartCoroutine(m_PositionRoutine);
+		StartCoroutine(m_ComboRoutine);
 	}
 
-	void Decrement(Color _Color)
+	void Decrement()
 	{
-		if (m_ColorRoutine != null)
-			StopCoroutine(m_ColorRoutine);
-		
-		if (m_PositionRoutine != null)
-			StopCoroutine(m_PositionRoutine);
+		if (m_ComboRoutine != null)
+			StopCoroutine(m_ComboRoutine);
 		
 		if (!gameObject.activeInHierarchy)
 			return;
 		
-		m_ColorRoutine = UnityRoutine.ColorRoutine(m_Graphic, _Color, m_Duration, EaseFunction.Linear);
+		m_ComboRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_TargetPosition, m_Duration, EaseFunction.EaseOut);
 		
-		m_PositionRoutine = UnityRoutine.PositionRoutine(m_Graphic.rectTransform, m_TargetPosition, m_Duration, EaseFunction.EaseOut);
-		
-		StartCoroutine(m_ColorRoutine);
-		StartCoroutine(m_PositionRoutine);
+		StartCoroutine(m_ComboRoutine);
 	}
 }

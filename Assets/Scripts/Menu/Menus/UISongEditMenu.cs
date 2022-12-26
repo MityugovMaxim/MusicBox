@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AudioBox.ASF;
 using Melanchall.DryWetMidi.Core;
@@ -400,7 +399,7 @@ public class UISongEditMenu : UIMenu
 			music = null;
 		}
 		
-		Dictionary<string, object> asf;
+		ASFFile asf;
 		try
 		{
 			asf = await LoadASF();
@@ -479,6 +478,7 @@ public class UISongEditMenu : UIMenu
 		m_Player.Music.UnloadAudioData();
 		m_Background.AudioClip.UnloadAudioData();
 		m_Player.Music         = null;
+		m_Player.ASF           = null;
 		m_Background.AudioClip = null;
 		m_Player.Time          = 0;
 		
@@ -516,13 +516,13 @@ public class UISongEditMenu : UIMenu
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
 		
-		Dictionary<string, object> asf = m_Player.Serialize();
+		m_Player.Save();
 		
 		string path = m_SongsManager.GetASF(m_SongID);
 		
 		try
 		{
-			await m_ASFProvider.UploadAsync(path, asf, Encoding.UTF8);
+			await m_ASFProvider.UploadAsync(path, m_Player.ASF);
 		}
 		catch (Exception exception)
 		{
@@ -550,10 +550,16 @@ public class UISongEditMenu : UIMenu
 		
 		try
 		{
-			Dictionary<string, object> asf = await LoadASF();
+			float ratio = m_ConfigProcessor.SongRatio;
+			
+			float speed = m_SongsManager.GetSpeed(m_SongID);
+			
+			AudioClip music = await LoadMusic();
+			
+			ASFFile asf = await LoadASF();
 			
 			m_Player.Clear();
-			m_Player.Deserialize(asf);
+			m_Player.Setup(ratio, speed, music, asf);
 			m_Player.Sample();
 		}
 		catch (Exception exception)
@@ -638,7 +644,7 @@ public class UISongEditMenu : UIMenu
 		return m_AudioClipProvider.DownloadAsync(path);
 	}
 
-	Task<Dictionary<string, object>> LoadASF()
+	Task<ASFFile> LoadASF()
 	{
 		string path = $"Songs/{m_SongID}.asf";
 		

@@ -6,25 +6,10 @@ using Unity.Advertisement.IosSupport;
 #endif
 using UnityEngine;
 using Zenject;
-using Object = UnityEngine.Object;
 
 public class GameInstaller : MonoInstaller
 {
 	[SerializeField] Canvas m_Canvas;
-
-	[SerializeField] UISocialElement m_SocialElement;
-
-	[SerializeField] UISongHeader  m_SongHeader;
-	[SerializeField] UISongItem    m_SongItem;
-	[SerializeField] UISongElement m_SongElement;
-
-	[SerializeField] UIProductPromo   m_ProductPromo;
-	[SerializeField] UIProductSpecial m_ProductSpecial;
-	[SerializeField] UIProductItem    m_ProductItem;
-	
-	[SerializeField] UIUnlockCoinsItem m_UnlockCoinsItem;
-	[SerializeField] UIUnlockSongItem  m_UnlockSongItem;
-	[SerializeField] SoundSource       m_SoundSource;
 
 	public override void InstallBindings()
 	{
@@ -42,8 +27,6 @@ public class GameInstaller : MonoInstaller
 		
 		InstallProcessors();
 		
-		InstallManagers();
-		
 		InstallFactories();
 		
 		InstallAudioManager();
@@ -59,30 +42,6 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesTo<StatisticFacebook>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticAppsFlyer>().FromNew().AsSingle();
 		Container.BindInterfacesTo<StatisticAppMetrica>().FromNew().AsSingle();
-		
-		InstallPool<UISocialElement, UISocialElement.Pool>(m_SocialElement, 1);
-		
-		InstallPool<UIProductSpecial, UIProductSpecial.Pool>(m_ProductSpecial, 1);
-		InstallPool<UIProductPromo, UIProductPromo.Pool>(m_ProductPromo, 1);
-		InstallPool<UIProductItem, UIProductItem.Pool>(m_ProductItem);
-		
-		InstallPool<UISongHeader, UISongHeader.Pool>(m_SongHeader);
-		InstallPool<UISongItem, UISongItem.Pool>(m_SongItem);
-		InstallPool<UISongElement, UISongElement.Pool>(m_SongElement);
-		
-		InstallPool<UIUnlockCoinsItem, UIUnlockCoinsItem.Pool>(m_UnlockCoinsItem, 1);
-		InstallPool<UIUnlockSongItem, UIUnlockSongItem.Pool>(m_UnlockSongItem);
-		
-
-		InstallPool<SoundSource, SoundSource.Pool>(m_SoundSource);
-	}
-
-	void InstallPool<TItem, TPool>(TItem _Prefab, int _Capacity = 5) where TItem : Object where TPool : IMemoryPool
-	{
-		Container.BindMemoryPool<TItem, TPool>()
-			.WithInitialSize(_Capacity)
-			.FromComponentInNewPrefab(_Prefab)
-			.UnderTransformGroup($"[{typeof(TItem).Name}] Pool");
 	}
 
 	void InstallCulture()
@@ -132,31 +91,18 @@ public class GameInstaller : MonoInstaller
 		
 		InstallProcessor<MenuProcessor>();
 		
-		InstallProcessor<VouchersManager>();
-		
-		InstallProcessor<VouchersCollection>();
-		InstallProcessor<ProductsCollection>();
-		InstallProcessor<SongsCollection>();
-		
+		InstallProcessor<ScheduleProcessor>();
 		InstallProcessor<SocialProcessor>();
 		InstallProcessor<ConfigProcessor>();
-		InstallProcessor<SoundProcessor>();
 		InstallProcessor<ApplicationManager>();
 		InstallProcessor<HapticProcessor>();
 		InstallProcessor<UrlProcessor>();
 		InstallProcessor<AdsProcessor>();
 		InstallProcessor<StatisticProcessor>();
 		InstallProcessor<BannersProcessor>();
-		InstallProcessor<StoreProcessor>();
-		InstallProcessor<ProgressProcessor>();
-		InstallProcessor<RevivesProcessor>();
 		InstallProcessor<LinkProcessor>();
 		
-		InstallProcessor<ProductsDescriptor>();
-		
 		InstallProcessor<HealthController>();
-		InstallProcessor<ScoreController>();
-		InstallProcessor<ScoresManager>();
 		
 		Container.BindInterfacesAndSelfTo<SongController>().FromNew().AsSingle();
 		Container.BindInterfacesAndSelfTo<TutorialController>().FromNew().AsSingle();
@@ -167,17 +113,9 @@ public class GameInstaller : MonoInstaller
 		Container.BindInterfacesAndSelfTo<T>().FromNew().AsSingle();
 	}
 
-	void InstallManagers()
-	{
-		Container.BindInterfacesAndSelfTo<SongsManager>().FromNew().AsSingle();
-		Container.BindInterfacesAndSelfTo<ProductsManager>().FromNew().AsSingle();
-	}
-
 	void InstallSignals()
 	{
 		SignalBusInstaller.Install(Container);
-		
-		Container.DeclareSignal<BannersDataUpdateSignal>().OptionalSubscriber();
 	}
 
 	void InstallAudioManager()

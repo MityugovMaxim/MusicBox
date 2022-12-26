@@ -23,6 +23,9 @@ public class UISeasonHeaderElement : UISeasonEntity
 	protected override void ProcessData()
 	{
 		m_Title.text = SeasonsManager.GetTitle(SeasonID);
-		m_Timer.Setup(SeasonsManager.GetEndTimestamp(SeasonID));
+		m_Timer.SetTimer(
+			SeasonsManager.GetStartTimestamp(SeasonID),
+			SeasonsManager.GetEndTimestamp(SeasonID)
+		);
 	}
 }

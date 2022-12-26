@@ -1,15 +1,10 @@
-using System;
 using UnityEngine.EventSystems;
 
 public abstract class UIButton : UIEntity, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
+	public readonly DynamicDelegate Action = new DynamicDelegate();
+
 	bool m_Pressed;
-
-	Action m_Action;
-
-	public void Subscribe(Action _Action) => m_Action += _Action;
-
-	public void Unsubscribe(Action _Action) => m_Action -= _Action;
 
 	protected abstract void OnNormal();
 
@@ -35,7 +30,7 @@ public abstract class UIButton : UIEntity, IPointerDownHandler, IPointerUpHandle
 		else
 		{
 			OnClick();
-			m_Action?.Invoke();
+			Action?.Invoke();
 		}
 	}
 

@@ -26,7 +26,7 @@ public class AudioClipProvider : StorageProvider<AudioClip>
 		if (string.IsNullOrEmpty(_Path))
 			return Task.FromResult(false);
 		
-		return UploadFileAsync(
+		return UploadAsync(
 			_Path,
 			() => _AudioClip.EncodeToOGG(_Quality, _Tags),
 			new MetadataChange()

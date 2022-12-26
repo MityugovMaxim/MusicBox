@@ -4,6 +4,9 @@ public static class VectorExtension
 {
 	public static Vector4 ToVector(this RectOffset _Offset)
 	{
+		if (_Offset == null)
+			return Vector4.zero;
+		
 		return new Vector4(
 			_Offset.left,
 			_Offset.right,

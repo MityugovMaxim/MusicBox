@@ -19,12 +19,11 @@ public class UIMainMenuStorePage : UIMainMenuPage
 	[Inject] TimersManager   m_TimersManager;
 	[Inject] DailyManager    m_DailyManager;
 
-	[Inject] RolesProcessor        m_RolesProcessor;
-	[Inject] UIAdminElement.Pool   m_AdminPool;
-	[Inject] UIDailyElement.Pool   m_DailyPool;
-	[Inject] UIProductSpecial.Pool m_SpecialPool;
-	[Inject] UIProductPromo.Pool   m_PromoPool;
-	[Inject] UIProductItem.Pool    m_ItemPool;
+	[Inject] RolesProcessor              m_RolesProcessor;
+	[Inject] UIAdminElement.Pool         m_AdminPool;
+	[Inject] UIDailyElement.Pool         m_DailyPool;
+	[Inject] UIProductCoinsElement.Pool  m_CoinsPool;
+	[Inject] UIProductSeasonElement.Pool m_SeasonsPool;
 
 	protected override async void OnShowStarted()
 	{
@@ -34,8 +33,8 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		int frame = Time.frameCount;
 		
 		await Task.WhenAll(
-			m_TimersManager.Preload(),
-			m_DailyManager.Preload()
+			m_TimersManager.Activate(),
+			m_DailyManager.Activate()
 		);
 		
 		bool instant = frame == Time.frameCount;
@@ -66,9 +65,11 @@ public class UIMainMenuStorePage : UIMainMenuPage
 			CreateAdminAds();
 		}
 		
+		CreateSeasons();
+		
 		CreateDaily();
 		
-		CreateItems();
+		CreateCoins();
 		
 		m_Content.Reposition();
 	}
@@ -130,6 +131,23 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		m_Content.Space(LIST_SPACING);
 	}
 
+	void CreateSeasons()
+	{
+		List<string> productIDs = m_ProductsManager.GetProductIDs(ProductType.Season);
+		
+		if (productIDs == null || productIDs.Count == 0)
+			return;
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		foreach (string productID in productIDs)
+			m_Content.Add(new ProductSeasonElementEntity(productID, m_SeasonsPool));
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
+	}
+
 	void CreateDaily()
 	{
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
@@ -141,7 +159,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		m_Content.Space(LIST_SPACING);
 	}
 
-	void CreateItems()
+	void CreateCoins()
 	{
 		List<string> productIDs = m_ProductsManager.GetProductIDs(ProductType.Coins);
 		
@@ -151,7 +169,7 @@ public class UIMainMenuStorePage : UIMainMenuPage
 		VerticalGridLayout.Start(m_Content, 3, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
 		
 		foreach (string productID in productIDs)
-			m_Content.Add(new ProductItemEntity(productID, m_ItemPool));
+			m_Content.Add(new ProductCoinsElementEntity(productID, m_CoinsPool));
 		
 		VerticalStackLayout.End(m_Content);
 		

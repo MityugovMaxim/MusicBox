@@ -109,8 +109,8 @@ public abstract class UIImage : MaskableGraphic
 	}
 
 	protected abstract Material GetMaterial();
-	protected abstract Vector2 GetUV2();
-	protected abstract Vector2 GetUV3();
+	protected abstract Vector4 GetUV2();
+	protected abstract Vector4 GetUV3();
 	protected abstract Vector3 GetNormal();
 	protected abstract Vector4 GetTangent();
 

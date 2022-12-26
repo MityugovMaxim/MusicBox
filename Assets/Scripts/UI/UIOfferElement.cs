@@ -7,10 +7,11 @@ public class UIOfferElement : UIEntity
 	[Preserve]
 	public class Pool : UIEntityPool<UIOfferElement> { }
 
-	[SerializeField] UIOfferImage  m_Image;
-	[SerializeField] UIOfferLabel  m_Label;
-	[SerializeField] UIOfferState  m_State;
-	[SerializeField] UIOfferAction m_Action;
+	[SerializeField] UIOfferImage    m_Image;
+	[SerializeField] UIOfferLabel    m_Label;
+	[SerializeField] UIOfferReward[] m_Rewards;
+	[SerializeField] UIOfferState    m_State;
+	[SerializeField] UIOfferAction   m_Action;
 
 	[Inject] BadgeManager m_BadgeManager;
 
@@ -21,6 +22,7 @@ public class UIOfferElement : UIEntity
 		m_State.OfferID  = _OfferID;
 		m_Action.OfferID = _OfferID;
 		
-		m_BadgeManager.Read(UINewsBadge.OFFERS_GROUP, _OfferID);
+		foreach (UIOfferReward reward in m_Rewards)
+			reward.OfferID = _OfferID;
 	}
 }

@@ -15,17 +15,17 @@ public class UIAccuracyIndicator : UIOrder
 	{
 		base.OnEnable();
 		
-		m_ScoreController.OnComboChange += OnComboChanged;
+		m_ScoreController.OnHit.AddListener(OnHit);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_ScoreController.OnComboChange -= OnComboChanged;
+		m_ScoreController.OnHit.AddListener(OnHit);
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
+	void OnHit(ScoreType _ScoreType, ScoreGrade _ScoreGrade)
 	{
 		switch (_ScoreGrade)
 		{

@@ -32,6 +32,10 @@ public class UIOverlayToggle : UIButton
 
 	bool m_Value;
 
+	public void Subscribe(UnityAction<bool> _Action) => ValueChanged.AddListener(_Action);
+
+	public void Unsubscribe(UnityAction<bool> _Action) => ValueChanged.RemoveListener(_Action);
+
 	public void SetState(bool _Value)
 	{
 		if (m_Value == _Value)

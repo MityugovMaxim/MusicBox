@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UISongImage : UISongEntity
 {
-	[SerializeField] WebImage m_Image;
+	[SerializeField] WebGraphic m_Image;
 
 	protected override void Subscribe()
 	{

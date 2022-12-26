@@ -22,6 +22,6 @@ public class UISongLock : UISongEntity
 
 	protected override void ProcessData()
 	{
-		m_Content.SetActive(SongsManager.IsAvailable(SongID) || SongsManager.IsPaid(SongID));
+		m_Content.SetActive(SongsManager.IsFree(SongID) || SongsManager.IsPaid(SongID));
 	}
 }

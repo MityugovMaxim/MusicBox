@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using AudioBox.Logging;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class SongsManager
+public class SongsManager : IDataManager
 {
 	public SongsCollection Collection => m_SongsCollection;
 
@@ -14,13 +16,23 @@ public class SongsManager
 	[Inject] ProfileSongs      m_ProfileSongs;
 	[Inject] DifficultyManager m_DifficultyManager;
 	[Inject] ScoresManager     m_ScoresManager;
+	[Inject] MenuProcessor     m_MenuProcessor;
+
+	public Task<bool> Activate()
+	{
+		return GroupTask.ProcessAsync(
+			this,
+			Collection.Load,
+			Profile.Load
+		);
+	}
 
 	public List<string> GetAvailableSongIDs()
 	{
 		return m_SongsCollection.GetIDs()
-			.Where(IsAvailable)
+			.Where(IsFree)
 			.OrderBy(m_ScoresManager.GetRank)
-			.ThenBy(GetDifficulty)
+			.ThenBy(GetRank)
 			.ThenBy(m_SongsCollection.GetOrder)
 			.ToList();
 	}
@@ -30,7 +42,7 @@ public class SongsManager
 		return m_SongsCollection.GetIDs()
 			.Where(IsPaid)
 			.OrderBy(GetPrice)
-			.ThenBy(GetDifficulty)
+			.ThenBy(GetRank)
 			.ThenBy(m_SongsCollection.GetOrder)
 			.ToList();
 	}
@@ -40,7 +52,7 @@ public class SongsManager
 		return m_SongsCollection.GetIDs()
 			.Where(IsChest)
 			.OrderBy(GetPrice)
-			.ThenBy(GetDifficulty)
+			.ThenBy(GetRank)
 			.ThenBy(m_SongsCollection.GetOrder)
 			.ToList();
 	}
@@ -64,13 +76,11 @@ public class SongsManager
 		return null;
 	}
 
-	public bool IsAvailable(string _SongID) => Profile.Contains(_SongID) || GetMode(_SongID) == SongMode.Free;
+	public bool IsFree(string _SongID) => Profile.Contains(_SongID) || GetMode(_SongID) == SongMode.Free;
 
-	public bool IsUnavailable(string _SongID) => !IsAvailable(_SongID);
+	public bool IsPaid(string _SongID) => !IsFree(_SongID) && GetMode(_SongID) == SongMode.Paid;
 
-	public bool IsPaid(string _SongID) => IsUnavailable(_SongID) && GetMode(_SongID) == SongMode.Paid;
-
-	public bool IsChest(string _SongID) => IsUnavailable(_SongID) && GetMode(_SongID) == SongMode.Chest;
+	public bool IsChest(string _SongID) => !IsFree(_SongID) && GetMode(_SongID) == SongMode.Chest;
 
 	public string GetArtist(string _SongID)
 	{
@@ -114,20 +124,20 @@ public class SongsManager
 		return snapshot?.ASF ?? string.Empty;
 	}
 
-	public float GetSpeed(string _SongID) => m_DifficultyManager.GetSpeed(GetDifficulty(_SongID));
+	public float GetSpeed(string _SongID) => m_DifficultyManager.GetSpeed(GetRank(_SongID));
 
-	public DifficultyType GetDifficulty(string _SongID)
+	public RankType GetRank(string _SongID)
 	{
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
-		return snapshot?.Difficulty ?? DifficultyType.Casual;
+		return snapshot?.Rank ?? RankType.None;
 	}
 
-	public long GetCoins(string _SongID, ScoreRank _ScoreRank) => m_DifficultyManager.GetCoins(GetDifficulty(_SongID), _ScoreRank);
+	public long GetCoins(string _SongID, RankType _ScoreRank) => m_DifficultyManager.GetCoins(GetRank(_SongID), _ScoreRank);
 
-	public int GetThreshold(string _SongID, ScoreRank _ScoreRank) => m_DifficultyManager.GetThreshold(GetDifficulty(_SongID), _ScoreRank);
+	public int GetThreshold(string _SongID, RankType _ScoreRank) => m_DifficultyManager.GetThreshold(GetRank(_SongID), _ScoreRank);
 
-	public ScoreRank GetRank(string _SongID, int _Accuracy) => m_DifficultyManager.GetRank(GetDifficulty(_SongID), _Accuracy);
+	public RankType GetRank(string _SongID, int _Accuracy) => m_DifficultyManager.GetRank(GetRank(_SongID), _Accuracy);
 
 	public long GetPrice(string _SongID)
 	{
@@ -172,5 +182,30 @@ public class SongsManager
 		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
 		
 		return snapshot?.Badge ?? SongBadge.None;
+	}
+
+	public async Task<bool> Collect(string _SongID)
+	{
+		if (string.IsNullOrEmpty(_SongID))
+			return false;
+		
+		if (Profile.Contains(_SongID))
+			return false;
+		
+		if (IsPaid(_SongID) || IsChest(_SongID))
+			return false;
+		
+		Log.Info(this, "Collecting song with ID '{0}'...", _SongID);
+		
+		SongCollectRequest request = new SongCollectRequest(_SongID);
+		
+		bool success = await request.SendAsync();
+		
+		if (success)
+			return true;
+		
+		await m_MenuProcessor.ErrorAsync("song_collect");
+		
+		return false;
 	}
 }

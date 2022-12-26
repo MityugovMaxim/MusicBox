@@ -64,7 +64,7 @@ public class SongController
 			return false;
 		}
 		
-		Dictionary<string, object> asf = await LoadASFAsync(m_SongID);
+		ASFFile asf = await LoadASFAsync(m_SongID);
 		
 		if (asf == null)
 		{
@@ -74,13 +74,14 @@ public class SongController
 		
 		m_Progress = null;
 		
-		float ratio = m_ConfigProcessor.SongRatio;
-		float speed = m_SongsManager.GetSpeed(m_SongID);
+		float    ratio    = m_ConfigProcessor.SongRatio;
+		float    speed    = m_SongsManager.GetSpeed(m_SongID);
+		RankType songRank = m_SongsManager.GetRank(m_SongID);
 		
 		m_Player = m_SongFactory.Create(player);
 		m_Player.Setup(ratio, speed, music, asf, Finish);
 		
-		m_ScoreController.Setup(m_SongID);
+		m_ScoreController.Setup(songRank, asf);
 		m_HealthController.Setup(Death);
 		
 		m_Player.Time = -m_Player.Duration;
@@ -317,7 +318,7 @@ public class SongController
 		return m_AudioClipProvider.DownloadAsync(path, ProcessMusicProgress);
 	}
 
-	Task<Dictionary<string, object>> LoadASFAsync(string _SongID)
+	Task<ASFFile> LoadASFAsync(string _SongID)
 	{
 		string path = m_SongsManager.GetASF(_SongID);
 		

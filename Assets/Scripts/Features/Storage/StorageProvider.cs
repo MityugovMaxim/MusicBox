@@ -127,7 +127,7 @@ public abstract class StorageProvider<T>
 		return PlayerPrefs.GetString(key);
 	}
 
-	static void SetLocalHash(string _Path, string _MD5)
+	protected static void SetLocalHash(string _Path, string _MD5)
 	{
 		if (string.IsNullOrEmpty(_Path))
 			return;
@@ -183,10 +183,10 @@ public abstract class StorageProvider<T>
 		return $"file://{targetPath}";
 	}
 
-	static async Task EncryptionAsync(string _Path, int _Size = 2048)
+	static Task EncryptionAsync(string _Path, int _Size = 2048)
 	{
 		if (string.IsNullOrEmpty(_Path))
-			return;
+			return Task.CompletedTask;
 		
 		byte[] key =
 		{
@@ -210,9 +210,11 @@ public abstract class StorageProvider<T>
 		{
 			stream.Write(buffer, 0, count);
 		}
+
+		return Task.CompletedTask;
 	}
 
-	protected async Task<bool> UploadFileAsync(string _Path, Func<Task<byte[]>> _Data, MetadataChange _Metadata, Action<float> _Progress, CancellationToken _Token = default)
+	protected async Task<bool> UploadAsync(string _Path, Func<Task<byte[]>> _Data, MetadataChange _Metadata, Action<float> _Progress, CancellationToken _Token = default)
 	{
 		if (m_UploadProcesses.TryGetValue(_Path, out StorageUploadHandler handler) && handler != null)
 		{
@@ -289,7 +291,7 @@ public abstract class StorageProvider<T>
 		
 		handler = new StorageDownloadHandler(source.Task, _Progress);
 		
-		m_DownloadProcesses[_Path] = new StorageDownloadHandler(source.Task, _Progress);
+		m_DownloadProcesses[_Path] = handler;
 		
 		CreateDirectory(_Path);
 		
@@ -298,6 +300,81 @@ public abstract class StorageProvider<T>
 			string path = GetLocalPath(_Path);
 			
 			await reference.GetFileAsync(path, handler, _Token);
+			
+			SetLocalHash(_Path, remoteHash);
+			
+			if (Encrypt)
+				await EncryptFileAsync(_Path);
+			
+			source.TrySetResult(true);
+			return true;
+		}
+		catch (TaskCanceledException)
+		{
+			Log.Info(this, "Download canceled. Path: {0}", _Path);
+			source.TrySetResult(false);
+			return false;
+		}
+		catch (OperationCanceledException)
+		{
+			Log.Info(this, "Download canceled. Path: {0}", _Path);
+			source.TrySetResult(false);
+			return false;
+		}
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+			source.TrySetException(exception);
+			throw;
+		}
+		finally
+		{
+			if (m_DownloadProcesses.ContainsKey(_Path))
+				m_DownloadProcesses.Remove(_Path);
+			
+			handler.Dispose();
+		}
+	}
+
+	protected async Task<bool> DownloadDataAsync(string _Path, Action<float> _Progress, CancellationToken _Token = default)
+	{
+		if (string.IsNullOrEmpty(_Path))
+			return false;
+		
+		if (m_DownloadProcesses.TryGetValue(_Path, out StorageDownloadHandler handler) && handler != null)
+		{
+			handler.AddListener(_Progress);
+			return await handler.Task;
+		}
+		
+		string localHash  = GetLocalHash(_Path);
+		string remoteHash = await GetRemoteHash(_Path);
+		
+		if (localHash != null && remoteHash != null && localHash == remoteHash)
+			return true;
+		
+		StorageReference reference = GetReference(_Path);
+		
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
+		
+		handler = new StorageDownloadHandler(source.Task, _Progress);
+		
+		m_DownloadProcesses[_Path] = handler;
+		
+		CreateDirectory(_Path);
+		
+		try
+		{
+			const int size = 1024 * 1024 * 10;
+			
+			string path = GetLocalPath(_Path);
+			
+			byte[] data = await reference.GetBytesAsync(size, handler, _Token);
+			
+			if (Compress)
+				data = Compression.Decompress(data);
+			
+			await File.WriteAllBytesAsync(path, data, _Token);
 			
 			SetLocalHash(_Path, remoteHash);
 			

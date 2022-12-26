@@ -86,43 +86,8 @@ public class UIColorsMenu : UIMenu
 		Hide();
 	}
 
-	async void Upload()
+	void Upload()
 	{
-		bool confirm = await m_MenuProcessor.ConfirmAsync(
-			"upload",
-			"UPLOAD",
-			"Are you sure want to upload colors?"
-		);
-		
-		if (!confirm)
-			return;
-		
-		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		
-		foreach (ColorsSnapshot snapshot in m_Snapshots)
-		{
-			if (snapshot == null)
-				continue;
-			
-			Dictionary<string, object> entry = new Dictionary<string, object>();
-			
-			snapshot.Serialize(entry);
-			
-			data[snapshot.ID] = entry;
-		}
-		
-		try
-		{
-			await m_Data.SetValueAsync(data);
-		}
-		catch (Exception exception)
-		{
-			await m_MenuProcessor.ExceptionAsync(exception);
-		}
-		
-		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
 	async void Restore()
@@ -199,12 +164,5 @@ public class UIColorsMenu : UIMenu
 
 	void Add()
 	{
-		string colorsID = m_Snapshots.GenerateUniqueID("Colors", _Snapshot => _Snapshot.ID);
-		
-		m_Snapshots.Add(new ColorsSnapshot(colorsID, 0));
-		
-		m_Snapshots.Sort((_A, _B) => _A.Order.CompareTo(_B.Order));
-		
-		m_List.Setup(m_Snapshots);
 	}
 }

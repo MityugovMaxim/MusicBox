@@ -68,8 +68,8 @@ public class UISongScoreElement : UIEntity
 	public void Setup(
 		int       _Position,
 		long      _Score,
-		ScoreRank _Disc,
-		ScoreRank _Rank,
+		RankType _Disc,
+		RankType _Rank,
 		bool      _Record
 	)
 	{
@@ -78,11 +78,11 @@ public class UISongScoreElement : UIEntity
 		m_Content.SetActive(position >= 1 && position <= 100);
 		
 		m_Record.SetActive(_Record);
-		m_NoneRange.SetActive(!_Record && _Rank == ScoreRank.None);
-		m_BronzeRange.SetActive(!_Record && _Rank == ScoreRank.Bronze);
-		m_SilverRange.SetActive(!_Record && _Rank == ScoreRank.Silver);
-		m_GoldRange.SetActive(!_Record && _Rank == ScoreRank.Gold);
-		m_PlatinumRange.SetActive(!_Record && _Rank == ScoreRank.Platinum);
+		m_NoneRange.SetActive(!_Record && _Rank == RankType.None);
+		m_BronzeRange.SetActive(!_Record && _Rank == RankType.Bronze);
+		m_SilverRange.SetActive(!_Record && _Rank == RankType.Silver);
+		m_GoldRange.SetActive(!_Record && _Rank == RankType.Gold);
+		m_PlatinumRange.SetActive(!_Record && _Rank == RankType.Platinum);
 		
 		m_Position.text = position.ToString();
 		m_Score.Value   = _Score;

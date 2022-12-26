@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public class VoucherCollectRequest : FunctionRequest<bool>
+public class VoucherCollectRequest : FunctionRequest<RequestState>
 {
 	protected override string Command => "VoucherCollect";
 
@@ -16,13 +16,13 @@ public class VoucherCollectRequest : FunctionRequest<bool>
 		_Data["voucher_id"] = m_VoucherID;
 	}
 
-	protected override bool Success(object _Data)
+	protected override RequestState Success(object _Data)
 	{
-		return _Data != null && (bool)_Data;
+		return _Data != null && (bool)_Data ? RequestState.Success : RequestState.Fail;
 	}
 
-	protected override bool Fail()
+	protected override RequestState Fail()
 	{
-		return false;
+		return RequestState.Fail;
 	}
 }

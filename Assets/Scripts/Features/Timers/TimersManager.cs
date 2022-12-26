@@ -9,8 +9,9 @@ using Zenject;
 [Preserve]
 public class TimersManager : IDataManager, IInitializable, IDisposable
 {
-	public bool          Activated { get; private set; }
-	public ProfileTimers Profile   => m_ProfileTimers;
+	public bool Activated { get; private set; }
+
+	public ProfileTimers Profile => m_ProfileTimers;
 
 	[Inject] ProfileTimers m_ProfileTimers;
 
@@ -48,8 +49,6 @@ public class TimersManager : IDataManager, IInitializable, IDisposable
 		Profile.Unsubscribe(DataEventType.Remove, ProcessTimer);
 		Profile.Unsubscribe(DataEventType.Change, ProcessTimer);
 	}
-
-	public Task Preload() => Profile.Load();
 
 	public void SubscribeStart(string _TimerID, Action _Action) => m_StartHandler.AddListener(_TimerID, _Action);
 

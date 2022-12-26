@@ -22,11 +22,9 @@ public class UIAnalogDigit : UIEntity
 	[SerializeField, Range(0, 1)] float m_Phase;
 
 	[SerializeField] GameObject m_Content;
-	[SerializeField] Graphic    m_Background;
 	[SerializeField] Image      m_Center;
 	[SerializeField] Image      m_Upper;
 	[SerializeField] Image      m_Lower;
-	[SerializeField] Image      m_Analog;
 	[SerializeField] float      m_Duration;
 	[SerializeField] Sprite[]   m_Digits;
 
@@ -115,10 +113,6 @@ public class UIAnalogDigit : UIEntity
 		Vector3 centerScale = m_Center.rectTransform.localScale;
 		centerScale.y                     = Mathf.Lerp(1, 0, Mathf.PingPong(Phase * 2, 1));
 		m_Center.rectTransform.localScale = centerScale;
-		
-		Vector3 analogScale = m_Analog.rectTransform.localScale;
-		analogScale.y                     = Mathf.Lerp(1, -1, Phase);
-		m_Analog.rectTransform.localScale = analogScale;
 	}
 
 	void ProcessColor()
@@ -132,13 +126,7 @@ public class UIAnalogDigit : UIEntity
 		centerColor.g *= multiplier;
 		centerColor.b *= multiplier;
 		
-		Color analogColor = m_Background.color;
-		analogColor.r *= multiplier;
-		analogColor.g *= multiplier;
-		analogColor.b *= multiplier;
-		
 		m_Center.color = centerColor;
-		m_Analog.color = analogColor;
 	}
 
 	void ProcessContent()

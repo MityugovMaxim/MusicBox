@@ -1,5 +1,45 @@
 using System;
 
+public class DynamicDelegate
+{
+	Action m_RegularAction;
+	
+	public static DynamicDelegate operator +(DynamicDelegate _Delegate, Action _Action)
+	{
+		if (_Delegate == null)
+			_Delegate = new DynamicDelegate();
+		
+		_Delegate.AddListener(_Action);
+		
+		return _Delegate;
+	}
+
+	public static DynamicDelegate operator -(DynamicDelegate _Delegate, Action _Action)
+	{
+		if (_Delegate == null)
+			return null;
+		
+		_Delegate.RemoveListener(_Action);
+		
+		return _Delegate;
+	}
+
+	public void AddListener(Action _Action)
+	{
+		m_RegularAction += _Action;
+	}
+
+	public void RemoveListener(Action _Action)
+	{
+		m_RegularAction -= _Action;
+	}
+
+	public void Invoke()
+	{
+		m_RegularAction?.Invoke();
+	}
+}
+
 public class DynamicDelegate<T0, T1>
 {
 	Action         m_RegularAction;

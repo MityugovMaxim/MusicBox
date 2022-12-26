@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.Logging;
-using AudioBox.Compression;
 using UnityEngine;
 
 namespace AudioBox.ASF
@@ -67,9 +66,25 @@ namespace AudioBox.ASF
 			set => m_AudioSource.clip = value;
 		}
 
-		public float  BPM    { get; set; }
-		public int    Bar    { get; set; }
-		public double Origin { get; set; }
+		public ASFFile ASF { get; set; }
+
+		public float BPM
+		{
+			get => ASF.BPM;
+			set => ASF.BPM = value;
+		}
+
+		public int Bar
+		{
+			get => ASF.Bar;
+			set => ASF.Bar = value;
+		}
+
+		public double Origin
+		{
+			get => ASF.Origin;
+			set => ASF.Origin = value;
+		}
 
 		public ASFPlayerState State { get; private set; } = ASFPlayerState.Stop;
 
@@ -199,6 +214,18 @@ namespace AudioBox.ASF
 				sampler.Sample(Time, Length);
 		}
 
+		public void Load()
+		{
+			foreach (ASFTrack track in m_Tracks)
+				ASF.Load(track);
+		}
+
+		public void Save()
+		{
+			foreach (ASFTrack track in m_Tracks)
+				ASF.Save(track);
+		}
+
 		public void AddSampler(IASFSampler _Sampler)
 		{
 			if (_Sampler != null)
@@ -209,61 +236,6 @@ namespace AudioBox.ASF
 		{
 			if (_Sampler != null)
 				m_Samplers.Remove(_Sampler);
-		}
-
-		public Dictionary<string, object> Serialize()
-		{
-			Dictionary<string, object> data = new Dictionary<string, object>();
-			
-			data["bpm"]    = BPM;
-			data["bar"]    = Bar;
-			data["origin"] = Origin;
-			
-			foreach (ASFTrack track in m_Tracks)
-			{
-				if (track == null)
-				{
-					Log.Error(this, "Serialization failed. Track is null.");
-					continue;
-				}
-				
-				List<object> clips = track.Serialize();
-				
-				if (clips == null || clips.Count == 0)
-					continue;
-				
-				data[track.GetType().Name] = clips;
-			}
-			
-			return data;
-		}
-
-		public void Deserialize(IDictionary<string, object> _Data)
-		{
-			if (_Data == null)
-				return;
-			
-			_Data.GetFloat("bpm");
-			_Data.GetInt("bar");
-			_Data.GetDouble("origin");
-			
-			foreach (string key in _Data.GetKeys())
-			{
-				Type type = Type.GetType($"AudioBox.ASF.{key}");
-				
-				if (type == null)
-					continue;
-				
-				ASFTrack track = GetTrack(type);
-				
-				if (track == null)
-				{
-					Log.Error(this, "Deserialization error. Track '{0}' not found.", type);
-					continue;
-				}
-				
-				track.Deserialize(_Data.GetList(key));
-			}
 		}
 
 		protected void AddTrack(ASFTrack _Track)

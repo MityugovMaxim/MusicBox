@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -7,6 +8,23 @@ public class ScoresManager
 	public ProfileScores Profile => m_ProfileScores;
 
 	[Inject] ProfileScores m_ProfileScores;
+	[Inject] SongsManager  m_SongsManager;
+
+	public string GetBestSongID()
+	{
+		return Profile.GetIDs()
+			.OrderByDescending(GetAccuracy)
+			.ThenByDescending(m_SongsManager.GetRank)
+			.FirstOrDefault();
+	}
+
+	public string GetWorstSongID()
+	{
+		return Profile.GetIDs()
+			.OrderBy(GetAccuracy)
+			.ThenBy(m_SongsManager.GetRank)
+			.FirstOrDefault();
+	}
 
 	public int GetAccuracy(string _SongID)
 	{
@@ -22,10 +40,10 @@ public class ScoresManager
 		return snapshot?.Score ?? 0;
 	}
 
-	public ScoreRank GetRank(string _SongID)
+	public RankType GetRank(string _SongID)
 	{
 		ProfileScore snapshot = Profile.GetSnapshot(_SongID);
 		
-		return snapshot?.Rank ?? ScoreRank.None;
+		return snapshot?.Rank ?? RankType.None;
 	}
 }

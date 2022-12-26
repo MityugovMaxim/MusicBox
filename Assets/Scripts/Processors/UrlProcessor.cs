@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using AudioBox.Logging;
-using Firebase.DynamicLinks;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
@@ -192,12 +189,12 @@ public class UrlProcessor
 
 	Task ProcessOffers(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Season, _Parameters, _Instant);
+		return SelectMainPage(MainMenuPageType.Seasons, _Parameters, _Instant);
 	}
 
 	Task ProcessProfile(Dictionary<string, string> _Parameters, bool _Instant)
 	{
-		return SelectMainPage(MainMenuPageType.Profile, _Parameters, _Instant);
+		return SelectMainPage(MainMenuPageType.Chests, _Parameters, _Instant);
 	}
 
 	[SuppressMessage("ReSharper", "UnusedParameter.Local")]

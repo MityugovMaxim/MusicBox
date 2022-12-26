@@ -9,12 +9,12 @@ public class UIProductPrice : UIProductEntity
 
 	protected override void Subscribe()
 	{
-		ProductsManager.Store.Subscribe(ProcessData);
+		ProductsManager.Collection.Subscribe(DataEventType.Change, ProductID, ProcessData);
 	}
 
 	protected override void Unsubscribe()
 	{
-		ProductsManager.Store.Unsubscribe(ProcessData);
+		ProductsManager.Collection.Unsubscribe(DataEventType.Change, ProductID, ProcessData);
 	}
 
 	protected override async void ProcessData()

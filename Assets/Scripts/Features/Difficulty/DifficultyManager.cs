@@ -8,77 +8,77 @@ public class DifficultyManager
 
 	[Inject] DifficultyCollection m_DifficultyCollection;
 
-	public float GetSpeed(DifficultyType _DifficultyType)
+	public float GetSpeed(RankType _SongType)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
 		
 		return snapshot?.Speed ?? 500;
 	}
 
-	public float GetInputExpand(DifficultyType _DifficultyType)
+	public float GetInputExpand(RankType _SongType)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
 		
 		return snapshot?.InputExpand ?? 0;
 	}
 
-	public float GetInputOffset(DifficultyType _DifficultyType)
+	public float GetInputOffset(RankType _SongType)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
 		
 		return snapshot?.InputOffset ?? 0;
 	}
 
-	public long GetCoins(DifficultyType _DifficultyType, ScoreRank _ScoreRank)
+	public long GetCoins(RankType _SongType, RankType _ScoreRank)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
 		
 		if (snapshot == null)
 			return 0;
 		
 		switch (_ScoreRank)
 		{
-			case ScoreRank.Bronze:   return snapshot.BronzeCoins;
-			case ScoreRank.Silver:   return snapshot.SilverCoins;
-			case ScoreRank.Gold:     return snapshot.GoldCoins;
-			case ScoreRank.Platinum: return snapshot.PlatinumCoins;
+			case RankType.Bronze:   return snapshot.BronzeCoins;
+			case RankType.Silver:   return snapshot.SilverCoins;
+			case RankType.Gold:     return snapshot.GoldCoins;
+			case RankType.Platinum: return snapshot.PlatinumCoins;
 			default:                 return 0;
 		}
 	}
 
-	public int GetThreshold(DifficultyType _DifficultyType, ScoreRank _ScoreRank)
+	public int GetThreshold(RankType _SongRank, RankType _ScoreRank)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongRank);
 		
 		if (snapshot == null)
 			return 0;
 		
 		switch (_ScoreRank)
 		{
-			case ScoreRank.Bronze:   return snapshot.BronzeThreshold;
-			case ScoreRank.Silver:   return snapshot.SilverThreshold;
-			case ScoreRank.Gold:     return snapshot.GoldThreshold;
-			case ScoreRank.Platinum: return snapshot.PlatinumThreshold;
+			case RankType.Bronze:   return snapshot.BronzeThreshold;
+			case RankType.Silver:   return snapshot.SilverThreshold;
+			case RankType.Gold:     return snapshot.GoldThreshold;
+			case RankType.Platinum: return snapshot.PlatinumThreshold;
 			default:                 return 0;
 		}
 	}
 
-	public ScoreRank GetRank(DifficultyType _DifficultyType, int _Accuracy)
+	public RankType GetRank(RankType _SongRank, int _Accuracy)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_DifficultyType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongRank);
 		
 		if (snapshot == null)
-			return ScoreRank.None;
+			return RankType.None;
 		
 		if (_Accuracy >= snapshot.PlatinumThreshold)
-			return ScoreRank.Platinum;
+			return RankType.Platinum;
 		if (_Accuracy >= snapshot.GoldThreshold)
-			return ScoreRank.Gold;
+			return RankType.Gold;
 		if (_Accuracy >= snapshot.SilverThreshold)
-			return ScoreRank.Silver;
+			return RankType.Silver;
 		if (_Accuracy >= snapshot.BronzeThreshold)
-			return ScoreRank.Bronze;
+			return RankType.Bronze;
 		
-		return ScoreRank.None;
+		return RankType.None;
 	}
 }

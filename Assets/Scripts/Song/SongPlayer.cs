@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AudioBox.ASF;
 using UnityEngine;
@@ -25,19 +24,19 @@ public class SongPlayer : ASFPlayer
 	double m_Length;
 
 	public void Setup(
-		float                      _Ratio,
-		float                      _Speed,
-		AudioClip                  _Music,
-		Dictionary<string, object> _ASF,
-		Action                     _Finished
+		float     _Ratio,
+		float     _Speed,
+		AudioClip _Music,
+		ASFFile   _ASF,
+		Action    _Finished
 	)
 	{
-		// Rect rect = GetLocalRect();
+		Rect rect = GetLocalRect();
 		
-		// TODO: Move upper
-		// Ratio    = _Ratio;
-		// Duration = rect.height / _Speed;
-		// Music    = _Music;
+		Ratio    = _Ratio;
+		Duration = rect.height / _Speed;
+		Music    = _Music;
+		ASF      = _ASF;
 		
 		m_Finished = _Finished;
 		
@@ -49,7 +48,7 @@ public class SongPlayer : ASFPlayer
 		AddTrack(new ASFHoldTrack(m_HoldTrack));
 		AddTrack(new ASFColorTrack(m_ColorTrack, m_ColorTrack));
 		
-		Deserialize(_ASF);
+		Load();
 		
 		m_Length = GetLength() + Duration * Ratio;
 	}

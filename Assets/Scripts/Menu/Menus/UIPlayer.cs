@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AudioBox.ASF;
-using AudioBox.Logging;
 using Melanchall.DryWetMidi.Core;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -21,7 +20,7 @@ public class UIPlayer : ASFPlayer
 
 	float m_Length;
 
-	public void Setup(float _Ratio, float _Duration, AudioClip _Music, Dictionary<string, object> _ASF)
+	public void Setup(float _Ratio, float _Duration, AudioClip _Music, ASFFile _ASF)
 	{
 		Clear();
 		ClearTracks();
@@ -29,6 +28,7 @@ public class UIPlayer : ASFPlayer
 		Ratio    = _Ratio;
 		Duration = _Duration;
 		Music    = _Music;
+		ASF      = _ASF;
 		
 		m_Length = Music.length;
 		
@@ -42,14 +42,10 @@ public class UIPlayer : ASFPlayer
 		AddTrack(new ASFDoubleTrack(m_DoubleTrack));
 		AddTrack(new ASFHoldTrack(m_HoldTrack));
 		
-		try
-		{
-			Deserialize(_ASF);
-		}
-		catch (Exception exception)
-		{
-			Log.Exception(this, exception);
-		}
+		_ASF.LoadTap(GetTrack<ASFTapTrack>());
+		_ASF.LoadDouble(GetTrack<ASFDoubleTrack>());
+		_ASF.LoadHold(GetTrack<ASFHoldTrack>());
+		_ASF.LoadColor(GetTrack<ASFColorTrack>());
 	}
 
 	public void Generate()

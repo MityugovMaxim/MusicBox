@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using AudioBox.Logging;
@@ -15,15 +14,6 @@ public class BannerSnapshot : Snapshot
 	public bool   Permanent { get; }
 	public string URL       { get; }
 
-	public BannerSnapshot() : base("new_banner", 0)
-	{
-		Active    = false;
-		Image     = "Thumbnails/Banners/new_banner.jpg";
-		Language  = "en";
-		Permanent = false;
-		URL       = "audiobox://";
-	}
-
 	public BannerSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Active    = _Data.GetBool("active");
@@ -32,20 +22,7 @@ public class BannerSnapshot : Snapshot
 		Permanent = _Data.GetBool("permanent");
 		URL       = _Data.GetString("url");
 	}
-
-	public override void Serialize(Dictionary<string, object> _Data)
-	{
-		base.Serialize(_Data);
-		
-		_Data["active"]    = Active;
-		_Data["language"]  = Language;
-		_Data["permanent"] = Permanent;
-		_Data["url"]       = URL;
-	}
 }
-
-[Preserve]
-public class BannersDataUpdateSignal { }
 
 [Preserve]
 public class BannersProcessor : DataCollection<BannerSnapshot>

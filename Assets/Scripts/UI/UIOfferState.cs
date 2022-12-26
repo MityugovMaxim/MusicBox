@@ -2,50 +2,52 @@ using TMPro;
 using UnityEngine;
 using Zenject;
 
-public class UIOfferState : UIEntity
+public class UIOfferState : UIOfferEntity
 {
-	public string OfferID
-	{
-		get => m_OfferID;
-		set
-		{
-			if (m_OfferID == value)
-				return;
-			
-			m_OffersManager.UnsubscribeCollect(m_OfferID, ProcessState);
-			
-			m_OfferID = value;
-			
-			ProcessState();
-			
-			m_OffersManager.SubscribeCollect(m_OfferID, ProcessState);
-		}
-	}
-
 	[SerializeField] TMP_Text m_State;
+	[SerializeField] TMP_Text m_Progress;
+	[SerializeField] UIGroup  m_StateGroup;
+	[SerializeField] UIGroup  m_ProgressGroup;
 
-	[Inject] OffersManager m_OffersManager;
-	[Inject] Localization  m_Localization;
+	[Inject] Localization m_Localization;
 
-	string m_OfferID;
-
-	protected override void OnDisable()
+	protected override void Subscribe()
 	{
-		base.OnDisable();
-		
-		OfferID = null;
+		OffersManager.SubscribeCollect(OfferID, ProcessData);
+		OffersManager.Profile.Subscribe(DataEventType.Add, OfferID, ProcessData);
+		OffersManager.Profile.Subscribe(DataEventType.Remove, OfferID, ProcessData);
+		OffersManager.Collection.Subscribe(DataEventType.Change, OfferID, ProcessData);
 	}
 
-	void ProcessState()
+	protected override void Unsubscribe()
 	{
-		int source = m_OffersManager.GetSource(OfferID);
-		int target = m_OffersManager.GetTarget(OfferID);
-		
-		if (m_OffersManager.IsCollected(OfferID))
+		OffersManager.UnsubscribeCollect(OfferID, ProcessData);
+		OffersManager.Profile.Unsubscribe(DataEventType.Add, OfferID, ProcessData);
+		OffersManager.Profile.Unsubscribe(DataEventType.Remove, OfferID, ProcessData);
+		OffersManager.Collection.Unsubscribe(DataEventType.Change, OfferID, ProcessData);
+	}
+
+	protected override void ProcessData()
+	{
+		if (OffersManager.IsCollected(OfferID))
+		{
+			m_StateGroup.Show();
+			m_ProgressGroup.Hide();
 			m_State.text = m_Localization.Get("OFFER_COLLECTED");
-		else if (source < target)
-			m_State.text = m_Localization.Format("OFFER_PROGRESS", source, target);
+		}
+		else if (OffersManager.IsProcessing(OfferID))
+		{
+			m_ProgressGroup.Show();
+			m_StateGroup.Hide();
+			int source = OffersManager.GetSource(OfferID);
+			int target = OffersManager.GetTarget(OfferID);
+			m_Progress.text = $"<sprite name=ads>{source}/{target}";
+		}
 		else
+		{
+			m_StateGroup.Show();
+			m_ProgressGroup.Hide();
 			m_State.text = m_Localization.Get("OFFER_COLLECT");
+		}
 	}
 }

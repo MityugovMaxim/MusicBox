@@ -4,19 +4,22 @@ public class SeasonCollectRequest : FunctionRequest<bool>
 {
 	protected override string Command => "SeasonCollect";
 
-	readonly string m_SeasonID;
-	readonly string m_ItemID;
+	readonly string         m_SeasonID;
+	readonly int            m_Level;
+	readonly SeasonItemMode m_Mode;
 
-	public SeasonCollectRequest(string _SeasonID, string _ItemID)
+	public SeasonCollectRequest(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
 		m_SeasonID = _SeasonID;
-		m_ItemID   = _ItemID;
+		m_Level    = _Level;
+		m_Mode     = _Mode;
 	}
 
 	protected override void Serialize(IDictionary<string, object> _Data)
 	{
 		_Data["season_id"] = m_SeasonID;
-		_Data["item_id"]   = m_ItemID;
+		_Data["level"]     = m_Level;
+		_Data["mode"]      = (int)m_Mode;
 	}
 
 	protected override bool Success(object _Data)

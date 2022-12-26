@@ -17,6 +17,24 @@ public static class StringExtension
 		"URL",
 	};
 
+	static readonly Dictionary<string, string> m_Converters = new Dictionary<string, string>()
+	{
+		{ "ios", "iOS" },
+		{ "IOS", "iOS" },
+		{ "Ios", "iOS" },
+		{ "ids", "IDs" },
+		{ "Ids", "IDs" },
+		{ "IDS", "IDs" },
+		{ "id", "ID" },
+		{ "Id", "ID" },
+		{ "bpm", "BPM" },
+		{ "Bpm", "BPM" },
+		{ "asf", "ASF" },
+		{ "Asf", "ASF" },
+		{ "url", "URL" },
+		{ "Url", "URL" },
+	};
+
 	public static int NaturalCompareTo(this string _Source, string _Target)
 	{
 		MatchCollection source = Regex.Matches(_Source, @"\d+");
@@ -52,6 +70,25 @@ public static class StringExtension
 		return result.Trim();
 	}
 
+	public static string ToID(this string _String)
+	{
+		if (string.IsNullOrEmpty(_String))
+			return _String;
+		
+		string[] data = _String.Split(m_Words, StringSplitOptions.RemoveEmptyEntries);
+		
+		string result = _String;
+		
+		foreach (string entry in data)
+		{
+			string target = entry.SplitWords();
+			
+			result = result.Replace(entry, target);
+		}
+		
+		return result.ToLowerInvariant().Trim().Replace(' ', '_');
+	}
+
 	static string SplitWords(this string _String)
 	{
 		if (string.IsNullOrEmpty(_String))
@@ -59,8 +96,6 @@ public static class StringExtension
 		
 		StringBuilder builder = new StringBuilder();
 		List<string>  words   = new List<string>();
-		
-		builder.Append(' ');
 		
 		for (int i = 1; i < _String.Length; i++)
 		{
@@ -90,13 +125,28 @@ public static class StringExtension
 				builder.Clear();
 			}
 		}
-		builder.Append(_String[^1]);
+		
+		char symbol = _String[^1];
+		
+		if (char.IsLetterOrDigit(symbol))
+			builder.Append(_String[^1]);
+		
 		words.Add(builder.ToString());
+		
 		builder.Clear();
+		
+		for (int i = 0; i < words.Count; i++)
+		{
+			string word = words[i];
+			if (m_Converters.TryGetValue(word, out string value))
+				words[i] = value;
+			else
+				words[i] = word.ToCapital();
+		}
 		
 		foreach (string word in words)
 		{
-			builder.Append(word.ToCapital());
+			builder.Append(word);
 			builder.Append(' ');
 		}
 		

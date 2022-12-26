@@ -2,11 +2,10 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AudioBox.Compression;
 using AudioBox.Logging;
 using Firebase.Storage;
 using UnityEngine.Purchasing;
-using Json = System.Collections.Generic.Dictionary<string, object>;
+using Json = System.Collections.Generic.IDictionary<string, object>;
 
 public class JsonProvider : StorageProvider<Json>
 {
@@ -26,7 +25,7 @@ public class JsonProvider : StorageProvider<Json>
 		
 		Encoding encoding = _Encoding ?? Encoding.UTF8;
 		
-		return UploadFileAsync(
+		return UploadAsync(
 			_Path,
 			() =>
 			{
@@ -56,7 +55,7 @@ public class JsonProvider : StorageProvider<Json>
 		if (string.IsNullOrEmpty(_Path))
 			return null;
 		
-		await DownloadFileAsync(_Path, _Progress, _Token);
+		await DownloadDataAsync(_Path, _Progress, _Token);
 		
 		_Progress?.Invoke(1);
 		
@@ -74,11 +73,9 @@ public class JsonProvider : StorageProvider<Json>
 						if (!_Task.IsCompletedSuccessfully)
 							return null;
 						
-						byte[] data = Compression.Decompress(_Task.Result);
-						
 						Encoding encoding = _Encoding ?? Encoding.UTF8;
 						
-						string json = encoding.GetString(data);
+						string json = encoding.GetString(_Task.Result);
 						
 						return MiniJson.JsonDecode(json) as Json;
 					},

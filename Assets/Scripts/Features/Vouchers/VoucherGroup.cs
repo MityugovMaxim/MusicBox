@@ -1,6 +1,7 @@
 public enum VoucherGroup
 {
-	All        = 0,
-	F2P        = 1,
-	Purchasers = 2,
+	None       = 0,
+	All        = 1,
+	F2P        = 2,
+	Purchasers = 3,
 }

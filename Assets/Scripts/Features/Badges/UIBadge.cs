@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -7,16 +5,16 @@ public abstract class UIBadge : UIEntity
 {
 	protected BadgeManager BadgeManager => m_BadgeManager;
 
-	[SerializeField] TMP_Text m_Label;
-	[SerializeField] UIGroup  m_Content;
+	[SerializeField] UIUnitLabel m_Value;
+	[SerializeField] UIGroup     m_Content;
 
 	[Inject] BadgeManager m_BadgeManager;
-
-	static readonly Dictionary<string, bool> m_Cache = new Dictionary<string, bool>();
 
 	protected override void OnEnable()
 	{
 		base.OnEnable();
+		
+		Preload();
 		
 		Subscribe();
 	}
@@ -25,8 +23,6 @@ public abstract class UIBadge : UIEntity
 	{
 		base.OnDisable();
 		
-		Process();
-		
 		Unsubscribe();
 	}
 
@@ -34,15 +30,17 @@ public abstract class UIBadge : UIEntity
 
 	protected abstract void Unsubscribe();
 
+	protected virtual void Preload() => Process();
+
 	protected abstract void Process();
 
-	protected void SetValue(int _Value)
+	protected void SetValue(int _Value, bool _Instant = false)
 	{
-		bool instant = !gameObject.activeInHierarchy;
+		bool instant = _Instant || !gameObject.activeInHierarchy;
 		
 		if (_Value > 0)
 		{
-			m_Label.text = _Value.ToString();
+			m_Value.Value = _Value;
 			m_Content.Show(instant);
 		}
 		else

@@ -1,41 +1,21 @@
 using UnityEngine;
-using Zenject;
 
-public class UIOfferImage : UIEntity
+public class UIOfferImage : UIOfferEntity
 {
-	public string OfferID
+	[SerializeField] WebGraphic m_Image;
+
+	protected override void Subscribe()
 	{
-		get => m_OfferID;
-		set
-		{
-			if (m_OfferID == value)
-				return;
-			
-			m_OffersManager.Collection.Unsubscribe(DataEventType.Change, m_OfferID, ProcessImage);
-			
-			m_OfferID = value;
-			
-			m_OffersManager.Collection.Subscribe(DataEventType.Change, m_OfferID, ProcessImage);
-			
-			ProcessImage();
-		}
+		OffersManager.Collection.Subscribe(DataEventType.Change, OfferID, ProcessData);
 	}
 
-	[SerializeField] WebImage m_Image;
-
-	[Inject] OffersManager m_OffersManager;
-
-	string m_OfferID;
-
-	protected override void OnDisable()
+	protected override void Unsubscribe()
 	{
-		base.OnDisable();
-		
-		OfferID = null;
+		OffersManager.Collection.Unsubscribe(DataEventType.Change, OfferID, ProcessData);
 	}
 
-	void ProcessImage()
+	protected override void ProcessData()
 	{
-		m_Image.Path = m_OffersManager.GetImage(OfferID);
+		m_Image.Path = OffersManager.GetImage(OfferID);
 	}
 }

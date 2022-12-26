@@ -17,7 +17,7 @@ public class UIColorsList : UISnapshotsList<ColorsSnapshot, ColorsElementEntity>
 
 	protected override ColorsSnapshot CreateSnapshot()
 	{
-		return new ColorsSnapshot("NEW COLOR SCHEME", 0);
+		return null;
 	}
 
 	protected override ColorsElementEntity CreateEntity(ColorsSnapshot _Snapshot, Action<ColorsSnapshot> _Remove)

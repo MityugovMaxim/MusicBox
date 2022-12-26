@@ -22,6 +22,9 @@ public class UISplineLine : MaskableGraphic
 		get => m_Max;
 		set
 		{
+			if (float.IsNaN(value))
+				Debug.LogError("---> WTF!?!?!?!");
+			
 			if (Mathf.Approximately(m_Max, value))
 				return;
 			

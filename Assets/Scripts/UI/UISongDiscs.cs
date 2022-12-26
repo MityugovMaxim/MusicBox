@@ -10,11 +10,6 @@ public class UISongDiscs : UISongEntity
 	[SerializeField] GameObject m_GoldDisc;
 	[SerializeField] GameObject m_PlatinumDisc;
 
-	[SerializeField] GameObject m_BronzePlaceholder;
-	[SerializeField] GameObject m_SilverPlaceholder;
-	[SerializeField] GameObject m_GoldPlaceholder;
-	[SerializeField] GameObject m_PlatinumPlaceholder;
-
 	[Inject] ScoresManager m_ScoresManager;
 
 	protected override void Subscribe()
@@ -33,18 +28,13 @@ public class UISongDiscs : UISongEntity
 
 	protected override void ProcessData()
 	{
-		ScoreRank rank = m_ScoresManager.GetRank(SongID);
+		RankType rank = m_ScoresManager.GetRank(SongID);
 		
-		m_Content.SetActive(rank > ScoreRank.None);
+		m_Content.SetActive(rank > RankType.None);
 		
-		m_PlatinumDisc.SetActive(rank >= ScoreRank.Platinum);
-		m_GoldDisc.SetActive(rank >= ScoreRank.Gold);
-		m_SilverDisc.SetActive(rank >= ScoreRank.Silver);
-		m_BronzeDisc.SetActive(rank >= ScoreRank.Bronze);
-		
-		m_PlatinumPlaceholder.SetActive(rank < ScoreRank.Platinum);
-		m_GoldPlaceholder.SetActive(rank < ScoreRank.Gold);
-		m_SilverPlaceholder.SetActive(rank < ScoreRank.Silver);
-		m_BronzePlaceholder.SetActive(rank < ScoreRank.Bronze);
+		m_PlatinumDisc.SetActive(rank >= RankType.Platinum);
+		m_GoldDisc.SetActive(rank >= RankType.Gold);
+		m_SilverDisc.SetActive(rank >= RankType.Silver);
+		m_BronzeDisc.SetActive(rank >= RankType.Bronze);
 	}
 }

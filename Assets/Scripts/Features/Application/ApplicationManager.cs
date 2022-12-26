@@ -41,7 +41,7 @@ public class ApplicationManager : DataObject<ApplicationObject>, IDataObject
 		#if UNITY_IOS
 		return m_Object?.AppStoreReviewURL;
 		#elif UNITY_ANDROID
-		return m_Snapshot?.GooglePlayReviewURL;
+		return m_Object?.GooglePlayReviewURL;
 		#endif
 	}
 

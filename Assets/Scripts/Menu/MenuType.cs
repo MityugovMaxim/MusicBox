@@ -38,5 +38,9 @@ public enum MenuType
 	SongCreateMenu       = 35,
 	TransitionMenu       = 36,
 	PermissionMenu       = 37,
-	VoucherCreateMenu     = 38,
+	VoucherCreateMenu    = 38,
+	CoinsMenu            = 39,
+	ChestMenu            = 40,
+	ProfileMenu          = 41,
+	DataMenu       = 42,
 }

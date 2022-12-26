@@ -1,37 +1,35 @@
+using System.Collections.Generic;
 using Zenject;
 
 public class UISeasonsBadge : UIBadge
 {
 	[Inject] SeasonsManager m_SeasonsManager;
 
-	string m_SeasonID;
-
 	protected override void Subscribe()
 	{
-		m_SeasonID = m_SeasonsManager.GetSeasonID();
-		
-		if (string.IsNullOrEmpty(m_SeasonID))
-			return;
-		
-		m_SeasonsManager.Profile.Subscribe(DataEventType.Add, m_SeasonID, Process);
-		m_SeasonsManager.Profile.Subscribe(DataEventType.Remove, m_SeasonID, Process);
-		m_SeasonsManager.Profile.Subscribe(DataEventType.Change, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Subscribe(DataEventType.Add, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Subscribe(DataEventType.Remove, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Subscribe(DataEventType.Change, m_SeasonID, Process);
+		m_SeasonsManager.Profile.Subscribe(DataEventType.Add, Process);
+		m_SeasonsManager.Profile.Subscribe(DataEventType.Remove, Process);
+		m_SeasonsManager.Profile.Subscribe(DataEventType.Change, Process);
+		m_SeasonsManager.Collection.Subscribe(DataEventType.Add, Process);
+		m_SeasonsManager.Collection.Subscribe(DataEventType.Remove, Process);
+		m_SeasonsManager.Collection.Subscribe(DataEventType.Change, Process);
 	}
 
 	protected override void Unsubscribe()
 	{
-		if (string.IsNullOrEmpty(m_SeasonID))
-			return;
+		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Add, Process);
+		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Remove, Process);
+		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Change, Process);
+		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Add, Process);
+		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Remove, Process);
+		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Change, Process);
+	}
+
+	protected override async void Preload()
+	{
+		await m_SeasonsManager.Activate();
 		
-		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Add, m_SeasonID, Process);
-		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Remove, m_SeasonID, Process);
-		m_SeasonsManager.Profile.Unsubscribe(DataEventType.Change, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Add, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Remove, m_SeasonID, Process);
-		m_SeasonsManager.Collection.Unsubscribe(DataEventType.Change, m_SeasonID, Process);
+		base.Preload();
 	}
 
 	protected override void Process()
@@ -46,19 +44,21 @@ public class UISeasonsBadge : UIBadge
 
 	int GetFreeItemsCount()
 	{
-		if (string.IsNullOrEmpty(m_SeasonID))
+		string seasonID = m_SeasonsManager.GetSeasonID();
+		
+		if (string.IsNullOrEmpty(seasonID))
+			return 0;
+		
+		List<int> levels = m_SeasonsManager.GetLevels(seasonID);
+		
+		if (levels == null)
 			return 0;
 		
 		int count = 0;
 		
-		int source = m_SeasonsManager.GetMinLevel(m_SeasonID);
-		int target = m_SeasonsManager.GetLevel(m_SeasonID);
-		
-		for (int level = source; level <= target; level++)
+		foreach (int level in levels)
 		{
-			string itemID = m_SeasonsManager.GetFreeItemID(m_SeasonID, level);
-			
-			if (m_SeasonsManager.IsItemAvailable(m_SeasonID, itemID))
+			if (m_SeasonsManager.IsItemAvailable(seasonID, level, SeasonItemMode.Free))
 				count++;
 		}
 		
@@ -67,19 +67,21 @@ public class UISeasonsBadge : UIBadge
 
 	int GetPaidItemsCount()
 	{
-		if (string.IsNullOrEmpty(m_SeasonID))
+		string seasonID = m_SeasonsManager.GetSeasonID();
+		
+		if (string.IsNullOrEmpty(seasonID))
+			return 0;
+		
+		List<int> levels = m_SeasonsManager.GetLevels(seasonID);
+		
+		if (levels == null)
 			return 0;
 		
 		int count = 0;
 		
-		int source = m_SeasonsManager.GetMinLevel(m_SeasonID);
-		int target = m_SeasonsManager.GetLevel(m_SeasonID);
-		
-		for (int level = source; level <= target; level++)
+		foreach (int level in levels)
 		{
-			string itemID = m_SeasonsManager.GetPaidItemID(m_SeasonID, level);
-			
-			if (m_SeasonsManager.IsItemAvailable(m_SeasonID, itemID))
+			if (m_SeasonsManager.IsItemAvailable(seasonID, level, SeasonItemMode.Paid))
 				count++;
 		}
 		

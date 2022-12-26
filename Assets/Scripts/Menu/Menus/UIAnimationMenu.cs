@@ -28,8 +28,8 @@ public class UIAnimationMenu : UIMenu
 	{
 		base.OnEnable();
 		
-		m_Animator.RegisterComplete("show", InvokeShowFinished);
-		m_Animator.RegisterComplete("hide", InvokeHideFinished);
+		m_Animator.SubscribeComplete("show", InvokeShowFinished);
+		m_Animator.SubscribeComplete("hide", InvokeHideFinished);
 	}
 
 	protected override void OnDisable()
@@ -39,8 +39,8 @@ public class UIAnimationMenu : UIMenu
 		InvokeShowFinished();
 		InvokeHideFinished();
 		
-		m_Animator.UnregisterComplete("show", InvokeShowFinished);
-		m_Animator.UnregisterComplete("hide", InvokeHideFinished);
+		m_Animator.UnsubscribeComplete("show", InvokeShowFinished);
+		m_Animator.UnsubscribeComplete("hide", InvokeHideFinished);
 	}
 
 	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)

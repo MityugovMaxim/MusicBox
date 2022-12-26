@@ -1,15 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class VouchersManager : IDataManager, IInitializable, IDisposable
+public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 {
-	public bool Activated { get; private set; }
-
 	public VouchersCollection Collection => m_VouchersCollection;
 
 	public ProfileVouchers Profile => m_ProfileVouchers;
@@ -20,11 +18,13 @@ public class VouchersManager : IDataManager, IInitializable, IDisposable
 	[Inject] SongsCollection    m_SongsCollection;
 	[Inject] ScheduleProcessor  m_ScheduleProcessor;
 
-	readonly DataEventHandler m_ExpirationHandler = new DataEventHandler();
-	readonly DataEventHandler m_CancelHandler     = new DataEventHandler();
+	readonly DataEventHandler m_StartHandler  = new DataEventHandler();
+	readonly DataEventHandler m_CancelHandler = new DataEventHandler();
+	readonly DataEventHandler m_EndHandler    = new DataEventHandler();
 
 	void IInitializable.Initialize()
 	{
+		Collection.Subscribe(DataEventType.Add, Collect);
 		Collection.Subscribe(DataEventType.Add, ProcessTimer);
 		Collection.Subscribe(DataEventType.Remove, CancelTimer);
 		Collection.Subscribe(DataEventType.Change, ProcessTimer);
@@ -32,41 +32,30 @@ public class VouchersManager : IDataManager, IInitializable, IDisposable
 
 	void IDisposable.Dispose()
 	{
+		Collection.Unsubscribe(DataEventType.Add, Collect);
 		Collection.Unsubscribe(DataEventType.Add, ProcessTimer);
 		Collection.Unsubscribe(DataEventType.Remove, CancelTimer);
 		Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
 	}
 
-	public async Task<bool> Activate()
+	public Task<bool> Activate()
 	{
-		if (Activated)
-			return true;
-		
-		int frame = Time.frameCount;
-		
-		await Task.WhenAll(
-			m_VouchersCollection.Load(),
-			m_ProfileVouchers.Load(),
-			m_ProductsCollection.Load(),
-			m_SongsCollection.Load()
+		return GroupTask.ProcessAsync(
+			this,
+			GroupTask.CreateGroup(
+				Collection.Load,
+				Profile.Load,
+				m_ProductsCollection.Load,
+				m_SongsCollection.Load
+			),
+			GroupTask.CreateGroup(
+				CollectVouchers,
+				ProcessTimers
+			)
 		);
-		
-		Activated = true;
-		
-		return frame == Time.frameCount;
 	}
 
-	public void SubscribeExpiration(Action _Action) => m_ExpirationHandler.AddListener(_Action);
-	public void SubscribeExpiration(string _VoucherID, Action _Action) => m_ExpirationHandler.AddListener(_VoucherID, _Action);
-
-	public void SubscribeCancel(Action _Action) => m_CancelHandler.AddListener(_Action);
-	public void SubscribeCancel(string _VoucherID, Action _Action) => m_CancelHandler.AddListener(_VoucherID, _Action);
-
-	public void UnsubscribeExpiration(Action _Action) => m_ExpirationHandler.RemoveListener(_Action);
-	public void UnsubscribeExpiration(string _VoucherID, Action _Action) => m_ExpirationHandler.RemoveListener(_VoucherID, _Action);
-
-	public void UnsubscribeCancel(Action _Action) => m_CancelHandler.RemoveListener(_Action);
-	public void UnsubscribeCancel(string _VoucherID, Action _Action) => m_CancelHandler.RemoveListener(_VoucherID, _Action);
+	public List<string> GetVoucherIDs() => Profile.GetIDs().ToList();
 
 	public long GetProductDiscount(string _ProductID)
 	{
@@ -117,11 +106,27 @@ public class VouchersManager : IDataManager, IInitializable, IDisposable
 		return snapshot?.Amount ?? 0;
 	}
 
-	public long GetExpiration(string _VoucherID)
+	public long GetStartTimestamp(string _VoucherID)
 	{
 		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
 		
-		return snapshot?.Expiration ?? 0;
+		return snapshot?.EndTimestamp ?? 0;
+	}
+
+	public long GetEndTimestamp(string _VoucherID)
+	{
+		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
+		
+		return snapshot?.EndTimestamp ?? 0;
+	}
+
+	public bool IsProcessing(string _VoucherID)
+	{
+		long timestamp      = TimeUtility.GetTimestamp();
+		long startTimestamp = GetStartTimestamp(_VoucherID);
+		long endTimestamp   = GetEndTimestamp(_VoucherID);
+		
+		return timestamp >= startTimestamp && timestamp < endTimestamp;
 	}
 
 	long GetDiscount(string _VoucherID, long _Value)
@@ -132,6 +137,13 @@ public class VouchersManager : IDataManager, IInitializable, IDisposable
 		double amount = GetAmount(_VoucherID);
 		
 		return _Value + (long)(amount / 100 * _Value);
+	}
+
+	VoucherGroup GetGroup(string _VoucherID)
+	{
+		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
+		
+		return snapshot?.Group ?? VoucherGroup.None;
 	}
 
 	string GetVoucherID(VoucherType _VoucherType, string _ID)
@@ -145,13 +157,71 @@ public class VouchersManager : IDataManager, IInitializable, IDisposable
 			.Where(_Snapshot => _Snapshot != null)
 			.Where(_Snapshot => _Snapshot.Type == _VoucherType)
 			.Where(_Snapshot => _Snapshot.IDs == null || _Snapshot.IDs.Count > 0 && _Snapshot.IDs.Contains(_ID))
-			.Where(_Snapshot => _Snapshot.Expiration == 0 || _Snapshot.Expiration >= timestamp)
+			.Where(_Snapshot => _Snapshot.EndTimestamp == 0 || _Snapshot.EndTimestamp >= timestamp)
 			.OrderByDescending(_Snapshot => Math.Abs(_Snapshot.Amount))
 			.Select(_Snapshot => _Snapshot.ID)
 			.FirstOrDefault();
 	}
 
+	async void Collect(string _VoucherID) => await CollectAsync(_VoucherID);
+
+	Task CollectVouchers()
+	{
+		IReadOnlyList<string> voucherIDs = Collection.GetIDs();
+		
+		if (voucherIDs == null || voucherIDs.Count == 0)
+			return Task.CompletedTask;
+		
+		List<Task> collect = new List<Task>();
+		
+		foreach (string voucherID in voucherIDs)
+			collect.Add(CollectAsync(voucherID));
+		
+		return Task.WhenAll(collect);
+	}
+
+	Task ProcessTimers()
+	{
+		List<string> voucherIDs = GetVoucherIDs();
+		
+		if (voucherIDs != null && voucherIDs.Count != 0)
+		{
+			foreach (string voucherID in voucherIDs)
+				ProcessTimer(voucherID);
+		}
+		
+		return Task.CompletedTask;
+	}
+
+	Task CollectAsync(string _VoucherID)
+	{
+		if (string.IsNullOrEmpty(_VoucherID) || Profile.Contains(_VoucherID))
+			return Task.CompletedTask;
+		
+		VoucherGroup group = GetGroup(_VoucherID);
+		
+		if (group == VoucherGroup.None)
+			return Task.CompletedTask;
+		
+		VoucherCollectRequest request = new VoucherCollectRequest(_VoucherID);
+		
+		return Task.FromResult(request.SendAsync());
+	}
+
 	void CancelTimer(string _VoucherID) => m_ScheduleProcessor.Cancel(_VoucherID);
 
-	void ProcessTimer(string _VoucherID) => m_ScheduleProcessor.Schedule(_VoucherID, GetExpiration(_VoucherID), m_ExpirationHandler, m_CancelHandler);
+	void ProcessTimer(string _VoucherID)
+	{
+		m_ScheduleProcessor.CancelStart(_VoucherID);
+		m_ScheduleProcessor.CancelEnd(_VoucherID);
+		
+		if (!IsProcessing(_VoucherID))
+			return;
+		
+		long startTimestamp = GetStartTimestamp(_VoucherID);
+		long endTimestamp   = GetEndTimestamp(_VoucherID);
+		
+		m_ScheduleProcessor.ScheduleStart(_VoucherID, startTimestamp, m_StartHandler, m_CancelHandler);
+		m_ScheduleProcessor.ScheduleEnd(_VoucherID, endTimestamp, m_EndHandler, m_CancelHandler);
+	}
 }

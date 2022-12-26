@@ -43,7 +43,7 @@ public class UIObject : UIEntity
 	{
 		RemoveTexture();
 		
-		m_RenderTexture = RenderTexture.GetTemporary(m_Width, m_Height, 8, GraphicsFormat.R16G16B16A16_UNorm);
+		m_RenderTexture = RenderTexture.GetTemporary(m_Width, m_Height, 8, GraphicsFormat.R16G16B16A16_UNorm, 8);
 		
 		m_Image.texture = m_RenderTexture;
 		

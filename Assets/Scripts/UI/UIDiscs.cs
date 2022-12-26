@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UIDiscs : UIGroup
 {
-	public ScoreRank Rank
+	public RankType Rank
 	{
 		get => m_Rank;
 		set
@@ -16,7 +16,7 @@ public class UIDiscs : UIGroup
 		}
 	}
 
-	[SerializeField] ScoreRank  m_Rank;
+	[SerializeField] RankType  m_Rank;
 	[SerializeField] GameObject m_BronzeRank;
 	[SerializeField] GameObject m_SilverRank;
 	[SerializeField] GameObject m_GoldRank;
@@ -47,9 +47,9 @@ public class UIDiscs : UIGroup
 
 	void ProcessRank()
 	{
-		m_BronzeRank.SetActive(Rank >= ScoreRank.Bronze);
-		m_SilverRank.SetActive(Rank >= ScoreRank.Silver);
-		m_GoldRank.SetActive(Rank >= ScoreRank.Gold);
-		m_PlatinumRank.SetActive(Rank >= ScoreRank.Platinum);
+		m_BronzeRank.SetActive(Rank >= RankType.Bronze);
+		m_SilverRank.SetActive(Rank >= RankType.Silver);
+		m_GoldRank.SetActive(Rank >= RankType.Gold);
+		m_PlatinumRank.SetActive(Rank >= RankType.Platinum);
 	}
 }

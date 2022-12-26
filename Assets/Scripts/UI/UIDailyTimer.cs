@@ -37,6 +37,6 @@ public class UIDailyTimer : UIEntity
 	{
 		long timestamp = m_DailyManager.GetTimestamp();
 		
-		m_Timer.Setup(timestamp);
+		m_Timer.SetTimer(timestamp);
 	}
 }

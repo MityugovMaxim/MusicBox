@@ -23,7 +23,7 @@ public class SeasonLevelElementEntity : LayoutEntity
 		if (m_Item == null)
 			m_Item = m_Pool.Spawn(_Container);
 		
-		m_Item.SetRect(Rect);
+		m_Item.SetRect(Rect, new Vector2(0, 0));
 		
 		m_Item.Setup(m_SeasonID, m_Level);
 	}

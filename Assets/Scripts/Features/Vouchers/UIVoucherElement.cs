@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Scripting;
+using Zenject;
 
 public class UIVoucherElement : UIEntity
 {
@@ -8,12 +9,18 @@ public class UIVoucherElement : UIEntity
 
 	[SerializeField] UIVoucherTitle       m_Title;
 	[SerializeField] UIVoucherDescription m_Description;
-	[SerializeField] UIVoucherButton      m_Button;
+	[SerializeField] UIVoucherTimer       m_Timer;
+	[SerializeField] UIVoucherAction      m_Action;
+
+	[Inject] BadgeManager m_BadgeManager;
 
 	public void Setup(string _VoucherID)
 	{
 		m_Title.VoucherID       = _VoucherID;
 		m_Description.VoucherID = _VoucherID;
-		m_Button.VoucherID      = _VoucherID;
+		m_Timer.VoucherID       = _VoucherID;
+		m_Action.VoucherID      = _VoucherID;
+		
+		m_BadgeManager.ReadVoucher(_VoucherID);
 	}
 }

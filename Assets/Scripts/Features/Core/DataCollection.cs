@@ -23,6 +23,7 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 
 	readonly DataEventHandler[] m_Handlers =
 	{
+		new DataEventHandler(DataEventType.Load),
 		new DataEventHandler(DataEventType.Add),
 		new DataEventHandler(DataEventType.Remove),
 		new DataEventHandler(DataEventType.Change),
@@ -62,7 +63,11 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		Loaded = await Fetch();
 		
 		if (Loaded)
+		{
 			await OnLoad();
+			
+			InvokeHandler(DataEventType.Load, string.Empty);
+		}
 		
 		completionSource.TrySetResult(true);
 		
@@ -91,6 +96,65 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		}
 		
 		Loaded = false;
+	}
+
+	public Task UpdateAsync(params string[] _IDs) => UpdateAsync(_IDs.AsEnumerable());
+
+	public async Task UpdateAsync(IEnumerable<string> _IDs)
+	{
+		if (_IDs == null)
+			return;
+		
+		List<Task<DataSnapshot>> tasks = _IDs
+			.Where(_ID => !string.IsNullOrEmpty(_ID))
+			.Select(m_Data.Child)
+			.Select(_Reference => _Reference.GetValueAsync())
+			.ToList();
+		
+		DataSnapshot[] snapshots = await Task.WhenAll(tasks);
+		
+		foreach (DataSnapshot snapshot in snapshots)
+		{
+			string itemID = snapshot.Key;
+			
+			if (!snapshot.Exists)
+			{
+				m_IDs.Remove(snapshot.Key);
+				
+				m_Snapshots.RemoveAll(_Item => _Item.ID == itemID);
+				
+				if (m_Registry.ContainsKey(itemID))
+					m_Registry.Remove(itemID);
+				
+				InvokeHandler(DataEventType.Remove, itemID);
+				
+				continue;
+			}
+			
+			TSnapshot item = Create(snapshot);
+			
+			if (Contains(itemID))
+			{
+				int index = m_Snapshots.FindIndex(_Item => _Item.ID == itemID);
+				
+				if (index >= 0)
+					m_Snapshots[index] = item;
+				
+				m_Registry[itemID] = item;
+				
+				InvokeHandler(DataEventType.Change, itemID);
+			}
+			else
+			{
+				m_IDs.Add(itemID);
+				
+				m_Snapshots.Add(item);
+				
+				m_Registry[itemID] = item;
+				
+				InvokeHandler(DataEventType.Add, itemID);
+			}
+		}
 	}
 
 	public void Subscribe(DataEventType _EventType, Action _Action) => GetHandler(_EventType)?.AddListener(_Action);
@@ -331,11 +395,6 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		return !string.IsNullOrEmpty(_ID) && m_Registry.ContainsKey(_ID);
 	}
 
-	public bool Contains(Func<TSnapshot, bool> _Predicate)
-	{
-		return _Predicate != null && m_Snapshots.Where(_Snapshot => _Snapshot != null).Any(_Predicate);
-	}
-
 	protected virtual Task OnLoad() => Task.CompletedTask;
 
 	protected virtual Query Filter(DatabaseReference _Data)
@@ -368,11 +427,6 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 			return snapshot;
 		
 		return m_Snapshots.FirstOrDefault(_Snapshot => _Snapshot.ID == _ID);
-	}
-
-	public TSnapshot GetSnapshot(Func<TSnapshot, bool> _Predicate)
-	{
-		return _Predicate != null ? m_Snapshots.Where(_Snapshot => _Snapshot != null).FirstOrDefault(_Predicate) : null;
 	}
 
 	public int GetOrder(string _ID)

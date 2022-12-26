@@ -1,12 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public enum Direction
+{
+	Up    = 0,
+	Down  = 1,
+	Left  = 2,
+	Right = 3
+}
+
 public class UILayout : UIEntity
 {
-	[SerializeField] UIEntity m_Viewport;
+	bool IsHorizontal => m_Direction == Direction.Left || m_Direction == Direction.Right;
+	bool IsVertical => m_Direction == Direction.Down || m_Direction == Direction.Up;
 
-	readonly List<LayoutEntity> m_Items = new List<LayoutEntity>();
+	[SerializeField] Direction  m_Direction = Direction.Down;
+	[SerializeField] UIEntity   m_Viewport;
+	[SerializeField] RectOffset m_Margin;
+
+	readonly List<LayoutEntity>       m_Items = new List<LayoutEntity>();
+	readonly Dictionary<string, Rect> m_Rects = new Dictionary<string, Rect>();
 
 	int MinIndex { get; set; } = -1;
 	int MaxIndex { get; set; } = -1;
@@ -32,18 +47,32 @@ public class UILayout : UIEntity
 		
 		Vector2 size = RectTransform.sizeDelta;
 		
-		size.y += m_Layout.GetHeight();
+		if (IsVertical)
+			size.y += m_Layout.GetHeight();
+		
+		if (IsHorizontal)
+			size.x += m_Layout.GetWidth();
 		
 		RectTransform.sizeDelta = size;
 		
 		m_Layout = null;
 	}
 
+	public void Spacing(float _Value)
+	{
+		if (m_Items.Count > 0)
+			Space(_Value);
+	}
+
 	public void Space(float _Value)
 	{
 		Vector2 size = RectTransform.sizeDelta;
 		
-		size.y += _Value;
+		if (IsVertical)
+			size.y += _Value;
+		
+		if (IsHorizontal)
+			size.x += _Value;
 		
 		RectTransform.sizeDelta = size;
 	}
@@ -53,11 +82,14 @@ public class UILayout : UIEntity
 		m_Items.Add(_Item);
 		
 		_Item.Rect = m_Layout.GetRect(_Item.Size);
+		
+		m_Rects[_Item.ID] = _Item.Rect;
 	}
 
 	public void Remove(LayoutEntity _Item)
 	{
 		m_Items.Remove(_Item);
+		m_Rects.Remove(_Item.ID);
 	}
 
 	public void Refresh(string _ID)
@@ -67,10 +99,7 @@ public class UILayout : UIEntity
 		item?.Refresh();
 	}
 
-	public bool Contains(string _ID)
-	{
-		return m_Items.Any(_Item => _Item != null && _Item.ID == _ID);
-	}
+	public bool Contains(string _ID) => m_Rects.ContainsKey(_ID);
 
 	public void Clear()
 	{
@@ -81,13 +110,27 @@ public class UILayout : UIEntity
 		
 		Vector2 size = RectTransform.sizeDelta;
 		
-		size.y = 0;
+		if (IsVertical)
+			size.y = 0;
+		
+		if (IsHorizontal)
+			size.x = 0;
 		
 		RectTransform.sizeDelta = size;
 		
 		foreach (LayoutEntity item in m_Items)
 			item.Remove();
 		m_Items.Clear();
+		m_Rects.Clear();
+	}
+
+	public Vector2 GetPosition(string _ID, TextAnchor _Alignment)
+	{
+		m_Rects.TryGetValue(_ID, out Rect rect);
+		
+		Vector2 pivot = _Alignment.GetPivot();
+		
+		return rect.position + Vector2.Scale(rect.size, -pivot);
 	}
 
 	public void Reposition()
@@ -96,8 +139,20 @@ public class UILayout : UIEntity
 		
 		Rect rect = GetLocalRect(m_Viewport.GetWorldRect());
 		
-		float min = rect.yMin;
-		float max = rect.yMax;
+		float min = 0;
+		float max = 0;
+		
+		if (IsVertical)
+		{
+			min = rect.yMin - m_Margin.bottom;
+			max = rect.yMax + m_Margin.top;
+		}
+		
+		if (IsHorizontal)
+		{
+			min = rect.xMin + m_Margin.left;
+			max = rect.xMax - m_Margin.right;
+		}
 		
 		(int minIndex, int maxIndex) = GetRange(min, max);
 		
@@ -132,7 +187,15 @@ public class UILayout : UIEntity
 		if (m_Items == null || m_Items.Count == 0)
 			return (-1, Rect.zero);
 		
-		(int minIndex, int maxIndex) = GetRange(_Position.y, _Position.y);
+		float position = 0;
+		
+		if (IsVertical)
+			position = _Position.y;
+		
+		if (IsHorizontal)
+			position = _Position.x;
+		
+		(int minIndex, int maxIndex) = GetRange(position, position);
 		
 		int index = (minIndex + maxIndex) / 2;
 		
@@ -157,6 +220,9 @@ public class UILayout : UIEntity
 
 	int FindMin(int _Anchor, float _Max)
 	{
+		bool vertical   = IsVertical;
+		bool horizontal = IsHorizontal;
+		
 		int index = _Anchor;
 		while (index > 0)
 		{
@@ -164,7 +230,13 @@ public class UILayout : UIEntity
 			
 			Rect rect = item.Rect;
 			
-			float min = rect.y - rect.height;
+			float min = 0;
+			
+			if (vertical)
+				min = rect.y - rect.height;
+			
+			if (horizontal)
+				min = rect.x;
 			
 			if (min > _Max)
 				break;
@@ -176,6 +248,9 @@ public class UILayout : UIEntity
 
 	int FindMax(int _Anchor, float _Min)
 	{
+		bool vertical   = IsVertical;
+		bool horizontal = IsHorizontal;
+		
 		int index = _Anchor;
 		while (index < m_Items.Count - 1)
 		{
@@ -183,7 +258,13 @@ public class UILayout : UIEntity
 			
 			Rect rect = item.Rect;
 			
-			float max = rect.y;
+			float max = 0;
+			
+			if (vertical)
+				max = rect.y;
+			
+			if (horizontal)
+				max = rect.x + rect.width;
 			
 			if (max < _Min)
 				break;
@@ -195,6 +276,9 @@ public class UILayout : UIEntity
 
 	int FindAnchor(float _Min, float _Max)
 	{
+		bool vertical   = IsVertical;
+		bool horizontal = IsHorizontal;
+		
 		int i = 0;
 		int j = m_Items.Count - 1;
 		while (i <= j)
@@ -205,8 +289,20 @@ public class UILayout : UIEntity
 			
 			Rect rect = item.Rect;
 			
-			float min = rect.y - rect.height;
-			float max = rect.y;
+			float min = 0;
+			float max = 0;
+			
+			if (vertical)
+			{
+				min = rect.y - rect.height;
+				max = rect.y;
+			}
+			
+			if (horizontal)
+			{
+				min = rect.x;
+				max = rect.x + rect.width;
+			}
 			
 			if (min > _Max)
 				i = k + 1;

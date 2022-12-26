@@ -9,7 +9,7 @@ public class ProfileSongs : ProfileCollection<DataSnapshot<long>>, IDataCollecti
 
 	protected override Task OnLoad()
 	{
-		Log.Error(this, "Profile songs loaded.");
+		Log.Info(this, "Profile songs loaded.");
 		
 		return base.OnLoad();
 	}

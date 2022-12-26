@@ -110,9 +110,9 @@ public class UIResultMenuControlPage : UIResultMenuPage
 			.GetAvailableSongIDs()
 			.FirstOrDefault(_SongID => _SongID != m_SongID);
 		
-		ScoreRank rank = m_ScoresManager.GetRank(songID);
+		RankType rank = m_ScoresManager.GetRank(songID);
 		
-		if (rank < ScoreRank.Gold)
+		if (rank < RankType.Gold)
 			return songID;
 		
 		return m_SongsManager

@@ -3,37 +3,45 @@ using System.Linq;
 using UnityEngine;
 using Zenject;
 
-using ColorMode = UIStroke.ColorMode;
-
 public class UIMainMenuSongsPage : UIMainMenuPage
 {
 	const float ITEM_ASPECT  = 0.675f;
-	const float GRID_SPACING = 30;
-	const float LIST_SPACING = 15;
+	const float GRID_SPACING = 25;
+	const float LIST_SPACING = 20;
 
 	public override MainMenuPageType Type => MainMenuPageType.Songs;
 
 	[SerializeField] UILayout m_Content;
+	[SerializeField] UIGroup  m_ContentGroup;
+	[SerializeField] UIGroup  m_LoaderGroup;
 
-	[Inject] AudioManager        m_AudioManager;
-	[Inject] SongsManager        m_SongsManager;
+	[Inject] AudioManager    m_AudioManager;
+	[Inject] SongsManager    m_SongsManager;
 	[Inject] ProductsManager m_ProductsManager;
 
 	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ConfigProcessor m_ConfigProcessor;
-	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 
-	[Inject] UIAdminElement.Pool      m_AdminPool;
-	[Inject] UISocialElement.Pool     m_SocialPool;
-	[Inject] UISongHeader.Pool        m_HeaderPool;
-	[Inject] UIProductItem.Pool       m_ProductPool;
-	[Inject] UISongItem.Pool          m_ItemPool;
-	[Inject] UISongElement.Pool       m_ElementPool;
-	[Inject] UILatencyElement.Factory m_LatencyFactory;
+	[Inject] UIAdminElement.Pool        m_AdminPool;
+	[Inject] UIProductCoinsElement.Pool m_ProductPool;
+	[Inject] UISongItem.Pool            m_SongsPool;
+	[Inject] UISongElement.Pool         m_ElementPool;
+	[Inject] UILatencyElement.Factory   m_LatencyFactory;
 
-	protected override void OnShowStarted()
+	protected override async void OnShowStarted()
 	{
+		m_ContentGroup.Hide(true);
+		m_LoaderGroup.Show(true);
+		
+		bool instant = await m_SongsManager.Activate();
+		
+		if (!IsActive)
+			return;
+		
+		m_ContentGroup.Show(instant);
+		m_LoaderGroup.Hide(instant);
+		
 		Refresh();
 		
 		m_SongsManager.Collection.Subscribe(DataEventType.Add, Refresh);
@@ -252,15 +260,13 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		
 		CreateLatency();
 		
-		CreateSocial();
-		
 		int group = m_ConfigProcessor.SongLibraryGroupSize;
 		
 		int position = 0;
 		
 		position += CreateGrid(songIDs, position, group);
 		
-		position += CreateList(songIDs, position, 4);
+		position += CreateList(songIDs, position, 3);
 		
 		CreateCoins();
 		
@@ -274,10 +280,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
-		string title = GetLocalization("SONGS_GROUP_PAID");
-		
-		CreateHeader(title, ColorMode.Blue);
-		
 		CreateList(songIDs);
 	}
 
@@ -288,25 +290,7 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (songIDs == null || songIDs.Count == 0)
 			return;
 		
-		string title = GetLocalization("SONGS_GROUP_CHEST");
-		
-		CreateHeader(title, ColorMode.Grey);
-		
 		CreateList(songIDs);
-	}
-
-	void CreateSocial()
-	{
-		if (!m_SocialProcessor.Guest)
-			return;
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		m_Content.Add(new SocialElementEntity(m_SocialPool));
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateLatency()
@@ -323,61 +307,63 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		m_Content.Space(LIST_SPACING);
 	}
 
-	void CreateHeader(string _Title, ColorMode _Color)
-	{
-		m_Content.Space(LIST_SPACING);
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		m_Content.Add(new SongHeaderEntity(_Title, _Color, m_HeaderPool));
-		
-		VerticalStackLayout.End(m_Content);
-	}
-
 	int CreateGrid(List<string> _SongIDs, int _Skip = 0, int _Take = 0)
 	{
-		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
+		if (_SongIDs == null || _SongIDs.Count == 0)
+			return 0;
 		
-		IEnumerable<string> songIDs;
+		List<string> songIDs;
 		
 		if (_Skip > 0 && _Take > 0)
-			songIDs = _SongIDs.Skip(_Skip).Take(_Take);
+			songIDs = _SongIDs.Skip(_Skip).Take(_Take).ToList();
 		else if (_Skip > 0)
-			songIDs = _SongIDs.Skip(_Skip);
+			songIDs = _SongIDs.Skip(_Skip).ToList();
 		else if (_Take > 0)
-			songIDs = _SongIDs.Take(_Take);
+			songIDs = _SongIDs.Take(_Take).ToList();
 		else
 			songIDs = _SongIDs;
+		
+		if (songIDs.Count == 0)
+			return 0;
+		
+		m_Content.Spacing(LIST_SPACING);
+		
+		VerticalGridLayout.Start(m_Content, 2, 1, GRID_SPACING, GRID_SPACING);
 		
 		int count = 0;
 		foreach (string songID in songIDs)
 		{
-			m_Content.Add(new SongItemEntity(songID, m_ItemPool));
+			m_Content.Add(new SongItemEntity(songID, m_SongsPool));
 			count++;
 		}
 		
 		VerticalGridLayout.End(m_Content);
-		
-		if (count > 0)
-			m_Content.Space(LIST_SPACING);
 		
 		return count;
 	}
 
 	int CreateList(List<string> _SongIDs, int _Skip = 0, int _Take = 0)
 	{
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		if (_SongIDs == null || _SongIDs.Count == 0)
+			return 0;
 		
-		IEnumerable<string> songIDs;
+		List<string> songIDs;
 		
 		if (_Skip > 0 && _Take > 0)
-			songIDs = _SongIDs.Skip(_Skip).Take(_Take);
+			songIDs = _SongIDs.Skip(_Skip).Take(_Take).ToList();
 		else if (_Skip > 0)
-			songIDs = _SongIDs.Skip(_Skip);
+			songIDs = _SongIDs.Skip(_Skip).ToList();
 		else if (_Take > 0)
-			songIDs = _SongIDs.Take(_Take);
+			songIDs = _SongIDs.Take(_Take).ToList();
 		else
 			songIDs = _SongIDs;
+		
+		if (songIDs.Count == 0)
+			return 0;
+		
+		m_Content.Spacing(LIST_SPACING);
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		int count = 0;
 		foreach (string songID in songIDs)
@@ -387,9 +373,6 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		}
 		
 		VerticalStackLayout.End(m_Content);
-		
-		if (count > 0)
-			m_Content.Space(LIST_SPACING);
 		
 		return count;
 	}
@@ -403,13 +386,13 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		if (coinsIDs == null || coinsIDs.Count < count)
 			return;
 		
+		m_Content.Spacing(LIST_SPACING);
+		
 		VerticalGridLayout.Start(m_Content, count, ITEM_ASPECT, GRID_SPACING / 2, GRID_SPACING);
 		
 		foreach (string coinsID in coinsIDs.Take(count))
-			m_Content.Add(new ProductItemEntity(coinsID, m_ProductPool));
+			m_Content.Add(new ProductCoinsElementEntity(coinsID, m_ProductPool));
 		
 		VerticalGridLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
 	}
 }

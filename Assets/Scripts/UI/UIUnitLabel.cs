@@ -14,7 +14,12 @@ public class UIUnitLabel : UIEntity
 		Multiplier = 2,
 		Points     = 3,
 		Coins      = 4,
-		Time       = 5,
+		Date       = 5,
+		Seconds    = 6,
+		Minutes    = 7,
+		Hours      = 8,
+		Days       = 9,
+		Badge      = 10,
 	}
 
 	public enum UnitPosition
@@ -52,7 +57,6 @@ public class UIUnitLabel : UIEntity
 	[SerializeField] TMP_Text     m_Label;
 	[SerializeField] double       m_Value;
 	[SerializeField] bool         m_Sign;
-	[SerializeField] bool         m_Tint;
 
 	#if UNITY_EDITOR
 	protected override void OnValidate()
@@ -82,7 +86,7 @@ public class UIUnitLabel : UIEntity
 
 	void ProcessValue()
 	{
-		m_Label.text = Convert(GetText(Value, m_Type), m_Tint);
+		m_Label.text = Convert(GetText(Value, m_Type));
 	}
 
 	string GetText(double _Value, UnitType _Type)
@@ -90,12 +94,24 @@ public class UIUnitLabel : UIEntity
 		string sign = m_Sign && _Value > 0 ? "+" : string.Empty;
 		switch (_Type)
 		{
+			case UnitType.None:       return string.Format(m_FormatInfo, "{0}{1:0.##}", sign, _Value);
 			case UnitType.Percent:    return string.Format(m_FormatInfo, GetMask("{0}{1:0.##}", '%'), sign, _Value);
 			case UnitType.Multiplier: return string.Format(m_FormatInfo, GetMask("{0}{1:#,##0.##}", '*'), sign, _Value);
 			case UnitType.Points:     return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'p'), sign, Math.Truncate(_Value));
 			case UnitType.Coins:      return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'c'), sign, Math.Truncate(_Value));
-			case UnitType.Time:       return string.Format(m_FormatInfo, "{0}{1:#,##0.###}", sign, _Value);
-			default:                  return string.Format(m_FormatInfo, "{0}{1:#,##0.##}", sign, _Value);
+			case UnitType.Seconds:    return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 's'), sign, Math.Truncate(_Value));
+			case UnitType.Minutes:    return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'm'), sign, Math.Truncate(_Value));
+			case UnitType.Hours:      return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'h'), sign, Math.Truncate(_Value));
+			case UnitType.Days:       return string.Format(m_FormatInfo, GetMask("{0}{1:N}", 'd'), sign, Math.Truncate(_Value));
+			case UnitType.Badge:
+				int count = Mathf.Max(0, (int)_Value);
+				return count > 9 ? "9+" : count.ToString();
+			case UnitType.Date:
+				DateTime date = TimeUtility.GetLocalTime(_Value);
+				return date.Day == DateTime.Today.Day
+					? date.ToShortTimeString()
+					: date.ToShortDateString();
+			default: return _Value.ToString(CultureInfo.InvariantCulture);
 		}
 	}
 
@@ -112,35 +128,26 @@ public class UIUnitLabel : UIEntity
 		}
 	}
 
-	static string Convert(string _Text, bool _Tint)
+	static string Convert(string _Text)
 	{
 		StringBuilder text = new StringBuilder();
 		foreach (char symbol in _Text)
-			text.Append(Convert(symbol, _Tint));
+			text.Append(Convert(symbol));
 		return text.ToString();
 	}
 
-	static string Convert(char _Symbol, bool _Tint)
+	static string Convert(char _Symbol)
 	{
 		switch (_Symbol)
 		{
-			case '0': return "<sprite tint=1 name=unit_font_0>";
-			case '1': return "<sprite tint=1 name=unit_font_1>";
-			case '2': return "<sprite tint=1 name=unit_font_2>";
-			case '3': return "<sprite tint=1 name=unit_font_3>";
-			case '4': return "<sprite tint=1 name=unit_font_4>";
-			case '5': return "<sprite tint=1 name=unit_font_5>";
-			case '6': return "<sprite tint=1 name=unit_font_6>";
-			case '7': return "<sprite tint=1 name=unit_font_7>";
-			case '8': return "<sprite tint=1 name=unit_font_8>";
-			case '9': return "<sprite tint=1 name=unit_font_9>";
-			case '.': return "<sprite tint=1 name=unit_font_dot>";
-			case '+': return "<sprite tint=1 name=unit_font_plus>";
-			case '-': return "<sprite tint=1 name=unit_font_minus>";
-			case '%': return "<sprite tint=1 name=unit_font_percent>";
-			case '*': return "<sprite tint=1 name=unit_font_multiplier>";
-			case 'p': return "<sprite tint=1 name=unit_font_points>";
-			case 'c': return $"<sprite tint={(_Tint ? 1 : 0)} name=coins_icon>";
+			case '%': return "<sup>%</sup>";
+			case '*': return "<sup>X</sup>";
+			case 'p': return "<sup>PTS</sup>";
+			case 's': return "<sup>SEC</sup>";
+			case 'm': return "<sup>MIN</sup>";
+			case 'h': return "<sup>HRS</sup>";
+			case 'd': return "<sup>DAYS</sup>";
+			case 'c': return "<sprite tint=1 name=coins>";
 			default:  return _Symbol.ToString();
 		}
 	}

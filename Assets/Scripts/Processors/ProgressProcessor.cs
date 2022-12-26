@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
+using AudioBox.Compression;
 using AudioBox.Logging;
 using Firebase.Database;
 using UnityEngine;
@@ -8,39 +8,25 @@ using UnityEngine.Scripting;
 [Preserve]
 public class ProgressSnapshot : Snapshot
 {
-	public bool         Active  { get; }
-	public int          Level   { get; }
-	public int          Discs   { get; }
-	public long         Coins   { get; }
-	public List<string> SongIDs { get; }
-
-	public ProgressSnapshot() : base("new_progress", 0)
-	{
-		Active  = false;
-		Level   = 1;
-		Discs   = 0;
-		Coins   = 0;
-		SongIDs = new List<string>();
-	}
+	public bool   Active    { get; }
+	public int    Level     { get; }
+	public int    Discs     { get; }
+	public long   Coins     { get; }
+	public string SongID    { get; }
+	public string ChestID   { get; }
+	public string VoucherID { get; }
+	public string FrameID   { get; }
 
 	public ProgressSnapshot(DataSnapshot _Data) : base(_Data)
 	{
-		Active  = _Data.GetBool("active");
-		Level   = _Data.GetInt("level");
-		Discs   = _Data.GetInt("discs");
-		Coins   = _Data.GetLong("coins");
-		SongIDs = _Data.GetChildKeys("song_ids");
-	}
-
-	public override void Serialize(Dictionary<string, object> _Data)
-	{
-		base.Serialize(_Data);
-		
-		_Data["active"]   = Active;
-		_Data["level"]    = Level;
-		_Data["discs"]    = Discs;
-		_Data["coins"]    = Coins;
-		_Data["song_ids"] = SongIDs.ToDictionary(_SongID => _SongID, _ => true);
+		Active    = _Data.GetBool("active");
+		Level     = _Data.GetInt("level");
+		Discs     = _Data.GetInt("discs");
+		Coins     = _Data.GetLong("coins");
+		SongID    = _Data.GetString("song_id");
+		ChestID   = _Data.GetString("chest_id");
+		VoucherID = _Data.GetString("voucher_id");
+		FrameID   = _Data.GetString("frame_id");
 	}
 }
 
@@ -48,22 +34,6 @@ public class ProgressSnapshot : Snapshot
 public class ProgressProcessor : DataCollection<ProgressSnapshot>
 {
 	protected override string Path => "progress";
-
-	public int GetSongLevel(string _SongID)
-	{
-		if (Snapshots.Count == 0)
-			return 1;
-		
-		ProgressSnapshot[] snapshots = Snapshots
-			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.SongIDs != null && _Snapshot.SongIDs.Count > 0)
-			.Where(_Snapshot => _Snapshot.SongIDs.Contains(_SongID))
-			.ToArray();
-		
-		return snapshots.Length > 0
-			? snapshots.Aggregate((_A, _B) => _A.Level < _B.Level ? _A : _B).Level
-			: 1;
-	}
 
 	public int GetDiscs(int _Level)
 	{
@@ -79,14 +49,11 @@ public class ProgressProcessor : DataCollection<ProgressSnapshot>
 		return snapshot?.Coins ?? 0;
 	}
 
-	public List<string> GetSongIDs(int _Level)
+	public string GetSongID(int _Level)
 	{
 		ProgressSnapshot snapshot = GetSnapshot(_Level);
 		
-		if (snapshot == null || snapshot.SongIDs == null)
-			return new List<string>();
-		
-		return snapshot.SongIDs;
+		return snapshot?.SongID ?? string.Empty;
 	}
 
 	public int GetLevel(int _Discs)
@@ -99,8 +66,7 @@ public class ProgressProcessor : DataCollection<ProgressSnapshot>
 		
 		ProgressSnapshot snapshot = Snapshots
 			.Where(_Snapshot => _Snapshot.Active)
-			.Where(_Snapshot => _Snapshot.Discs <= _Discs)
-			.Aggregate((_A, _B) => _A.Level > _B.Level ? _A : _B);
+			.GreaterMax(_Snapshot => _Snapshot.Discs, _Discs);
 		
 		return snapshot != null
 			? Mathf.Clamp(snapshot.Level, minLevel, maxLevel)

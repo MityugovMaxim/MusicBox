@@ -412,9 +412,9 @@ public class TutorialPlayer : ASFPlayer
 		
 		AudioClip sound = m_SoundProcessor.GetSound(_Sound);
 		
-		void OnComboChange(int _Combo, ScoreGrade _Grade)
+		void OnHit(ScoreType _ScoreType, ScoreGrade _Grade)
 		{
-			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss)
+			if (_Grade != ScoreGrade.Fail && _Grade != ScoreGrade.Miss && _Grade != ScoreGrade.Bad)
 			{
 				AudioSource.PlayOneShot(sound);
 				progress++;
@@ -425,9 +425,9 @@ public class TutorialPlayer : ASFPlayer
 		
 		m_Input = false;
 		
-		_Token.Register(() => m_ScoreController.OnComboChange -= OnComboChange);
+		_Token.Register(() => m_ScoreController.OnHit.RemoveListener(OnHit));
 		
-		m_ScoreController.OnComboChange += OnComboChange;
+		m_ScoreController.OnHit.AddListener(OnHit);
 		
 		m_HealthController.Restore();
 		
@@ -452,13 +452,41 @@ public class TutorialPlayer : ASFPlayer
 			SampleAsync(maxTime + Duration, _Token)
 		);
 		
-		m_ScoreController.OnComboChange -= OnComboChange;
+		m_ScoreController.OnHit.RemoveListener(OnHit);
 		
 		m_Input = false;
 		
 		ProcessSamplers(0, threshold);
 		
 		return progress >= threshold;
+	}
+
+	Task WaitSelect(ScoreType _ScoreType, CancellationToken _Token = default)
+	{
+		if (_Token.IsCancellationRequested)
+			return Task.CompletedTask;
+		
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
+		
+		void OnSelect(ScoreType _Type)
+		{
+			if (_ScoreType != _Type)
+				return;
+			
+			m_ScoreController.OnSelect.RemoveListener(OnSelect);
+			source.TrySetResult(true);
+		}
+		
+		_Token.Register(() =>
+			{
+				m_ScoreController.OnSelect.RemoveListener(OnSelect);
+				source.TrySetResult(false);
+			}
+		);
+		
+		m_ScoreController.OnSelect.AddListener(OnSelect);
+		
+		return source.Task;
 	}
 
 	async Task PlayVideoAsync(string _VideoClip, CancellationToken _Token = default)

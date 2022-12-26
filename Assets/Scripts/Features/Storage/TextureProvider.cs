@@ -21,7 +21,7 @@ public class TextureProvider : StorageProvider<Texture2D>
 		if (string.IsNullOrEmpty(_Path))
 			return Task.FromResult(false);
 		
-		return UploadFileAsync(
+		return UploadAsync(
 			_Path,
 			() => Task.FromResult(_Texture.EncodeToJPG()),
 			new MetadataChange()
@@ -44,7 +44,7 @@ public class TextureProvider : StorageProvider<Texture2D>
 		if (string.IsNullOrEmpty(_Path))
 			return Task.FromResult(false);
 		
-		return UploadFileAsync(
+		return UploadAsync(
 			_Path,
 			() => Task.FromResult(_Texture.EncodeToPNG()),
 			new MetadataChange()

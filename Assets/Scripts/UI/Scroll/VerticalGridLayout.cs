@@ -1,65 +1,5 @@
 using UnityEngine;
 
-public class VerticalStackLayout : Layout
-{
-	Vector2 Position { get; }
-	float   Width    { get; }
-	float   Spacing  { get; }
-
-	float m_Height;
-
-	public VerticalStackLayout(
-		Vector2 _Position,
-		float   _Width,
-		float   _Spacing
-	)
-	{
-		Position = _Position;
-		Width    = _Width;
-		Spacing  = _Spacing;
-	}
-
-	public static void Start(UILayout _Layout, float _Spacing)
-	{
-		if (_Layout == null)
-			return;
-		
-		_Layout.EndLayout();
-		
-		Rect rect = _Layout.GetLocalRect();
-		
-		VerticalStackLayout layout = new VerticalStackLayout(
-			new Vector2(0, -rect.height),
-			rect.width,
-			_Spacing
-		);
-		
-		_Layout.StartLayout(layout);
-	}
-
-	public static void End(UILayout _Layout)
-	{
-		if (_Layout != null)
-			_Layout.EndLayout();
-	}
-
-	public override Vector2 GetSize() => new Vector2(Width, Mathf.Max(0, m_Height - Spacing));
-
-	public override Rect GetRect(Vector2 _Size)
-	{
-		Rect rect = new Rect(
-			Position.x,
-			Position.y - m_Height,
-			Width,
-			_Size.y
-		);
-		
-		m_Height += _Size.y + Spacing;
-		
-		return rect;
-	}
-}
-
 public class VerticalGridLayout : Layout
 {
 	Vector2 Position          { get; }
@@ -68,6 +8,7 @@ public class VerticalGridLayout : Layout
 	float   Height            { get; }
 	float   HorizontalSpacing { get; }
 	float   VerticalSpacing   { get; }
+	Vector2 Pivot             { get; }
 
 	int m_Count;
 
@@ -77,7 +18,8 @@ public class VerticalGridLayout : Layout
 		float   _Width,
 		float   _Height,
 		float   _HorizontalSpacing,
-		float   _VerticalSpacing
+		float   _VerticalSpacing,
+		Vector2 _Pivot
 	)
 	{
 		Position          = _Position;
@@ -86,6 +28,7 @@ public class VerticalGridLayout : Layout
 		Height            = _Height;
 		HorizontalSpacing = _HorizontalSpacing;
 		VerticalSpacing   = _VerticalSpacing;
+		Pivot             = _Pivot;
 	}
 
 	public static void Start(
@@ -101,6 +44,10 @@ public class VerticalGridLayout : Layout
 		
 		_Layout.EndLayout();
 		
+		Vector2 pivot = _Layout.RectTransform.pivot;
+		
+		float direction = pivot.y * 2 - 1;
+		
 		Rect rect = _Layout.GetLocalRect();
 		
 		float spacing = Mathf.Max(0, _ColumnCount - 1) * _HorizontalSpacing;
@@ -108,12 +55,13 @@ public class VerticalGridLayout : Layout
 		float height  = width / _Aspect;
 		
 		Layout layout = new VerticalGridLayout(
-			new Vector2(0, -rect.height),
+			new Vector2(0, -rect.height * direction),
 			_ColumnCount,
 			width,
 			height,
 			_HorizontalSpacing,
-			_VerticalSpacing
+			_VerticalSpacing,
+			pivot
 		);
 		
 		_Layout.StartLayout(layout);
@@ -138,12 +86,14 @@ public class VerticalGridLayout : Layout
 
 	public override Rect GetRect(Vector2 _Size)
 	{
+		float direction = Pivot.y * 2 - 1;
+		
 		int x = m_Count % ColumnCount;
 		int y = m_Count / ColumnCount;
 		
 		Rect rect = new Rect(
 			Position.x + x * Width + x * HorizontalSpacing,
-			Position.y - y * Height - y * VerticalSpacing,
+			Position.y - y * Height * direction - y * VerticalSpacing,
 			Width,
 			Height
 		);

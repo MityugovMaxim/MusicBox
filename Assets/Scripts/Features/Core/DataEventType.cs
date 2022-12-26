@@ -4,9 +4,10 @@ using System;
 public enum DataEventType
 {
 	None    = 0,
-	Add     = 1 << 0,
-	Remove  = 1 << 1,
-	Change  = 1 << 2,
-	Reorder = 1 << 3,
+	Load    = 1 << 0,
+	Add     = 1 << 1,
+	Remove  = 1 << 2,
+	Change  = 1 << 3,
+	Reorder = 1 << 4,
 	Update  = Add | Remove,
 }

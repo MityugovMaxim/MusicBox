@@ -5,6 +5,7 @@ Shader "UI/OutlineStroke"
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
 		_Speed ("Speed", Float) = 1
+		_Power ("Power", Float) = 1
 		
 		_Color0 ("Color 0", Color) = (1,1,1,1)
 		_Color1 ("Color 1", Color) = (1,1,1,1)
@@ -93,6 +94,7 @@ Shader "UI/OutlineStroke"
 			float _Ratio0;
 			float _Ratio1;
 			float _Speed;
+			float _Power;
 
 			fixed4 getGradient(const float _Phase)
 			{
@@ -128,7 +130,7 @@ Shader "UI/OutlineStroke"
 				color *= getGradient(phase);
 				color.a *= smoothstep(0, fade, position) * smoothstep(size, size - fade, position);
 				
-				return useUIMask(color, IN.mask);
+				return useUIMask(color, IN.mask) * _Power;
 			}
 			ENDCG
 		}

@@ -5,15 +5,18 @@ using Zenject;
 
 public class UISongPlay : UISongEntity
 {
-	[SerializeField] UIGroup    m_ControlGroup;
-	[SerializeField] UIGroup    m_LoaderGroup;
-	[SerializeField] UIFlare    m_Flare;
-	[SerializeField] Button     m_FreeButton;
-	[SerializeField] Button     m_PaidButton;
-	[SerializeField] GameObject m_FreeContent;
-	[SerializeField] GameObject m_PaidContent;
+	[SerializeField] UIChestImage m_Chest;
+	[SerializeField] UIGroup      m_ControlGroup;
+	[SerializeField] UIGroup      m_LoaderGroup;
+	[SerializeField] UIFlare      m_Flare;
+	[SerializeField] Button       m_FreeButton;
+	[SerializeField] Button       m_PaidButton;
+	[SerializeField] Button       m_ChestButton;
+	[SerializeField] GameObject   m_FreeContent;
+	[SerializeField] GameObject   m_PaidContent;
+	[SerializeField] GameObject   m_ChestContent;
 
-	[Inject] SongsManager          m_SongsManager;
+	[Inject] ChestsManager         m_ChestsManager;
 	[Inject] ProfileCoinsParameter m_ProfileCoins;
 	[Inject] MenuProcessor         m_MenuProcessor;
 
@@ -23,6 +26,7 @@ public class UISongPlay : UISongEntity
 		
 		m_FreeButton.Subscribe(Play);
 		m_PaidButton.Subscribe(Play);
+		m_ChestButton.Subscribe(Play);
 	}
 
 	protected override void OnDestroy()
@@ -31,6 +35,7 @@ public class UISongPlay : UISongEntity
 		
 		m_FreeButton.Unsubscribe(Play);
 		m_PaidButton.Unsubscribe(Play);
+		m_ChestButton.Unsubscribe(Play);
 	}
 
 	protected override void Subscribe()
@@ -54,35 +59,27 @@ public class UISongPlay : UISongEntity
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
 		
-		SongMode mode = SongsManager.GetMode(SongID);
+		RankType songRank = SongsManager.GetRank(SongID);
 		
-		m_FreeContent.SetActive(mode == SongMode.Free);
-		m_PaidContent.SetActive(mode == SongMode.Paid);
+		m_Chest.ChestID = m_ChestsManager.GetChestID(songRank);
+		
+		m_FreeContent.SetActive(SongsManager.IsFree(SongID));
+		m_PaidContent.SetActive(SongsManager.IsPaid(SongID));
+		m_ChestContent.SetActive(SongsManager.IsChest(SongID));
 	}
 
 	void Play()
 	{
-		SongMode mode = SongsManager.GetMode(SongID);
-		
-		switch (mode)
-		{
-			case SongMode.Free:
-				PlayFree();
-				break;
-			case SongMode.Paid:
-				PlayPaid();
-				break;
-		}
+		if (SongsManager.IsFree(SongID))
+			PlayFree();
+		else if (SongsManager.IsPaid(SongID))
+			PlayPaid();
+		else if (SongsManager.IsChest(SongID))
+			PlayChest();
 	}
 
 	async void PlayFree()
 	{
-		if (m_SongsManager.IsPaid(SongID))
-		{
-			PlayPaid();
-			return;
-		}
-		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
@@ -100,15 +97,9 @@ public class UISongPlay : UISongEntity
 
 	async void PlayPaid()
 	{
-		if (m_SongsManager.IsAvailable(SongID))
-		{
-			PlayFree();
-			return;
-		}
-		
 		string songID = SongID;
 		
-		long coins = m_SongsManager.GetPrice(songID);
+		long coins = SongsManager.GetPrice(songID);
 		
 		if (!await m_ProfileCoins.Remove(coins))
 			return;
@@ -154,5 +145,15 @@ public class UISongPlay : UISongEntity
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
+	}
+
+	void PlayChest()
+	{
+		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
+		
+		if (mainMenu == null)
+			return;
+		
+		mainMenu.Select(MainMenuPageType.Chests);
 	}
 }

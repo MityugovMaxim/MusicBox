@@ -36,7 +36,7 @@ public class UISongScoreMilestone : UIGroup
 	{
 		m_SongID = _SongID;
 		
-		m_Accuracy = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Bronze);
+		m_Accuracy = m_SongsManager.GetThreshold(m_SongID, RankType.Bronze);
 		
 		ProcessValues();
 		
@@ -77,7 +77,7 @@ public class UISongScoreMilestone : UIGroup
 	{
 		int       position = 100 - Accuracy;
 		long      score    = m_ScoreController.GetScore(Accuracy);
-		ScoreRank rank     = m_SongsManager.GetRank(m_SongID, Accuracy);
+		RankType rank     = m_SongsManager.GetRank(m_SongID, Accuracy);
 		
 		m_Position.text = position.ToString();
 		m_Score.Value   = score;

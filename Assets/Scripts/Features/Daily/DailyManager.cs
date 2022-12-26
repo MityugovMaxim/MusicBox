@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
 [Preserve]
-public class DailyManager
+public class DailyManager : IDataManager
 {
+	public bool Activated { get; private set; }
+
 	public DailyCollection Collection => m_DailyCollection;
 
 	[Inject] AdsProcessor    m_AdsProcessor;
@@ -17,7 +20,22 @@ public class DailyManager
 
 	readonly DataEventHandler m_CollectHandler = new DataEventHandler();
 
-	public Task Preload() => m_DailyCollection.Load();
+	public async Task<bool> Activate()
+	{
+		if (Activated)
+			return true;
+		
+		int frame = Time.frameCount;
+		
+		await Task.WhenAll(
+			m_DailyCollection.Load(),
+			m_TimersManager.Activate()
+		);
+		
+		Activated = true;
+		
+		return frame == Time.frameCount;
+	}
 
 	public void SubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.AddListener(_DailyID, _Action);
 

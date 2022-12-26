@@ -27,7 +27,7 @@ public class UILevelCollect : UIEntity
 		Cancel();
 	}
 
-	public async Task CollectAsync(ScoreRank _Rank)
+	public async Task CollectAsync(RankType _Rank)
 	{
 		Cancel();
 		
@@ -60,7 +60,7 @@ public class UILevelCollect : UIEntity
 		}
 		
 		m_Path.Phase = 0;
-		m_Disc.Rank  = ScoreRank.None;
+		m_Disc.Rank  = RankType.None;
 		
 		Complete();
 	}

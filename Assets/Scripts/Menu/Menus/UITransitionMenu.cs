@@ -42,9 +42,9 @@ public class UITransitionMenu : UIAnimationMenu
 	[ContextMenu("Process discs")]
 	void ProcessDiscs()
 	{
-		ScoreRank[] ranks = Enum.GetValues(typeof(ScoreRank))
-			.OfType<ScoreRank>()
-			.Where(_Rank => _Rank != ScoreRank.None)
+		RankType[] ranks = Enum.GetValues(typeof(RankType))
+			.OfType<RankType>()
+			.Where(_Rank => _Rank != RankType.None)
 			.ToArray();
 		
 		foreach (UIDisc disc in m_Discs)

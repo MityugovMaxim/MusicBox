@@ -33,8 +33,8 @@ public class UISongScoreList : UIEntity
 	[Inject] HapticProcessor m_HapticProcessor;
 
 	CancellationTokenSource m_DiscToken;
-	ScoreRank               m_CoinsRank;
-	ScoreRank               m_DiscRank;
+	RankType               m_CoinsRank;
+	RankType               m_DiscRank;
 
 	string m_SongID;
 
@@ -50,12 +50,12 @@ public class UISongScoreList : UIEntity
 	{
 		m_SongID         = _SongID;
 		m_SourceAccuracy = m_ScoresManager.GetAccuracy(m_SongID);
-		m_TargetAccuracy = m_ScoreController.GetAccuracy();
+		m_TargetAccuracy = m_ScoreController.Accuracy;
 		
-		m_BronzeThreshold   = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Bronze);
-		m_SilverThreshold   = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Silver);
-		m_GoldThreshold     = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Gold);
-		m_PlatinumThreshold = m_SongsManager.GetThreshold(m_SongID, ScoreRank.Platinum);
+		m_BronzeThreshold   = m_SongsManager.GetThreshold(m_SongID, RankType.Bronze);
+		m_SilverThreshold   = m_SongsManager.GetThreshold(m_SongID, RankType.Silver);
+		m_GoldThreshold     = m_SongsManager.GetThreshold(m_SongID, RankType.Gold);
+		m_PlatinumThreshold = m_SongsManager.GetThreshold(m_SongID, RankType.Platinum);
 		
 		m_Image.SongID = m_SongID;
 		m_Label.SongID = m_SongID;
@@ -66,7 +66,7 @@ public class UISongScoreList : UIEntity
 		m_Coins.Value = 0;
 		
 		m_DiscRank  = m_ScoresManager.GetRank(m_SongID);
-		m_CoinsRank = ScoreRank.None;
+		m_CoinsRank = RankType.None;
 		
 		m_Disc.Rank = m_DiscRank;
 		
@@ -82,7 +82,7 @@ public class UISongScoreList : UIEntity
 		await m_Statistics.PlayAsync();
 		
 		await Task.WhenAll(
-			ScoreAsync(m_ScoreController.GetScore()),
+			ScoreAsync(m_ScoreController.Score),
 			ShiftAsync()
 		);
 		
@@ -104,42 +104,42 @@ public class UISongScoreList : UIEntity
 		await Task.Delay(2000);
 	}
 
-	ScoreRank GetDisc(int _Accuracy)
+	RankType GetDisc(int _Accuracy)
 	{
 		if (_Accuracy == m_PlatinumThreshold)
-			return ScoreRank.Platinum;
+			return RankType.Platinum;
 		else if (_Accuracy == m_GoldThreshold)
-			return ScoreRank.Gold;
+			return RankType.Gold;
 		else if (_Accuracy == m_SilverThreshold)
-			return ScoreRank.Silver;
+			return RankType.Silver;
 		else if (_Accuracy == m_BronzeThreshold)
-			return ScoreRank.Bronze;
+			return RankType.Bronze;
 		else
-			return ScoreRank.None;
+			return RankType.None;
 	}
 
-	ScoreRank GetRank(int _Accuracy)
+	RankType GetRank(int _Accuracy)
 	{
 		if (_Accuracy >= m_PlatinumThreshold)
-			return ScoreRank.Platinum;
+			return RankType.Platinum;
 		else if (_Accuracy >= m_GoldThreshold)
-			return ScoreRank.Gold;
+			return RankType.Gold;
 		else if (_Accuracy >= m_SilverThreshold)
-			return ScoreRank.Silver;
+			return RankType.Silver;
 		else if (_Accuracy >= m_BronzeThreshold)
-			return ScoreRank.Bronze;
+			return RankType.Bronze;
 		else
-			return ScoreRank.None;
+			return RankType.None;
 	}
 
-	string GetDiscSound(ScoreRank _Rank)
+	string GetDiscSound(RankType _Rank)
 	{
 		switch (_Rank)
 		{
-			case ScoreRank.Platinum: return m_PlatinumSound;
-			case ScoreRank.Gold:     return m_GoldSound;
-			case ScoreRank.Silver:   return m_SilverSound;
-			case ScoreRank.Bronze:   return m_BronzeSound;
+			case RankType.Platinum: return m_PlatinumSound;
+			case RankType.Gold:     return m_GoldSound;
+			case RankType.Silver:   return m_SilverSound;
+			case RankType.Bronze:   return m_BronzeSound;
 			default:                 return string.Empty;
 		}
 	}
@@ -171,12 +171,12 @@ public class UISongScoreList : UIEntity
 	{
 		int accuracy = Mathf.Min(m_TargetAccuracy, _Accuracy);
 		
-		ScoreRank rank = GetRank(accuracy);
+		RankType rank = GetRank(accuracy);
 		
 		if (m_CoinsRank < rank)
 		{
 			m_CoinsRank   =  rank;
-			m_Coins.Value += m_SongsManager.GetCoins(m_SongID, ScoreRank.None);
+			m_Coins.Value += m_SongsManager.GetCoins(m_SongID, RankType.None);
 		}
 		
 		if (m_DiscRank >= rank)
@@ -257,7 +257,7 @@ public class UISongScoreList : UIEntity
 			lower.Setup(
 				lowerAccuracy,
 				m_ScoreController.GetScore(lowerAccuracy),
-				ScoreRank.None,
+				RankType.None,
 				GetRank(lowerAccuracy - 1),
 				lowerAccuracy == m_SourceAccuracy
 			);

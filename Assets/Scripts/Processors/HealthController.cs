@@ -21,12 +21,14 @@ public class HealthController : IInitializable, IDisposable
 
 	void IInitializable.Initialize()
 	{
-		m_ScoreController.OnComboChange += OnComboChange;
+		m_ScoreController.OnMiss.AddListener(Damage);
+		m_ScoreController.OnFail.AddListener(Damage);
 	}
 
 	void IDisposable.Dispose()
 	{
-		m_ScoreController.OnComboChange -= OnComboChange;
+		m_ScoreController.OnMiss.RemoveListener(Damage);
+		m_ScoreController.OnFail.RemoveListener(Damage);
 	}
 
 	public void Setup(Action _Death)
@@ -43,12 +45,6 @@ public class HealthController : IInitializable, IDisposable
 		m_InvincibilityTime = 0;
 		
 		OnRestore?.Invoke(m_Health);
-	}
-
-	void OnComboChange(int _Combo, ScoreGrade _ScoreGrade)
-	{
-		if (_ScoreGrade == ScoreGrade.Fail || _ScoreGrade == ScoreGrade.Miss)
-			Damage();
 	}
 
 	void Damage()

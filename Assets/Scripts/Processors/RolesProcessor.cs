@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
@@ -21,24 +20,6 @@ public class RoleSnapshot : Snapshot
 	public bool   Daily     { get; }
 	public bool   Vouchers  { get; }
 
-	public RoleSnapshot() : base("new_role_user", 0)
-	{
-		Name      = string.Empty;
-		Roles     = false;
-		Ambient   = false;
-		Languages = false;
-		Banners   = false;
-		Songs     = false;
-		Ads       = false;
-		Progress  = false;
-		Revives   = false;
-		Offers    = false;
-		News      = false;
-		Products  = false;
-		Daily     = false;
-		Vouchers  = false;
-	}
-
 	public RoleSnapshot(DataSnapshot _Data) : base(_Data)
 	{
 		Name      = _Data.GetString("name");
@@ -55,29 +36,6 @@ public class RoleSnapshot : Snapshot
 		Products  = _Data.GetBool("permissions/products");
 		Daily     = _Data.GetBool("permissions/daily");
 		Vouchers  = _Data.GetBool("permissions/vouchers");
-	}
-
-	public override void Serialize(Dictionary<string, object> _Data)
-	{
-		base.Serialize(_Data);
-		
-		_Data["name"] = Name;
-		_Data["permissions"] = new Dictionary<string, bool>()
-		{
-			{ "roles", Roles },
-			{ "songs", Songs },
-			{ "progress", Progress },
-			{ "revives", Revives },
-			{ "offers", Offers },
-			{ "news", News },
-			{ "ads", Ads },
-			{ "ambient", Ambient },
-			{ "languages", Languages },
-			{ "banners", Banners },
-			{ "products", Products },
-			{ "daily", Daily },
-			{ "vouchers", Vouchers },
-		};
 	}
 
 	public override string ToString() => Name;

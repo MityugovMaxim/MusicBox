@@ -21,6 +21,23 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 
 	CancellationTokenSource m_TokenSource;
 
+	public void Scroll(Vector2 _Position, TextAnchor _Alignment)
+	{
+		CancelScroll();
+		
+		float direction = m_Content.pivot.y * 2 - 1;
+		
+		float offset = m_Viewport.rect.height * _Alignment.GetVerticalPivot();
+		
+		Vector2 position = m_Content.anchoredPosition;
+		
+		position.y = (_Position.y - offset) * direction;
+		
+		m_Content.anchoredPosition = position;
+		
+		Clamp();
+	}
+
 	protected override void OnEnable()
 	{
 		base.OnEnable();
@@ -128,8 +145,10 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		m_TokenSource = null;
 	}
 
-	float MinPosition => 0;
-	float MaxPosition => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
+	float MinPosition => -Height * (1.0f - m_Content.pivot.y);
+	float MaxPosition => Height * m_Content.pivot.y;
+
+	float Height => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
 
 	float GetOverflow(Vector2 _Position)
 	{

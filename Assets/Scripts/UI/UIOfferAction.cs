@@ -1,14 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
-public class UIOfferAction : UIEntity
+public class UIOfferAction : UIOfferEntity
 {
-	public string OfferID { get; set; }
+	[SerializeField] UIOverlayButton m_Button;
 
-	[SerializeField] Button m_Button;
-
-	[Inject] OffersManager m_OffersManager;
 	[Inject] MenuProcessor m_MenuProcessor;
 
 	protected override void Awake()
@@ -31,7 +27,7 @@ public class UIOfferAction : UIEntity
 		
 		try
 		{
-			await m_OffersManager.Collect(OfferID);
+			await OffersManager.Collect(OfferID);
 		}
 		catch (UnityException)
 		{
@@ -40,4 +36,10 @@ public class UIOfferAction : UIEntity
 		
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
+
+	protected override void Subscribe() { }
+
+	protected override void Unsubscribe() { }
+
+	protected override void ProcessData() { }
 }

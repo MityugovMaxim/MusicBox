@@ -9,13 +9,13 @@ public class SeasonsInstaller : FeatureInstaller
 	{
 		InstallSingleton<SeasonsCollection>();
 		
-		InstallSingleton<SeasonsDescriptors>();
+		InstallSingleton<SeasonsDescriptor>();
 		
 		InstallSingleton<ProfileSeasons>();
 		
 		InstallSingleton<SeasonsManager>();
 		
-		InstallPool<UISeasonHeaderElement, UISeasonHeaderElement.Pool>(m_SeasonHeaderElement, 1);
+		InstallPool<UISeasonHeaderElement, UISeasonHeaderElement.Pool>(m_SeasonHeaderElement);
 		
 		InstallPool<UISeasonLevelElement, UISeasonLevelElement.Pool>(m_SeasonLevelElement, 4);
 	}

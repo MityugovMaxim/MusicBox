@@ -65,22 +65,6 @@ public class UILevelItems : UIGroup
 
 	void CreateSongs()
 	{
-		List<string> songIDs = m_ProgressProcessor.GetSongIDs(m_Level);
-		
-		if (songIDs == null || songIDs.Count == 0)
-			return;
-		
-		foreach (string songID in songIDs)
-		{
-			UIUnlockSongItem item = m_SongsPool.Spawn(m_Container);
-			
-			if (item == null)
-				continue;
-			
-			item.Setup(songID, m_Preview);
-			
-			m_Items.Add(item);
-		}
 	}
 
 	public async Task PlayAsync()

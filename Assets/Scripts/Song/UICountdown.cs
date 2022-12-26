@@ -20,7 +20,7 @@ public class UICountdown : UIOrder
 		
 		m_Animator = GetComponent<Animator>();
 		
-		m_Animator.RegisterComplete("play", InvokePlayFinished);
+		m_Animator.SubscribeComplete("play", InvokePlayFinished);
 	}
 
 	public void Play()

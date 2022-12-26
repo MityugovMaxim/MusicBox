@@ -78,15 +78,7 @@ public class UIVoucherCreateMenu : UIMenu
 		
 		long expiration = Days > 0 || Hours > 0 || Minutes > 0 ? TimeUtility.GetTimestamp(Days, Hours, Minutes) : 0;
 		
-		VoucherCreateRequest request = new VoucherCreateRequest(
-			Type,
-			Group,
-			Amount,
-			IDs,
-			expiration
-		);
-		
-		bool success = await request.SendAsync();
+		bool success = false;
 		
 		if (success)
 			await HideAsync();

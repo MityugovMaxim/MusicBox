@@ -1,10 +1,12 @@
 public enum ChestItemType
 {
-	SongCasual      = 0,
-	SongEasy        = 1,
-	SongMedium      = 2,
-	SongHard        = 3,
-	SongExtreme     = 4,
-	VoucherProducts = 5,
-	VoucherSongs    = 6,
+	Coins          = 0,
+	SongBronze     = 1,
+	SongSilver     = 2,
+	SongGold       = 3,
+	SongPlatinum   = 4,
+	VoucherStore   = 5,
+	VoucherCoins   = 6,
+	VoucherSeasons = 7,
+	VoucherSongs   = 8,
 }

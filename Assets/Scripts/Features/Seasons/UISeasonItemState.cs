@@ -19,13 +19,11 @@ public class UISeasonItemState : UISeasonItemEntity
 
 	protected override void ProcessData()
 	{
-		bool available = SeasonsManager.IsItemAvailable(SeasonID, ItemID);
+		bool available = SeasonsManager.IsItemAvailable(SeasonID, Level, Mode);
 		bool pass      = SeasonsManager.HasPass(SeasonID);
-		bool free      = SeasonsManager.IsFreeItem(SeasonID, ItemID);
-		bool paid      = SeasonsManager.IsFreeItem(SeasonID, ItemID);
 		
-		m_Collect.SetActive(available && free || available && paid && pass);
+		m_Collect.SetActive(available && Mode == SeasonItemMode.Free || available && Mode == SeasonItemMode.Paid && pass);
 		
-		m_Purchase.SetActive(available && paid && !pass);
+		m_Purchase.SetActive(available && Mode == SeasonItemMode.Paid && !pass);
 	}
 }

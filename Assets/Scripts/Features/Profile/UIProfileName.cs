@@ -5,12 +5,26 @@ using Zenject;
 
 public class UIProfileName : UIEntity
 {
-	[SerializeField] TMP_Text m_Username;
+	[SerializeField] TMP_InputField m_Username;
 
 	[Inject] SocialProcessor m_SocialProcessor;
 	[Inject] Localization    m_Localization;
 	[Inject] MenuProcessor   m_MenuProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_Username.Subscribe(SetUsername);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_Username.Unsubscribe(SetUsername);
+	}
 
 	protected override void OnEnable()
 	{

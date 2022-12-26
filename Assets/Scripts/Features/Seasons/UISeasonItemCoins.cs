@@ -3,7 +3,7 @@ using UnityEngine;
 public class UISeasonItemCoins : UISeasonItemEntity
 {
 	[SerializeField] GameObject  m_Content;
-	[SerializeField] UIUnitLabel m_Coins;
+	[SerializeField] UICoinsItem m_Coins;
 
 	protected override void Subscribe()
 	{
@@ -17,9 +17,10 @@ public class UISeasonItemCoins : UISeasonItemEntity
 
 	protected override void ProcessData()
 	{
-		long coins = SeasonsManager.GetCoins(SeasonID, ItemID);
+		long coins = SeasonsManager.GetCoins(SeasonID, Level, Mode);
 		
 		m_Content.SetActive(coins > 0);
-		m_Coins.Value = coins;
+		
+		m_Coins.Setup(coins);
 	}
 }

@@ -76,10 +76,7 @@ public class AmbientManager : IDataManager
 	string GetAmbientID()
 	{
 		if (m_Playlist == null || m_Playlist.Count == 0)
-		{
-			Debug.LogError("---> PLAYLIST IS EMPTY");
 			return null;
-		}
 		
 		int index = MathUtility.Repeat(m_AmbientIndex, m_Playlist.Count);
 		

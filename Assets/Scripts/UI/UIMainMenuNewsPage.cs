@@ -12,12 +12,13 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	[SerializeField] UIGroup  m_ContentGroup;
 	[SerializeField] UIGroup  m_LoaderGroup;
 
-	[Inject] RolesProcessor      m_RolesProcessor;
-	[Inject] NewsManager         m_NewsManager;
-	[Inject] OffersManager       m_OffersManager;
+	[Inject] RolesProcessor m_RolesProcessor;
+	[Inject] NewsManager    m_NewsManager;
+	[Inject] OffersManager  m_OffersManager;
+
 	[Inject] UIAdminElement.Pool m_AdminPool;
-	[Inject] UINewsElement.Pool     m_NewsPool;
-	[Inject] UIOfferElement.Pool    m_OffersPool;
+	[Inject] UINewsElement.Pool  m_NewsPool;
+	[Inject] UIOfferElement.Pool m_OffersPool;
 
 	protected override async void OnShowStarted()
 	{
@@ -38,7 +39,6 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		
 		m_NewsManager.Collection.Subscribe(DataEventType.Add, Refresh);
 		m_NewsManager.Collection.Subscribe(DataEventType.Remove, Refresh);
-		
 		m_OffersManager.Collection.Subscribe(DataEventType.Add, Refresh);
 		m_OffersManager.Collection.Subscribe(DataEventType.Remove, Refresh);
 	}
@@ -147,7 +147,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		foreach (string offerID in offerIDs)
 			m_Content.Add(new OfferElementEntity(offerID, m_OffersPool));
 		
-		m_Content.Space(LIST_SPACING);
+		VerticalStackLayout.End(m_Content);
 	}
 
 	void CreateCollectedOffers()
@@ -157,12 +157,14 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		if (offerIDs == null || offerIDs.Count == 0)
 			return;
 		
+		m_Content.Spacing(LIST_SPACING);
+		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string offerID in offerIDs)
 			m_Content.Add(new OfferElementEntity(offerID, m_OffersPool));
 		
-		m_Content.Space(LIST_SPACING);
+		VerticalStackLayout.End(m_Content);
 	}
 
 	void CreateNews()
@@ -172,13 +174,13 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		if (newsIDs == null || newsIDs.Count == 0)
 			return;
 		
+		m_Content.Spacing(LIST_SPACING);
+		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		foreach (string newsID in newsIDs)
 			m_Content.Add(new NewsElementEntity(newsID, m_NewsPool));
 		
 		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
 	}
 }

@@ -23,7 +23,7 @@ public class UISplashLogo : UIEntity
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		m_Animator.RegisterComplete("play", InvokePlayFinished);
+		m_Animator.SubscribeComplete("play", InvokePlayFinished);
 	}
 
 	public Task PlayAsync()

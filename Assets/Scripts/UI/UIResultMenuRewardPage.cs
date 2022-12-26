@@ -17,8 +17,8 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 
 	string    m_SongID;
 	bool      m_Double;
-	ScoreRank m_SourceRank;
-	ScoreRank m_TargetRank;
+	RankType m_SourceRank;
+	RankType m_TargetRank;
 
 	public override void Setup(string _SongID)
 	{
@@ -79,8 +79,8 @@ public class UIResultMenuRewardPage : UIResultMenuPage
 		
 		SongFinishRequest request = new SongFinishRequest(
 			m_SongID,
-			m_ScoreController.GetScore(),
-			m_ScoreController.GetAccuracy(),
+			m_ScoreController.Score,
+			m_ScoreController.Accuracy,
 			m_Double
 		);
 		

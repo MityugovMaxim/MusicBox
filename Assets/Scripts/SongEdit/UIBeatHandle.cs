@@ -20,24 +20,24 @@ public class UIBeatHandle : UIEntity
 	{
 		base.Awake();
 		
-		m_AddOriginButton.Subscribe(AddOrigin);
-		m_RemoveOriginButton.Subscribe(RemoveOrigin);
-		m_AddBPMButton.Subscribe(AddBPM);
-		m_RemoveBPMButton.Subscribe(RemoveBPM);
-		m_AddBarButton.Subscribe(AddBar);
-		m_RemoveBarButton.Subscribe(RemoveBar);
+		ButtonExtension.Subscribe(m_AddOriginButton, AddOrigin);
+		ButtonExtension.Subscribe(m_RemoveOriginButton, RemoveOrigin);
+		ButtonExtension.Subscribe(m_AddBPMButton, AddBPM);
+		ButtonExtension.Subscribe(m_RemoveBPMButton, RemoveBPM);
+		ButtonExtension.Subscribe(m_AddBarButton, AddBar);
+		ButtonExtension.Subscribe(m_RemoveBarButton, RemoveBar);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_AddOriginButton.Unsubscribe(AddOrigin);
-		m_RemoveOriginButton.Unsubscribe(RemoveOrigin);
-		m_AddBPMButton.Unsubscribe(AddBPM);
-		m_RemoveBPMButton.Unsubscribe(RemoveBPM);
-		m_AddBarButton.Unsubscribe(AddBar);
-		m_RemoveBarButton.Unsubscribe(RemoveBar);
+		ButtonExtension.Unsubscribe(m_AddOriginButton, AddOrigin);
+		ButtonExtension.Unsubscribe(m_RemoveOriginButton, RemoveOrigin);
+		ButtonExtension.Unsubscribe(m_AddBPMButton, AddBPM);
+		ButtonExtension.Unsubscribe(m_RemoveBPMButton, RemoveBPM);
+		ButtonExtension.Unsubscribe(m_AddBarButton, AddBar);
+		ButtonExtension.Unsubscribe(m_RemoveBarButton, RemoveBar);
 	}
 
 	protected override void OnEnable()

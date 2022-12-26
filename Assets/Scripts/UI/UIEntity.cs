@@ -25,6 +25,70 @@ public class UIEntity : UIBehaviour
 		}
 	}
 
+	public float X
+	{
+		get => RectTransform.anchoredPosition.x;
+		set
+		{
+			Vector2 position = RectTransform.anchoredPosition;
+			
+			if (Mathf.Approximately(position.x, value))
+				return;
+			
+			position.x = value;
+			
+			RectTransform.anchoredPosition = position;
+		}
+	}
+
+	public float Y
+	{
+		get => RectTransform.anchoredPosition.y;
+		set
+		{
+			Vector2 position = RectTransform.anchoredPosition;
+			
+			if (Mathf.Approximately(position.y, value))
+				return;
+			
+			position.y = value;
+			
+			RectTransform.anchoredPosition = position;
+		}
+	}
+
+	public float Width
+	{
+		get => RectTransform.sizeDelta.x;
+		set
+		{
+			Vector2 size = RectTransform.sizeDelta;
+			
+			if (Mathf.Approximately(size.x, value))
+				return;
+			
+			size.x = value;
+			
+			RectTransform.sizeDelta = size;
+		}
+	}
+
+	public float Height
+	{
+		get => RectTransform.sizeDelta.y;
+		set
+		{
+			Vector2 size = RectTransform.sizeDelta;
+			
+			if (Mathf.Approximately(size.y, value))
+				return;
+			
+			size.y = value;
+			
+			RectTransform.sizeDelta = size;
+		}
+	}
+
 	public bool IsActive => gameObject.activeSelf;
 
 	protected bool IsInstanced => gameObject.scene.isLoaded;
@@ -49,6 +113,21 @@ public class UIEntity : UIBehaviour
 		
 		RectTransform.anchorMin = anchor;
 		RectTransform.anchorMax = anchor;
+		
+		RectTransform.anchoredPosition = new Vector2(
+			_Rect.x + _Rect.width * pivot.x,
+			_Rect.y - _Rect.height * pivot.y
+		);
+		
+		RectTransform.sizeDelta = _Rect.size;
+	}
+
+	public void SetRect(Rect _Rect, Vector2 _Anchor)
+	{
+		Vector2 pivot = RectTransform.pivot;
+		
+		RectTransform.anchorMin = _Anchor;
+		RectTransform.anchorMax = _Anchor;
 		
 		RectTransform.anchoredPosition = new Vector2(
 			_Rect.x + _Rect.width * pivot.x,

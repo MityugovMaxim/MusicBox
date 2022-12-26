@@ -8,6 +8,12 @@ public class ChestReward
 	public ChestItemType Type  { get; }
 	public double        Value { get; }
 
+	public bool IsCoins => Type == ChestItemType.Coins;
+
+	public bool IsSong => Type == ChestItemType.SongBronze || Type == ChestItemType.SongSilver || Type == ChestItemType.SongGold || Type == ChestItemType.SongPlatinum;
+
+	public bool IsVoucher => Type == ChestItemType.VoucherCoins || Type == ChestItemType.VoucherStore || Type == ChestItemType.VoucherSongs || Type == ChestItemType.VoucherSeasons;
+
 	public ChestReward(Dictionary<string, object> _Data)
 	{
 		ID    = _Data.GetString("id");

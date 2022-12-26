@@ -177,21 +177,21 @@ public class UIAudioWave : UIImage
 		return (min, max);
 	}
 
-	protected override Vector2 GetUV2()
+	protected override Vector4 GetUV2()
 	{
 		(double min, double max) = GetLimits();
 		
-		return new Vector2(
+		return new Vector4(
 			(float)min,
 			(float)max
 		);
 	}
 
-	protected override Vector2 GetUV3()
+	protected override Vector4 GetUV3()
 	{
 		return m_Mode == Mode.Horizontal
-			? new Vector2(1, 0)
-			: new Vector2(0, 1);
+			? new Vector4(1, 0)
+			: new Vector4(0, 1);
 	}
 
 	protected override Vector3 GetNormal()

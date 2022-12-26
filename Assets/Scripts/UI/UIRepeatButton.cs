@@ -40,7 +40,9 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 	[SerializeField] Haptic.Type m_UpHaptic;
 	[SerializeField] Haptic.Type m_RepeatHaptic;
 
+	[SerializeField] UnityEvent m_Start;
 	[SerializeField] UnityEvent m_Action;
+	[SerializeField] UnityEvent m_Stop;
 
 	[Inject] HapticProcessor m_HapticProcessor;
 	[Inject] SoundProcessor  m_SoundProcessor;
@@ -64,23 +66,22 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 		StopRepeat();
 	}
 
-	public void AddListener(UnityAction _Action)
-	{
-		m_Action.AddListener(_Action);
-	}
+	public void SubscribeStart(UnityAction _Action) => m_Start.AddListener(_Action);
 
-	public void RemoveListener(UnityAction _Action)
-	{
-		m_Action.RemoveListener(_Action);
-	}
+	public void UnsubscribeStart(UnityAction _Action) => m_Start.RemoveListener(_Action);
 
-	public void RemoveAllListeners()
-	{
-		m_Action.RemoveAllListeners();
-	}
+	public void SubscribeStop(UnityAction _Action) => m_Stop.AddListener(_Action);
+
+	public void UnsubscribeStop(UnityAction _Action) => m_Stop.RemoveListener(_Action);
+
+	public void Subscribe(UnityAction _Action) => m_Action.AddListener(_Action);
+
+	public void Unsubscribe(UnityAction _Action) => m_Action.RemoveListener(_Action);
 
 	void StopRepeat()
 	{
+		m_Stop?.Invoke();
+		
 		m_TokenSource?.Cancel();
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
@@ -101,6 +102,8 @@ public class UIRepeatButton : UIEntity, IPointerDownHandler, IPointerUpHandler, 
 		m_TokenSource = new CancellationTokenSource();
 		
 		CancellationToken token = m_TokenSource.Token;
+		
+		m_Start?.Invoke();
 		
 		try
 		{

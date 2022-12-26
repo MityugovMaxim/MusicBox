@@ -10,6 +10,8 @@ public class ChestsInstaller : FeatureInstaller
 		
 		InstallSingleton<ProfileChests>();
 		
+		InstallSingleton<ChestsInventory>();
+		
 		InstallSingleton<ChestsManager>();
 		
 		InstallPool<UIChestElement, UIChestElement.Pool>(m_ChestElement, 6);

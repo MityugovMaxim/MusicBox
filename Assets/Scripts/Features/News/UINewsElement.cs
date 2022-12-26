@@ -9,7 +9,6 @@ public class UINewsElement : UIEntity
 
 	[SerializeField] UINewsImage  m_Image;
 	[SerializeField] UINewsLabel  m_Label;
-	[SerializeField] UINewsDate   m_Date;
 	[SerializeField] UINewsAction m_Action;
 
 	[Inject] BadgeManager m_BadgeManager;
@@ -18,9 +17,8 @@ public class UINewsElement : UIEntity
 	{
 		m_Image.NewsID  = _NewsID;
 		m_Label.NewsID  = _NewsID;
-		m_Date.NewsID   = _NewsID;
 		m_Action.NewsID = _NewsID;
 		
-		m_BadgeManager.Read(UINewsBadge.NEWS_GROUP, _NewsID);
+		m_BadgeManager.ReadNews(_NewsID);
 	}
 }

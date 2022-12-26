@@ -11,6 +11,8 @@ public class OffersInstaller : FeatureInstaller
 		
 		InstallSingleton<OffersDescriptor>();
 		
+		InstallSingleton<ProfileOffers>();
+		
 		InstallSingleton<OffersManager>();
 		
 		InstallPool<UIOfferElement, UIOfferElement.Pool>(m_OfferElement, m_Capacity);

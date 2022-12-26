@@ -11,9 +11,9 @@ public class UIProductCoins : UIProductEntity
 	{
 		ProductsManager.Profile.Subscribe(DataEventType.Add, ProductID, ProcessData);
 		ProductsManager.Collection.Subscribe(DataEventType.Change, ProductID, ProcessData);
-		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.SubscribeStart(ProcessData);
 		ProductsManager.Vouchers.SubscribeCancel(ProcessData);
-		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.SubscribeEnd(ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Add, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Change, ProcessData);
@@ -24,9 +24,9 @@ public class UIProductCoins : UIProductEntity
 	{
 		ProductsManager.Profile.Subscribe(DataEventType.Add, ProductID, ProcessData);
 		ProductsManager.Collection.Subscribe(DataEventType.Change, ProductID, ProcessData);
-		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.SubscribeStart(ProcessData);
 		ProductsManager.Vouchers.SubscribeCancel(ProcessData);
-		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.SubscribeEnd(ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Add, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Change, ProcessData);

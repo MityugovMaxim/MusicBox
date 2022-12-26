@@ -48,7 +48,7 @@ public class TutorialController
 		m_Player = m_TutorialFactory.Create(player);
 		m_Player.Setup(ratio, speed, Finish);
 		
-		m_ScoreController.Setup(m_SongID);
+		m_ScoreController.Setup(RankType.None, null);
 		m_HealthController.Setup(null);
 		
 		UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>();

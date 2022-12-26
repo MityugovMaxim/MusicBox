@@ -22,7 +22,7 @@ public abstract class UIField : UIEntity
 		m_Target       = _Target;
 		m_PropertyInfo = _PropertyInfo;
 		
-		m_Name = m_PropertyInfo?.Name?.ToDisplayName() ?? "[Unknown]";
+		m_Name = m_PropertyInfo?.Name.ToDisplayName() ?? "[Unknown]";
 		
 		Refresh();
 	}

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AudioBox.Logging;
 using Zenject;
@@ -56,25 +57,26 @@ public class UILoginMenu : UIMenu
 		
 		await LoadObjects();
 		
-		await LoadProcessors(DataPriority.High);
+		await LoadCollections(DataPriority.High);
 		
-		await LoadProcessors(DataPriority.Medium);
-		
+		await LoadCollections(DataPriority.Medium);
 		
 		await m_MenuProcessor.Show(MenuType.MainMenu, true);
 		
 		await m_MenuProcessor.Hide(MenuType.LoginMenu);
 		
-		await LoadProcessors(DataPriority.Low);
+		await LoadCollections(DataPriority.Low);
 	}
 
-	async Task LoadProcessors(DataPriority _Priority)
+	Task LoadCollections(DataPriority _Priority)
 	{
+		List<Task> loading = new List<Task>();
 		foreach (IDataCollection data in m_Collections)
 		{
 			if (data != null && data.Priority == _Priority)
-				await data.Reload();
+				loading.Add(data.Reload());
 		}
+		return Task.WhenAll(loading);
 	}
 
 	async Task LoadObjects()

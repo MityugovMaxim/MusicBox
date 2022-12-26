@@ -1,41 +1,21 @@
 using UnityEngine;
-using Zenject;
 
-public class UINewsImage : UIEntity
+public class UINewsImage : UINewsEntity
 {
-	public string NewsID
+	[SerializeField] WebGraphic m_Image;
+
+	protected override void Subscribe()
 	{
-		get => m_NewsID;
-		set
-		{
-			if (m_NewsID == value)
-				return;
-			
-			m_NewsManager.Collection.Unsubscribe(DataEventType.Change, m_NewsID, ProcessImage);
-			
-			m_NewsID = value;
-			
-			ProcessImage();
-			
-			m_NewsManager.Collection.Subscribe(DataEventType.Change, m_NewsID, ProcessImage);
-		}
+		NewsManager.Collection.Subscribe(DataEventType.Change, NewsID, ProcessData);
 	}
 
-	[SerializeField] WebImage m_Image;
-
-	[Inject] NewsManager m_NewsManager;
-
-	string m_NewsID;
-
-	protected override void OnDisable()
+	protected override void Unsubscribe()
 	{
-		base.OnDisable();
-		
-		NewsID = null;
+		NewsManager.Collection.Unsubscribe(DataEventType.Change, NewsID, ProcessData);
 	}
 
-	void ProcessImage()
+	protected override void ProcessData()
 	{
-		m_Image.Path = m_NewsManager.GetImage(NewsID);
+		m_Image.Path = NewsManager.GetImage(NewsID);
 	}
 }

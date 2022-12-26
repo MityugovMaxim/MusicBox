@@ -29,10 +29,10 @@ public class UIReviewMenu : UIAnimationMenu
 	[Inject] ConfigProcessor      m_ConfigProcessor;
 
 	#if UNITY_ANDROID
-	[Inject] ApplicationProcessor m_ApplicationProcessor;
+	[Inject] ApplicationManager m_ApplicationManager;
 	#endif
 
-	ScoreRank m_Rank;
+	RankType m_Rank;
 
 	protected override void Awake()
 	{
@@ -50,7 +50,7 @@ public class UIReviewMenu : UIAnimationMenu
 		m_ReviewButton.onClick.RemoveListener(Review);
 	}
 
-	public void Setup(ScoreRank _Rank)
+	public void Setup(RankType _Rank)
 	{
 		m_Rank = _Rank;
 	}
@@ -113,7 +113,7 @@ public class UIReviewMenu : UIAnimationMenu
 	#if UNITY_ANDROID
 	void GooglePlayReview()
 	{
-		string url = m_ApplicationProcessor.GetReviewURL();
+		string url = m_ApplicationManager.GetReviewURL();
 		
 		if (string.IsNullOrEmpty(url))
 			return;

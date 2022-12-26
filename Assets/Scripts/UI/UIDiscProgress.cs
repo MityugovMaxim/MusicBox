@@ -6,7 +6,7 @@ using Zenject;
 [RequireComponent(typeof(Animator))]
 public class UIDiscProgress : UIGroup
 {
-	public ScoreRank Rank => m_Rank;
+	public RankType Rank => m_Rank;
 
 	public float Progress
 	{
@@ -25,7 +25,7 @@ public class UIDiscProgress : UIGroup
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 	static readonly int m_CollectParameterID = Animator.StringToHash("Collect");
 
-	[SerializeField] ScoreRank        m_Rank;
+	[SerializeField] RankType        m_Rank;
 	[SerializeField] UISplineProgress m_Target;
 	[SerializeField] float            m_ProgressDelay;
 	[SerializeField] float            m_ProgressDuration;
@@ -56,14 +56,14 @@ public class UIDiscProgress : UIGroup
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		m_Animator.RegisterComplete("collect", InvokeCollectFinished);
+		m_Animator.SubscribeComplete("collect", InvokeCollectFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_Animator.UnregisterComplete("collect", InvokeCollectFinished);
+		m_Animator.UnsubscribeComplete("collect", InvokeCollectFinished);
 	}
 
 	#if UNITY_EDITOR

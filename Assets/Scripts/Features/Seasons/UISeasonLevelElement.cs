@@ -6,12 +6,10 @@ public class UISeasonLevelElement : UISeasonLevelEntity
 	[Preserve]
 	public class Pool : UIEntityPool<UISeasonLevelElement> { }
 
-	[SerializeField] UISeasonLevelLabel    m_Label;
-	[SerializeField] UISeasonLevelProgress m_Progress;
-	[SerializeField] GameObject            m_FreeContent;
-	[SerializeField] GameObject            m_PaidContent;
-	[SerializeField] UISeasonItem          m_FreeItem;
-	[SerializeField] UISeasonItem          m_PaidItem;
+	[SerializeField] UISeasonLevelLabel   m_Level;
+	[SerializeField] UISeasonLevelState[] m_State;
+	[SerializeField] UISeasonItem         m_FreeItem;
+	[SerializeField] UISeasonItem         m_PaidItem;
 
 	protected override void Subscribe()
 	{
@@ -25,19 +23,11 @@ public class UISeasonLevelElement : UISeasonLevelEntity
 
 	protected override void ProcessData()
 	{
-		string freeItemID = SeasonsManager.GetFreeItemID(SeasonID, Level);
-		string paidItemID = SeasonsManager.GetPaidItemID(SeasonID, Level);
+		m_Level.Setup(SeasonID, Level);
+		m_FreeItem.Setup(SeasonID, Level);
+		m_PaidItem.Setup(SeasonID, Level);
 		
-		m_Label.Setup(SeasonID, Level);
-		
-		m_Progress.Setup(SeasonID, Level);
-		
-		m_FreeContent.SetActive(!string.IsNullOrEmpty(freeItemID));
-		
-		m_PaidContent.SetActive(!string.IsNullOrEmpty(paidItemID));
-		
-		m_FreeItem.Setup(SeasonID, freeItemID);
-		
-		m_PaidItem.Setup(SeasonID, paidItemID);
+		foreach (UISeasonLevelState state in m_State)
+			state.Setup(SeasonID, Level);
 	}
 }

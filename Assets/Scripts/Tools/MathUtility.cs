@@ -284,9 +284,29 @@ public static class MathUtility
 		return _Low2 + (_Value - _Low1) * (_High2 - _Low2) / (_High1 - _Low1);
 	}
 
+	public static long Remap(long _Value, long _Low1, long _High1, long _Low2, long _High2)
+	{
+		return (long)(_Low2 + (_Value - _Low1) * (_High2 - _Low2) / (double)(_High1 - _Low1));
+	}
+
+	public static double Remap(double _Value, double _Low1, double _High1, double _Low2, double _High2)
+	{
+		return _Low2 + (_Value - _Low1) * (_High2 - _Low2) / (_High1 - _Low1);
+	}
+
 	public static float RemapClamped(float _Value, float _Low1, float _High1, float _Low2, float _High2)
 	{
 		return Mathf.Clamp(Remap(_Value, _Low1, _High1, _Low2, _High2), _Low2, _High2);
+	}
+
+	public static double RemapClamped(double _Value, double _Low1, double _High1, double _Low2, double _High2)
+	{
+		return Math.Clamp(Remap(_Value, _Low1, _High1, _Low2, _High2), _Low2, _High2);
+	}
+
+	public static long RemapClamped(long _Value, long _Low1, long _High1, long _Low2, long _High2)
+	{
+		return Math.Clamp(Remap(_Value, _Low1, _High1, _Low2, _High2), _Low2, _High2);
 	}
 
 	public static float Remap01(float _Value, float _Low, float _High)
@@ -295,6 +315,11 @@ public static class MathUtility
 	}
 
 	public static float Remap01(long _Value, long _Low, long _High)
+	{
+		return Remap01((double)_Value, _Low, _High);
+	}
+
+	public static float Remap01(int _Value, int _Low, int _High)
 	{
 		return Remap01((double)_Value, _Low, _High);
 	}
@@ -417,6 +442,13 @@ public static class MathUtility
 	{
 		int value = _Value % _Length;
 		return value < 0 ? value + _Length : value;
+	}
+
+	public static int Repeat(int _Value, int _Min, int _Max)
+	{
+		int value  = _Value - _Min;
+		int length = _Max - _Min;
+		return _Min + Repeat(value, length + 1);
 	}
 
 	public static int Lerp(int _Source, int _Target, float _Phase)

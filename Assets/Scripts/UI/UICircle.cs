@@ -62,14 +62,14 @@ public class UICircle : UIImage
 		return material;
 	}
 
-	protected override Vector2 GetUV2()
+	protected override Vector4 GetUV2()
 	{
 		return new Vector2(m_Size, m_Fade);
 	}
 
-	protected override Vector2 GetUV3()
+	protected override Vector4 GetUV3()
 	{
-		return Vector2.zero;
+		return Vector4.zero;
 	}
 
 	protected override Vector3 GetNormal()

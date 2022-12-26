@@ -22,9 +22,11 @@ public abstract class UIChestEntity : UIEntity
 		}
 	}
 
-	protected ChestsManager ChestsManager => m_ChestsManager;
+	protected ChestsInventory ChestsInventory => m_ChestsInventory;
+	protected ChestsManager   ChestsManager   => m_ChestsManager;
 
-	[Inject] ChestsManager m_ChestsManager;
+	[Inject] ChestsInventory m_ChestsInventory;
+	[Inject] ChestsManager   m_ChestsManager;
 
 	string m_ChestID;
 

@@ -2,39 +2,21 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIChestElement : UIOverlayButton
+public class UIChestElement : UIEntity
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UIChestElement> { }
 
-	static bool Processing { get; set; }
+	[SerializeField] UIChestImage  m_Image;
+	[SerializeField] UIChestAction m_Action;
 
-	[SerializeField] UIChestBody m_Body;
-	[SerializeField] UIChestTime m_Time;
-
-	[Inject] ChestsManager m_ChestsManager;
-
-	string m_ChestID;
+	[Inject] BadgeManager m_BadgeManager;
 
 	public void Setup(string _ChestID)
 	{
-		m_ChestID = _ChestID;
+		m_Image.ChestID  = _ChestID;
+		m_Action.ChestID = _ChestID;
 		
-		m_Body.ChestID = m_ChestID;
-		m_Time.ChestID = m_ChestID;
-	}
-
-	protected override async void OnClick()
-	{
-		base.OnClick();
-		
-		if (Processing)
-			return;
-		
-		Processing = true;
-		
-		await m_ChestsManager.Select(m_ChestID);
-		
-		Processing = false;
+		m_BadgeManager.ReadChest(_ChestID);
 	}
 }

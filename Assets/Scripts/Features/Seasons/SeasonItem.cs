@@ -14,5 +14,6 @@ public class SeasonItem : Snapshot
 		SongID    = _Data.GetString("song_id");
 		VoucherID = _Data.GetString("voucher_id");
 		ChestID   = _Data.GetString("chest_id");
+		FrameID   = _Data.GetString("frame_id");
 	}
 }

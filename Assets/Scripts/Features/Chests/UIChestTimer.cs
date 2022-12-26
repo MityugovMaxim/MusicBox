@@ -14,33 +14,32 @@ public class UIChestTimer : UIChestEntity
 
 	protected override void Subscribe()
 	{
-		ChestsManager.Profile.Subscribe(DataEventType.Change, ChestID, ProcessTimer);
-		ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessTimer);
+		ChestsInventory.SubscribeStart(ChestID, ProcessData);
+		ChestsInventory.SubscribeEnd(ChestID, ProcessData);
+		ChestsInventory.SubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.Profile.Subscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void Unsubscribe()
 	{
-		ChestsManager.Profile.Unsubscribe(DataEventType.Change, ChestID, ProcessTimer);
-		ChestsManager.Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
+		ChestsInventory.UnsubscribeStart(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeEnd(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void ProcessData()
 	{
-		if (ChestsManager.IsStarted(ChestID))
+		if (ChestsInventory.IsProcessing(ChestID))
 			m_TimerGroup.Show(true);
 		else
 			m_TimerGroup.Hide(true);
 		
-		m_Timer.Setup(ChestsManager.GetEndTimestamp(ChestID));
-	}
-
-	void ProcessTimer()
-	{
-		if (ChestsManager.IsStarted(ChestID))
-			m_TimerGroup.Show();
-		else
-			m_TimerGroup.Hide();
-		
-		m_Timer.Setup(ChestsManager.GetEndTimestamp(ChestID));
+		m_Timer.SetTimer(
+			ChestsInventory.GetStartTimestamp(ChestID),
+			ChestsInventory.GetEndTimestamp(ChestID)
+		);
 	}
 }

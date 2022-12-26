@@ -11,8 +11,9 @@ public class UIProductDiscount : UIProductEntity
 		ProductsManager.Profile.Subscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Profile.Subscribe(DataEventType.Change, ProcessData);
 		ProductsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.SubscribeStart(ProcessData);
 		ProductsManager.Vouchers.SubscribeCancel(ProcessData);
-		ProductsManager.Vouchers.SubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.SubscribeEnd(ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Add, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Vouchers.Profile.Subscribe(DataEventType.Change, ProcessData);
@@ -25,8 +26,9 @@ public class UIProductDiscount : UIProductEntity
 		ProductsManager.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Profile.Unsubscribe(DataEventType.Change, ProcessData);
 		ProductsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
+		ProductsManager.Vouchers.UnsubscribeStart(ProcessData);
 		ProductsManager.Vouchers.UnsubscribeCancel(ProcessData);
-		ProductsManager.Vouchers.UnsubscribeExpiration(ProcessData);
+		ProductsManager.Vouchers.UnsubscribeEnd(ProcessData);
 		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Add, ProcessData);
 		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
 		ProductsManager.Vouchers.Profile.Unsubscribe(DataEventType.Change, ProcessData);

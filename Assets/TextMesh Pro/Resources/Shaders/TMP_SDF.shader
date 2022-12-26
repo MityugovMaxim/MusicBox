@@ -156,6 +156,8 @@ SubShader {
 		// Used by Unity internally to handle Texture Tiling and Offset.
 		float4 _FaceTex_ST;
 		float4 _OutlineTex_ST;
+		float  _UIMaskSoftnessX;
+		float  _UIMaskSoftnessY;
 
 		pixel_t VertShader(vertex_t input)
 		{
@@ -220,7 +222,7 @@ SubShader {
 			output.color = input.color;
 			output.atlas =	input.texcoord0;
 			output.param =	float4(alphaClip, scale, bias, weight);
-			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_MaskSoftnessX, _MaskSoftnessY) + pixelSize.xy));
+			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + pixelSize.xy));
 			output.viewDir =	mul((float3x3)_EnvMatrix, _WorldSpaceCameraPos.xyz - mul(unity_ObjectToWorld, vert).xyz);
 			#if (UNDERLAY_ON || UNDERLAY_INNER)
 			output.texcoord2 = float4(input.texcoord0 + bOffset, bScale, bBias);

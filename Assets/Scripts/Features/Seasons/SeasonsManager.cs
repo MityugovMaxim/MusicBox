@@ -6,42 +6,39 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
+public enum SeasonItemMode
+{
+	None = 0,
+	Free = 1,
+	Paid = 2,
+}
+
 [Preserve]
 public class SeasonsManager : IDataManager
 {
-	public bool Activated { get; private set; }
-
 	public SeasonsCollection Collection => m_SeasonsCollection;
 
 	public ProfileSeasons Profile => m_ProfileSeasons;
 
-	[Inject] SeasonsCollection   m_SeasonsCollection;
-	[Inject] SeasonsDescriptors  m_SeasonsDescriptors;
-	[Inject] ProfileSeasons      m_ProfileSeasons;
-	[Inject] ProductsManager m_ProductsManager;
+	public SeasonsDescriptor Descriptor => m_SeasonsDescriptor;
+
+	[Inject] SeasonsCollection m_SeasonsCollection;
+	[Inject] SeasonsDescriptor m_SeasonsDescriptor;
+	[Inject] ProfileSeasons    m_ProfileSeasons;
+	[Inject] ProductsManager   m_ProductsManager;
 
 	public void SubscribePass(string _SeasonID, Action _Action) => m_ProductsManager.Profile.SubscribePurchase(_SeasonID, _Action);
 
-	public void UnsubscribePass(string _SeasonID, Action _Action) => m_ProductsManager.Profile.SubscribePurchase(_SeasonID, _Action);
+	public void UnsubscribePass(string _SeasonID, Action _Action) => m_ProductsManager.Profile.UnsubscribePurchase(_SeasonID, _Action);
 
-	public async Task<bool> Activate()
+	public Task<bool> Activate()
 	{
-		if (Activated)
-			return true;
-		
-		int frame = Time.frameCount;
-		
-		await Task.WhenAll(
-			m_SeasonsCollection.Load(),
-			m_SeasonsDescriptors.Load(),
-			m_ProfileSeasons.Load()
+		return GroupTask.ProcessAsync(
+			this,
+			Collection.Load,
+			Descriptor.Load,
+			Profile.Load
 		);
-		
-		await Complete();
-		
-		Activated = true;
-		
-		return frame == Time.frameCount;
 	}
 
 	public string GetSeasonID()
@@ -56,12 +53,24 @@ public class SeasonsManager : IDataManager
 			.FirstOrDefault();
 	}
 
-	public async Task<RequestState> Collect(string _SeasonID, string _ItemID)
+	public int GetAvailableLevel(string _SeasonID)
 	{
-		if (!IsItemAvailable(_SeasonID, _ItemID))
+		int level = GetLevel(_SeasonID);
+		
+		return GetLevels(_SeasonID)
+			.OrderBy(_Level => _Level)
+			.Where(_Level => _Level <= level)
+			.Where(_Level => IsItemAvailable(_SeasonID, _Level))
+			.DefaultIfEmpty(level)
+			.FirstOrDefault();
+	}
+
+	public async Task<RequestState> Collect(string _SeasonID, int _Level, SeasonItemMode _Mode)
+	{
+		if (!IsItemAvailable(_SeasonID, _Level, _Mode))
 			return RequestState.Fail;
 		
-		SeasonCollectRequest request = new SeasonCollectRequest(_SeasonID, _ItemID);
+		SeasonCollectRequest request = new SeasonCollectRequest(_SeasonID, _Level, _Mode);
 		
 		bool success = await request.SendAsync();
 		
@@ -90,16 +99,9 @@ public class SeasonsManager : IDataManager
 		return RequestState.Success;
 	}
 
-	public bool HasPass(string _SeasonID) => m_ProductsManager.ContainsProduct(_SeasonID);
+	public bool HasPass(string _SeasonID) => m_ProductsManager.Profile.Contains(_SeasonID);
 
-	public string GetTitle(string _SeasonID) => m_SeasonsDescriptors.GetTitle(_SeasonID);
-
-	public string GetFreeItemID(string _SeasonID, int _Level)
-	{
-		SeasonLevel level = GetLevel(_SeasonID, _Level);
-		
-		return level?.FreeItem?.ID;
-	}
+	public string GetTitle(string _SeasonID) => m_SeasonsDescriptor.GetTitle(_SeasonID);
 
 	public List<int> GetLevels(string _SeasonID)
 	{
@@ -142,37 +144,30 @@ public class SeasonsManager : IDataManager
 			.Max();
 	}
 
-	public string GetPaidItemID(string _SeasonID, int _Level)
+	public long GetCoins(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
-		SeasonLevel level = GetLevel(_SeasonID, _Level);
-		
-		return level?.PaidItem?.ID;
-	}
-
-	public long GetCoins(string _SeasonID, string _ItemID)
-	{
-		SeasonItem item = GetItem(_SeasonID, _ItemID);
+		SeasonItem item = GetItem(_SeasonID, _Level, _Mode);
 		
 		return item?.Coins ?? 0;
 	}
 
-	public string GetVoucherID(string _SeasonID, string _ItemID)
+	public string GetVoucherID(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
-		SeasonItem item = GetItem(_SeasonID, _ItemID);
+		SeasonItem item = GetItem(_SeasonID, _Level, _Mode);
 		
 		return item?.VoucherID ?? string.Empty;
 	}
 
-	public string GetSongID(string _SeasonID, string _ItemID)
+	public string GetSongID(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
-		SeasonItem item = GetItem(_SeasonID, _ItemID);
+		SeasonItem item = GetItem(_SeasonID, _Level, _Mode);
 		
 		return item?.SongID ?? string.Empty;
 	}
 
-	public string GetChestID(string _SeasonID, string _ItemID)
+	public string GetChestID(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
-		SeasonItem item = GetItem(_SeasonID, _ItemID);
+		SeasonItem item = GetItem(_SeasonID, _Level, _Mode);
 		
 		return item?.ChestID ?? string.Empty;
 	}
@@ -193,26 +188,31 @@ public class SeasonsManager : IDataManager
 		
 		long points = GetPoints(_SeasonID);
 		
-		SeasonLevel level = snapshot.Levels
+		return snapshot.Levels
 			.Where(_Level => _Level != null)
-			.Aggregate((_A, _B) => _A.Level >= _B.Level && _A.Points <= points ? _A : _B);
-		
-		return level?.Level ?? 0;
+			.Where(_Level => _Level.Points <= points)
+			.Select(_Level => _Level.Level)
+			.Max();
 	}
 
 	public float GetProgress(string _SeasonID, int _Level)
 	{
-		SeasonLevel source = GetSourceLevel(_SeasonID);
-		SeasonLevel target = GetTargetLevel(_SeasonID);
+		int minLevel    = GetMinLevel(_SeasonID);
+		int maxLevel    = GetMaxLevel(_SeasonID);
+		int sourceLevel = Mathf.Clamp(_Level, minLevel, maxLevel);
+		int targetLevel = Mathf.Clamp(_Level + 1, minLevel, maxLevel);
 		
-		int sourceLevel = source?.Level ?? 0;
-		int targetLevel = target?.Level ?? 0;
+		if (sourceLevel == targetLevel)
+			return 1;
 		
 		if (_Level > targetLevel)
 			return 1;
 		
 		if (_Level < sourceLevel)
 			return 0;
+		
+		SeasonLevel source = GetLevel(_SeasonID, sourceLevel);
+		SeasonLevel target = GetLevel(_SeasonID, targetLevel);
 		
 		long sourcePoints = source?.Points ?? 0;
 		long targetPoints = target?.Points ?? 0;
@@ -242,46 +242,47 @@ public class SeasonsManager : IDataManager
 		return snapshot?.EndTimestamp ?? 0;
 	}
 
-	public bool IsItemAvailable(string _SeasonID, string _ItemID)
+	public bool IsLevelAvailable(string _SeasonID, int _Level)
 	{
-		ProfileSeason snapshot = Profile.GetSnapshot(_SeasonID);
+		int level = GetLevel(_SeasonID);
 		
-		if (snapshot?.ItemIDs != null && snapshot.ItemIDs.Contains(_ItemID))
+		return level >= _Level;
+	}
+
+	public bool IsLevelUnavailable(string _SeasonID, int _Level) => !IsLevelAvailable(_SeasonID, _Level);
+
+	public bool IsItemAvailable(string _SeasonID, int _Level) => IsItemAvailable(_SeasonID, _Level, SeasonItemMode.Free) || IsItemAvailable(_SeasonID, _Level, SeasonItemMode.Paid);
+
+	public bool IsItemAvailable(string _SeasonID, int _Level, SeasonItemMode _Mode)
+	{
+		int level = GetLevel(_SeasonID);
+		
+		if (level < _Level)
 			return false;
 		
-		int sourceLevel = GetLevel(_SeasonID);
-		int targetLevel = GetItemLevel(_SeasonID, _ItemID);
+		if (_Mode == SeasonItemMode.Paid && !HasPass(_SeasonID))
+			return false;
 		
-		return sourceLevel >= targetLevel;
+		ProfileSeason snapshot = Profile.GetSnapshot(_SeasonID);
+		
+		List<int> items;
+		switch (_Mode)
+		{
+			case SeasonItemMode.Free:
+				items = snapshot?.FreeItems;
+				break;
+			case SeasonItemMode.Paid:
+				items = snapshot?.PaidItems;
+				break;
+			default:
+				items = null;
+				break;
+		}
+		
+		return items == null || !items.Contains(_Level);
 	}
 
-	SeasonLevel GetSourceLevel(string _SeasonID)
-	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
-		
-		if (snapshot?.Levels == null || snapshot.Levels.Count == 0)
-			return null;
-		
-		long points = GetPoints(_SeasonID);
-		
-		return snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Aggregate((_A, _B) => _A.Level >= _B.Level && _A.Points <= points ? _A : _B);
-	}
-
-	SeasonLevel GetTargetLevel(string _SeasonID)
-	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
-		
-		if (snapshot?.Levels == null || snapshot.Levels.Count == 0)
-			return null;
-		
-		long points = GetPoints(_SeasonID);
-		
-		return snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Aggregate((_A, _B) => _A.Level <= _B.Level && _A.Points > points ? _A : _B);
-	}
+	public bool IsItemUnavailable(string _SeasonID, int _Level, SeasonItemMode _Mode) => !IsItemAvailable(_SeasonID, _Level, _Mode);
 
 	SeasonLevel GetLevel(string _SeasonID, int _Level)
 	{
@@ -295,77 +296,18 @@ public class SeasonsManager : IDataManager
 			.FirstOrDefault(_Entry => _Entry.Level == _Level);
 	}
 
-	SeasonItem GetItem(string _SeasonID, string _ItemID)
+	SeasonItem GetItem(string _SeasonID, int _Level, SeasonItemMode _Mode)
 	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
+		SeasonLevel level = GetLevel(_SeasonID, _Level);
 		
-		if (snapshot?.Levels == null || snapshot.Levels.Count == 0)
+		if (level == null)
 			return null;
 		
-		SeasonItem freeItem = snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Select(_Level => _Level.FreeItem)
-			.Where(_Item => _Item != null)
-			.FirstOrDefault(_Item => _Item.ID == _ItemID);
-		
-		SeasonItem paidItem = snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Select(_Level => _Level.PaidItem)
-			.Where(_Item => _Item != null)
-			.FirstOrDefault(_Item => _Item.ID == _ItemID);
-		
-		return freeItem ?? paidItem;
-	}
-
-	int GetItemLevel(string _SeasonID, string _ItemID)
-	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
-		
-		if (snapshot?.Levels == null || snapshot.Levels.Count == 0)
-			return 0;
-		
-		int freeLevel = snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Where(_Level => _Level.FreeItem != null)
-			.Where(_Level => _Level.FreeItem.ID == _ItemID)
-			.Select(_Level => _Level.Level)
-			.DefaultIfEmpty(int.MaxValue)
-			.Min();
-		
-		int paidLevel = snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Where(_Level => _Level.PaidItem != null)
-			.Where(_Level => _Level.PaidItem.ID == _ItemID)
-			.Select(_Level => _Level.Level)
-			.DefaultIfEmpty(int.MaxValue)
-			.Min();
-		
-		return Mathf.Min(freeLevel, paidLevel);
-	}
-
-	public bool IsFreeItem(string _SeasonID, string _ItemID)
-	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
-		
-		if (snapshot?.Levels == null || snapshot.Levels.Count == 0)
-			return false;
-		
-		return snapshot.Levels
-			.Where(_Level => _Level != null)
-			.Select(_Level => _Level.FreeItem)
-			.Where(_Item => _Item != null)
-			.Any(_Item => _Item.ID == _ItemID);
-	}
-
-	public bool IsPaidItem(string _SeasonID, string _ItemID)
-	{
-		SeasonSnapshot snapshot = Collection.GetSnapshot(_SeasonID);
-		
-		if (snapshot == null)
-			return false;
-		
-		return snapshot.Levels.Select(_Level => _Level.PaidItem)
-			.Where(_Item => _Item != null)
-			.Any(_Item => _Item.ID == _ItemID);
+		switch (_Mode)
+		{
+			case SeasonItemMode.Free: return level.FreeItem;
+			case SeasonItemMode.Paid: return level.PaidItem;
+			default:                  return null;
+		}
 	}
 }

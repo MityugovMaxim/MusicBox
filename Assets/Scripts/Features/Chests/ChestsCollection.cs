@@ -16,9 +16,4 @@ public class ChestsCollection : DataCollection<ChestSnapshot>, IDataCollection
 		
 		return base.OnLoad();
 	}
-
-	public ChestSnapshot GetSnapshot(ChestType _ChestType)
-	{
-		return Snapshots.FirstOrDefault(_Snapshot => _Snapshot != null && _Snapshot.Type == _ChestType);
-	}
 }

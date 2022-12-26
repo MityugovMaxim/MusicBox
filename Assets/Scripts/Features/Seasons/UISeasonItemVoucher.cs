@@ -17,7 +17,7 @@ public class UISeasonItemVoucher : UISeasonItemEntity
 
 	protected override void ProcessData()
 	{
-		string voucherID = SeasonsManager.GetVoucherID(SeasonID, ItemID);
+		string voucherID = SeasonsManager.GetVoucherID(SeasonID, Level, Mode);
 		
 		m_Content.SetActive(!string.IsNullOrEmpty(voucherID));
 		

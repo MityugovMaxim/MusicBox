@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class UIDisc : UIEntity
 {
-	public ScoreRank Rank
+	public RankType Rank
 	{
 		get => m_Rank;
 		set
@@ -42,7 +42,7 @@ public class UIDisc : UIEntity
 		}
 	}
 
-	[SerializeField] ScoreRank m_Rank;
+	[SerializeField] RankType m_Rank;
 	[SerializeField] Color     m_Color;
 	[SerializeField] Image     m_Graphic;
 	[SerializeField] Sprite    m_Bronze;
@@ -81,19 +81,19 @@ public class UIDisc : UIEntity
 
 	void ProcessRank()
 	{
-		m_Graphic.enabled = Rank != ScoreRank.None;
+		m_Graphic.enabled = Rank != RankType.None;
 		switch (Rank)
 		{
-			case ScoreRank.Bronze:
+			case RankType.Bronze:
 				m_Graphic.sprite = m_Bronze;
 				break;
-			case ScoreRank.Silver:
+			case RankType.Silver:
 				m_Graphic.sprite = m_Silver;
 				break;
-			case ScoreRank.Gold:
+			case RankType.Gold:
 				m_Graphic.sprite = m_Gold;
 				break;
-			case ScoreRank.Platinum:
+			case RankType.Platinum:
 				m_Graphic.sprite = m_Platinum;
 				break;
 		}

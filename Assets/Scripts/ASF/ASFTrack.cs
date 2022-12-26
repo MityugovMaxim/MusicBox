@@ -7,10 +7,6 @@ namespace AudioBox.ASF
 	public abstract class ASFTrack
 	{
 		public abstract void Sample(double _Time, double _MinTime, double _MaxTime);
-
-		public abstract List<object> Serialize();
-
-		public abstract void Deserialize(IList<object> _Data);
 	}
 
 	public abstract class ASFTrack<T> : ASFTrack where T : ASFClip
@@ -36,41 +32,13 @@ namespace AudioBox.ASF
 			Context.Clear();
 		}
 
-		public override List<object> Serialize()
-		{
-			List<object> data = new List<object>();
-			
-			foreach (T clip in Clips)
-			{
-				if (clip != null)
-					data.Add(clip.Serialize());
-			}
-			
-			return data;
-		}
-
-		public override void Deserialize(IList<object> _Data)
+		public void ClearClips()
 		{
 			MinIndex = -1;
 			MaxIndex = -1;
 			
 			Context.Clear();
 			m_Clips.Clear();
-			
-			if (_Data == null)
-				return;
-			
-			for (int i = 0; i < _Data.Count; i++)
-			{
-				T clip = CreateClip();
-				
-				if (clip == null)
-					continue;
-				
-				clip.Deserialize(_Data.GetDictionary(i));
-				
-				AddClip(clip);
-			}
 		}
 
 		public void AddClip(T _Clip)

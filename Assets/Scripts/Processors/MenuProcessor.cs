@@ -112,32 +112,57 @@ public class MenuProcessor : IInitializable
 	{
 		UIConfirmMenu confirmMenu = GetMenu<UIConfirmMenu>();
 		
-		if (confirmMenu != null)
-			confirmMenu.Setup(_ID, _Title, _Message, _Confirm, _Cancel);
+		if (confirmMenu == null)
+			return Task.CompletedTask;
 		
-		return Show(MenuType.ConfirmMenu);
+		confirmMenu.Setup(_ID, _Title, _Message, _Confirm, _Cancel);
+		
+		return confirmMenu.ShowAsync();
 	}
 
 	public Task<bool> ConfirmAsync(string _ID, string _Title, string _Message)
 	{
-		TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
-		
 		UIConfirmMenu confirmMenu = GetMenu<UIConfirmMenu>();
 		
 		if (confirmMenu == null)
 			return Task.FromResult(false);
 		
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
+		
 		confirmMenu.Setup(
 			_ID,
 			_Title,
 			_Message,
-			() => completionSource.TrySetResult(true),
-			() => completionSource.TrySetResult(false)
+			() => source.TrySetResult(true),
+			() => source.TrySetResult(false)
 		);
 		
 		confirmMenu.Show();
 		
-		return completionSource.Task;
+		return source.Task;
+	}
+
+	public Task<bool> CoinsAsync(string _ID, string _Title, string _Message, long _Coins)
+	{
+		UICoinsMenu coinsMenu = GetMenu<UICoinsMenu>();
+		
+		if (coinsMenu == null)
+			return Task.FromResult(false);
+		
+		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
+		
+		coinsMenu.Setup(
+			_ID,
+			_Title,
+			_Message,
+			_Coins,
+			() => source.TrySetResult(true),
+			() => source.TrySetResult(false)
+		);
+		
+		coinsMenu.Show();
+		
+		return source.Task;
 	}
 
 	public Task RetryAsync(string _ID, Action _Retry = null, Action _Cancel = null)

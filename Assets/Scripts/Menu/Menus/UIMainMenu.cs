@@ -7,8 +7,8 @@ public enum MainMenuPageType
 	News    = 0,
 	Store   = 1,
 	Songs   = 2,
-	Profile = 3,
-	Season  = 4,
+	Chests  = 3,
+	Seasons = 4,
 }
 
 [Menu(MenuType.MainMenu)]
@@ -19,8 +19,68 @@ public class UIMainMenu : UIMenu
 
 	[Inject] LinkProcessor  m_LinkProcessor;
 	[Inject] AmbientManager m_AmbientManager;
+	[Inject] MenuProcessor  m_MenuProcessor;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Songs;
+
+	async void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			UIDataMenu dataMenu = m_MenuProcessor.GetMenu<UIDataMenu>();
+			
+			AdminLanguagesData languages = new AdminLanguagesData();
+			
+			await languages.LoadAsync();
+			
+			AdminStoreData         store         = new AdminStoreData();
+			AdminProductsData      products      = new AdminProductsData();
+			AdminNewsData          news          = new AdminNewsData(languages.Languages);
+			AdminOffersData        offers        = new AdminOffersData(languages.Languages);
+			AdminSongsData         songs         = new AdminSongsData();
+			AdminRevivesData       revives       = new AdminRevivesData();
+			AdminDailyData         daily         = new AdminDailyData();
+			AdminProgressData      progress      = new AdminProgressData();
+			AdminDifficultyData    difficulty    = new AdminDifficultyData();
+			AdminChestsData        chests        = new AdminChestsData();
+			AdminVouchersData      vouchers      = new AdminVouchersData();
+			AdminSeasonsData       seasons       = new AdminSeasonsData();
+			AdminLocalizationsData localizations = new AdminLocalizationsData(languages.Languages);
+			
+			await store.LoadAsync();
+			await products.LoadAsync();
+			await news.LoadAsync();
+			await offers.LoadAsync();
+			await songs.LoadAsync();
+			await revives.LoadAsync();
+			await daily.LoadAsync();
+			await progress.LoadAsync();
+			await difficulty.LoadAsync();
+			await chests.LoadAsync();
+			await vouchers.LoadAsync();
+			await seasons.LoadAsync();
+			await localizations.LoadAsync();
+			
+			dataMenu.Setup(
+				store,
+				products,
+				languages,
+				news,
+				offers,
+				songs,
+				revives,
+				daily,
+				progress,
+				difficulty,
+				chests,
+				vouchers,
+				seasons,
+				localizations
+			);
+			
+			dataMenu.Show();
+		}
+	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant = false)
 	{

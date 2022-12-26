@@ -17,9 +17,10 @@ public class UISeasonItemChest : UISeasonItemEntity
 
 	protected override void ProcessData()
 	{
-		string chestID = SeasonsManager.GetChestID(SeasonID, ItemID);
+		string chestID = SeasonsManager.GetChestID(SeasonID, Level, Mode);
 		
 		m_Content.SetActive(!string.IsNullOrEmpty(chestID));
+		
 		m_Chest.Setup(chestID);
 	}
 }

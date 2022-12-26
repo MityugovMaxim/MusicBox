@@ -17,9 +17,10 @@ public class UISeasonItemSong : UISeasonItemEntity
 
 	protected override void ProcessData()
 	{
-		string songID = SeasonsManager.GetSongID(SeasonID, ItemID);
+		string songID = SeasonsManager.GetSongID(SeasonID, Level, Mode);
 		
 		m_Content.SetActive(!string.IsNullOrEmpty(songID));
+		
 		m_Song.Setup(songID);
 	}
 }

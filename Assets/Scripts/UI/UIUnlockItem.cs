@@ -28,14 +28,14 @@ public class UIUnlockItem : UIEntity
 		
 		m_Animator.keepAnimatorControllerStateOnDisable = true;
 		
-		m_Animator.RegisterComplete(PLAY_STATE, InvokePlayFinished);
+		m_Animator.SubscribeComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 		
-		m_Animator.UnregisterComplete(PLAY_STATE, InvokePlayFinished);
+		m_Animator.UnsubscribeComplete(PLAY_STATE, InvokePlayFinished);
 	}
 
 	public Task PlayAsync(bool _Instant = false)

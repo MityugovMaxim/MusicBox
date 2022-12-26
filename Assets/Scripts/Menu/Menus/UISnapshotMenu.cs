@@ -98,48 +98,14 @@ public class UISnapshotMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
 	}
 
-	async Task UploadSnapshot()
+	Task UploadSnapshot()
 	{
-		if (string.IsNullOrEmpty(m_Path) || m_Snapshot == null || string.IsNullOrEmpty(m_Snapshot.ID))
-			return;
-		
-		DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
-			.Child(m_Path)
-			.Child(m_Snapshot.ID);
-		
-		Dictionary<string, object> data = new Dictionary<string, object>();
-		
-		m_Snapshot.Serialize(data);
-		
-		await reference.SetValueAsync(data);
+		return Task.CompletedTask;
 	}
 
-	async Task UploadDescriptors()
+	Task UploadDescriptors()
 	{
-		if (string.IsNullOrEmpty(m_Descriptors))
-			return;
-		
-		IReadOnlyList<string> languages = m_LanguagesCollection.GetIDs();
-		
-		foreach (string language in languages)
-		{
-			if (string.IsNullOrEmpty(language))
-				continue;
-			
-			if (!m_DescriptorsRegistry.TryGetValue(language, out Descriptor descriptor) || descriptor == null)
-				continue;
-			
-			DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference
-				.Child(m_Descriptors)
-				.Child(language)
-				.Child(m_SnapshotID);
-			
-			Dictionary<string, object> data = new Dictionary<string, object>();
-			
-			descriptor.Serialize(data);
-			
-			await reference.SetValueAsync(data);
-		}
+		return Task.CompletedTask;
 	}
 
 	async void Restore()
@@ -252,43 +218,8 @@ public class UISnapshotMenu : UIMenu
 		}
 	}
 
-	async void CreateDescriptors()
+	void CreateDescriptors()
 	{
-		m_DescriptorsRegistry.Clear();
-		
-		if (string.IsNullOrEmpty(m_Descriptors))
-			return;
-		
-		DataSnapshot data = await FirebaseDatabase.DefaultInstance.RootReference
-			.Child(m_Descriptors)
-			.GetValueAsync();
-		
-		IReadOnlyList<string> languages = m_LanguagesCollection.GetIDs();
-		foreach (string language in languages)
-		{
-			if (string.IsNullOrEmpty(language))
-				continue;
-			
-			string path = $"{language}/{m_SnapshotID}";
-			
-			Descriptor descriptor;
-			if (data.HasChild(path))
-				descriptor = Activator.CreateInstance(typeof(Descriptor), data.Child(path)) as Descriptor;
-			else
-				descriptor = new Descriptor(m_SnapshotID);
-			
-			m_DescriptorsRegistry[language] = descriptor;
-			
-			LanguageSnapshot snapshot = m_LanguagesCollection.GetSnapshot(language);
-			
-			CreateHeader(snapshot.Name);
-			
-			CreateSnapshot(
-				descriptor,
-				nameof(descriptor.ID),
-				nameof(descriptor.Order)
-			);
-		}
 	}
 
 	static PropertyInfo[] GetProperties(Snapshot _Snapshot, params string[] _Exclude)

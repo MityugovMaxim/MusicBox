@@ -1,71 +1,35 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class UIChestBoost : UIChestEntity
 {
-	static bool Processing { get; set; }
-
-	[SerializeField] Button  m_BoostButton;
-	[SerializeField] UIGroup m_BoostGroup;
-
-	protected override void Awake()
-	{
-		base.Awake();
-		
-		m_BoostButton.Subscribe(Boost);
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		m_BoostButton.Unsubscribe(Boost);
-	}
-
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		m_BoostGroup.Hide(true);
-	}
+	[SerializeField] UIUnitLabel m_Coins;
+	[SerializeField] UIGroup     m_CoinsGroup;
 
 	protected override void Subscribe()
 	{
-		ChestsManager.SubscribeStart(ChestID, ProcessBoost);
-		ChestsManager.SubscribeEnd(ChestID, ProcessBoost);
+		ChestsInventory.SubscribeStart(ChestID, ProcessData);
+		ChestsInventory.SubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.SubscribeEnd(ChestID, ProcessData);
+		ChestsManager.Collection.Subscribe(DataEventType.Change, ChestID, ProcessData);
 	}
 
 	protected override void Unsubscribe()
 	{
-		ChestsManager.UnsubscribeStart(ChestID, ProcessBoost);
-		ChestsManager.UnsubscribeEnd(ChestID, ProcessBoost);
+		ChestsInventory.UnsubscribeStart(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeCancel(ChestID, ProcessData);
+		ChestsInventory.UnsubscribeEnd(ChestID, ProcessData);
+		ChestsManager.Collection.Unsubscribe(DataEventType.Change, ChestID, ProcessData);
 	}
 
 	protected override void ProcessData()
 	{
-		if (ChestsManager.IsStarted(ChestID))
-			m_BoostGroup.Show(true);
+		RankType rank = ChestsInventory.GetRank(ChestID);
+		
+		m_Coins.Value = ChestsManager.GetBoost(rank);
+		
+		if (ChestsInventory.IsProcessing(ChestID))
+			m_CoinsGroup.Show();
 		else
-			m_BoostGroup.Hide(true);
-	}
-
-	void ProcessBoost()
-	{
-		if (ChestsManager.IsStarted(ChestID))
-			m_BoostGroup.Show();
-		else
-			m_BoostGroup.Hide();
-	}
-
-	async void Boost()
-	{
-		if (Processing)
-			return;
-		
-		Processing = true;
-		
-		await ChestsManager.Boost(ChestID);
-		
-		Processing = false;
+			m_CoinsGroup.Hide();
 	}
 }

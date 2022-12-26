@@ -15,10 +15,10 @@ public abstract class UIMainMenuPage : UIPage<MainMenuPageType>
 		MainMenuPageType[] order =
 		{
 			MainMenuPageType.News,
-			MainMenuPageType.Season,
+			MainMenuPageType.Seasons,
 			MainMenuPageType.Songs,
 			MainMenuPageType.Store,
-			MainMenuPageType.Profile
+			MainMenuPageType.Chests
 		};
 		
 		int source = Array.IndexOf(order, _Source);

@@ -18,7 +18,9 @@ public class Mixer : MonoBehaviour
 
 	void Awake()
 	{
-		m_ScoreController.OnComboChange += OnComboChanged;
+		m_ScoreController.OnMiss.AddListener(OnMiss);
+		m_ScoreController.OnFail.AddListener(OnFail);
+		m_ScoreController.OnHit.AddListener(OnHit);
 	}
 
 	void OnDestroy()
@@ -27,15 +29,24 @@ public class Mixer : MonoBehaviour
 		m_TokenSource?.Dispose();
 		m_TokenSource = null;
 		
-		m_ScoreController.OnComboChange -= OnComboChanged;
+		m_ScoreController.OnMiss.RemoveListener(OnMiss);
+		m_ScoreController.OnFail.RemoveListener(OnFail);
+		m_ScoreController.OnHit.RemoveListener(OnHit);
 	}
 
-	void OnComboChanged(int _Combo, ScoreGrade _ScoreGrade)
+	void OnMiss()
 	{
-		if (_ScoreGrade == ScoreGrade.Fail || _ScoreGrade == ScoreGrade.Miss)
-			RegisterMiss();
-		else
-			RegisterHit();
+		RegisterMiss();
+	}
+
+	void OnFail()
+	{
+		RegisterMiss();
+	}
+
+	void OnHit()
+	{
+		RegisterHit();
 	}
 
 	async void RegisterMiss()
