@@ -11,9 +11,10 @@ public abstract class RemoteImage : UIEntity
 	[Flags]
 	public enum Options
 	{
-		Blur = 1 << 1,
-		URL  = 1 << 2,
-		Pack = 1 << 3,
+		Blur  = 1 << 1,
+		URL   = 1 << 2,
+		Pack  = 1 << 3,
+		Alpha = 1 << 4,
 	}
 
 	public string Path
@@ -122,7 +123,7 @@ public abstract class RemoteImage : UIEntity
 				await HideLoaderAsync(true);
 			return;
 		}
-
+		
 		CreateAtlas();
 		
 		if (TryGetSprite(out Sprite sprite))
@@ -148,9 +149,15 @@ public abstract class RemoteImage : UIEntity
 		
 		int frame = Time.renderedFrameCount;
 		
-		try { texture = await LoadTextureAsync(); }
+		try
+		{
+			texture = await LoadTextureAsync();
+		}
 		catch (TaskCanceledException) { }
-		catch (Exception exception) { Log.Exception(this, exception); }
+		catch (Exception exception)
+		{
+			Log.Exception(this, exception);
+		}
 		
 		if (token.IsCancellationRequested)
 			return;
@@ -205,7 +212,7 @@ public abstract class RemoteImage : UIEntity
 	void CreateAtlas()
 	{
 		if (m_Atlas == null && CheckOptions(Options.Pack))
-			m_Atlas = Atlas.Create(m_AtlasID, m_AtlasSize, m_Width, m_Height);
+			m_Atlas = Atlas.Create(m_AtlasID, m_AtlasSize, m_Width, m_Height, CheckOptions(Options.Alpha));
 	}
 
 	Sprite CreateSprite(Texture2D _Texture)

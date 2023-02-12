@@ -7,8 +7,6 @@ public class UIAudioWave : UIImage
 {
 	class Block
 	{
-		public bool Full => m_Count >= m_Data.Length;
-
 		readonly float[] m_Data;
 
 		int m_Count;
@@ -258,9 +256,9 @@ public class UIAudioWave : UIImage
 		int x = sample % size;
 		int y = sample / size;
 		
-		Color color = Sprite.texture.GetPixel(x, y);
+		Color pointColor = Sprite.texture.GetPixel(x, y);
 		
-		return new Vector3(color.r, color.g, color.b);
+		return new Vector3(pointColor.r, pointColor.g, pointColor.b);
 	}
 
 	public async void Render()

@@ -18,7 +18,7 @@ public static class ResourceManager
 		
 		ResourceRequest request = Resources.LoadAsync<T>(_Path);
 		
-		request.completed += _Operation =>
+		request.completed += _ =>
 		{
 			if (_Token.IsCancellationRequested)
 				return;
@@ -45,7 +45,7 @@ public static class ResourceManager
 		
 		AsyncOperation operation = Resources.UnloadUnusedAssets();
 		
-		operation.completed += _Operation =>
+		operation.completed += _ =>
 		{
 			if (_Token.IsCancellationRequested)
 				return;

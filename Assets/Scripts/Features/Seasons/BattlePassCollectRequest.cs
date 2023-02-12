@@ -19,6 +19,7 @@ public class BattlePassCollectRequest : FunctionRequest<bool>
 	{
 		_Data["id"]    = m_BattlePassID;
 		_Data["level"] = m_Level;
+		_Data["free"]  = m_Free;
 	}
 
 	protected override bool Success(object _Data) => _Data != null && (bool)_Data;

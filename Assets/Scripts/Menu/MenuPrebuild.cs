@@ -7,80 +7,58 @@ using UnityEngine.Scripting;
 [Preserve]
 public class MenuPrebuild
 {
-	#if UNITY_EDITOR
-	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>();
-	#else
 	static readonly Dictionary<Type, MenuType> m_MenuTypes = new Dictionary<Type, MenuType>()
-	/// PREBUILD_START
+	//// PREBUILD_START
 	{
+		{ typeof(UIAdminMenu), MenuType.AdminMenu },
 		{ typeof(UIBannerMenu), MenuType.BannerMenu },
 		{ typeof(UIBlockMenu), MenuType.BlockMenu },
-		{ typeof(UIColorMenu), MenuType.ColorMenu },
+		{ typeof(UIChestConfirmMenu), MenuType.ChestConfirmMenu },
+		{ typeof(UIChestMenu), MenuType.ChestMenu },
+		{ typeof(UICoinsMenu), MenuType.CoinsMenu },
 		{ typeof(UIColorsEditMenu), MenuType.ColorsEditMenu },
-		{ typeof(UIColorsMenu), MenuType.ColorsMenu },
 		{ typeof(UIConfirmMenu), MenuType.ConfirmMenu },
 		{ typeof(UIConsentMenu), MenuType.ConsentMenu },
 		{ typeof(UIErrorMenu), MenuType.ErrorMenu },
 		{ typeof(UIGameMenu), MenuType.GameMenu },
 		{ typeof(UILanguageMenu), MenuType.LanguageMenu },
-		{ typeof(UILanguagesMenu), MenuType.LanguagesMenu },
 		{ typeof(UILatencyMenu), MenuType.LatencyMenu },
 		{ typeof(UILoadingMenu), MenuType.LoadingMenu },
-		{ typeof(UILocalizationEditMenu), MenuType.LocalizationEditMenu },
-		{ typeof(UILocalizationMenu), MenuType.LocalizationMenu },
 		{ typeof(UILoginMenu), MenuType.LoginMenu },
 		{ typeof(UIMainMenu), MenuType.MainMenu },
+		{ typeof(UIMapMenu), MenuType.MapMenu },
 		{ typeof(UIMapsMenu), MenuType.MapsMenu },
 		{ typeof(UIPauseMenu), MenuType.PauseMenu },
 		{ typeof(UIPermissionMenu), MenuType.PermissionMenu },
 		{ typeof(UIProcessingMenu), MenuType.ProcessingMenu },
 		{ typeof(UIProductMenu), MenuType.ProductMenu },
+		{ typeof(UIProfileMenu), MenuType.ProfileMenu },
 		{ typeof(UIResultMenu), MenuType.ResultMenu },
-		{ typeof(UIRetryMenu), MenuType.RetryMenu },
+		{ typeof(UIRetryDialog), MenuType.RetryMenu },
 		{ typeof(UIReviewMenu), MenuType.ReviewMenu },
 		{ typeof(UIReviveMenu), MenuType.ReviveMenu },
-		{ typeof(UISetupMenu), MenuType.SetupMenu },
-		{ typeof(UISnapshotMenu), MenuType.SnapshotMenu },
-		{ typeof(UISnapshotsMenu), MenuType.SnapshotsMenu },
-		{ typeof(UISocialMenu), MenuType.SocialMenu },
-		{ typeof(UISongCreateMenu), MenuType.SongCreateMenu },
-		{ typeof(UISongEditMenu), MenuType.SongEditMenu },
 		{ typeof(UISongMenu), MenuType.SongMenu },
 		{ typeof(UISplashMenu), MenuType.SplashMenu },
 		{ typeof(UITransitionMenu), MenuType.TransitionMenu },
 		{ typeof(UITutorialMenu), MenuType.TutorialMenu },
 		{ typeof(UIVideoMenu), MenuType.VideoMenu },
 	};
-	/// PREBUILD_END
-	#endif
 
-	public static KeyValuePair<Type, MenuType>[] GetMenuTypes()
-	{
-		return m_MenuTypes.ToArray();
-	}
+	//// PREBUILD_END
 
 	public static bool TryGetMenuType<T>(out MenuType _MenuType) where T : UIMenu
 	{
-		#if UNITY_EDITOR
-		if (m_MenuTypes.Count == 0)
-			Initialize();
-		#endif
 		return m_MenuTypes.TryGetValue(typeof(T), out _MenuType);
 	}
 
 	public static bool TryGetMenuType(Type _Type, out MenuType _MenuType)
 	{
-		#if UNITY_EDITOR
-		if (m_MenuTypes.Count == 0)
-			Initialize();
-		#endif
 		return m_MenuTypes.TryGetValue(_Type, out _MenuType);
 	}
 
-	public static void Initialize()
+	public static KeyValuePair<Type, MenuType>[] GetMenuTypes()
 	{
-		m_MenuTypes.Clear();
-		
+		Dictionary<Type, MenuType> types = new Dictionary<Type, MenuType>();
 		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
 		{
 			foreach (Type type in assembly.GetTypes())
@@ -90,8 +68,9 @@ public class MenuPrebuild
 				if (attribute == null)
 					continue;
 				
-				m_MenuTypes[type] = attribute.MenuType;
+				types[type] = attribute.MenuType;
 			}
 		}
+		return types.ToArray();
 	}
 }

@@ -67,7 +67,7 @@ public class BadgeManager
 
 	public void ReadVoucher(string _VoucherID) => Read(VOUCHERS_GROUP, _VoucherID);
 
-	public void IsVoucherUnread(string _VoucherID) => IsUnread(VOUCHERS_GROUP, _VoucherID);
+	public bool IsVoucherUnread(string _VoucherID) => IsUnread(VOUCHERS_GROUP, _VoucherID);
 
 	void Subscribe(string _Group, Action _Action) => m_BadgeHandler.AddListener(_Group, _Action);
 

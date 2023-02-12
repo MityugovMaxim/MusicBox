@@ -11,29 +11,29 @@ public class MenuProcessor : IInitializable
 {
 	readonly Localization                   m_Localization;
 	readonly Canvas                         m_Canvas;
-	readonly UIMenu.Factory                 m_MenuFactory;
-	readonly Dictionary<MenuType, UIMenu>   m_MenuCache;
-	readonly Dictionary<MenuType, MenuInfo> m_MenuInfos;
-	readonly List<MenuType>                 m_MenuOrder;
-	readonly List<MenuType>                 m_MenuFocus;
-
-	MenuType m_FocusedMenu;
+	readonly UIMenu.Factory                 m_Factory;
+	readonly Dictionary<MenuType, UIMenu>   m_Cache;
+	readonly Dictionary<MenuType, MenuInfo> m_Data;
+	readonly Dictionary<MenuType, MenuMode> m_Modes;
+	readonly Dictionary<MenuType, int>      m_Orders;
+	readonly SortedList<int, MenuType>      m_Menus;
 
 	[Inject]
 	public MenuProcessor(
 		Localization   _Localization,
 		Canvas         _Canvas,
 		MenuInfo[]     _MenuInfos,
-		UIMenu.Factory _MenuFactory
+		UIMenu.Factory _Factory
 	)
 	{
 		m_Localization = _Localization;
 		m_Canvas       = _Canvas;
-		m_MenuFactory  = _MenuFactory;
-		m_MenuCache    = new Dictionary<MenuType, UIMenu>();
-		m_MenuInfos    = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
-		m_MenuOrder    = _MenuInfos.Select(_MenuInfo => _MenuInfo.Type).ToList();
-		m_MenuFocus    = _MenuInfos.Where(_MenuInfo => _MenuInfo.Focusable).Select(_MenuInfo => _MenuInfo.Type).ToList();
+		m_Factory      = _Factory;
+		m_Cache        = new Dictionary<MenuType, UIMenu>();
+		m_Menus        = new SortedList<int, MenuType>();
+		m_Data         = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo);
+		m_Modes        = _MenuInfos.ToDictionary(_MenuInfo => _MenuInfo.Type, _MenuInfo => _MenuInfo.Mode);
+		m_Orders       = _MenuInfos.Select((_MenuInfo, _Index) => new KeyValuePair<MenuType, int>(_MenuInfo.Type, _MenuInfos.Length - _Index)).ToDictionary(_Entry => _Entry.Key, _Entry => _Entry.Value);
 	}
 
 	async void IInitializable.Initialize()
@@ -41,22 +41,97 @@ public class MenuProcessor : IInitializable
 		await Show(MenuType.SplashMenu, true);
 	}
 
-	public void ProcessFocus()
+	MenuMode GetMenuMode(MenuType _MenuType) => m_Modes.TryGetValue(_MenuType, out MenuMode menuMode) ? menuMode : MenuMode.Menu;
+
+	int GetMenuOrder(MenuType _MenuType) => m_Orders.TryGetValue(_MenuType, out int menuOrder) ? menuOrder : int.MinValue;
+
+	MenuType GetMenuType(UIMenu _Menu) => MenuPrebuild.TryGetMenuType(_Menu.GetType(), out MenuType menuType) ? menuType : MenuType.Invalid;
+
+	public void Register(UIMenu _Menu)
 	{
-		MenuType menuType = m_MenuFocus.FirstOrDefault(_MenuType => m_MenuCache.ContainsKey(_MenuType) && m_MenuCache[_MenuType].Shown);
-		
-		if (menuType == m_FocusedMenu)
+		if (_Menu == null)
 			return;
 		
-		UIMenu source = GetMenu<UIMenu>(m_FocusedMenu, true);
-		if (source != null)
-			source.OnFocusLose();
+		MenuType menuType  = GetMenuType(_Menu);
+		MenuMode menuMode  = GetMenuMode(menuType);
+		int      menuOrder = GetMenuOrder(menuType);
 		
-		UIMenu target = GetMenu<UIMenu>(menuType, true);
-		if (target != null)
-			target.OnFocusGain();
+		MenuType current = GetLastMenuType(menuMode);
 		
-		m_FocusedMenu = menuType;
+		m_Menus.Add(menuOrder, menuType);
+		
+		ProcessOrder();
+		
+		ProcessFocus(menuType, current);
+	}
+
+	public void Unregister(UIMenu _Menu)
+	{
+		MenuType menuType  = GetMenuType(_Menu);
+		MenuMode menuMode  = GetMenuMode(menuType);
+		int      menuOrder = GetMenuOrder(menuType);
+		
+		m_Menus.Remove(menuOrder);
+		
+		MenuType current = GetLastMenuType(menuMode);
+		
+		ProcessOrder();
+		
+		RestoreFocus(menuType, current);
+	}
+
+	void ProcessFocus(MenuType _SourceType, MenuType _TargetType)
+	{
+		if (_SourceType == _TargetType)
+			return;
+		
+		int sourceOrder = GetMenuOrder(_SourceType);
+		int targetOrder = GetMenuOrder(_TargetType);
+		
+		if (sourceOrder < targetOrder)
+			return;
+		
+		UIMenu sourceMenu = GetMenu<UIMenu>(_SourceType);
+		if (sourceMenu != null)
+			sourceMenu.OnFocusGain();
+		
+		UIMenu targetMenu = GetMenu<UIMenu>(_TargetType);
+		if (targetMenu != null)
+			targetMenu.OnFocusLose();
+	}
+
+	void RestoreFocus(MenuType _SourceType, MenuType _TargetType)
+	{
+		if (_SourceType == _TargetType)
+			return;
+		
+		int sourceOrder = GetMenuOrder(_SourceType);
+		int targetOrder = GetMenuOrder(_TargetType);
+		
+		if (sourceOrder < targetOrder)
+			return;
+		
+		UIMenu sourceMenu = GetMenu<UIMenu>(_SourceType);
+		if (sourceMenu != null)
+			sourceMenu.OnFocusLose();
+		
+		UIMenu targetMenu = GetMenu<UIMenu>(_TargetType);
+		if (targetMenu != null)
+			targetMenu.OnFocusGain();
+	}
+
+	MenuType GetLastMenuType(MenuMode _MenuMode)
+	{
+		return m_Menus.Values.LastOrDefault(_MenuType => GetMenuMode(_MenuType) == _MenuMode);
+	}
+
+	void ProcessOrder()
+	{
+		foreach (MenuType menuType in m_Menus.Values)
+		{
+			if (m_Cache.TryGetValue(menuType, out UIMenu menu) && menu == null)
+				menu.RectTransform.SetAsLastSibling();
+		}
 	}
 
 	public Task ExceptionAsync(Exception _Exception)
@@ -97,29 +172,6 @@ public class MenuProcessor : IInitializable
 		return errorMenu.ShowAsync();
 	}
 
-	public Task ConfirmLocalizedAsync(string _ID, string _TitleKey, string _MessageKey, Action _Confirm, Action _Cancel = null)
-	{
-		return ConfirmAsync(
-			_ID,
-			m_Localization.Get(_TitleKey),
-			m_Localization.Get(_MessageKey),
-			_Confirm,
-			_Cancel
-		);
-	}
-
-	public Task ConfirmAsync(string _ID, string _Title, string _Message, Action _Confirm, Action _Cancel = null)
-	{
-		UIConfirmMenu confirmMenu = GetMenu<UIConfirmMenu>();
-		
-		if (confirmMenu == null)
-			return Task.CompletedTask;
-		
-		confirmMenu.Setup(_ID, _Title, _Message, _Confirm, _Cancel);
-		
-		return confirmMenu.ShowAsync();
-	}
-
 	public Task<bool> ConfirmAsync(string _ID, string _Title, string _Message)
 	{
 		UIConfirmMenu confirmMenu = GetMenu<UIConfirmMenu>();
@@ -130,7 +182,6 @@ public class MenuProcessor : IInitializable
 		TaskCompletionSource<bool> source = new TaskCompletionSource<bool>();
 		
 		confirmMenu.Setup(
-			_ID,
 			_Title,
 			_Message,
 			() => source.TrySetResult(true),
@@ -167,26 +218,26 @@ public class MenuProcessor : IInitializable
 
 	public Task RetryAsync(string _ID, Action _Retry = null, Action _Cancel = null)
 	{
-		UIRetryMenu retryMenu = GetMenu<UIRetryMenu>();
+		UIRetryDialog retryDialog = GetMenu<UIRetryDialog>();
 		
-		if (retryMenu == null)
+		if (retryDialog == null)
 			return Task.CompletedTask;
 		
-		retryMenu.Setup(_ID, _Retry, _Cancel);
+		retryDialog.Setup(_ID, _Retry, _Cancel);
 		
-		return retryMenu.ShowAsync();
+		return retryDialog.ShowAsync();
 	}
 
 	public Task RetryAsync(string _ID, string _Title, string _Message, Action _Retry = null, Action _Cancel = null)
 	{
-		UIRetryMenu retryMenu = GetMenu<UIRetryMenu>();
+		UIRetryDialog retryDialog = GetMenu<UIRetryDialog>();
 		
-		if (retryMenu == null)
+		if (retryDialog == null)
 			return Task.CompletedTask;
 		
-		retryMenu.Setup(_ID, _Title, _Message, _Retry, _Cancel);
+		retryDialog.Setup(_ID, _Title, _Message, _Retry, _Cancel);
 		
-		return retryMenu.ShowAsync();
+		return retryDialog.ShowAsync();
 	}
 
 	public T GetMenu<T>(bool _Cache = false) where T : UIMenu
@@ -202,19 +253,22 @@ public class MenuProcessor : IInitializable
 
 	T GetMenu<T>(MenuType _MenuType, bool _Cache = false) where T : UIMenu
 	{
-		if (m_MenuCache.ContainsKey(_MenuType) && m_MenuCache[_MenuType] is T menuCache)
+		if (_MenuType == MenuType.Invalid)
+			return null;
+		
+		if (m_Cache.ContainsKey(_MenuType) && m_Cache[_MenuType] is T menuCache)
 			return menuCache;
 		
 		if (_Cache)
 			return null;
 		
-		if (!m_MenuInfos.ContainsKey(_MenuType))
+		if (!m_Data.ContainsKey(_MenuType))
 		{
 			Log.Error(this, "Get menu failed. Menu '{0}' not found.", _MenuType);
 			return null;
 		}
 		
-		MenuInfo menuInfo = m_MenuInfos[_MenuType];
+		MenuInfo menuInfo = m_Data[_MenuType];
 		
 		if (menuInfo == null)
 		{
@@ -224,35 +278,31 @@ public class MenuProcessor : IInitializable
 		
 		T prefab = Resources.Load<T>(menuInfo.Path);
 		
-		T menu = m_MenuFactory.Create(prefab) as T;
+		T menu = m_Factory.Create(prefab) as T;
 		
-		m_MenuCache[_MenuType] = menu;
+		m_Cache[_MenuType] = menu;
 		
 		if (menu == null)
 			return null;
 		
 		menu.RectTransform.SetParent(m_Canvas.transform, false);
 		
-		Reorder();
-		
 		return menu;
 	}
 
 	public bool RemoveMenu(MenuType _MenuType)
 	{
-		if (!m_MenuCache.ContainsKey(_MenuType))
+		if (!m_Cache.ContainsKey(_MenuType))
 			return false;
 		
-		UIMenu menu = m_MenuCache[_MenuType];
+		UIMenu menu = m_Cache[_MenuType];
 		
-		m_MenuCache.Remove(_MenuType);
+		m_Cache.Remove(_MenuType);
 		
 		if (menu == null)
 			return false;
 		
 		Object.Destroy(menu.gameObject);
-		
-		Reorder();
 		
 		return true;
 	}
@@ -279,21 +329,5 @@ public class MenuProcessor : IInitializable
 		await menu.HideAsync(_Instant);
 		
 		return menu;
-	}
-
-	void Reorder()
-	{
-		foreach (MenuType menuType in m_MenuOrder)
-		{
-			if (!m_MenuCache.ContainsKey(menuType))
-				continue;
-			
-			UIMenu menu = m_MenuCache[menuType];
-			
-			if (menu == null)
-				continue;
-			
-			menu.RectTransform.SetAsFirstSibling();
-		}
 	}
 }

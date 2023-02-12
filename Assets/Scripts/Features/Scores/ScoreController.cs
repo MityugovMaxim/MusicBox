@@ -71,7 +71,7 @@ public class ScoreController
 		}
 	}
 
-	public int Accuracy => (int)MathUtility.RemapClamped(Score, 0, TotalScore, 0, 100);
+	public int Accuracy => 100;// (int)MathUtility.RemapClamped(Score, 0, TotalScore, 0, 100);
 
 	public long  TotalScore    { get; private set; }
 	public long  BronzeScore   { get; private set; }

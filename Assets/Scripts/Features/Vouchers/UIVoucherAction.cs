@@ -30,16 +30,16 @@ public class UIVoucherAction : UIVoucherEntity
 		string link;
 		switch (VouchersManager.GetType(VoucherID))
 		{
-			case VoucherType.ProductDiscount:
+			case VoucherType.Product:
 				link = "audiobox://store";
 				break;
-			case VoucherType.SongDiscount:
+			case VoucherType.Song:
 				link = "audiobox://songs";
 				break;
-			case VoucherType.ChestDiscount:
+			case VoucherType.Chest:
 				link = "audiobox://chests";
 				break;
-			case VoucherType.SeasonsBoost:
+			case VoucherType.Season:
 				link = "audiobox://seasons";
 				break;
 			default: return;

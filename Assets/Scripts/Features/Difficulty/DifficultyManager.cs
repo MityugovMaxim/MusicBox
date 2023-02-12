@@ -15,6 +15,31 @@ public class DifficultyManager
 		return snapshot?.Speed ?? 500;
 	}
 
+	public long GetPoints(RankType _SongRank, RankType _SourceScoreRank, RankType _TargetScoreRank)
+	{
+		long points = 0;
+		for (RankType scoreRank = _SourceScoreRank + 1; scoreRank <= _TargetScoreRank; scoreRank++)
+			points += GetPoints(_SongRank, scoreRank);
+		return points;
+	}
+
+	public long GetPoints(RankType _SongRank, RankType _ScoreRank)
+	{
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongRank);
+		
+		if (snapshot == null)
+			return 0;
+		
+		switch (_ScoreRank)
+		{
+			case RankType.Bronze:   return snapshot.BronzePoints;
+			case RankType.Silver:   return snapshot.SilverPoints;
+			case RankType.Gold:     return snapshot.GoldPoints;
+			case RankType.Platinum: return snapshot.PlatinumPoints;
+			default:                return 0;
+		}
+	}
+
 	public float GetInputExpand(RankType _SongType)
 	{
 		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
@@ -22,16 +47,16 @@ public class DifficultyManager
 		return snapshot?.InputExpand ?? 0;
 	}
 
-	public float GetInputOffset(RankType _SongType)
+	public float GetInputOffset(RankType _SongRank)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongRank);
 		
 		return snapshot?.InputOffset ?? 0;
 	}
 
-	public long GetCoins(RankType _SongType, RankType _ScoreRank)
+	public long GetCoins(RankType _SongRank, RankType _ScoreRank)
 	{
-		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongType);
+		DifficultySnapshot snapshot = Collection.GetSnapshot(_SongRank);
 		
 		if (snapshot == null)
 			return 0;
@@ -42,8 +67,16 @@ public class DifficultyManager
 			case RankType.Silver:   return snapshot.SilverCoins;
 			case RankType.Gold:     return snapshot.GoldCoins;
 			case RankType.Platinum: return snapshot.PlatinumCoins;
-			default:                 return 0;
+			default:                return 0;
 		}
+	}
+
+	public long GetPayout(RankType _SongRank, RankType _SourceRank, RankType _TargetRank)
+	{
+		long payout = 0;
+		for (RankType scoreRank = _SourceRank + 1; scoreRank <= _TargetRank; scoreRank++)
+			payout += GetCoins(_SongRank, scoreRank);
+		return payout;
 	}
 
 	public int GetThreshold(RankType _SongRank, RankType _ScoreRank)

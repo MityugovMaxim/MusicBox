@@ -107,20 +107,20 @@ public class UISlideMenu : UIMenu, IInitializePotentialDragHandler, IBeginDragHa
 		return ShrinkAsync(_Duration, _Instant, _Token);
 	}
 
-	static Task MoveAsync(RectTransform _Transform, float _Position, float _Delay, float _Duration, bool _Instant, EaseFunction _Function, CancellationToken _Token = default)
+	static Task MoveAsync(RectTransform _Target, float _Position, float _Delay, float _Duration, bool _Instant, EaseFunction _Function, CancellationToken _Token = default)
 	{
-		if (_Transform == null)
+		if (_Target == null)
 			return Task.CompletedTask;
 		
-		Vector2 sourceMin = _Transform.anchorMin;
-		Vector2 sourceMax = _Transform.anchorMax;
+		Vector2 sourceMin = _Target.anchorMin;
+		Vector2 sourceMax = _Target.anchorMax;
 		Vector2 targetMin = new Vector2(0, 0 + _Position);
 		Vector2 targetMax = new Vector2(1, 1 + _Position);
 		
 		void Process(float _Phase)
 		{
-			_Transform.anchorMin = Vector2.LerpUnclamped(sourceMin, targetMin, _Phase);
-			_Transform.anchorMax = Vector2.LerpUnclamped(sourceMax, targetMax, _Phase);
+			_Target.anchorMin = Vector2.LerpUnclamped(sourceMin, targetMin, _Phase);
+			_Target.anchorMax = Vector2.LerpUnclamped(sourceMax, targetMax, _Phase);
 		}
 		
 		if (_Instant)

@@ -13,7 +13,7 @@ public class UIChestControl : UIEntity, IBeginDragHandler, IDragHandler, IEndDra
 	[SerializeField] UIEntity      m_Pointer;
 	[SerializeField] UIChestCount  m_Count;
 
-	[Inject] ChestsInventory m_ChestsInventory;
+	[Inject] ChestsManager m_ChestsManager;
 
 	Vector2 m_Offset;
 
@@ -22,7 +22,7 @@ public class UIChestControl : UIEntity, IBeginDragHandler, IDragHandler, IEndDra
 		if (m_Drag)
 			return;
 		
-		int count = m_ChestsInventory.GetChestsCount(m_ChestRank);
+		int count = m_ChestsManager.GetChestCount(m_ChestRank);
 		
 		if (count <= 0)
 			return;
@@ -79,7 +79,7 @@ public class UIChestControl : UIEntity, IBeginDragHandler, IDragHandler, IEndDra
 		if (m_Drag)
 			return;
 		
-		int count = m_ChestsInventory.GetChestsCount(m_ChestRank);
+		int count = m_ChestsManager.GetChestCount(m_ChestRank);
 		
 		if (count <= 0)
 			return;
@@ -133,7 +133,8 @@ public class UIChestControl : UIEntity, IBeginDragHandler, IDragHandler, IEndDra
 
 	UIChestSlot GetSlot()
 	{
-		int slot = m_ChestsInventory.GetSlot();
+		if (!m_ChestsManager.TryGetAvailableSlot(out int slot))
+			return null;
 		
 		return slot >= 0 && slot < m_Slots.Length ? m_Slots[slot] : null;
 	}

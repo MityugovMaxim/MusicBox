@@ -5,69 +5,83 @@ using UnityEngine.UI;
 using Zenject;
 
 [Menu(MenuType.ConfirmMenu)]
-public class UIConfirmMenu : UIMenu
+public class UIConfirmMenu : UIDialog
 {
-	public string Reason => m_Reason;
-
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Message;
 	[SerializeField] Button   m_ConfirmButton;
-	[SerializeField] Button   m_CancelButton;
 
 	[SerializeField, Sound] string m_Sound;
 
 	[Inject] SoundProcessor  m_SoundProcessor;
 	[Inject] HapticProcessor m_HapticProcessor;
 
-	string m_Reason;
 	Action m_Confirm;
 	Action m_Cancel;
 
+	protected override void Awake()
+	{
+		base.Awake();
+		
+		m_ConfirmButton.Subscribe(Confirm);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_ConfirmButton.Unsubscribe(Confirm);
+	}
+
 	public void Setup(
-		string _Reason,
 		string _Title,
 		string _Message,
 		Action _Confirm = null,
 		Action _Cancel  = null
 	)
 	{
-		m_Reason  = _Reason;
 		m_Confirm = _Confirm;
 		m_Cancel  = _Cancel;
 		
 		m_Title.text   = _Title;
 		m_Message.text = _Message;
-		
-		m_ConfirmButton.onClick.RemoveAllListeners();
-		m_ConfirmButton.onClick.AddListener(Confirm);
-		
-		m_CancelButton.onClick.RemoveAllListeners();
-		m_CancelButton.onClick.AddListener(Cancel);
 	}
 
 	void Confirm()
 	{
-		Hide();
+		InvokeConfirm();
 		
+		Hide();
+	}
+
+	protected override void OnShowStarted()
+	{
+		base.OnShowStarted();
+		
+		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
+		m_SoundProcessor.Play(m_Sound);
+	}
+
+	protected override void OnHideStarted()
+	{
+		base.OnHideStarted();
+		
+		InvokeCancel();
+	}
+
+	void InvokeConfirm()
+	{
 		Action action = m_Confirm;
 		m_Confirm = null;
 		m_Cancel  = null;
 		action?.Invoke();
 	}
 
-	void Cancel()
+	void InvokeCancel()
 	{
-		Hide();
-		
 		Action action = m_Cancel;
 		m_Confirm = null;
 		m_Cancel  = null;
 		action?.Invoke();
-	}
-
-	protected override void OnShowStarted()
-	{
-		m_HapticProcessor.Process(Haptic.Type.ImpactSoft);
-		m_SoundProcessor.Play(m_Sound);
 	}
 }

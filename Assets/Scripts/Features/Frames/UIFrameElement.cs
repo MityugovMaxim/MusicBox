@@ -2,37 +2,19 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
 
-public class UIFrameElement : UIOverlayButton
+public class UIFrameElement : UIEntity
 {
 	[Preserve]
 	public class Pool : UIEntityPool<UIFrameElement> { }
 
-	static bool Processing { get; set; }
-
-	[SerializeField] UIFrameImage m_Image;
-
-	[Inject] FramesManager m_FramesManager;
-
-	string m_FrameID;
+	[SerializeField] UIFrameImage  m_Image;
+	[SerializeField] UIFrameAction m_Action;
+	[SerializeField] UIFrameCheck  m_Check;
 
 	public void Setup(string _FrameID)
 	{
-		m_FrameID = _FrameID;
-		
-		m_Image.FrameID = m_FrameID;
-	}
-
-	protected override async void OnClick()
-	{
-		base.OnClick();
-		
-		if (Processing)
-			return;
-		
-		Processing = true;
-		
-		await m_FramesManager.Select(m_FrameID);
-		
-		Processing = false;
+		m_Image.FrameID  = _FrameID;
+		m_Action.FrameID = _FrameID;
+		m_Check.FrameID  = _FrameID;
 	}
 }

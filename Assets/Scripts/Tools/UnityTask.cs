@@ -364,7 +364,7 @@ public class UnityTask : MonoBehaviour
 		
 		AsyncOperation operation = Resources.UnloadUnusedAssets();
 		
-		operation.completed += _Result =>
+		operation.completed += _ =>
 		{
 			GC.Collect();
 			GC.WaitForPendingFinalizers();

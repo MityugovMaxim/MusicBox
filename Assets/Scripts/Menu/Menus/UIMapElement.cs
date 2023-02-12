@@ -32,12 +32,12 @@ public class UIMapElement : UIOverlayButton
 
 	async void Open()
 	{
-		UISongEditMenu songEditMenu = m_MenuProcessor.GetMenu<UISongEditMenu>();
+		UIMapMenu mapMenu = m_MenuProcessor.GetMenu<UIMapMenu>();
 		
-		if (songEditMenu == null)
+		if (mapMenu == null)
 			return;
 		
-		songEditMenu.Setup(m_SongID);
+		mapMenu.Setup(m_SongID);
 		
 		UILoadingMenu loadingMenu = m_MenuProcessor.GetMenu<UILoadingMenu>();
 		
@@ -45,9 +45,9 @@ public class UIMapElement : UIOverlayButton
 		
 		await loadingMenu.ShowAsync();
 		
-		await songEditMenu.Load();
+		await mapMenu.Load();
 		
-		songEditMenu.Show(true);
+		mapMenu.Show(true);
 		
 		await loadingMenu.HideAsync();
 	}

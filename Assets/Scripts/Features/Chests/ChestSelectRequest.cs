@@ -4,16 +4,16 @@ public class ChestSelectRequest : FunctionRequest<bool>
 {
 	protected override string Command => "ChestSelect";
 
-	readonly string m_ChestID;
+	readonly RankType m_Rank;
 
-	public ChestSelectRequest(string _ChestID)
+	public ChestSelectRequest(RankType _Rank)
 	{
-		m_ChestID = _ChestID;
+		m_Rank = _Rank;
 	}
 
 	protected override void Serialize(IDictionary<string, object> _Data)
 	{
-		_Data["chest_id"] = m_ChestID;
+		_Data["rank"] = (int)m_Rank;
 	}
 
 	protected override bool Success(object _Data)

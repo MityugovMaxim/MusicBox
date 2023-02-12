@@ -73,6 +73,36 @@ public class StoreProcessor : IStoreListener
 		return FormatPrice(product.metadata.localizedPrice, product.metadata.isoCurrencyCode, _Sign);
 	}
 
+	public async Task<RequestState> Purchase(string _StoreID, FunctionRequest<bool> _Request)
+	{
+		try
+		{
+			Product product = await Purchase(_StoreID);
+			
+			RequestState validate = await Validate(product);
+			
+			if (validate != RequestState.Success)
+				return validate;
+			
+			bool success = await _Request.SendAsync();
+			
+			if (!success)
+				return RequestState.Fail;
+			
+			m_Controller.ConfirmPendingPurchase(product);
+			
+			return RequestState.Success;
+		}
+		catch (TaskCanceledException)
+		{
+			return RequestState.Cancel;
+		}
+		catch (Exception)
+		{
+			return RequestState.Fail;
+		}
+	}
+
 	static string FormatPrice(decimal _Price, string _CurrencyCode, bool _Sign)
 	{
 		if (_Price.Equals(0m))
@@ -141,24 +171,6 @@ public class StoreProcessor : IStoreListener
 		return product;
 	}
 
-	public async Task<RequestState> Purchase(string _StoreID, string _ProductID, string _VoucherID)
-	{
-		try
-		{
-			Product product = await Purchase(_StoreID);
-			
-			return await Validate(product, _ProductID, _VoucherID);
-		}
-		catch (TaskCanceledException)
-		{
-			return RequestState.Cancel;
-		}
-		catch (Exception)
-		{
-			return RequestState.Fail;
-		}
-	}
-
 	Task<Product> Purchase(string _StoreID)
 	{
 		Product product = GetProduct(_StoreID);
@@ -176,7 +188,7 @@ public class StoreProcessor : IStoreListener
 		return source.Task;
 	}
 
-	async Task<RequestState> Validate(Product _Product, string _ProductID, string _VoucherID)
+	async Task<RequestState> Validate(Product _Product)
 	{
 		#if UNITY_IOS
 		const string store = "AppStore";
@@ -184,9 +196,8 @@ public class StoreProcessor : IStoreListener
 		const string store = "GooglePlay";
 		#endif
 		
-		ProductPurchaseRequest request = new ProductPurchaseRequest(
-			_ProductID,
-			_VoucherID,
+		StoreValidateRequest request = new StoreValidateRequest(
+			_Product.definition.id,
 			_Product.receipt,
 			store
 		);
@@ -195,8 +206,6 @@ public class StoreProcessor : IStoreListener
 		
 		if (!success)
 			return RequestState.Fail;
-		
-		m_Controller.ConfirmPendingPurchase(_Product);
 		
 		return RequestState.Success;
 	}

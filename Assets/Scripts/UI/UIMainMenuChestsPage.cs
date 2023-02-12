@@ -8,14 +8,14 @@ public class UIMainMenuChestsPage : UIMainMenuPage
 	[SerializeField] UIGroup m_ContentGroup;
 	[SerializeField] UIGroup m_LoaderGroup;
 
-	[Inject] ChestsInventory m_ChestsInventory;
+	[Inject] ChestsManager m_ChestsManager;
 
 	protected override async void OnShowStarted()
 	{
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
-		bool instant = await m_ChestsInventory.Activate();
+		bool instant = await m_ChestsManager.Activate();
 		
 		m_ContentGroup.Show(instant);
 		m_LoaderGroup.Hide(instant);

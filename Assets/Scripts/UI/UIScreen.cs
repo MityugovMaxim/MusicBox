@@ -38,31 +38,31 @@ public class UIScreen : UIOrder
 		
 		Rect rect = GetWorldRect();
 		
-		foreach (Camera camera in m_Cameras)
+		foreach (Camera screenCamera in m_Cameras)
 		{
 			if (m_Cameras == null)
 				continue;
 			
-			Transform transform = camera.transform;
+			Transform cameraTransform = screenCamera.transform;
 			
-			transform.localPosition = new Vector3(0, 0, -m_Distance);
+			cameraTransform.localPosition = new Vector3(0, 0, -m_Distance);
 			
-			if (camera.orthographic)
+			if (screenCamera.orthographic)
 			{
-				camera.nearClipPlane    = 0;
-				camera.farClipPlane     = m_Distance;
-				camera.orthographicSize = rect.height * 0.5f;
+				screenCamera.nearClipPlane    = 0;
+				screenCamera.farClipPlane     = m_Distance;
+				screenCamera.orthographicSize = rect.height * 0.5f;
 			}
 			else
 			{
-				Vector3 position = transform.position;
+				Vector3 position = cameraTransform.position;
 				
 				Vector3 a = new Vector3(position.x, rect.yMin, 0) - position;
 				Vector3 b = new Vector3(position.x, rect.yMax, 0) - position;
 				
 				float angle = Vector3.Angle(a, b);
 				
-				camera.fieldOfView = angle;
+				screenCamera.fieldOfView = angle;
 			}
 		}
 	}

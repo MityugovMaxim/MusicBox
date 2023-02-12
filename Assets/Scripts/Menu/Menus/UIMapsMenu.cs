@@ -13,7 +13,7 @@ public class UIMapsMenu : UIMenu
 	[SerializeField] Button   m_RestoreButton;
 	[SerializeField] Button   m_ColorsButton;
 
-	[Inject] SongsCollection    m_SongsCollection;
+	[Inject] SongsCollection   m_SongsCollection;
 	[Inject] MenuProcessor     m_MenuProcessor;
 	[Inject] UIMapElement.Pool m_Pool;
 
@@ -52,6 +52,8 @@ public class UIMapsMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		Refresh();
 	}
 

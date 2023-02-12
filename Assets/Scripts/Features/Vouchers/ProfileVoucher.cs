@@ -6,6 +6,6 @@ public class ProfileVoucher : Snapshot
 
 	public ProfileVoucher(DataSnapshot _Data) : base(_Data)
 	{
-		Timestamp = _Data.GetLong();
+		Timestamp = _Data.GetLong("timestamp");
 	}
 }

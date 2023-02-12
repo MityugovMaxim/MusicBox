@@ -33,7 +33,7 @@ public class SeasonsManager : IDataManager
 
 	public Task<bool> Activate()
 	{
-		return GroupTask.ProcessAsync(
+		return TaskProvider.ProcessAsync(
 			this,
 			Collection.Load,
 			Descriptor.Load,

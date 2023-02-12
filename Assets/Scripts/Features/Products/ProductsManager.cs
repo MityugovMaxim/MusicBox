@@ -13,26 +13,23 @@ public class ProductsManager : IDataManager
 	public ProductsCollection Collection => m_ProductsCollection;
 	public ProductsDescriptor Descriptor => m_ProductsDescriptor;
 	public ProfileProducts    Profile    => m_ProfileProducts;
-	public VouchersManager    Vouchers   => m_VouchersManager;
 
 	[Inject] ProductsCollection    m_ProductsCollection;
 	[Inject] ProductsDescriptor    m_ProductsDescriptor;
 	[Inject] ProfileProducts       m_ProfileProducts;
 	[Inject] ProfileCoinsParameter m_CoinsParameter;
-	[Inject] VouchersManager       m_VouchersManager;
 	[Inject] StoreManager          m_StoreManager;
 	[Inject] MenuProcessor         m_MenuProcessor;
 
 	public Task<bool> Activate()
 	{
-		return GroupTask.ProcessAsync(
+		return TaskProvider.ProcessAsync(
 			this,
 			m_ProductsCollection.Load,
 			m_ProductsDescriptor.Load,
 			m_ProfileProducts.Load,
 			m_CoinsParameter.Load,
-			m_StoreManager.Activate,
-			m_VouchersManager.Activate
+			m_StoreManager.Activate
 		);
 	}
 
@@ -42,9 +39,9 @@ public class ProductsManager : IDataManager
 		{
 			string storeID = GetStoreID(_ProductID);
 			
-			string voucherID = GetVoucherID(_ProductID);
+			ProductCollectRequest request = new ProductCollectRequest(_ProductID);
 			
-			return await m_StoreManager.Purchase(storeID, _ProductID, voucherID);
+			return await m_StoreManager.Purchase(storeID, request);
 		}
 		catch (Exception exception)
 		{
@@ -56,13 +53,11 @@ public class ProductsManager : IDataManager
 		return RequestState.Fail;
 	}
 
-	public string GetVoucherID(string _ProductID) => m_VouchersManager.GetProductVoucherID(_ProductID);
-
 	public string GetProductID(long _Coins)
 	{
 		return Collection.GetIDs()
 			.Where(IsActive)
-			.GreaterMin(m_VouchersManager.GetProductDiscount, _Coins);
+			.GreaterMin(GetCoins, _Coins);
 	}
 
 	public List<string> GetProductIDs()
@@ -87,7 +82,7 @@ public class ProductsManager : IDataManager
 	public List<string> GetRecommendedProductIDs(int _Count, long _Coins)
 	{
 		List<string> productIDs = GetProductIDs(ProductType.Coins)
-			.OrderBy(m_VouchersManager.GetProductDiscount)
+			.OrderBy(GetCoins)
 			.ToList();
 		
 		int skip = 0;
@@ -95,7 +90,7 @@ public class ProductsManager : IDataManager
 		{
 			string productID = productIDs[skip];
 			
-			long coins = m_VouchersManager.GetProductDiscount(productID);
+			long coins = GetCoins(productID);
 			
 			if (coins >= _Coins)
 				break;
@@ -138,14 +133,12 @@ public class ProductsManager : IDataManager
 
 	public string GetDescription(string _ProductID) => m_ProductsDescriptor.GetDescription(_ProductID);
 
-	public long GetDiscount(string _ProductID)
+	public long GetCoins(string _ProductID)
 	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
+		ProductSnapshot snapshot = Collection.GetSnapshot(_ProductID);
 		
 		return snapshot?.Coins ?? 0;
 	}
-
-	public long GetCoins(string _ProductID) => m_VouchersManager.GetProductDiscount(_ProductID);
 
 	public string GetSeasonID(string _ProductID)
 	{

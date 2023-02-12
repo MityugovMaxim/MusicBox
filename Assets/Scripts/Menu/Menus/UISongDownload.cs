@@ -55,7 +55,7 @@ public class UISongDownload : UIGroup
 	{
 		base.OnDisable();
 		
-		SongID = null;
+		m_SongID = null;
 		
 		m_TokenSource?.Cancel();
 	}

@@ -89,7 +89,7 @@ public class UIEntity : UIBehaviour
 		}
 	}
 
-	public bool IsActive => gameObject.activeSelf;
+	public bool IsActiveSelf => gameObject.activeSelf;
 
 	protected bool IsInstanced => gameObject.scene.isLoaded;
 

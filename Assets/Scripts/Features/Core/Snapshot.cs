@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Firebase.Database;
 using UnityEngine.Scripting;
 
@@ -7,7 +6,7 @@ public class Snapshot
 {
 	public string ID { get; }
 
-	public int Order { get; set; }
+	public int Order { get; }
 
 	protected Snapshot(DataSnapshot _Data)
 	{

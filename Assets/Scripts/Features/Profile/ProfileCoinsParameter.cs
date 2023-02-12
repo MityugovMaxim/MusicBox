@@ -3,6 +3,28 @@ using Firebase.Database;
 using UnityEngine.Scripting;
 using Zenject;
 
+public class ProfileDailyData : Snapshot
+{
+	public string DailyID        { get; }
+	public long   StartTimestamp { get; }
+	public long   EndTimestamp   { get; }
+
+	public ProfileDailyData(DataSnapshot _Data) : base(_Data)
+	{
+		DailyID        = _Data.GetString("daily_id");
+		StartTimestamp = _Data.GetLong("start_timestamp");
+		EndTimestamp   = _Data.GetLong("end_timestamp");
+	}
+}
+
+[Preserve]
+public class ProfileDaily : ProfileParameter<ProfileDailyData>, IDataObject
+{
+	protected override string Name => "daily";
+
+	protected override ProfileDailyData Create(DataSnapshot _Data) => new ProfileDailyData(_Data);
+}
+
 [Preserve]
 public class ProfileCoinsParameter : ProfileParameter<long>, IDataObject
 {
@@ -11,12 +33,12 @@ public class ProfileCoinsParameter : ProfileParameter<long>, IDataObject
 	[Inject] ProductsManager m_ProductsManager;
 	[Inject] MenuProcessor   m_MenuProcessor;
 
-	public async Task<bool> Remove(long _Coins)
+	public Task<bool> ReduceAsync(long _Coins)
 	{
 		if (Value >= _Coins)
 		{
 			Value -= _Coins;
-			return true;
+			return Task.FromResult(true);
 		}
 		
 		long coins = _Coins - Value;
@@ -24,15 +46,18 @@ public class ProfileCoinsParameter : ProfileParameter<long>, IDataObject
 		string productID = m_ProductsManager.GetProductID(coins);
 		
 		if (string.IsNullOrEmpty(productID))
-			return false;
+			return Task.FromResult(false);
 		
 		UIProductMenu productMenu = m_MenuProcessor.GetMenu<UIProductMenu>();
 		if (productMenu != null)
 			productMenu.Setup(productID);
 		
-		await m_MenuProcessor.Show(MenuType.ProductMenu);
+		TaskCompletionSource<bool> task = new TaskCompletionSource<bool>();
 		
-		return false;
+		productMenu.Setup(productID, _Success => task.TrySetResult(_Success));
+		productMenu.Show();
+		
+		return task.Task;
 	}
 
 	protected override long Create(DataSnapshot _Data)

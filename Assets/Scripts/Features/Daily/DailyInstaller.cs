@@ -9,6 +9,8 @@ public class DailyInstaller : FeatureInstaller
 	{
 		InstallSingleton<DailyCollection>();
 		
+		InstallSingleton<ProfileDaily>();
+		
 		InstallSingleton<DailyManager>();
 		
 		InstallPool<UIDailyElement, UIDailyElement.Pool>(m_DailyElement, m_Capacity);

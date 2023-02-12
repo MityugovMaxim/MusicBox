@@ -34,6 +34,8 @@ public class UIProcessingMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_Text = null;
 		
 		m_Label.text = string.Empty;

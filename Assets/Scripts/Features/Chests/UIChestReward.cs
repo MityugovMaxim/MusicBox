@@ -10,13 +10,11 @@ public class UIChestReward : UIEntity
 	static readonly int m_PlayParameterID    = Animator.StringToHash("Play");
 	static readonly int m_RestoreParameterID = Animator.StringToHash("Restore");
 
-	[SerializeField] UIChestImage  m_Image;
-	[SerializeField] GameObject    m_CoinsContent;
-	[SerializeField] GameObject    m_SongContent;
-	[SerializeField] GameObject    m_VoucherContent;
-	[SerializeField] UICoinsItem   m_CoinsItem;
-	[SerializeField] UISongItem    m_SongItem;
-	[SerializeField] UIVoucherItem m_VoucherItem;
+	[SerializeField] UIChestImage m_Image;
+	[SerializeField] GameObject   m_CoinsContent;
+	[SerializeField] GameObject   m_SongContent;
+	[SerializeField] UICoinsItem  m_CoinsItem;
+	[SerializeField] UISongItem   m_SongItem;
 
 	Animator m_Animator;
 
@@ -29,6 +27,8 @@ public class UIChestReward : UIEntity
 		m_Animator = GetComponent<Animator>();
 		
 		m_Animator.SubscribeComplete(PLAY_STATE, InvokeFinished);
+		
+		m_Animator.keepAnimatorControllerStateOnDisable = true;
 	}
 
 	protected override void OnDestroy()
@@ -38,39 +38,32 @@ public class UIChestReward : UIEntity
 		m_Animator.UnsubscribeComplete(PLAY_STATE, InvokeFinished);
 	}
 
-	protected override void OnDisable()
+	public void Setup(RankType _Rank)
 	{
-		base.OnDisable();
-		
-		Restore();
+		m_Image.Rank = _Rank;
 	}
 
-	public void Setup(string _ChestID, ChestReward _Reward)
+	public void Process(ChestReward _Reward)
 	{
-		m_Image.ChestID = _ChestID;
-		
 		m_CoinsContent.SetActive(false);
 		m_SongContent.SetActive(false);
-		m_VoucherContent.SetActive(false);
 		
-		if (_Reward.IsCoins)
-		{
-			m_CoinsContent.SetActive(true);
-			m_CoinsItem.Setup(_Reward.Value);
-		}
-		else if (_Reward.IsSong)
+		if (!string.IsNullOrEmpty(_Reward.SongID))
 		{
 			m_SongContent.SetActive(true);
-			m_SongItem.Setup(_Reward.ID);
+			m_SongItem.Setup(_Reward.SongID);
 		}
-		else if (_Reward.IsVoucher)
+		else if (!string.IsNullOrEmpty(_Reward.VoucherID))
 		{
-			m_VoucherContent.SetActive(true);
-			m_VoucherItem.Setup(_Reward.ID);
+			//m_VoucherContent.SetActive(true);
+			//m_VoucherItem.Setup(_Reward.VoucherID);
+		}
+		else if (_Reward.Coins > 0)
+		{
+			m_CoinsContent.SetActive(true);
+			m_CoinsItem.Setup(_Reward.Coins);
 		}
 	}
-
-	public async void Play() => await PlayAsync();
 
 	public Task PlayAsync()
 	{
@@ -91,7 +84,6 @@ public class UIChestReward : UIEntity
 		
 		m_Animator.ResetTrigger(m_PlayParameterID);
 		m_Animator.SetTrigger(m_RestoreParameterID);
-		m_Animator.Update(0);
 	}
 
 	void InvokeFinished()

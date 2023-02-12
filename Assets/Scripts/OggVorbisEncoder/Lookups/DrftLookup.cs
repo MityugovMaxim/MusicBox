@@ -4,8 +4,8 @@ namespace OggVorbisEncoder.Lookups
 {
 	public class DrftLookup
 	{
-		readonly        int[]   m_SplitCache;
-		public readonly float[] m_TrigCache;
+		readonly int[]   m_SplitCache;
+		readonly float[] m_TrigCache;
 
 		public DrftLookup(int _N)
 		{

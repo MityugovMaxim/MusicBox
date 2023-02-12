@@ -30,18 +30,18 @@ public class UIReorderElement : UIEntity, IInitializePotentialDragHandler, IDrag
 
 	void ProcessSource()
 	{
-		RectTransform transform = m_Source.RectTransform;
-		Vector2       pivot     = transform.pivot;
-		transform.anchoredPosition = m_SourceRect.position - Vector2.Scale(m_SourceRect.size, pivot);
-		transform.sizeDelta        = m_SourceRect.size;
+		RectTransform source = m_Source.RectTransform;
+		Vector2       pivot  = source.pivot;
+		source.anchoredPosition = m_SourceRect.position - Vector2.Scale(m_SourceRect.size, pivot);
+		source.sizeDelta        = m_SourceRect.size;
 	}
 
 	void ProcessTarget()
 	{
-		RectTransform transform = m_Target.RectTransform;
-		Vector2       pivot     = transform.pivot;
-		transform.anchoredPosition = m_TargetRect.position - Vector2.Scale(m_TargetRect.size, pivot);
-		transform.sizeDelta        = m_TargetRect.size;
+		RectTransform target = m_Target.RectTransform;
+		Vector2       pivot  = target.pivot;
+		target.anchoredPosition = m_TargetRect.position - Vector2.Scale(m_TargetRect.size, pivot);
+		target.sizeDelta        = m_TargetRect.size;
 	}
 
 	void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData _EventData)

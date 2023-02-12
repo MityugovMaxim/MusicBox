@@ -7,9 +7,7 @@ public class UISongToolbar : UIEntity
 {
 	[SerializeField] Toggle m_SnapToggle;
 	[SerializeField] Toggle m_BeatToggle;
-
 	[SerializeField] Button m_PlayButton;
-
 	[SerializeField] Button m_StepForwardButton;
 	[SerializeField] Button m_StepBackwardButton;
 

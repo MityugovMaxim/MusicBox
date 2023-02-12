@@ -5,6 +5,62 @@ public class UIChamfer : UIImage
 {
 	static readonly MaterialPool m_MaterialPool = new MaterialPool();
 
+	public float TopLeft
+	{
+		get => m_TopLeft;
+		set
+		{
+			if (Mathf.Approximately(m_TopLeft, value))
+				return;
+			
+			m_TopLeft = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
+	public float TopRight
+	{
+		get => m_TopRight;
+		set
+		{
+			if (Mathf.Approximately(m_TopRight, value))
+				return;
+			
+			m_TopRight = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
+	public float BottomLeft
+	{
+		get => m_BottomLeft;
+		set
+		{
+			if (Mathf.Approximately(m_BottomLeft, value))
+				return;
+			
+			m_BottomLeft = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
+	public float BottomRight
+	{
+		get => m_BottomRight;
+		set
+		{
+			if (Mathf.Approximately(m_BottomRight, value))
+				return;
+			
+			m_BottomRight = value;
+			
+			SetVerticesDirty();
+		}
+	}
+
 	[SerializeField] float m_TopLeft;
 	[SerializeField] float m_TopRight;
 	[SerializeField] float m_BottomLeft;
@@ -14,27 +70,27 @@ public class UIChamfer : UIImage
 	{
 		string materialID = GetMaterialID();
 		
-		Material material = m_MaterialPool.Get(materialID);
+		Material item = m_MaterialPool.Get(materialID);
 		
-		if (material != null)
-			return material;
+		if (item != null)
+			return item;
 		
-		material = CreateMaterial("Elements/Chamfer");
+		item = CreateMaterial("Elements/Chamfer");
 		
 		switch (Type)
 		{
 			case BlendType.Blend:
-				SetBlend(material);
+				SetBlend(item);
 				break;
 			
 			case BlendType.Additive:
-				SetAdditive(material);
+				SetAdditive(item);
 				break;
 		}
 		
-		m_MaterialPool.Register(materialID, material);
+		m_MaterialPool.Register(materialID, item);
 		
-		return material;
+		return item;
 	}
 
 	protected override Vector4 GetUV2()

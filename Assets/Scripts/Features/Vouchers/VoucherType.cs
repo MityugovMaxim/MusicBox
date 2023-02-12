@@ -1,8 +1,8 @@
 public enum VoucherType
 {
-	None            = 0,
-	ProductDiscount = 1,
-	SongDiscount    = 2,
-	ChestDiscount   = 3,
-	SeasonsBoost    = 4,
+	None    = 0,
+	Product = 1,
+	Song    = 2,
+	Chest   = 3,
+	Season = 4,
 }

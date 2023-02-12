@@ -1,12 +1,12 @@
 using System;
 using System.Collections;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 [ExecuteAlways]
 public class UIAnalogTimer : UIEntity
 {
+	string ID => GetInstanceID().ToString();
+
 	[SerializeField] RectTransform m_Content;
 	[SerializeField] UIGroup       m_DaysGroup;
 	[SerializeField] UIGroup       m_TimeGroup;
@@ -22,15 +22,16 @@ public class UIAnalogTimer : UIEntity
 	long m_StartTimestamp;
 	long m_EndTimestamp;
 
-	IEnumerator             m_TickRoutine;
-	CancellationTokenSource m_TokenSource;
+	IEnumerator m_TickRoutine;
 
 	protected override void OnEnable()
 	{
 		base.OnEnable();
 		
-		if (!Application.isPlaying)
+		#if UNITY_EDITOR
+		if (!IsInstanced)
 			return;
+		#endif
 		
 		ProcessSize();
 		
@@ -43,14 +44,7 @@ public class UIAnalogTimer : UIEntity
 	{
 		base.OnDisable();
 		
-		m_TokenSource?.Cancel();
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-		
-		m_TokenSource?.Cancel();
+		TokenProvider.CancelToken(this, ID);
 	}
 
 	protected override void OnRectTransformDimensionsChange()
@@ -129,17 +123,8 @@ public class UIAnalogTimer : UIEntity
 		ProcessTimer(true);
 	}
 
-	async void ProcessTimer(bool _Instant = false)
+	void ProcessTimer(bool _Instant = false)
 	{
-		await ProcessTimerAsync(_Instant);
-	}
-
-	async Task ProcessTimerAsync(bool _Instant = false)
-	{
-		m_TokenSource?.Cancel();
-		
-		m_TokenSource = new CancellationTokenSource();
-		
 		long delta = m_EndTimestamp - m_StartTimestamp;
 		
 		long timer;
@@ -166,26 +151,14 @@ public class UIAnalogTimer : UIEntity
 			m_DaysGroup.Hide(_Instant);
 		}
 		
-		try
-		{
-			await Task.WhenAll(
-				m_Day1.SetValueAsync(days % 10, _Instant, m_TokenSource.Token),
-				m_Day2.SetValueAsync(days / 10 % 10, _Instant, m_TokenSource.Token),
-				m_Hour1.SetValueAsync(hours % 10, _Instant, m_TokenSource.Token),
-				m_Hour2.SetValueAsync(hours / 10 % 10, _Instant, m_TokenSource.Token),
-				m_Minute1.SetValueAsync(minutes % 10, _Instant, m_TokenSource.Token),
-				m_Minute2.SetValueAsync(minutes / 10 % 10, _Instant, m_TokenSource.Token),
-				m_Second1.SetValueAsync(seconds % 10, _Instant, m_TokenSource.Token),
-				m_Second2.SetValueAsync(seconds / 10 % 10, _Instant, m_TokenSource.Token)
-			);
-		}
-		catch (TaskCanceledException) { }
-		catch (OperationCanceledException) { }
-		finally
-		{
-			m_TokenSource?.Dispose();
-			m_TokenSource = null;
-		}
+		m_Day1.SetValue(days % 10, _Instant);
+		m_Day2.SetValue(days / 10 % 10, _Instant);
+		m_Hour1.SetValue(hours % 10, _Instant);
+		m_Hour2.SetValue(hours / 10 % 10, _Instant);
+		m_Minute1.SetValue(minutes % 10, _Instant);
+		m_Minute2.SetValue(minutes / 10 % 10, _Instant);
+		m_Second1.SetValue(seconds % 10, _Instant);
+		m_Second2.SetValue(seconds / 10 % 10, _Instant);
 	}
 
 	void ProcessSize()

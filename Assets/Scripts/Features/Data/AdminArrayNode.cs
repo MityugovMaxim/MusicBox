@@ -11,7 +11,7 @@ public class AdminArrayNode : AdminNode
 		get => Data.GetValue<IList<object>>(Path);
 		set
 		{
-			if (Data.Contains(Path) && Value == value)
+			if (Data.Contains(Path) && Equals(Value, value))
 				return;
 			
 			Data.SetValue(Path, value);

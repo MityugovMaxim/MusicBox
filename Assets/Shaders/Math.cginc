@@ -62,7 +62,7 @@ fixed grayscale(const fixed3 _Color)
 	return _Color.r * 0.299 + _Color.g * 0.587 + _Color.b * 0.114;
 }
 
-half getCircle(const half2 _Position, const half _Radius, const half _Smooth)
+half getCircle(const float2 _Position, const float _Radius, const float _Smooth)
 {
 	const half delta = _Radius - _Smooth;
 	const half min = delta * delta;

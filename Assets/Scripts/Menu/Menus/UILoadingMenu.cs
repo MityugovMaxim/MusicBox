@@ -11,8 +11,8 @@ public class UILoadingMenu : UIAnimationMenu
 
 	static bool Tutorial
 	{
-		get => PlayerPrefs.GetInt(TUTORIAL_KEY, 0) > 0;
-		set => PlayerPrefs.SetInt(TUTORIAL_KEY, value ? 1 : 0);
+		get => PlayerPrefs.GetInt(TUTORIAL_KEY, 0) == 0;
+		set => PlayerPrefs.SetInt(TUTORIAL_KEY, value ? 0 : 1);
 	}
 
 	[SerializeField] UISongImage m_Image;
@@ -30,14 +30,12 @@ public class UILoadingMenu : UIAnimationMenu
 	[Inject] HapticProcessor    m_HapticProcessor;
 
 	string m_SongID;
-	bool   m_Full;
 
 	CancellationTokenSource m_TokenSource;
 
-	public void Setup(string _SongID, bool _Full = false)
+	public void Setup(string _SongID)
 	{
 		m_SongID = _SongID;
-		m_Full   = _Full;
 		
 		m_Image.gameObject.SetActive(!string.IsNullOrEmpty(m_SongID));
 		
@@ -51,19 +49,19 @@ public class UILoadingMenu : UIAnimationMenu
 	public async void Load()
 	{
 		if (Tutorial)
-			await LoadSong();
-		else
 			await LoadTutorial();
+		else
+			await LoadSong();
 	}
 
 	public void ResetTutorial()
 	{
-		Tutorial = false;
+		Tutorial = true;
 	}
 
 	async Task LoadTutorial()
 	{
-		Tutorial = true;
+		Tutorial = false;
 		
 		Task<bool> load = m_TutorialController.Load(m_SongID);
 		
@@ -77,6 +75,10 @@ public class UILoadingMenu : UIAnimationMenu
 		if (success)
 		{
 			await Task.Delay(500);
+			
+			UITutorialMenu tutorialMenu = m_MenuProcessor.GetMenu<UITutorialMenu>();
+			if (tutorialMenu != null)
+				tutorialMenu.Show(true);
 			
 			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);
@@ -116,6 +118,20 @@ public class UILoadingMenu : UIAnimationMenu
 		if (success)
 		{
 			await Task.Delay(500);
+			
+			UIGameMenu gameMenu = m_MenuProcessor.GetMenu<UIGameMenu>();
+			if (gameMenu != null)
+			{
+				gameMenu.Setup(m_SongID);
+				gameMenu.Show(true);
+			}
+			
+			UIPauseMenu pauseMenu = m_MenuProcessor.GetMenu<UIPauseMenu>();
+			if (pauseMenu != null)
+			{
+				pauseMenu.Setup(m_SongID);
+				pauseMenu.Hide(true);
+			}
 			
 			await m_MenuProcessor.Hide(MenuType.MainMenu, true);
 			await m_MenuProcessor.Hide(MenuType.LoadingMenu);

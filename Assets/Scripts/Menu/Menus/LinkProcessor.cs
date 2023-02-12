@@ -17,10 +17,9 @@ public class LinkProcessor
 	const string URL_PREFIX = "https://audiobox.page.link";
 	const string URL_HOST   = "https://outofbounds.studio/audiobox?";
 
-	[Inject] SignalBus          m_SignalBus;
-	[Inject] ProfileDiscsParameter     m_ProfileDiscs;
-	[Inject] UrlProcessor       m_UrlProcessor;
-	[Inject] StatisticProcessor m_StatisticProcessor;
+	[Inject] ProfileDiscsParameter m_ProfileDiscs;
+	[Inject] UrlProcessor          m_UrlProcessor;
+	[Inject] StatisticProcessor    m_StatisticProcessor;
 
 
 	string m_AbsoluteLink;

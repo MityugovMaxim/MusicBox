@@ -35,9 +35,9 @@ public abstract class UIDailyEntity : UIEntity
 		DailyID = null;
 	}
 
-	public abstract void Subscribe();
+	protected abstract void Subscribe();
 
-	public abstract void Unsubscribe();
+	protected abstract void Unsubscribe();
 
-	public abstract void ProcessData();
+	protected abstract void ProcessData();
 }

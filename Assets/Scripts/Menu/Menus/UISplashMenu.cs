@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Threading.Tasks;
 using Facebook.Unity;
 using Unity.Services.Core;
@@ -21,6 +22,10 @@ public class UISplashMenu : UIMenu
 
 	protected override async void OnShowFinished()
 	{
+		base.OnShowFinished();
+		
+		await ClearCache();
+		
 		await InitializeThirdParty();
 		
 		await Task.Delay(250);
@@ -43,7 +48,16 @@ public class UISplashMenu : UIMenu
 
 	protected override void OnHideFinished()
 	{
+		base.OnHideFinished();
+		
 		m_MenuProcessor.RemoveMenu(MenuType.SplashMenu);
+	}
+
+	static Task ClearCache()
+	{
+		if (Directory.Exists(Application.temporaryCachePath))
+			Directory.Delete(Application.temporaryCachePath, true);
+		return Task.CompletedTask;
 	}
 
 	async Task InitializeThirdParty()

@@ -10,11 +10,11 @@ public class UIEntityPool<T> : MonoMemoryPool<RectTransform, T> where T : UIEnti
 			if (m_Size.HasValue)
 				return m_Size.Value;
 			
-			T item = base.GetInternal();
+			T item = GetInternal();
 			
 			m_Size = item.GetLocalRect().size;
 			
-			base.Despawn(item);
+			Despawn(item);
 			
 			return m_Size ?? Vector2.zero;
 		}

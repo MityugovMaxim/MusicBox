@@ -2,76 +2,95 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
+using AudioBox.Compression;
 using UnityEngine.Scripting;
 using Zenject;
 
-[Preserve]
-public class DailyManager : IDataManager
+public partial class DailyManager : IInitializable, IDisposable
 {
-	public bool Activated { get; private set; }
+	[Inject] ScheduleProcessor m_ScheduleProcessor;
 
+	readonly DataEventHandler m_StartTimer  = new DataEventHandler();
+	readonly DataEventHandler m_EndTimer    = new DataEventHandler();
+	readonly DataEventHandler m_CancelTimer = new DataEventHandler();
+	readonly DataEventHandler m_Collect     = new DataEventHandler();
+
+	public void SubscribeCollect(string _DailyID, Action _Action) => m_Collect.AddListener(_DailyID, _Action);
+
+	public void SubscribeCollect(Action _Action) => m_Collect.AddListener(_Action);
+
+	public void UnsubscribeCollect(string _DailyID, Action _Action) => m_Collect.RemoveListener(_DailyID, _Action);
+
+	public void UnsubscribeCollect(Action _Action) => m_Collect.RemoveListener(_Action);
+
+	public void SubscribeStartTimer(Action _Action) => m_StartTimer.AddListener(_Action);
+
+	public void UnsubscribeStartTimer(Action _Action) => m_StartTimer.RemoveListener(_Action);
+
+	public void SubscribeEndTimer(Action _Action) => m_EndTimer.AddListener(_Action);
+
+	public void UnsubscribeEndTimer(Action _Action) => m_EndTimer.RemoveListener(_Action);
+
+	public void SubscribeCancelTimer(Action _Action) => m_CancelTimer.AddListener(_Action);
+
+	public void UnsubscribeCancelTimer(Action _Action) => m_CancelTimer.RemoveListener(_Action);
+
+	void IInitializable.Initialize()
+	{
+		Profile.Subscribe(ProcessTimer);
+	}
+
+	void IDisposable.Dispose()
+	{
+		Profile.Unsubscribe(ProcessTimer);
+	}
+
+	async void ProcessTimer() => await ProcessTimerAsync();
+
+	Task ProcessTimerAsync()
+	{
+		m_ScheduleProcessor.Schedule(
+			this,
+			"daily",
+			GetDailyStartTimestamp(),
+			GetDailyEndTimestamp(),
+			m_StartTimer,
+			m_EndTimer,
+			m_CancelTimer
+		);
+		
+		return Task.CompletedTask;
+	}
+
+	void InvokeCollect(string _DailyID) => m_Collect.Invoke(_DailyID);
+}
+
+[Preserve]
+public partial class DailyManager : IDataManager
+{
 	public DailyCollection Collection => m_DailyCollection;
+
+	public ProfileDaily Profile => m_ProfileDaily;
 
 	[Inject] AdsProcessor    m_AdsProcessor;
 	[Inject] DailyCollection m_DailyCollection;
-	[Inject] TimersManager   m_TimersManager;
-	[Inject] MenuProcessor   m_MenuProcessor;
+	[Inject] ProfileDaily    m_ProfileDaily;
 
-	readonly DataEventHandler m_CollectHandler = new DataEventHandler();
-
-	public async Task<bool> Activate()
+	public Task<bool> Activate()
 	{
-		if (Activated)
-			return true;
-		
-		int frame = Time.frameCount;
-		
-		await Task.WhenAll(
-			m_DailyCollection.Load(),
-			m_TimersManager.Activate()
+		return TaskProvider.ProcessAsync(
+			this,
+			TaskProvider.Group(
+				Collection.Load,
+				Profile.Load
+			),
+			TaskProvider.Group(
+				ProcessTimerAsync
+			)
 		);
-		
-		Activated = true;
-		
-		return frame == Time.frameCount;
 	}
 
-	public void SubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.AddListener(_DailyID, _Action);
-
-	public void UnsubscribeCollect(string _DailyID, Action _Action) => m_CollectHandler.RemoveListener(_DailyID, _Action);
-
-	public void SubscribeRestore(string _DailyID, Action _Action)
-	{
-		m_TimersManager.SubscribeCancel(_DailyID, _Action);
-		m_TimersManager.SubscribeEnd(_DailyID, _Action);
-	}
-
-	public void UnsubscribeRestore(string _DailyID, Action _Action)
-	{
-		m_TimersManager.UnsubscribeCancel(_DailyID, _Action);
-		m_TimersManager.UnsubscribeEnd(_DailyID, _Action);
-	}
-
-	public bool IsDailyAvailable(string _DailyID)
-	{
-		string dailyID = GetDailyID();
-		
-		if (string.IsNullOrEmpty(dailyID))
-			return false;
-		
-		int sourceOrder = Collection.GetOrder(_DailyID);
-		int targetOrder = Collection.GetOrder(dailyID);
-		
-		return sourceOrder >= targetOrder;
-	}
-
-	public List<string> GetDailyIDs()
-	{
-		return Collection.GetIDs()
-			.Where(IsActive)
-			.ToList();
-	}
+	public List<string> GetDailyIDs() => Collection.GetIDs().ToList();
 
 	public long GetCoins(string _DailyID)
 	{
@@ -89,72 +108,72 @@ public class DailyManager : IDataManager
 
 	public bool IsFree(string _DailyID) => !IsAds(_DailyID);
 
-	public async Task Collect()
+	public async Task<bool> CollectAsync()
 	{
-		string dailyID = GetDailyID();
+		long timestamp      = TimeUtility.GetTimestamp();
+		long startTimestamp = GetDailyStartTimestamp();
+		long endTimestamp   = GetDailyEndTimestamp();
+		int dailyOrder = timestamp >= startTimestamp && timestamp < endTimestamp
+			? GetDailyOrder() + 1
+			: 1;
 		
-		if (!IsDailyAvailable(dailyID))
-			return;
+		string dailyID = GetDailyID(dailyOrder);
 		
-		DailyCollectRequest request = new DailyCollectRequest(dailyID);
+		if (IsDailyUnavailable(dailyID))
+			return false;
 		
 		bool process = IsFree(dailyID) || await m_AdsProcessor.Rewarded("daily");
 		
 		if (!process)
-		{
-			await m_MenuProcessor.ErrorAsync("daily_ads");
-			return;
-		}
+			return false;
+		
+		DailyCollectRequest request = new DailyCollectRequest();
 		
 		bool success = await request.SendAsync();
 		
 		if (!success)
-		{
-			await m_MenuProcessor.ErrorAsync("daily_collect");
-			return;
-		}
+			return false;
 		
-		m_CollectHandler.Invoke(dailyID);
+		InvokeCollect(dailyID);
+		
+		return true;
 	}
 
-	string GetDailyID()
-	{
-		return Collection.GetIDs()
-			.Where(IsActive)
-			.Where(IsAvailable)
-			.FirstOrDefault();
-	}
-
-	bool IsAvailable(string _DailyID)
+	public bool IsDailyAvailable(string _DailyID)
 	{
 		if (string.IsNullOrEmpty(_DailyID))
 			return false;
 		
-		if (!m_TimersManager.ContainsTimer(_DailyID))
-			return true;
-		
-		long cooldown  = m_TimersManager.GetEndTimestamp(_DailyID);
-		long timestamp = TimeUtility.GetTimestamp();
-		
-		return timestamp >= cooldown;
-	}
-
-	bool IsUnavailable(string _DailyID) => !IsAvailable(_DailyID);
-
-	bool IsActive(string _DailyID)
-	{
 		DailySnapshot snapshot = Collection.GetSnapshot(_DailyID);
 		
-		return snapshot?.Active ?? false;
+		if (snapshot == null)
+			return false;
+		
+		long timestamp      = TimeUtility.GetTimestamp();
+		long startTimestamp = GetDailyStartTimestamp();
+		long endTimestamp   = GetDailyEndTimestamp();
+		
+		if (timestamp >= startTimestamp && timestamp >= endTimestamp)
+			return true;
+		
+		int sourceOrder = GetDailyOrder();
+		int targetOrder = snapshot.Order;
+		
+		return targetOrder > sourceOrder;
 	}
 
-	public long GetTimestamp()
+	public bool IsDailyUnavailable(string _DailyID) => !IsDailyAvailable(_DailyID);
+
+	public string GetDailyID(int _DailyOrder)
 	{
-		return Collection.GetIDs()
-			.Where(IsActive)
-			.Where(IsUnavailable)
-			.Select(m_TimersManager.GetEndTimestamp)
-			.DefaultIfEmpty(0)
-			.Max();
+		DailySnapshot snapshot = Collection.Snapshots.ApproximatelyMax(_Snapshot => _Snapshot.Order, _DailyOrder);
+		
+		return snapshot?.ID ?? string.Empty;
 	}
+
+	public int GetDailyOrder() => Profile.Value?.Order ?? int.MaxValue;
+
+	public long GetDailyStartTimestamp() => Profile.Value?.StartTimestamp ?? 0;
+
+	public long GetDailyEndTimestamp() => Profile.Value?.EndTimestamp ?? 0;
 }

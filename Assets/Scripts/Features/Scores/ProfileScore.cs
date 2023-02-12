@@ -9,7 +9,7 @@ public class ProfileScore : Snapshot
 	public long      Score     { get; }
 	public long      Timestamp { get; }
 
-	protected ProfileScore(DataSnapshot _Data) : base(_Data)
+	public ProfileScore(DataSnapshot _Data) : base(_Data)
 	{
 		Rank      = _Data.GetEnum<RankType>("rank");
 		Accuracy  = _Data.GetInt("accuracy");

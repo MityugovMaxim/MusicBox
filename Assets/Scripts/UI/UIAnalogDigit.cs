@@ -1,5 +1,4 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,7 +29,7 @@ public class UIAnalogDigit : UIEntity
 
 	int m_Value;
 
-	CancellationTokenSource m_TokenSource;
+	IEnumerator m_ValueRoutine;
 
 	protected override void OnEnable()
 	{
@@ -44,49 +43,38 @@ public class UIAnalogDigit : UIEntity
 	{
 		base.OnValidate();
 		
+		if (Application.isPlaying || !IsInstanced)
+			return;
+		
 		ProcessPhase();
 	}
 	#endif
 
-	public async Task SetValueAsync(int _Value, bool _Instant = false, CancellationToken _Token = default)
+	public void SetValue(int _Value, bool _Instant = false)
 	{
+		if (m_ValueRoutine != null)
+		{
+			StopCoroutine(m_ValueRoutine);
+			m_ValueRoutine = null;
+		}
+		
 		int value = Mathf.Abs(_Value) % 10;
 		
-		if (m_Value == value)
+		if (gameObject.activeInHierarchy && !_Instant)
 		{
-			Phase = 0;
-			return;
+			m_ValueRoutine = ValueRoutine(value);
+			
+			StartCoroutine(m_ValueRoutine);
 		}
-		
-		if (_Token.IsCancellationRequested || _Instant)
+		else
 		{
-			m_Value = value;
+			Phase           = 0;
+			m_Value         = value;
+			m_Upper.sprite  = m_Digits[m_Value];
+			m_Lower.sprite  = m_Digits[m_Value];
+			m_Center.sprite = m_Digits[m_Value];
 			m_Content.SetActive(false);
-			m_Upper.sprite = m_Digits[m_Value];
-			m_Lower.sprite = m_Digits[m_Value];
-			Phase          = 0;
-			return;
 		}
-		
-		m_Upper.sprite  = m_Digits[value];
-		m_Center.sprite = m_Digits[m_Value];
-		
-		m_Value = value;
-		
-		m_Content.SetActive(true);
-		
-		await UnityTask.Phase(
-			_Phase => Phase = _Phase,
-			m_Duration,
-			EaseFunction.EaseInQuad,
-			_Token
-		);
-		
-		Phase = 0;
-		
-		m_Lower.sprite = m_Digits[value];
-		
-		m_Content.SetActive(false);
 	}
 
 	void ProcessPhase()
@@ -96,8 +84,6 @@ public class UIAnalogDigit : UIEntity
 		ProcessScale();
 		
 		ProcessColor();
-		
-		ProcessContent();
 	}
 
 	void ProcessFill()
@@ -129,8 +115,46 @@ public class UIAnalogDigit : UIEntity
 		m_Center.color = centerColor;
 	}
 
-	void ProcessContent()
+	IEnumerator ValueRoutine(int _Value)
 	{
-		m_Content.SetActive(Phase > float.Epsilon && Phase < 1);
+		int source = m_Value;
+		int target = _Value;
+		
+		Sprite sourceSprite = m_Digits[source];
+		Sprite targetSprite = m_Digits[target];
+		
+		m_Upper.sprite  = targetSprite;
+		m_Lower.sprite  = sourceSprite;
+		m_Center.sprite = sourceSprite;
+		
+		Phase = 0;
+		
+		if (source != target && m_Duration > float.Epsilon)
+		{
+			m_Content.SetActive(true);
+			
+			float time = 0;
+			while (time < m_Duration)
+			{
+				yield return null;
+				
+				time += Time.deltaTime;
+				
+				Phase = EaseFunction.EaseInQuad.Get(time / m_Duration);
+				
+				if (Phase >= 0.5f)
+					m_Center.sprite = targetSprite;
+			}
+			
+			m_Content.SetActive(false);
+		}
+		
+		m_Value = target;
+		
+		Phase = 0;
+		
+		m_Upper.sprite  = targetSprite;
+		m_Lower.sprite  = targetSprite;
+		m_Center.sprite = targetSprite;
 	}
 }

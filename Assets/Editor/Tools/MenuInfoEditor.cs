@@ -4,12 +4,12 @@ using UnityEngine;
 [CustomEditor(typeof(MenuInfo))]
 public class MenuInfoEditor : Editor
 {
-	SerializedProperty PathProperty      => m_PathProperty ??= serializedObject.FindProperty("m_Path");
-	SerializedProperty FocusableProperty => m_FocusableProperty ??= serializedObject.FindProperty("m_Focusable");
-	SerializedProperty TypeProperty      => m_TypeProperty ??= serializedObject.FindProperty("m_Type");
+	SerializedProperty PathProperty => m_PathProperty ??= serializedObject.FindProperty("m_Path");
+	SerializedProperty ModeProperty => m_ModeProperty ??= serializedObject.FindProperty("m_Mode");
+	SerializedProperty TypeProperty => m_TypeProperty ??= serializedObject.FindProperty("m_Type");
 
 	SerializedProperty m_PathProperty;
-	SerializedProperty m_FocusableProperty;
+	SerializedProperty m_ModeProperty;
 	SerializedProperty m_TypeProperty;
 
 	UIMenu   m_Menu;
@@ -40,7 +40,7 @@ public class MenuInfoEditor : Editor
 				m_Type = type;
 		}
 		
-		EditorGUILayout.PropertyField(FocusableProperty);
+		EditorGUILayout.PropertyField(ModeProperty);
 		
 		if (TypeProperty.enumValueIndex != (int)m_Type)
 			TypeProperty.enumValueIndex = (int)m_Type;

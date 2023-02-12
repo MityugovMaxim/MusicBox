@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class AdminStringNode : AdminNode
 {
 	public override AdminNodeType Type => AdminNodeType.String;

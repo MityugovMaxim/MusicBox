@@ -4,14 +4,18 @@ using UnityEngine.Scripting;
 [Preserve]
 public class ChestItem
 {
-	public ChestItemType Type   { get; }
-	public double        Weight { get; }
-	public double        Value  { get; }
+	public RankType SongRank  { get; }
+	public string   VoucherID { get; }
+	public long     Coins     { get; }
+	public long     Points    { get; }
+	public double   Weight    { get; }
 
 	public ChestItem(DataSnapshot _Data)
 	{
-		Type   = _Data.GetEnum<ChestItemType>("type");
-		Weight = _Data.GetDouble("weight");
-		Value  = _Data.GetDouble("value");
+		SongRank  = _Data.GetEnum<RankType>("song_rank");
+		VoucherID = _Data.GetString("voucher_id");
+		Coins     = _Data.GetLong("coins");
+		Points    = _Data.GetLong("points");
+		Weight    = _Data.GetDouble("weight");
 	}
 }

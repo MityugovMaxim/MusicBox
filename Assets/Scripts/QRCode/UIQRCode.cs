@@ -164,13 +164,13 @@ public partial class UIQRCode : MaskableGraphic
 			rect.height / m_Matrix.Count
 		);
 		
-		Color32 color = this.color;
+		Color32 vertexColor = color;
 		
 		Vector4 uv = m_Body != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Body) : new Vector4(0, 0, 1, 1);
 		
 		void AddVertex(float _X, float _Y, float _U, float _V)
 		{
-			m_Vertices.Add(new UIVertex() { position = new Vector3(_X, _Y), uv0 = new Vector2(_U, _V), color = color });
+			m_Vertices.Add(new UIVertex() { position = new Vector3(_X, _Y), uv0 = new Vector2(_U, _V), color = vertexColor });
 		}
 		
 		void AddTriangle(int _A, int _B, int _C)
@@ -328,14 +328,14 @@ public partial class UIQRCode : MaskableGraphic
 			if (_Target is Image image)
 				image.sprite = m_Anchor;
 			
-			RectTransform transform = _Target.rectTransform;
+			RectTransform layout = _Target.rectTransform;
 			
-			transform.sizeDelta        = size * 7;
-			transform.pivot            = _Pivot;
-			transform.anchorMin        = _Anchor;
-			transform.anchorMax        = _Anchor;
-			transform.localEulerAngles = new Vector3(0, 0, _Rotation);
-			transform.anchoredPosition = _Position;
+			layout.sizeDelta        = size * 7;
+			layout.pivot            = _Pivot;
+			layout.anchorMin        = _Anchor;
+			layout.anchorMax        = _Anchor;
+			layout.localEulerAngles = new Vector3(0, 0, _Rotation);
+			layout.anchoredPosition = _Position;
 		}
 		
 		if (m_RotateAnchors)

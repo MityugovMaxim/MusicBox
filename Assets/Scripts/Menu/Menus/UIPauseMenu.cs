@@ -9,7 +9,6 @@ public class UIPauseMenu : UIMenu
 	[SerializeField] UISongQRCode m_QR;
 
 	[Inject] SongController m_SongController;
-	[Inject] AdsProcessor   m_AdsProcessor;
 	[Inject] MenuProcessor  m_MenuProcessor;
 
 	string m_SongID;
@@ -35,7 +34,7 @@ public class UIPauseMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);
 	}
 
-	public async void Leave()
+	public void Leave()
 	{
 		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
 		if (mainMenu != null)
@@ -45,12 +44,7 @@ public class UIPauseMenu : UIMenu
 		if (songMenu != null)
 			songMenu.Setup(m_SongID);
 		
-		m_SongController.Leave();
-		
-		await m_MenuProcessor.Show(MenuType.SongMenu);
-		await m_MenuProcessor.Show(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
-		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
+		m_SongController.Finish();
 	}
 
 	public async void Resume()
@@ -89,6 +83,8 @@ public class UIPauseMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_Image.SongID = m_SongID;
 		m_Label.SongID = m_SongID;
 		

@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class UISongCreateLabelsPage : UISongCreateMenuPage
+public class UISongCreateLabelsPage : UIGroup
 {
-	public override bool Valid
+	public virtual bool Valid
 	{
 		get
 		{

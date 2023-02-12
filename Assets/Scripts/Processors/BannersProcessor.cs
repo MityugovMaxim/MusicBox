@@ -25,8 +25,10 @@ public class BannerSnapshot : Snapshot
 }
 
 [Preserve]
-public class BannersProcessor : DataCollection<BannerSnapshot>
+public class BannersProcessor : DataCollection<BannerSnapshot>, IDataCollection
 {
+	public DataPriority Priority => DataPriority.High;
+
 	protected override string Path => $"banners/{m_LanguagesManager.Language}";
 
 	[Inject] LanguagesManager m_LanguagesManager;

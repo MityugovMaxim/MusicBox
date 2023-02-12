@@ -95,7 +95,7 @@ public class UISafeArea : UIBehaviour
 		
 		Rect safeArea = Screen.safeArea;
 		
-		Camera camera = Canvas.renderMode != RenderMode.ScreenSpaceOverlay ? Canvas.worldCamera : null;
+		Camera canvasCamera = Canvas.renderMode != RenderMode.ScreenSpaceOverlay ? Canvas.worldCamera : null;
 		
 		RectTransform rectTransform = Canvas.transform as RectTransform;
 		
@@ -105,14 +105,14 @@ public class UISafeArea : UIBehaviour
 		RectTransformUtility.ScreenPointToWorldPointInRectangle(
 			rectTransform,
 			safeArea.min,
-			camera,
+			canvasCamera,
 			out Vector3 min
 		);
 		
 		RectTransformUtility.ScreenPointToWorldPointInRectangle(
 			rectTransform,
 			safeArea.max,
-			camera,
+			canvasCamera,
 			out Vector3 max
 		);
 		

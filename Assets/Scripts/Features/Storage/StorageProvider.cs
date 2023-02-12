@@ -169,9 +169,7 @@ public abstract class StorageProvider<T>
 		if (!File.Exists(sourcePath))
 			return null;
 		
-		string fileName = Path.GetFileNameWithoutExtension(_Path);
-		
-		string targetPath = $"{Application.temporaryCachePath}/{CRC32.Get(fileName)}.abf";
+		string targetPath = $"{Application.temporaryCachePath}/{CRC32.Get(_Path)}.abf";
 		
 		if (!File.Exists(targetPath))
 		{
@@ -196,7 +194,7 @@ public abstract class StorageProvider<T>
 			0x1F,
 		};
 		
-		int    count  = 0;
+		int    count;
 		byte[] buffer = new byte[Mathf.Max(2048, _Size)];
 		
 		using (FileStream stream = File.OpenRead(_Path))
@@ -299,14 +297,17 @@ public abstract class StorageProvider<T>
 		{
 			string path = GetLocalPath(_Path);
 			
-			await reference.GetFileAsync(path, handler, _Token);
+			await reference.GetFileAsync(path, handler, CancellationToken.None);
 			
 			SetLocalHash(_Path, remoteHash);
 			
 			if (Encrypt)
 				await EncryptFileAsync(_Path);
 			
+			_Token.ThrowIfCancellationRequested();
+			
 			source.TrySetResult(true);
+			
 			return true;
 		}
 		catch (TaskCanceledException)

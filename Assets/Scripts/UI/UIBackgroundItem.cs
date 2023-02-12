@@ -9,7 +9,7 @@ public class UIBackgroundItem : UIGroup
 	[Preserve]
 	public class Factory : PlaceholderFactory<UIBackgroundItem, UIBackgroundItem> { }
 
-	[SerializeField] WebImage m_Image;
+	[SerializeField] RemoteImage m_Image;
 
 	string m_Path;
 
@@ -21,6 +21,9 @@ public class UIBackgroundItem : UIGroup
 	protected override async Task ShowAnimation(float _Duration, bool _Instant = false, CancellationToken _Token = default)
 	{
 		await m_Image.SetSpriteAsync(m_Path);
+		
+		if (_Token.IsCancellationRequested)
+			return;
 		
 		await base.ShowAnimation(_Duration, _Instant, _Token);
 	}

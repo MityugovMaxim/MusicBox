@@ -1,37 +1,41 @@
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 [Menu(MenuType.ReviveMenu)]
 public class UIReviveMenu : UIMenu
 {
-	[SerializeField] UISongImage m_Image;
-	[SerializeField] UIUnitLabel m_Coins;
+	[SerializeField] TMP_Text      m_Coins;
+	[SerializeField] Button        m_ReviveAdsButton;
+	[SerializeField] Button        m_ReviveCoinsButton;
+	[SerializeField] UIReviveTimer m_Timer;
 
 	[SerializeField, Sound] string m_Sound;
 
-	[Inject] ProfileCoinsParameter   m_ProfileCoins;
-	[Inject] AdsProcessor     m_AdsProcessor;
-	[Inject] SongController   m_SongController;
-	[Inject] RevivesProcessor m_RevivesProcessor;
-	[Inject] MenuProcessor    m_MenuProcessor;
-	[Inject] SoundProcessor   m_SoundProcessor;
+	[Inject] ProfileCoinsParameter m_ProfileCoins;
+	[Inject] RevivesManager        m_RevivesManager;
+	[Inject] AdsProcessor          m_AdsProcessor;
+	[Inject] SongController        m_SongController;
+	[Inject] MenuProcessor         m_MenuProcessor;
+	[Inject] SoundProcessor        m_SoundProcessor;
 
-	string m_SongID;
-	int    m_Count;
+	int m_Count;
 
-	public void Setup(string _SongID)
+	public void Setup()
 	{
-		m_SongID = _SongID;
-		m_Count  = 0;
+		m_Count = 0;
 	}
 
 	public async void ReviveCoins()
 	{
-		long coins = m_RevivesProcessor.GetCoins(m_Count);
+		long coins = m_RevivesManager.GetCoins(m_Count);
 		
-		if (!await m_ProfileCoins.Remove(coins))
+		if (!await m_ProfileCoins.ReduceAsync(coins))
 			return;
+		
+		m_Timer.Pause();
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
@@ -47,6 +51,8 @@ public class UIReviveMenu : UIMenu
 		{
 			m_Count++;
 			
+			m_Timer.Complete();
+			
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
 			
 			await Task.Delay(500);
@@ -56,9 +62,9 @@ public class UIReviveMenu : UIMenu
 		else
 		{
 			await m_MenuProcessor.RetryAsync(
-				"song_revive_coins",
+				"revive_coins",
 				ReviveCoins,
-				() => { }
+				m_Timer.Resume
 			);
 		}
 		
@@ -67,6 +73,8 @@ public class UIReviveMenu : UIMenu
 
 	public async void ReviveAds()
 	{
+		m_Timer.Pause();
+		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
 		
 		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
@@ -79,6 +87,8 @@ public class UIReviveMenu : UIMenu
 		{
 			m_Count++;
 			
+			m_Timer.Complete();
+			
 			await m_MenuProcessor.Hide(MenuType.ReviveMenu);
 			
 			await Task.Delay(500);
@@ -90,7 +100,7 @@ public class UIReviveMenu : UIMenu
 			await m_MenuProcessor.RetryAsync(
 				"song_revive_ads",
 				ReviveAds,
-				() => { }
+				m_Timer.Resume
 			);
 		}
 		
@@ -106,31 +116,17 @@ public class UIReviveMenu : UIMenu
 		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
 	}
 
-	public async void Leave()
+	protected override async void OnShowStarted()
 	{
-		UIMainMenu mainMenu = m_MenuProcessor.GetMenu<UIMainMenu>();
-		if (mainMenu != null)
-			mainMenu.Select(MainMenuPageType.Songs);
+		base.OnShowStarted();
 		
-		UISongMenu songMenu = m_MenuProcessor.GetMenu<UISongMenu>();
-		if (songMenu != null)
-			songMenu.Setup(m_SongID);
-		
-		m_SongController.Complete();
-		
-		await m_MenuProcessor.Show(MenuType.SongMenu);
-		await m_MenuProcessor.Show(MenuType.MainMenu, true);
-		await m_MenuProcessor.Hide(MenuType.ReviveMenu, true);
-		await m_MenuProcessor.Hide(MenuType.GameMenu, true);
-		await m_MenuProcessor.Hide(MenuType.PauseMenu, true);
-	}
-
-	protected override void OnShowStarted()
-	{
 		m_SoundProcessor.Play(m_Sound);
 		
-		m_Image.SongID = m_SongID;
+		bool success = await m_Timer.ProcessAsync();
 		
-		m_Coins.Value = m_RevivesProcessor.GetCoins(m_Count);
+		if (success)
+			return;
+		
+		m_SongController.Finish();
 	}
 }

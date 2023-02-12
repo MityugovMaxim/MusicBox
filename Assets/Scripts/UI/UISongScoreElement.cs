@@ -33,7 +33,7 @@ public class UISongScoreElement : UIEntity
 	[SerializeField] UIDisc      m_Disc;
 
 	[Header("Alpha")]
-	[SerializeField] float m_SourceAlpha = 0;
+	[SerializeField] float m_SourceAlpha;
 	[SerializeField] float m_TargetAlpha = 1;
 
 	[Header("Scale")]

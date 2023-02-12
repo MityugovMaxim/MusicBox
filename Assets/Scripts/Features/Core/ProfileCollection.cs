@@ -1,4 +1,3 @@
-using Firebase.Database;
 using Zenject;
 
 public abstract class ProfileCollection<TSnapshot> : DataCollection<TSnapshot> where TSnapshot : Snapshot

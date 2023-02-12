@@ -25,10 +25,10 @@ public class UICircle : UIImage
 	{
 		string materialID = GetMaterialID();
 		
-		Material material = m_MaterialPool.Get(materialID);
+		Material item = m_MaterialPool.Get(materialID);
 		
-		if (material != null)
-			return material;
+		if (item != null)
+			return item;
 		
 		string keyword;
 		switch (Scheme)
@@ -44,22 +44,22 @@ public class UICircle : UIImage
 				break;
 		}
 		
-		material = CreateMaterial("UI/Circle", keyword);
+		item = CreateMaterial("UI/Circle", keyword);
 		
 		switch (Type)
 		{
 			case BlendType.Blend:
-				SetBlend(material);
+				SetBlend(item);
 				break;
 			
 			case BlendType.Additive:
-				SetAdditive(material);
+				SetAdditive(item);
 				break;
 		}
 		
-		m_MaterialPool.Register(materialID, material);
+		m_MaterialPool.Register(materialID, item);
 		
-		return material;
+		return item;
 	}
 
 	protected override Vector4 GetUV2()

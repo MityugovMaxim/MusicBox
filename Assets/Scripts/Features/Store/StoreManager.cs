@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing;
+using UnityEngine.Scripting;
 using Zenject;
 
+[Preserve]
 public class StoreManager : IDataManager
 {
 	public StoreCollection Collection => m_StoreCollection;
@@ -13,12 +15,12 @@ public class StoreManager : IDataManager
 
 	public Task<bool> Activate()
 	{
-		return GroupTask.ProcessAsync(
+		return TaskProvider.ProcessAsync(
 			this,
-			GroupTask.CreateGroup(
+			TaskProvider.Group(
 				m_StoreCollection.Load
 			),
-			GroupTask.CreateGroup(
+			TaskProvider.Group(
 				ProcessProducts
 			)
 		);
@@ -28,9 +30,9 @@ public class StoreManager : IDataManager
 
 	public string GetPriceCode(string _StoreID) => m_StoreProcessor.GetPrice(_StoreID, false);
 
-	public Task<RequestState> Purchase(string _StoreID, string _ProductID, string _VoucherID)
+	public Task<RequestState> Purchase(string _StoreID, FunctionRequest<bool> _Request)
 	{
-		return m_StoreProcessor.Purchase(_StoreID, _ProductID, _VoucherID);
+		return m_StoreProcessor.Purchase(_StoreID, _Request);
 	}
 
 	List<string> GetStoreIDs() => Collection.GetIDs().ToList();

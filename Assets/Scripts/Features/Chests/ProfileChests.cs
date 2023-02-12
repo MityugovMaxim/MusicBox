@@ -1,14 +1,46 @@
-using System.Threading.Tasks;
-using AudioBox.Logging;
+using Firebase.Database;
 
-public class ProfileChests : ProfileCollection<ProfileChest>
+public class ProfileChest
 {
-	protected override string Name => "chests";
+	public int Count    { get; }
+	public int Progress { get; }
 
-	protected override Task OnLoad()
+	public ProfileChest(DataSnapshot _Data)
 	{
-		Log.Info(this, "Profile chests loaded.");
-	
-		return base.OnLoad();
+		Count    = _Data.GetInt("count");
+		Progress = _Data.GetInt("progress");
 	}
+}
+
+public abstract class ProfileChests : ProfileParameter<ProfileChest>, IDataObject
+{
+	public int Count => Value?.Count ?? 0;
+
+	public int Progress => Value?.Progress ?? 0;
+
+	protected abstract RankType Rank { get; }
+
+	protected override string Name => $"chests/{Rank.ToString().ToLowerInvariant()}";
+
+	protected override ProfileChest Create(DataSnapshot _Data) => new ProfileChest(_Data);
+}
+
+public class ProfileBronzeChests : ProfileChests
+{
+	protected override RankType Rank => RankType.Bronze;
+}
+
+public class ProfileSilverChests : ProfileChests
+{
+	protected override RankType Rank => RankType.Silver;
+}
+
+public class ProfileGoldChests : ProfileChests
+{
+	protected override RankType Rank => RankType.Gold;
+}
+
+public class ProfilePlatinumChests : ProfileChests
+{
+	protected override RankType Rank => RankType.Platinum;
 }

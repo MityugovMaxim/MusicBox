@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AudioBox.ASF
+﻿namespace AudioBox.ASF
 {
 	public enum ASFClipState
 	{

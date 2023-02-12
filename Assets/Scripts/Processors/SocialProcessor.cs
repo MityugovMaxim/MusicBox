@@ -19,10 +19,7 @@ public class SocialProcessor : IInitializable, IDisposable
 	public event Action OnLogin;
 	public event Action OnLogout;
 	public event Action OnNameChange;
-	public event Action OnEmailChange;
 	public event Action OnPhotoChange;
-
-	[Inject] Localization m_Localization;
 
 	FirebaseAuth m_Auth;
 	FirebaseUser m_User;
@@ -85,7 +82,7 @@ public class SocialProcessor : IInitializable, IDisposable
 		{
 			Credential credential = EmailAuthProvider.GetCredential(_Email, _Password);
 			
-			m_User = await Link(credential, _Credential => credential = _Credential);
+			m_User = null;//await Link(credential, _Credential => credential = _Credential);
 			
 			if (m_User == null)
 				m_User = await Auth(credential);

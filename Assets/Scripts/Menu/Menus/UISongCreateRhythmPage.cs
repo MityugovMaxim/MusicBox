@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class UISongCreateRhythmPage : UISongCreateMenuPage
+public class UISongCreateRhythmPage : UIGroup
 {
-	public override bool Valid => true;
+	public virtual bool Valid => true;
 
 	public float Speed { get; private set; }
 	public float BPM   { get; private set; }

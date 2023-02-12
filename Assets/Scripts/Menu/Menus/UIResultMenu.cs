@@ -1,103 +1,90 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-
-public enum ResultMenuPageType
-{
-	Reward  = 0,
-	Level   = 1,
-	Control = 2,
-}
 
 [Menu(MenuType.ResultMenu)]
 public class UIResultMenu : UIMenu
 {
 	[SerializeField] UISongBackground   m_Background;
-	[SerializeField] UIResultMenuPage[] m_Pages;
+	[SerializeField] UIResultStatistics m_Statistics;
+	[SerializeField] UIResultScores     m_Scores;
+	[SerializeField] UIResultDiscs      m_Discs;
+	[SerializeField] UIResultCoins      m_Coins;
+	[SerializeField] UIResultPoints     m_Points;
+	[SerializeField] UIResultChests     m_Chests;
+	[SerializeField] UIResultControl    m_Control;
 
-	string             m_SongID;
-	ResultMenuPageType m_PageType;
+	string m_SongID;
 
 	public void Setup(string _SongID)
 	{
-		m_SongID   = _SongID;
-		m_PageType = ResultMenuPageType.Reward;
+		m_SongID = _SongID;
+		
+		m_Scores.Setup(m_SongID);
+		m_Discs.Setup(m_SongID);
+		m_Chests.Setup(m_SongID);
+		m_Coins.Setup(m_SongID);
+		m_Points.Setup(m_SongID);
+		m_Control.Setup(m_SongID);
 		
 		m_Background.SongID = m_SongID;
-		
-		foreach (UIResultMenuPage page in m_Pages)
-			page.Setup(m_SongID);
-	}
-
-	public async void Next()
-	{
-		ResultMenuPageType pageType;
-		switch (m_PageType)
-		{
-			case ResultMenuPageType.Reward:
-				pageType = ResultMenuPageType.Level;
-				break;
-			
-			case ResultMenuPageType.Level:
-				pageType = ResultMenuPageType.Control;
-				break;
-			
-			default:
-				return;
-		}
-		
-		UIResultMenuPage page = GetPage(pageType);
-		
-		if (page != null && page.Valid)
-		{
-			await SelectPage(pageType);
-			
-			page.Play();
-		}
-		else
-		{
-			m_PageType = pageType;
-			
-			Next();
-		}
 	}
 
 	protected override void OnShowStarted()
 	{
-		SelectPage(m_PageType, true);
+		base.OnShowStarted();
+		
+		m_Statistics.Hide(true);
+		m_Scores.Hide(true);
+		m_Discs.Hide(true);
+		m_Coins.Hide(true);
+		m_Points.Hide(true);
+		m_Chests.Hide(true);
+		m_Control.Hide(true);
+		
+		m_Scores.OnAccuracyChange += OnAccuracyChange;
 	}
 
-	protected override void OnShowFinished()
+	protected override async void OnShowFinished()
 	{
-		UIResultMenuPage page = GetPage(m_PageType);
+		base.OnShowFinished();
 		
-		page.Play();
+		await m_Statistics.ShowAsync();
+		
+		await m_Statistics.PlayAsync();
+		
+		await m_Statistics.HideAsync();
+		
+		await m_Scores.ShowAsync();
+		
+		await Task.WhenAll(
+			m_Coins.ShowAsync(),
+			m_Points.ShowAsync()
+		);
+		
+		await m_Discs.ShowAsync();
+		
+		await m_Scores.PlayAsync();
+		
+		await m_Scores.HideAsync();
+		
+		await m_Chests.ShowAsync();
+		
+		await m_Chests.PlayAsync();
+		
+		await m_Control.ShowAsync();
 	}
 
 	protected override void OnHideFinished()
 	{
-		foreach (UIResultMenuPage page in m_Pages)
-			page.Hide(true);
-	}
-
-	Task SelectPage(ResultMenuPageType _PageType, bool _Instant = false)
-	{
-		m_PageType = _PageType;
+		base.OnHideFinished();
 		
-		List<Task> tasks = new List<Task>();
-		foreach (UIResultMenuPage page in m_Pages)
-		{
-			if (page.Type == _PageType)
-				tasks.Add(page.ShowAsync(_Instant));
-			else
-				tasks.Add(page.HideAsync(_Instant));
-		}
-		return Task.WhenAll(tasks);
+		m_Scores.OnAccuracyChange -= OnAccuracyChange;
 	}
 
-	UIResultMenuPage GetPage(ResultMenuPageType _PageType)
+	void OnAccuracyChange(int _Accuracy)
 	{
-		return m_Pages.FirstOrDefault(_Page => _Page.Type == _PageType);
+		m_Coins.Accuracy  = _Accuracy;
+		m_Discs.Accuracy  = _Accuracy;
+		m_Points.Accuracy = _Accuracy;
 	}
 }

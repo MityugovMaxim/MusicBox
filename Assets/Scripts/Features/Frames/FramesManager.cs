@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
+[Preserve]
 public class FramesManager : IDataManager
 {
-	public bool Activated { get; private set; }
-
 	public FramesCollection Collection => m_FramesCollection;
 
 	public ProfileFrames Profile => m_ProfileFrames;
@@ -15,27 +14,18 @@ public class FramesManager : IDataManager
 	[Inject] FramesCollection m_FramesCollection;
 	[Inject] ProfileFrames    m_ProfileFrames;
 
-	public async Task<bool> Activate()
+	public Task<bool> Activate()
 	{
-		if (Activated)
-			return true;
-		
-		int frame = Time.frameCount;
-		
-		await Task.WhenAll(
-			m_FramesCollection.Load(),
-			m_ProfileFrames.Load()
+		return TaskProvider.ProcessAsync(
+			this,
+			Collection.Load,
+			Profile.Load
 		);
-		
-		Activated = true;
-		
-		return frame == Time.frameCount;
 	}
 
-	public List<string> GetFrameIDs()
-	{
-		return Profile.GetIDs().ToList();
-	}
+	public string GetFrameID() => Profile.Value?.FrameID;
+
+	public List<string> GetFrameIDs() => Profile.Value?.FrameIDs.OrderBy(Collection.GetOrder).ToList();
 
 	public string GetImage(string _FrameID)
 	{
@@ -44,19 +34,15 @@ public class FramesManager : IDataManager
 		return snapshot?.Image ?? string.Empty;
 	}
 
-	public async Task<RequestState> Select(string _FrameID)
+	public Task<bool> SelectAsync(string _FrameID)
 	{
-		if (IsUnavailable(_FrameID))
-			return RequestState.Fail;
+		string frameID = GetFrameID();
+		
+		if (frameID == _FrameID)
+			return Task.FromResult(true);
 		
 		FrameSelectRequest request = new FrameSelectRequest(_FrameID);
 		
-		bool success = await request.SendAsync();
-		
-		return success ? RequestState.Success : RequestState.Fail;
+		return request.SendAsync();
 	}
-
-	bool IsAvailable(string _FrameID) => Profile.Contains(_FrameID);
-
-	bool IsUnavailable(string _FrameID) => !IsAvailable(_FrameID);
 }

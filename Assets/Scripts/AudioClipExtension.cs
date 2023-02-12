@@ -10,12 +10,11 @@ public class AudioStream
 {
 	const int BUFFER_SIZE = 4096;
 
-	int            Samples   => m_AudioClip.samples;
-	int            Channels  => m_AudioClip.channels;
-	int            Frequency => m_AudioClip.frequency;
-	public float[] Data      => m_Buffer;
-	public int     Size      => BUFFER_SIZE;
-	public float   Progress  => Mathf.Clamp01((float)m_Sample / Samples);
+	int            Samples  => m_AudioClip.samples;
+	int            Channels => m_AudioClip.channels;
+	public float[] Data     => m_Buffer;
+	public int     Size     => BUFFER_SIZE;
+	public float   Progress => Mathf.Clamp01((float)m_Sample / Samples);
 
 	readonly AudioClip m_AudioClip;
 	readonly float[]   m_Buffer;

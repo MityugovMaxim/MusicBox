@@ -22,7 +22,7 @@ public class UIAccuracyIndicator : UIOrder
 	{
 		base.OnDisable();
 		
-		m_ScoreController.OnHit.AddListener(OnHit);
+		m_ScoreController.OnHit.RemoveListener(OnHit);
 	}
 
 	void OnHit(ScoreType _ScoreType, ScoreGrade _ScoreGrade)

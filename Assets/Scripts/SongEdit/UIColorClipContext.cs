@@ -41,7 +41,6 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 	[Inject] UIBeat              m_Beat;
 	[Inject] UIPlayer            m_Player;
 	[Inject] UICreateColorHandle m_CreateColorHandle;
-	[Inject] MenuProcessor       m_MenuProcessor;
 
 	readonly ClickCounter m_EditColor = new ClickCounter(2);
 
@@ -117,17 +116,11 @@ public class UIColorClipContext : ASFClipContext<ASFColorClip>, IPointerClickHan
 		return m_CreateColorHandle != null && m_CreateColorHandle.gameObject.activeSelf;
 	}
 
-	async void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
+	void IPointerClickHandler.OnPointerClick(PointerEventData _EventData)
 	{
 		if (!m_EditColor.Execute(_EventData))
 			return;
 		
 		_EventData.Use();
-		
-		UIColorMenu colorMenu = m_MenuProcessor.GetMenu<UIColorMenu>();
-		
-		colorMenu.Select(Clip);
-		
-		await m_MenuProcessor.Show(MenuType.ColorMenu);
 	}
 }

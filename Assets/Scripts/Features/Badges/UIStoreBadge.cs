@@ -8,24 +8,38 @@ public class UIStoreBadge : UIBadge
 	[Inject] ProductsManager m_ProductsManager;
 	[Inject] DailyManager    m_DailyManager;
 
-	List<string> m_DailyIDs;
-
 	protected override void Subscribe()
 	{
 		BadgeManager.SubscribeProducts(Process);
-		m_ProductsManager.Collection.Subscribe(DataEventType.Add, Reload);
-		m_ProductsManager.Collection.Subscribe(DataEventType.Remove, Reload);
-		m_ProductsManager.Profile.Subscribe(DataEventType.Add, Reload);
-		m_ProductsManager.Profile.Subscribe(DataEventType.Remove, Reload);
+		m_ProductsManager.Collection.Subscribe(DataEventType.Add, Process);
+		m_ProductsManager.Collection.Subscribe(DataEventType.Remove, Process);
+		m_ProductsManager.Profile.Subscribe(DataEventType.Add, Process);
+		m_ProductsManager.Profile.Subscribe(DataEventType.Remove, Process);
+		m_DailyManager.Collection.Subscribe(DataEventType.Add, Process);
+		m_DailyManager.Collection.Subscribe(DataEventType.Remove, Process);
+		m_DailyManager.Collection.Subscribe(DataEventType.Change, Process);
+		m_DailyManager.Profile.Subscribe(Process);
+		m_DailyManager.SubscribeCollect(Process);
+		m_DailyManager.SubscribeStartTimer(Process);
+		m_DailyManager.SubscribeEndTimer(Process);
+		m_DailyManager.SubscribeCancelTimer(Process);
 	}
 
 	protected override void Unsubscribe()
 	{
 		BadgeManager.UnsubscribeProducts(Process);
-		m_ProductsManager.Collection.Unsubscribe(DataEventType.Add, Reload);
-		m_ProductsManager.Collection.Unsubscribe(DataEventType.Remove, Reload);
-		m_ProductsManager.Profile.Unsubscribe(DataEventType.Add, Reload);
-		m_ProductsManager.Profile.Unsubscribe(DataEventType.Remove, Reload);
+		m_ProductsManager.Collection.Unsubscribe(DataEventType.Add, Process);
+		m_ProductsManager.Collection.Unsubscribe(DataEventType.Remove, Process);
+		m_ProductsManager.Profile.Unsubscribe(DataEventType.Add, Process);
+		m_ProductsManager.Profile.Unsubscribe(DataEventType.Remove, Process);
+		m_DailyManager.Collection.Unsubscribe(DataEventType.Add, Process);
+		m_DailyManager.Collection.Unsubscribe(DataEventType.Remove, Process);
+		m_DailyManager.Collection.Unsubscribe(DataEventType.Change, Process);
+		m_DailyManager.Profile.Unsubscribe(Process);
+		m_DailyManager.UnsubscribeCollect(Process);
+		m_DailyManager.UnsubscribeStartTimer(Process);
+		m_DailyManager.UnsubscribeEndTimer(Process);
+		m_DailyManager.UnsubscribeCancelTimer(Process);
 	}
 
 	protected override async void Preload()
@@ -36,31 +50,6 @@ public class UIStoreBadge : UIBadge
 		);
 		
 		base.Preload();
-	}
-
-	void Reload()
-	{
-		if (m_DailyIDs != null)
-		{
-			foreach (string dailyID in m_DailyIDs)
-			{
-				m_DailyManager.UnsubscribeCollect(dailyID, Process);
-				m_DailyManager.UnsubscribeRestore(dailyID, Process);
-			}
-		}
-		
-		m_DailyIDs = m_DailyManager.GetDailyIDs();
-		
-		if (m_DailyIDs != null)
-		{
-			foreach (string dailyID in m_DailyIDs)
-			{
-				m_DailyManager.SubscribeCollect(dailyID, Process);
-				m_DailyManager.SubscribeRestore(dailyID, Process);
-			}
-		}
-		
-		Process();
 	}
 
 	protected override void Process()

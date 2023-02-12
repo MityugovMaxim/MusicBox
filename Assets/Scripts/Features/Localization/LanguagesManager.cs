@@ -20,7 +20,7 @@ public class LanguagesManager : IDataCollection
 
 	public string Language { get; private set; }
 
-	public DynamicDelegate<string> OnLanguageChange;
+	public DynamicDelegate<string> OnLanguageChange { get; } = new DynamicDelegate<string>();
 
 	[Inject] LanguagesCollection m_LanguagesCollection;
 	[Inject] Localization        m_Localization;

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Scripting;
 using Zenject;
 
 public class UIProfileDiscs : UIEntity

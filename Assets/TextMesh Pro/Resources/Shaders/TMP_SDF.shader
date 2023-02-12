@@ -288,7 +288,7 @@ SubShader {
 
 		#if UNDERLAY_INNER
 			float d = tex2D(_MainTex, input.texcoord2.xy).a * input.texcoord2.z;
-			faceColor += input.underlayColor * (1 - saturate(d - input.texcoord2.w)) * saturate(1 - sd) * (1 - faceColor.a);
+			faceColor = lerp(faceColor, input.underlayColor, (1 - saturate(d - input.texcoord2.w)) * saturate(1 - sd));
 		#endif
 
 		#if GLOW_ON

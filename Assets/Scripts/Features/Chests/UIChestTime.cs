@@ -1,39 +1,44 @@
 using UnityEngine;
 
-public class UIChestTime : UIChestEntity
+public class UIChestTime : UISlotEntity
 {
 	[SerializeField] UIAnalogTimer m_Time;
 	[SerializeField] UIGroup       m_TimeGroup;
 
 	protected override void Subscribe()
 	{
-		ChestsInventory.SubscribeStart(ChestID, ProcessData);
-		ChestsInventory.SubscribeCancel(ChestID, ProcessData);
-		ChestsInventory.SubscribeEnd(ChestID, ProcessData);
-		ChestsInventory.Profile.Subscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.SubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.SubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.SubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Add, Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Remove, Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Change, Slot, ProcessData);
+		ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void Unsubscribe()
 	{
-		ChestsInventory.UnsubscribeStart(ChestID, ProcessData);
-		ChestsInventory.UnsubscribeCancel(ChestID, ProcessData);
-		ChestsInventory.UnsubscribeEnd(ChestID, ProcessData);
-		ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.UnsubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Add, Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Remove, Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Change, Slot, ProcessData);
+		ChestsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void ProcessData()
 	{
-		if (!ChestsInventory.IsSelected(ChestID) || ChestsInventory.IsProcessing(ChestID) || ChestsInventory.IsReady(ChestID))
-		{
+		ChestSlotState state = ChestsManager.GetSlotState(Slot);
+		
+		if (state == ChestSlotState.Pending)
+			m_TimeGroup.Show();
+		else
 			m_TimeGroup.Hide();
-			return;
-		}
 		
-		m_TimeGroup.Show();
-		
-		long startTimestamp = ChestsInventory.GetStartTimestamp(ChestID);
-		long endTimestamp   = ChestsInventory.GetEndTimestamp(ChestID);
-		
-		m_Time.SetTime(startTimestamp, endTimestamp);
+		m_Time.SetTime(
+			ChestsManager.GetSlotStartTimestamp(Slot),
+			ChestsManager.GetSlotEndTimestamp(Slot)
+		);
 	}
 }

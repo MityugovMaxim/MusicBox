@@ -23,6 +23,8 @@ public class UIProfileMenu : UIMenu
 
 	protected override async void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
@@ -59,6 +61,9 @@ public class UIProfileMenu : UIMenu
 	{
 		string songID = m_ScoresManager.GetBestSongID();
 		
+		if (string.IsNullOrEmpty(songID))
+			return;
+		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
 		m_Content.Add(new ProfileSongElementEntity(songID, ProfileSongMode.Best, m_SongsPool));
@@ -71,6 +76,9 @@ public class UIProfileMenu : UIMenu
 	void CreateWorstSong()
 	{
 		string songID = m_ScoresManager.GetWorstSongID();
+		
+		if (string.IsNullOrEmpty(songID))
+			return;
 		
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		

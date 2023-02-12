@@ -23,9 +23,8 @@ public class UIVoucherTimer : UIVoucherEntity
 
 	protected override void ProcessData()
 	{
-		long timestamp      = TimeUtility.GetTimestamp();
-		long startTimestamp = VouchersManager.GetStartTimestamp(VoucherID);
-		long expiration     = VouchersManager.GetEndTimestamp(VoucherID);
+		long timestamp  = TimeUtility.GetTimestamp();
+		long expiration = VouchersManager.GetEndTimestamp(VoucherID);
 		
 		m_Content.SetActive(timestamp < expiration);
 		m_Timer.SetTimer(expiration);

@@ -56,6 +56,8 @@ public class UIBannerMenu : UIMenu
 
 	protected override void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		m_BannerItem.Hide(true);
 	}
 

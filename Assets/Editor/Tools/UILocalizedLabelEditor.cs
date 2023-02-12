@@ -89,7 +89,7 @@ public class UILocalizedLabelEditor : Editor
 			EditorGUI.SelectableLabel(_Rect, DataProperty.displayName);
 		};
 		
-		list.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
+		list.drawElementCallback += (_Rect, _Index, _, _) =>
 		{
 			Rect rect = new RectOffset(0, 0, 1, 1).Remove(_Rect);
 			

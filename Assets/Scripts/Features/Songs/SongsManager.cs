@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,43 +18,82 @@ public class SongsManager : IDataManager
 	[Inject] DifficultyManager m_DifficultyManager;
 	[Inject] ScoresManager     m_ScoresManager;
 	[Inject] MenuProcessor     m_MenuProcessor;
+	[Inject] AudioProcessor    m_AudioProcessor;
 
 	public Task<bool> Activate()
 	{
-		return GroupTask.ProcessAsync(
+		return TaskProvider.ProcessAsync(
 			this,
 			Collection.Load,
-			Profile.Load
+			Profile.Load,
+			CreateChannel
 		);
+	}
+
+	public void SubscribeState(Action _Action) => m_AudioProcessor.SubscribeState(AudioChannelType.Preview, _Action);
+
+	public void UnsubscribeState(Action _Action) => m_AudioProcessor.UnsubscribeState(AudioChannelType.Preview, _Action);
+
+	public void SubscribeTrack(Action _Action) => m_AudioProcessor.SubscribeTrack(AudioChannelType.Preview, _Action);
+
+	public void UnsubscribeTrack(Action _Action) => m_AudioProcessor.UnsubscribeTrack(AudioChannelType.Preview, _Action);
+
+	public void Play(string _SongID)
+	{
+		if (!Collection.Contains(_SongID))
+			return;
+		
+		m_AudioProcessor.Play(
+			AudioChannelType.Preview,
+			new AudioTrack(
+				_SongID,
+				GetTitle(_SongID),
+				GetArtist(_SongID),
+				GetPreview(_SongID)
+			)
+		);
+	}
+
+	public void Stop() => m_AudioProcessor.Stop(AudioChannelType.Preview);
+
+	public string GetID() => m_AudioProcessor.GetID(AudioChannelType.Preview);
+
+	public AudioChannelState GetState() => m_AudioProcessor.GetState(AudioChannelType.Preview);
+
+	public List<string> GetSongIDs()
+	{
+		return Collection
+			.GetIDs()
+			.ToList();
 	}
 
 	public List<string> GetAvailableSongIDs()
 	{
-		return m_SongsCollection.GetIDs()
+		return Collection.GetIDs()
 			.Where(IsFree)
 			.OrderBy(m_ScoresManager.GetRank)
 			.ThenBy(GetRank)
-			.ThenBy(m_SongsCollection.GetOrder)
+			.ThenBy(Collection.GetOrder)
 			.ToList();
 	}
 
 	public List<string> GetPaidSongIDs()
 	{
-		return m_SongsCollection.GetIDs()
+		return Collection.GetIDs()
 			.Where(IsPaid)
 			.OrderBy(GetPrice)
 			.ThenBy(GetRank)
-			.ThenBy(m_SongsCollection.GetOrder)
+			.ThenBy(Collection.GetOrder)
 			.ToList();
 	}
 
 	public List<string> GetChestSongIDs()
 	{
-		return m_SongsCollection.GetIDs()
+		return Collection.GetIDs()
 			.Where(IsChest)
 			.OrderBy(GetPrice)
 			.ThenBy(GetRank)
-			.ThenBy(m_SongsCollection.GetOrder)
+			.ThenBy(Collection.GetOrder)
 			.ToList();
 	}
 
@@ -62,7 +102,7 @@ public class SongsManager : IDataManager
 		if (string.IsNullOrEmpty(_SongHash))
 			return null;
 		
-		foreach (string songID in m_SongsCollection.GetIDs())
+		foreach (string songID in Collection.GetIDs())
 		{
 			if (string.IsNullOrEmpty(songID))
 				continue;
@@ -84,35 +124,35 @@ public class SongsManager : IDataManager
 
 	public string GetArtist(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Artist ?? string.Empty;
 	}
 
 	public string GetTitle(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Title ?? string.Empty;
 	}
 
 	public string GetImage(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Image ?? string.Empty;
 	}
 
 	public string GetPreview(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Preview ?? string.Empty;
 	}
 
 	public string GetMusic(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Music ?? string.Empty;
 	}
@@ -128,7 +168,7 @@ public class SongsManager : IDataManager
 
 	public RankType GetRank(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Rank ?? RankType.None;
 	}
@@ -141,47 +181,16 @@ public class SongsManager : IDataManager
 
 	public long GetPrice(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Price ?? 0;
 	}
 
-	// TODO: Remove
-	public float GetBPM(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot?.BPM ?? 0;
-	}
-
-	// TODO: Remove
-	public int GetBar(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot?.Bar ?? 0;
-	}
-
-	// TODO: Remove
-	public double GetOrigin(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot?.Origin ?? 0;
-	}
-
 	public SongMode GetMode(string _SongID)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		SongSnapshot snapshot = Collection.GetSnapshot(_SongID);
 		
 		return snapshot?.Mode ?? SongMode.Free;
-	}
-
-	public SongBadge GetBadge(string _SongID)
-	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
-		
-		return snapshot?.Badge ?? SongBadge.None;
 	}
 
 	public async Task<bool> Collect(string _SongID)
@@ -207,5 +216,17 @@ public class SongsManager : IDataManager
 		await m_MenuProcessor.ErrorAsync("song_collect");
 		
 		return false;
+	}
+
+	Task CreateChannel()
+	{
+		AudioChannelSettings settings = new AudioChannelSettings();
+		settings.Shuffle = false;
+		settings.Repeat  = false;
+		settings.Loop    = true;
+		
+		m_AudioProcessor.RegisterChannel(AudioChannelType.Preview, settings);
+		
+		return Task.CompletedTask;
 	}
 }

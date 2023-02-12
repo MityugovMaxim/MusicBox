@@ -36,9 +36,9 @@ public class UIParticleFX : UIEntity
 		
 		m_ParticleSystems = GetComponentsInChildren<ParticleSystem>(true);
 		
-		foreach (ParticleSystem particleSystem in m_ParticleSystems)
+		foreach (ParticleSystem particle in m_ParticleSystems)
 		{
-			ParticleSystem.MainModule main = particleSystem.main;
+			ParticleSystem.MainModule main = particle.main;
 			
 			main.scalingMode = ParticleSystemScalingMode.Local;
 		}

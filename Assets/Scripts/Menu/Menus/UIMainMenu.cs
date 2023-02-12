@@ -16,70 +16,26 @@ public class UIMainMenu : UIMenu
 {
 	[SerializeField] UIMainMenuPage[]  m_Pages;
 	[SerializeField] UIMainMenuControl m_Control;
+	[SerializeField] UIButton          m_ProfileButton;
 
+	[Inject] MenuProcessor  m_MenuProcessor;
 	[Inject] LinkProcessor  m_LinkProcessor;
 	[Inject] AmbientManager m_AmbientManager;
-	[Inject] MenuProcessor  m_MenuProcessor;
 
 	[NonSerialized] MainMenuPageType m_PageType = MainMenuPageType.Songs;
 
-	async void Update()
+	protected override void Awake()
 	{
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			UIDataMenu dataMenu = m_MenuProcessor.GetMenu<UIDataMenu>();
-			
-			AdminLanguagesData languages = new AdminLanguagesData();
-			
-			await languages.LoadAsync();
-			
-			AdminStoreData         store         = new AdminStoreData();
-			AdminProductsData      products      = new AdminProductsData();
-			AdminNewsData          news          = new AdminNewsData(languages.Languages);
-			AdminOffersData        offers        = new AdminOffersData(languages.Languages);
-			AdminSongsData         songs         = new AdminSongsData();
-			AdminRevivesData       revives       = new AdminRevivesData();
-			AdminDailyData         daily         = new AdminDailyData();
-			AdminProgressData      progress      = new AdminProgressData();
-			AdminDifficultyData    difficulty    = new AdminDifficultyData();
-			AdminChestsData        chests        = new AdminChestsData();
-			AdminVouchersData      vouchers      = new AdminVouchersData();
-			AdminSeasonsData       seasons       = new AdminSeasonsData();
-			AdminLocalizationsData localizations = new AdminLocalizationsData(languages.Languages);
-			
-			await store.LoadAsync();
-			await products.LoadAsync();
-			await news.LoadAsync();
-			await offers.LoadAsync();
-			await songs.LoadAsync();
-			await revives.LoadAsync();
-			await daily.LoadAsync();
-			await progress.LoadAsync();
-			await difficulty.LoadAsync();
-			await chests.LoadAsync();
-			await vouchers.LoadAsync();
-			await seasons.LoadAsync();
-			await localizations.LoadAsync();
-			
-			dataMenu.Setup(
-				store,
-				products,
-				languages,
-				news,
-				offers,
-				songs,
-				revives,
-				daily,
-				progress,
-				difficulty,
-				chests,
-				vouchers,
-				seasons,
-				localizations
-			);
-			
-			dataMenu.Show();
-		}
+		base.Awake();
+		
+		m_ProfileButton.Subscribe(Profile);
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		
+		m_ProfileButton.Unsubscribe(Profile);
 	}
 
 	public void Select(MainMenuPageType _PageType, bool _Instant = false)
@@ -102,6 +58,8 @@ public class UIMainMenu : UIMenu
 
 	protected override async void OnShowStarted()
 	{
+		base.OnShowStarted();
+		
 		foreach (UIMainMenuPage page in m_Pages)
 		{
 			if (page.Type == m_PageType)
@@ -118,24 +76,24 @@ public class UIMainMenu : UIMenu
 
 	protected override void OnHideStarted()
 	{
+		base.OnHideStarted();
+		
 		m_LinkProcessor.Unsubscribe(ProcessLink);
 	}
 
 	protected override void OnHideFinished()
 	{
+		base.OnHideFinished();
+		
 		foreach (UIMainMenuPage page in m_Pages)
 			page.Hide(m_PageType, true);
 	}
 
-	public override void OnFocusGain()
-	{
-		m_AmbientManager.Play();
-	}
+	public override void OnFocusGain() => m_AmbientManager.Play();
 
-	public override void OnFocusLose()
-	{
-		m_AmbientManager.Pause();
-	}
+	public override void OnFocusLose() => m_AmbientManager.Pause();
 
 	async void ProcessLink() => await m_LinkProcessor.Process();
+
+	async void Profile() => await m_MenuProcessor.Show(MenuType.ProfileMenu);
 }

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using AudioBox.Logging;
 
-public class ProfileSongs : ProfileCollection<DataSnapshot<long>>, IDataCollection
+public class ProfileSongs : ProfileCollection<ProfileSongData>, IDataCollection
 {
 	public DataPriority Priority => DataPriority.High;
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AudioBox.ASF;
@@ -20,6 +19,7 @@ public class SongController
 	[Inject] SongPlayer.Factory m_SongFactory;
 	[Inject] HealthController   m_HealthController;
 	[Inject] ScoreController    m_ScoreController;
+	[Inject] MenuProcessor      m_MenuProcessor;
 
 	string        m_SongID;
 	Action<float> m_Progress;
@@ -38,23 +38,7 @@ public class SongController
 			return false;
 		}
 		
-		if (m_Player != null)
-		{
-			m_Player.Stop();
-			m_Player.Clear();
-			Object.Destroy(m_Player.gameObject);
-		}
-		
-		m_Player = null;
-		
 		await ResourceManager.UnloadAsync();
-		
-		SongPlayer player = await ResourceManager.LoadAsync<SongPlayer>("default");
-		if (ReferenceEquals(player, null))
-		{
-			Log.Error(this, "Load song failed. Player with ID '{0}' is null.", m_SongID);
-			return false;
-		}
 		
 		AudioClip music = await LoadMusicAsync(m_SongID);
 		
@@ -74,46 +58,42 @@ public class SongController
 		
 		m_Progress = null;
 		
-		float    ratio    = m_ConfigProcessor.SongRatio;
-		float    speed    = m_SongsManager.GetSpeed(m_SongID);
-		RankType songRank = m_SongsManager.GetRank(m_SongID);
+		m_Player = await LoadPlayerAsync(m_SongID, music, asf);
 		
-		m_Player = m_SongFactory.Create(player);
-		m_Player.Setup(ratio, speed, music, asf, Finish);
+		if (m_Player == null)
+		{
+			Log.Error(this, "Load song failed. Player with ID '{0}' is null.", m_SongID);
+			return false;
+		}
+		
+		RankType songRank = m_SongsManager.GetRank(m_SongID);
 		
 		m_ScoreController.Setup(songRank, asf);
 		m_HealthController.Setup(Death);
-		
-		m_Player.Time = -m_Player.Duration;
-		m_Player.Sample();
 		
 		await UnityTask.Yield();
 		
 		return true;
 	}
 
-	public bool Start()
+	public void Start()
 	{
 		if (m_Player == null)
 		{
 			Log.Error(this, "Play failed. Player is null.");
-			return false;
+			return;
 		}
 		
 		if (m_Player.State == ASFPlayerState.Play)
-			return false;
+			return;
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_HealthController.Restore();
 		m_ScoreController.Restore();
 		
 		m_Player.Time = -m_Player.Duration;
 		m_Player.Play(GetLatency());
-		
-		return true;
 	}
 
 	public bool Pause()
@@ -127,9 +107,7 @@ public class SongController
 		if (m_Player.State != ASFPlayerState.Play)
 			return false;
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_Player.Stop();
 		
@@ -144,22 +122,9 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		
-		m_RewindToken = new CancellationTokenSource();
-		
-		CancellationToken token = m_RewindToken.Token;
-		
-		await Rewind(token);
-		
-		if (token.IsCancellationRequested)
-			return;
+		await RewindAsync();
 		
 		m_Player.Play(GetLatency());
-		
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
 	}
 
 	public async void Revive()
@@ -170,24 +135,11 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		
-		m_RewindToken = new CancellationTokenSource();
-		
-		CancellationToken token = m_RewindToken.Token;
-		
 		m_HealthController.Restore();
 		
-		await Rewind(token);
-		
-		if (token.IsCancellationRequested)
-			return;
+		await RewindAsync();
 		
 		m_Player.Play(GetLatency());
-		
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
 	}
 
 	public void Restart()
@@ -198,9 +150,7 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_HealthController.Restore();
 		m_ScoreController.Restore();
@@ -218,9 +168,7 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_Player.Stop();
 		
@@ -229,26 +177,7 @@ public class SongController
 		m_Player = null;
 	}
 
-	public void Leave()
-	{
-		if (m_Player == null)
-		{
-			Log.Error(this, "Leave failed. Player is null.");
-			return;
-		}
-		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
-		
-		m_Player.Stop();
-		
-		Object.Destroy(m_Player.gameObject);
-		
-		m_Player = null;
-	}
-
-	void Death()
+	async void Death()
 	{
 		if (m_Player == null)
 		{
@@ -256,14 +185,14 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_Player.Stop();
+		
+		await m_MenuProcessor.Show(MenuType.ReviveMenu);
 	}
 
-	void Finish()
+	public async void Finish()
 	{
 		if (m_Player == null)
 		{
@@ -271,20 +200,36 @@ public class SongController
 			return;
 		}
 		
-		m_RewindToken?.Cancel();
-		m_RewindToken?.Dispose();
-		m_RewindToken = null;
+		CancelRewind();
 		
 		m_Player.Stop();
+		
+		UIResultMenu resultMenu = m_MenuProcessor.GetMenu<UIResultMenu>();
+		
+		resultMenu.Setup(m_SongID);
+		resultMenu.Show();
+		
+		await m_MenuProcessor.Show(MenuType.TransitionMenu);
 	}
 
-	Task Rewind(CancellationToken _Token = default)
+	void CancelRewind()
 	{
+		m_RewindToken?.Cancel();
+	}
+
+	Task RewindAsync()
+	{
+		CancelRewind();
+		
 		if (m_Player == null)
 		{
 			Log.Error(this, "Rewind failed. Player is null.");
 			return null;
 		}
+		
+		m_RewindToken = new CancellationTokenSource();
+		
+		CancellationToken token = m_RewindToken.Token;
 		
 		const float duration = 0.6f;
 		
@@ -299,13 +244,19 @@ public class SongController
 			return UnityTask.Phase(
 				_Phase => m_Player.Time = EaseFunction.EaseOutQuad.Get(source, target, _Phase),
 				duration,
-				_Token
+				token
 			);
 		}
 		catch (TaskCanceledException) { }
+		catch (OperationCanceledException) { }
 		catch (Exception exception)
 		{
 			Log.Exception(this, exception);
+		}
+		finally
+		{
+			m_RewindToken?.Dispose();
+			m_RewindToken = null;
 		}
 		
 		return null;
@@ -323,6 +274,22 @@ public class SongController
 		string path = m_SongsManager.GetASF(_SongID);
 		
 		return m_ASFProvider.DownloadAsync(path, ProcessASFProgress);
+	}
+
+	async Task<SongPlayer> LoadPlayerAsync(string _SongID, AudioClip _Music, ASFFile _ASF)
+	{
+		SongPlayer player = await ResourceManager.LoadAsync<SongPlayer>("default");
+		
+		if (player == null)
+			return null;
+		
+		float speed = m_SongsManager.GetSpeed(_SongID);
+		
+		player = m_SongFactory.Create(player);
+		player.Setup(speed, _Music, _ASF, Finish);
+		player.Sample();
+		
+		return player;
 	}
 
 	void ProcessMusicProgress(float _Progress)

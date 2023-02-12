@@ -16,7 +16,7 @@ public class DependencyResolver : MonoBehaviour
 	#if UNITY_ANDROID
 	async void Resolve()
 	{
-		DependencyStatus state = await FirebaseApp.CheckDependenciesAsync();
+		await FirebaseApp.CheckDependenciesAsync();
 		
 		m_Context.Run();
 	}

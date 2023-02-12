@@ -2,25 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(CanvasRenderer))]
-public class UIQuad : MaskableGraphic
+public class UIQuad : UIImage
 {
-	public override Texture mainTexture => m_Sprite != null ? m_Sprite.texture : base.mainTexture;
-
-	public Sprite Sprite
-	{
-		get => m_Sprite;
-		set
-		{
-			if (m_Sprite == value)
-				return;
-			
-			m_Sprite = value;
-			
-			SetAllDirty();
-		}
-	}
-
-	[SerializeField] Sprite     m_Sprite;
 	[SerializeField] TextAnchor m_Alignment;
 	[SerializeField] ScaleMode  m_ScaleMode;
 	[SerializeField] BorderMode m_BorderMode;
@@ -36,7 +19,7 @@ public class UIQuad : MaskableGraphic
 		
 		m_Generator.Generate(
 			rect,
-			m_Sprite != null ? m_Sprite.rect.size : rect.size,
+			Sprite != null ? Sprite.rect.size : rect.size,
 			m_Alignment,
 			m_ScaleMode,
 			m_BorderMode,
@@ -47,4 +30,14 @@ public class UIQuad : MaskableGraphic
 		
 		m_Generator.Fill(_VertexHelper, Sprite, color);
 	}
+
+	protected override Material GetMaterial() => defaultGraphicMaterial;
+
+	protected override Vector4 GetUV2() => Vector4.zero;
+
+	protected override Vector4 GetUV3() => Vector4.zero;
+
+	protected override Vector3 GetNormal() => Vector3.zero;
+
+	protected override Vector4 GetTangent() => Vector4.zero;
 }

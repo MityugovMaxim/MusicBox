@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[ExecuteAlways]
 public class UIDisc : UIEntity
 {
 	public RankType Rank

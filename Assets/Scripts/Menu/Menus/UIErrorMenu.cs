@@ -4,7 +4,7 @@ using UnityEngine;
 using Zenject;
 
 [Menu(MenuType.ErrorMenu)]
-public class UIErrorMenu : UIMenu
+public class UIErrorMenu : UIDialog
 {
 	[SerializeField] TMP_Text m_Title;
 	[SerializeField] TMP_Text m_Message;
@@ -12,7 +12,6 @@ public class UIErrorMenu : UIMenu
 	[SerializeField, Sound] string m_Sound;
 
 	[Inject] Localization       m_Localization;
-	[Inject] MenuProcessor      m_MenuProcessor;
 	[Inject] HapticProcessor    m_HapticProcessor;
 	[Inject] SoundProcessor     m_SoundProcessor;
 	[Inject] StatisticProcessor m_StatisticProcessor;
@@ -38,18 +37,25 @@ public class UIErrorMenu : UIMenu
 		m_Action       = _Action;
 	}
 
-	public async void Close()
+	protected override void OnShowStarted()
 	{
-		await m_MenuProcessor.Hide(MenuType.ErrorMenu);
+		base.OnShowStarted();
 		
+		m_HapticProcessor.Process(Haptic.Type.Failure);
+		m_SoundProcessor.Play(m_Sound);
+	}
+
+	protected override void OnHideStarted()
+	{
+		base.OnHideStarted();
+		
+		InvokeAction();
+	}
+
+	void InvokeAction()
+	{
 		Action action = m_Action;
 		m_Action = null;
 		action?.Invoke();
-	}
-
-	protected override void OnShowStarted()
-	{
-		m_HapticProcessor.Process(Haptic.Type.Failure);
-		m_SoundProcessor.Play(m_Sound);
 	}
 }

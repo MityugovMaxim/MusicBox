@@ -1,8 +1,11 @@
+using UnityEngine;
 using UnityEngine.EventSystems;
 
-public abstract class UIButton : UIEntity, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
+public abstract class UIButton : UIEntity, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler, ICanvasRaycastFilter
 {
 	public readonly DynamicDelegate Action = new DynamicDelegate();
+
+	[SerializeField] RectTransform[] m_Ignore;
 
 	bool m_Pressed;
 
@@ -44,5 +47,19 @@ public abstract class UIButton : UIEntity, IPointerDownHandler, IPointerUpHandle
 	{
 		if (m_Pressed)
 			OnNormal();
+	}
+
+	public bool IsRaycastLocationValid(Vector2 _ScreenPosition, Camera _Camera)
+	{
+		if (m_Ignore.Length == 0)
+			return true;
+		
+		foreach (RectTransform ignore in m_Ignore)
+		{
+			if (RectTransformUtility.RectangleContainsScreenPoint(ignore, _ScreenPosition, _Camera))
+				return false;
+		}
+		
+		return true;
 	}
 }

@@ -82,13 +82,6 @@ public class GameInstaller : MonoInstaller
 		Container.Bind<MessageProcessor>().To<AndroidMessageProcessor>().FromNew().AsSingle();
 		#endif
 		
-		Container.Bind<PreviewProcessor>()
-			.To<PreviewProcessor>()
-			.FromNewComponentOnNewGameObject()
-			.WithGameObjectName("MusicProcessor")
-			.UnderTransform(transform)
-			.AsSingle();
-		
 		InstallProcessor<MenuProcessor>();
 		
 		InstallProcessor<ScheduleProcessor>();

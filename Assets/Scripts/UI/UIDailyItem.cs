@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using Zenject;
 
 public class UIDailyItem : UIDailyEntity
 {
@@ -22,20 +21,13 @@ public class UIDailyItem : UIDailyEntity
 
 	[SerializeField] UIDailyCoins m_Coins;
 	[SerializeField] UIDailyAds   m_Ads;
+	[SerializeField] CanvasGroup  m_Content;
 
-	[SerializeField] UIFlare m_Flare;
-	[SerializeField] float   m_Duration;
-
+	[SerializeField] float m_Duration;
 	[SerializeField] float m_SourceWidth;
 	[SerializeField] float m_TargetWidth;
 	[SerializeField] float m_CollectDelay;
 	[SerializeField] float m_RestoreDelay;
-
-	[SerializeField]        Haptic.Type m_Haptic;
-	[SerializeField, Sound] string      m_Sound;
-
-	[Inject] HapticProcessor m_HapticProcessor;
-	[Inject] SoundProcessor  m_SoundProcessor;
 
 	IEnumerator m_ToggleRoutine;
 
@@ -51,47 +43,41 @@ public class UIDailyItem : UIDailyEntity
 	}
 	#endif
 
-	public override void Subscribe()
+	protected override void Subscribe()
 	{
-		DailyManager.SubscribeCollect(DailyID, CollectDaily);
-		DailyManager.SubscribeRestore(DailyID, RestoreDaily);
+		DailyManager.SubscribeCollect(DailyID, ProcessDaily);
+		DailyManager.SubscribeStartTimer(ProcessDaily);
+		DailyManager.SubscribeEndTimer(ProcessDaily);
+		DailyManager.SubscribeCancelTimer(ProcessDaily);
 	}
 
-	public override void Unsubscribe()
+	protected override void Unsubscribe()
 	{
-		DailyManager.UnsubscribeCollect(DailyID, CollectDaily);
-		DailyManager.UnsubscribeRestore(DailyID, RestoreDaily);
+		DailyManager.UnsubscribeCollect(DailyID, ProcessDaily);
+		DailyManager.UnsubscribeStartTimer(ProcessDaily);
+		DailyManager.UnsubscribeEndTimer(ProcessDaily);
+		DailyManager.SubscribeCancelTimer(ProcessDaily);
 	}
 
-	public override void ProcessData()
+	protected override void ProcessData()
 	{
 		m_Coins.DailyID = DailyID;
 		m_Ads.DailyID   = DailyID;
 		
-		Phase = DailyManager.IsDailyAvailable(DailyID) ? 1 : 0;
-		
-		ProcessPhase();
+		Toggle(DailyManager.IsDailyAvailable(DailyID), true);
 	}
 
-	void CollectDaily()
+	void ProcessDaily()
 	{
-		m_Flare.Play();
-		
-		m_HapticProcessor.Process(m_Haptic);
-		m_SoundProcessor.Play(m_Sound);
-		
-		Toggle(false);
-	}
-
-	void RestoreDaily()
-	{
-		Toggle(true);
+		Toggle(DailyManager.IsDailyAvailable(DailyID));
 	}
 
 	void ProcessPhase()
 	{
+		m_Content.alpha = MathUtility.Remap01Clamped(Phase, 0.7f, 1);
+		
 		Vector2 size = RectTransform.sizeDelta;
-		size.x                  = Mathf.Lerp(m_SourceWidth, m_TargetWidth, Phase);
+		size.x                  = MathUtility.RemapClamped(Phase, 0, 0.7f, m_SourceWidth, m_TargetWidth);
 		RectTransform.sizeDelta = size;
 	}
 

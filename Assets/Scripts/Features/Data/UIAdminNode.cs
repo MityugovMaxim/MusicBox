@@ -236,12 +236,12 @@ public abstract class UIAdminNode : UIEntity
 	{
 		Expand();
 		
-		UIDataMenu dataMenu = m_MenuProcessor.GetMenu<UIDataMenu>();
+		UIAdminMenu adminMenu = m_MenuProcessor.GetMenu<UIAdminMenu>();
 		
-		if (dataMenu == null)
+		if (adminMenu == null)
 			return;
 		
-		dataMenu.Select(Node);
+		adminMenu.Select(Node);
 	}
 
 	void SetDirtyPosition()

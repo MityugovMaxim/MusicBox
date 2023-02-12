@@ -1,36 +1,45 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using Zenject;
 
 public class UIChestsBadge : UIBadge
 {
-	[Inject] ChestsInventory m_ChestsInventory;
+	[Inject] ChestsManager m_ChestsManager;
 
 	protected override void Subscribe()
 	{
 		BadgeManager.SubscribeChests(Process);
-		m_ChestsInventory.SubscribeEnd(Process);
-		m_ChestsInventory.SubscribeStart(Process);
-		m_ChestsInventory.SubscribeCancel(Process);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Add, Process);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Remove, Process);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, Process);
+		m_ChestsManager.SubscribeChests(RankType.Bronze, Process);
+		m_ChestsManager.SubscribeChests(RankType.Silver, Process);
+		m_ChestsManager.SubscribeChests(RankType.Gold, Process);
+		m_ChestsManager.SubscribeChests(RankType.Platinum, Process);
+		m_ChestsManager.SubscribeStartTimer(Process);
+		m_ChestsManager.SubscribeEndTimer(Process);
+		m_ChestsManager.SubscribeCancelTimer(Process);
+		m_ChestsManager.Slots.Subscribe(DataEventType.Add, Process);
+		m_ChestsManager.Slots.Subscribe(DataEventType.Remove, Process);
+		m_ChestsManager.Slots.Subscribe(DataEventType.Change, Process);
 	}
 
 	protected override void Unsubscribe()
 	{
 		BadgeManager.UnsubscribeChests(Process);
-		m_ChestsInventory.UnsubscribeEnd(Process);
-		m_ChestsInventory.UnsubscribeStart(Process);
-		m_ChestsInventory.UnsubscribeCancel(Process);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Add, Process);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Remove, Process);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, Process);
+		m_ChestsManager.UnsubscribeChests(RankType.Bronze, Process);
+		m_ChestsManager.UnsubscribeChests(RankType.Silver, Process);
+		m_ChestsManager.UnsubscribeChests(RankType.Gold, Process);
+		m_ChestsManager.UnsubscribeChests(RankType.Platinum, Process);
+		m_ChestsManager.UnsubscribeStartTimer(Process);
+		m_ChestsManager.UnsubscribeEndTimer(Process);
+		m_ChestsManager.UnsubscribeCancelTimer(Process);
+		m_ChestsManager.Slots.Unsubscribe(DataEventType.Add, Process);
+		m_ChestsManager.Slots.Unsubscribe(DataEventType.Remove, Process);
+		m_ChestsManager.Slots.Unsubscribe(DataEventType.Change, Process);
 	}
 
 	protected override async void Preload()
 	{
-		await m_ChestsInventory.Activate();
+		await m_ChestsManager.Activate();
 		
 		Process();
 	}
@@ -47,15 +56,13 @@ public class UIChestsBadge : UIBadge
 
 	int GetAvailableChestsCount()
 	{
-		List<string> chestIDs = m_ChestsInventory.GetAvailableChestIDs();
-		
-		return chestIDs?.Count(_ChestID => BadgeManager.IsChestUnread(_ChestID)) ?? 0;
+		int slots  = m_ChestsManager.GetSlotsCount(ChestSlotState.None);
+		int chests = m_ChestsManager.GetChestCount();
+		return Mathf.Min(chests, slots);
 	}
 
 	int GetReadyChestsCount()
 	{
-		List<string> chestIDs = m_ChestsInventory.GetSelectedChestIDs();
-		
-		return chestIDs?.Count(m_ChestsInventory.IsReady) ?? 0;
+		return m_ChestsManager.GetSlotsCount(ChestSlotState.Ready);
 	}
 }

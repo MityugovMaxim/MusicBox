@@ -18,8 +18,9 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] AudioManager    m_AudioManager;
 	[Inject] SongsManager    m_SongsManager;
 	[Inject] ProductsManager m_ProductsManager;
+	[Inject] FramesManager   m_FramesManager;
+	[Inject] SocialProcessor m_SocialProcessor;
 
-	[Inject] RolesProcessor  m_RolesProcessor;
 	[Inject] ConfigProcessor m_ConfigProcessor;
 	[Inject] MenuProcessor   m_MenuProcessor;
 
@@ -28,15 +29,20 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	[Inject] UISongItem.Pool            m_SongsPool;
 	[Inject] UISongElement.Pool         m_ElementPool;
 	[Inject] UILatencyElement.Factory   m_LatencyFactory;
+	[Inject] UIAmbientElement.Pool      m_AmbientPool;
+	[Inject] UIFrameElement.Pool        m_FramesPool;
 
 	protected override async void OnShowStarted()
 	{
 		m_ContentGroup.Hide(true);
 		m_LoaderGroup.Show(true);
 		
-		bool instant = await m_SongsManager.Activate();
+		bool instant = true;
 		
-		if (!IsActive)
+		instant &= await m_SongsManager.Activate();
+		instant &= await m_ProductsManager.Activate();
+		
+		if (!IsActiveSelf)
 			return;
 		
 		m_ContentGroup.Show(instant);
@@ -62,18 +68,11 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
-		if (AdminMode.Enabled)
-		{
-			CreateAdminRoles();
-			CreateAdminSongs();
-			CreateAdminMaps();
-			CreateAdminProgress();
-			CreateAdminAmbient();
-			CreateAdminRevives();
-			CreateAdminVouchers();
-			CreateAdminLanguages();
-			CreateAdminLocalizations();
-		}
+		CreateAdminPanel();
+		
+		CreateAmbient();
+		
+		CreateFrames();
 		
 		CreateLibrary();
 		
@@ -84,44 +83,27 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 		m_Content.Reposition();
 	}
 
-	void CreateAdminRoles()
+	void CreateAdminPanel()
 	{
-		if (!m_RolesProcessor.HasRolesPermission())
+		if (!AdminMode.Enabled)
 			return;
 		
-		AdminElementEntity roles = new AdminElementEntity(
-			"Edit roles",
-			"roles",
-			typeof(RoleSnapshot),
+		AdminElementEntity admin = new AdminElementEntity(
+			"Admin",
+			() =>
+			{
+				UIAdminMenu adminMenu = m_MenuProcessor.GetMenu<UIAdminMenu>();
+				
+				if (adminMenu == null)
+					return;
+				
+				adminMenu.Show();
+			},
 			m_AdminPool
 		);
-		
-		CreateAdmin(roles);
-	}
-
-	void CreateAdminSongs()
-	{
-		if (!m_RolesProcessor.HasSongsPermission())
-			return;
-		
-		AdminElementEntity songs = new AdminElementEntity(
-			"Edit songs",
-			"songs",
-			typeof(SongSnapshot),
-			m_AdminPool
-		);
-		
-		CreateAdmin(songs);
-	}
-
-	void CreateAdminMaps()
-	{
-		if (!m_RolesProcessor.HasSongsPermission())
-			return;
 		
 		AdminElementEntity maps = new AdminElementEntity(
-			"Edit maps",
-			m_AdminPool,
+			"Maps",
 			() =>
 			{
 				UIMapsMenu mapsMenu = m_MenuProcessor.GetMenu<UIMapsMenu>();
@@ -130,123 +112,64 @@ public class UIMainMenuSongsPage : UIMainMenuPage
 					return;
 				
 				mapsMenu.Show();
-			}
-		);
-		
-		CreateAdmin(maps);
-	}
-
-	void CreateAdminProgress()
-	{
-		if (!m_RolesProcessor.HasProgressPermission())
-			return;
-		
-		AdminElementEntity progress = new AdminElementEntity(
-			"Edit progress",
-			"progress",
-			typeof(ProgressSnapshot),
+			},
 			m_AdminPool
 		);
 		
-		CreateAdmin(progress);
-	}
-
-	void CreateAdminAmbient()
-	{
-		if (!m_RolesProcessor.HasAmbientPermission())
-			return;
-		
-		AdminElementEntity ambient = new AdminElementEntity(
-			"Edit ambient",
-			"ambient",
-			typeof(AmbientSnapshot),
+		AdminElementEntity login = new AdminElementEntity(
+			"Login",
+			LoginAdmin,
 			m_AdminPool
 		);
 		
-		CreateAdmin(ambient);
-	}
-
-	void CreateAdminRevives()
-	{
-		if (!m_RolesProcessor.HasRevivesPermission())
-			return;
-		
-		AdminElementEntity revives = new AdminElementEntity(
-			"Edit revives",
-			"revives",
-			typeof(ReviveSnapshot),
-			m_AdminPool
-		);
-		
-		CreateAdmin(revives);
-	}
-
-	void CreateAdminVouchers()
-	{
-		if (!m_RolesProcessor.HasRolesPermission())
-			return;
-		
-		AdminElementEntity vouchers = new AdminElementEntity(
-			"Create voucher",
-			m_AdminPool,
-			() =>
-			{
-				UIVoucherCreateMenu voucherCreateMenu = m_MenuProcessor.GetMenu<UIVoucherCreateMenu>();
-				
-				if (voucherCreateMenu == null)
-					return;
-				
-				voucherCreateMenu.Show();
-			}
-		);
-		
-		CreateAdmin(vouchers);
-	}
-
-	void CreateAdminLanguages()
-	{
-		if (!m_RolesProcessor.HasLanguagesPermission())
-			return;
-		
-		AdminElementEntity languages = new AdminElementEntity(
-			"Edit languages",
-			"languages",
-			typeof(LanguageSnapshot),
-			m_AdminPool
-		);
-		
-		CreateAdmin(languages);
-	}
-
-	void CreateAdminLocalizations()
-	{
-		if (!m_RolesProcessor.HasLanguagesPermission())
-			return;
-		
-		AdminElementEntity localizations = new AdminElementEntity(
-			"Edit localizations",
-			m_AdminPool,
-			() =>
-			{
-				UILanguagesMenu languagesMenu = m_MenuProcessor.GetMenu<UILanguagesMenu>();
-				
-				if (languagesMenu == null)
-					return;
-				
-				languagesMenu.Show();
-			}
-		);
-		
-		CreateAdmin(localizations);
-	}
-
-	void CreateAdmin(AdminElementEntity _AdminElement)
-	{
 		VerticalStackLayout.Start(m_Content, LIST_SPACING);
 		
-		m_Content.Add(_AdminElement);
+		m_Content.Add(admin);
+		
+		m_Content.Add(maps);
+		
+		m_Content.Add(login);
 		
 		VerticalStackLayout.End(m_Content);
+	}
+
+	async void LoginAdmin()
+	{
+		await m_MenuProcessor.Show(MenuType.ProcessingMenu);
+		
+		await m_SocialProcessor.AttachEmail("mityugovmaxim@gmail.com", "121SuperMaxim");
+		
+		await m_MenuProcessor.Hide(MenuType.ProcessingMenu);
+	}
+
+	void CreateAmbient()
+	{
+		m_Content.Spacing(LIST_SPACING);
+		
+		VerticalStackLayout.Start(m_Content, LIST_SPACING);
+		
+		m_Content.Add(new AmbientElementEntity(m_AmbientPool));
+		
+		VerticalStackLayout.End(m_Content);
+		
+		m_Content.Space(LIST_SPACING);
+	}
+
+	void CreateFrames()
+	{
+		List<string> frameIDs = m_FramesManager.GetFrameIDs();
+		
+		if (frameIDs == null || frameIDs.Count == 0)
+			return;
+		
+		m_Content.Spacing(LIST_SPACING);
+		
+		VerticalGridLayout.Start(m_Content, 4, 1, 10, 10);
+		
+		foreach (string frameID in frameIDs)
+			m_Content.Add(new FrameElementEntity(frameID, m_FramesPool));
+		
+		VerticalGridLayout.End(m_Content);
 		
 		m_Content.Space(LIST_SPACING);
 	}

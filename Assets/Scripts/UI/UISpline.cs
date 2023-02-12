@@ -169,10 +169,10 @@ public class UISpline : UIEntity, IEnumerable<UISpline.Point>
 	[SerializeField]                  bool      m_AutoRebuild = true;
 	[SerializeField, HideInInspector] List<Key> m_Keys        = new List<Key>();
 	[SerializeField, HideInInspector] int       m_Samples     = 1;
-	[SerializeField, HideInInspector] bool      m_Loop        = false;
-	[SerializeField, HideInInspector] bool      m_Uniform     = false;
-	[SerializeField, HideInInspector] bool      m_Optimize    = false;
-	[SerializeField, HideInInspector] float     m_Threshold   = 10;
+	[SerializeField, HideInInspector] bool      m_Loop;
+	[SerializeField, HideInInspector] bool      m_Uniform;
+	[SerializeField, HideInInspector] bool      m_Optimize;
+	[SerializeField, HideInInspector] float     m_Threshold = 10;
 
 	bool m_SplineDirty;
 

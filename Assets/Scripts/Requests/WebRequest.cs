@@ -7,11 +7,6 @@ using UnityEngine.Networking;
 
 public static class WebRequest
 {
-	public static Task<AudioClip> LoadAudioClipFile(string _Path, AudioType _AudioType, CancellationToken _Token = default)
-	{
-		return LoadAudioClip($"file://{_Path}", _AudioType, _Token);
-	}
-
 	public static Task<AudioClip> LoadAudioClip(string _URL, AudioType _AudioType, CancellationToken _Token = default)
 	{
 		TaskCompletionSource<AudioClip> completionSource = new TaskCompletionSource<AudioClip>();
@@ -28,7 +23,7 @@ public static class WebRequest
 		
 		UnityWebRequestAsyncOperation operation = request.SendWebRequest();
 		
-		operation.completed += _Operation =>
+		operation.completed += _ =>
 		{
 			if (_Token.IsCancellationRequested)
 			{
@@ -116,7 +111,7 @@ public static class WebRequest
 		
 		UnityWebRequestAsyncOperation operation = request.SendWebRequest();
 		
-		operation.completed += _Operation =>
+		operation.completed += _ =>
 		{
 			if (_Token.IsCancellationRequested)
 			{
@@ -196,7 +191,7 @@ public static class WebRequest
 		
 		UnityWebRequestAsyncOperation operation = request.SendWebRequest();
 		
-		operation.completed += _Operation =>
+		operation.completed += _ =>
 		{
 			if (_Token.IsCancellationRequested)
 			{

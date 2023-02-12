@@ -6,14 +6,13 @@ using Zenject;
 [ExecuteInEditMode]
 public class UIChestIndicator : UIEntity
 {
-	[SerializeField] UIChestIcon m_Icon;
-	[SerializeField] TMP_Text    m_Progress;
-	[SerializeField] UIGroup     m_ProgressGroup;
+	[SerializeField] UIChestImage m_Image;
+	[SerializeField] RankType     m_Rank;
+	[SerializeField] TMP_Text     m_Progress;
+	[SerializeField] UIGroup      m_ProgressGroup;
 
-	[Inject] ChestsInventory m_ChestsInventory;
-	[Inject] ChestsManager   m_ChestsManager;
+	[Inject] ChestsManager m_ChestsManager;
 
-	[SerializeField] RankType m_ChestRank;
 
 	protected override void OnEnable()
 	{
@@ -41,9 +40,11 @@ public class UIChestIndicator : UIEntity
 		if (!IsInstanced || Application.isPlaying)
 			return;
 		
-		ProcessIcon();
+		ProcessImage();
 	}
 	#endif
+
+	public async void Progress() => await ProgressAsync();
 
 	public async Task ProgressAsync()
 	{
@@ -51,14 +52,14 @@ public class UIChestIndicator : UIEntity
 		
 		m_ProgressGroup.Show();
 		
-		int source = m_ChestsInventory.GetSource(m_ChestRank);
-		int target = m_ChestsInventory.GetTarget(m_ChestRank);
+		int progress = m_ChestsManager.GetChestProgress(m_Rank);
+		int capacity = m_ChestsManager.GetChestCapacity(m_Rank);
 		
-		source = Mathf.Clamp(source + 1, 0, target);
+		progress = Mathf.Clamp(progress + 1, 0, capacity);
 		
-		m_Progress.text = GetProgress(source, target);
+		m_Progress.text = GetProgress(progress, capacity);
 		
-		await m_Icon.ProgressAsync();
+		await m_Image.ProgressAsync();
 		
 		Subscribe();
 	}
@@ -69,55 +70,49 @@ public class UIChestIndicator : UIEntity
 		
 		m_ProgressGroup.Hide();
 		
-		await m_Icon.CollectAsync();
+		await m_Image.CollectAsync();
 		
 		Subscribe();
 	}
 
 	void Subscribe()
 	{
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Load, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, ProcessData);
+		m_ChestsManager.SubscribeChests(m_Rank, ProcessData);
 		m_ChestsManager.Collection.Subscribe(DataEventType.Load, ProcessData);
 		m_ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
 	}
 
 	void Unsubscribe()
 	{
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Load, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		m_ChestsManager.UnsubscribeChests(m_Rank, ProcessData);
 		m_ChestsManager.Collection.Unsubscribe(DataEventType.Load, ProcessData);
 		m_ChestsManager.Collection.Unsubscribe(DataEventType.Change, ProcessData);
 	}
 
 	void ProcessData()
 	{
-		ProcessIcon();
+		ProcessImage();
 		
 		ProcessProgress();
 	}
 
-	void ProcessIcon()
+	void ProcessImage()
 	{
-		m_Icon.ChestRank = m_ChestRank;
+		m_Image.Rank = m_Rank;
 	}
 
 	void ProcessProgress()
 	{
-		int source = m_ChestsInventory.GetSource(m_ChestRank);
-		int target = m_ChestsInventory.GetTarget(m_ChestRank);
+		int progress = m_ChestsManager.GetChestProgress(m_Rank);
+		int capacity = m_ChestsManager.GetChestCapacity(m_Rank);
 		
-		m_Progress.text = GetProgress(source, target);
+		m_Progress.text = GetProgress(progress, capacity);
 	}
 
 	string GetProgress(int _Source, int _Target)
 	{
 		string icon;
-		switch (m_ChestRank)
+		switch (m_Rank)
 		{
 			case RankType.Bronze:
 				icon = "<sprite name=disc_bronze>";

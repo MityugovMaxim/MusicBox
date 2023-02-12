@@ -239,7 +239,7 @@ public class UISplineEditor : Editor
 				EditorGUI.DrawRect(_Rect, new Color(0.3f, 0.3f, 0.3f));
 		};
 		
-		m_KeysList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
+		m_KeysList.drawElementCallback += (_Rect, _Index, _, _) =>
 		{
 			SerializedProperty keyProperty        = m_KeysList.serializedProperty.GetArrayElementAtIndex(_Index);
 			SerializedProperty positionProperty   = keyProperty.FindPropertyRelative("m_Position");
@@ -595,36 +595,36 @@ public class UISplineEditor : Editor
 	{
 		const float handleSize = 0.035f;
 		
-		Vector2 position = _PositionProperty.vector2Value;
-		Vector2 source   = position + _SourceTangent.vector2Value;
-		Vector2 target   = position + _SourceTangent.vector2Value;
+		Vector2 position       = _PositionProperty.vector2Value;
+		Vector2 sourcePosition = position + _SourceTangent.vector2Value;
+		Vector2 targetPosition = position + _SourceTangent.vector2Value;
 		
-		Handles.DrawLine(position, source);
+		Handles.DrawLine(position, sourcePosition);
 		
-		target = Handles.FreeMoveHandle(
-			target,
+		targetPosition = Handles.FreeMoveHandle(
+			targetPosition,
 			Quaternion.identity,
-			HandleUtility.GetHandleSize(target) * handleSize,
+			HandleUtility.GetHandleSize(targetPosition) * handleSize,
 			Vector3.zero,
 			DiscHandleCap
 		);
 		
-		if (source == target)
+		if (sourcePosition == targetPosition)
 			return;
 		
-		source -= position;
-		target -= position;
+		sourcePosition -= position;
+		targetPosition -= position;
 		
-		_SourceTangent.vector2Value = target;
+		_SourceTangent.vector2Value = targetPosition;
 		
 		if (Event.current.alt)
 			return;
 		
 		Vector2 tangent = _TargetTangent.vector2Value;
 		
-		float angle = Vector2.SignedAngle(source, target);
+		float angle = Vector2.SignedAngle(sourcePosition, targetPosition);
 		
-		tangent = tangent.normalized * (tangent.magnitude + target.magnitude - source.magnitude);
+		tangent = tangent.normalized * (tangent.magnitude + targetPosition.magnitude - sourcePosition.magnitude);
 		
 		_TargetTangent.vector2Value = Quaternion.Euler(0, 0, angle) * tangent;
 	}

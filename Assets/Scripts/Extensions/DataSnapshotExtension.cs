@@ -97,7 +97,7 @@ public static class DataSnapshotExtension
 
 	public static long GetLong(this DataSnapshot _DataSnapshot)
 	{
-		return (long)_DataSnapshot.Value;
+		return _DataSnapshot.Value != null ? (long)_DataSnapshot.Value : default;
 	}
 
 	public static long GetLong(this DataSnapshot _DataSnapshot, string _Name, long _Default = 0)

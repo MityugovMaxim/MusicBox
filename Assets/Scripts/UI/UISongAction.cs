@@ -28,6 +28,8 @@ public class UISongAction : UISongEntity
 		if (songMenu == null)
 			return;
 		
+		SongsManager.Stop();
+		
 		songMenu.Setup(SongID);
 		songMenu.Show();
 	}

@@ -1,36 +1,26 @@
 using System.Threading.Tasks;
 using UnityEngine;
-using Zenject;
 
-public class UIChestSlot : UIEntity
+public class UIChestSlot : UISlotEntity
 {
-	[SerializeField] int           m_Slot;
-	[SerializeField] UIChestIcon   m_Icon;
-	[SerializeField] UIChestAction m_Action;
-	[SerializeField] UIChestBoost  m_Boost;
-	[SerializeField] UIChestTimer  m_Timer;
-	[SerializeField] UIChestTime   m_Time;
-	[SerializeField] UIHighlight   m_EmptyHighlight;
-	[SerializeField] UIHighlight   m_SelectHighlight;
-	[SerializeField] UIHighlight   m_ReadyHighlight;
+	[SerializeField] UIChestImage   m_Image;
+	[SerializeField] UIHighlight    m_EmptyHighlight;
+	[SerializeField] UIHighlight    m_SelectHighlight;
+	[SerializeField] UIHighlight    m_ReadyHighlight;
+	[SerializeField] UISlotEntity[] m_Entities;
 
-	[Inject] ChestsInventory m_ChestsInventory;
-
-	protected override void OnEnable()
+	#if UNITY_EDITOR
+	protected override void OnValidate()
 	{
-		base.OnEnable();
+		base.OnValidate();
 		
-		ProcessData();
+		if (Application.isPlaying || !IsInstanced)
+			return;
 		
-		Subscribe();
+		foreach (UISlotEntity entity in m_Entities)
+			entity.Slot = Slot;
 	}
-
-	protected override void OnDisable()
-	{
-		base.OnDisable();
-		
-		Unsubscribe();
-	}
+	#endif
 
 	public void Highlight(bool _Value)
 	{
@@ -45,83 +35,83 @@ public class UIChestSlot : UIEntity
 		}
 	}
 
-	public async Task<bool> Select(RankType _ChestRank)
+	public async Task<bool> Select(RankType _Rank)
 	{
-		string chestID = m_ChestsInventory.GetAvailableChestID(_ChestRank);
-		
-		if (string.IsNullOrEmpty(chestID))
+		if (!ChestsManager.TryGetAvailableSlot(out int slot))
 			return false;
 		
 		Unsubscribe();
 		
-		m_Icon.ChestRank = _ChestRank;
+		m_Image.Rank = _Rank;
 		
-		m_Icon.Select();
+		m_Image.Select();
 		
-		RequestState state = await m_ChestsInventory.Select(chestID);
+		bool success = await ChestsManager.SelectAsync(_Rank, slot);
 		
-		await m_ChestsInventory.Profile.UpdateAsync(chestID);
+		await ChestsManager.UpdateChestsAsync(_Rank);
 		
 		ProcessData();
 		
 		Subscribe();
 		
-		return state == RequestState.Success;
+		return success;
 	}
 
-	void Subscribe()
+	protected override void Subscribe()
 	{
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, ProcessData);
+		ChestsManager.SubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.SubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.SubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Add, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Remove, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Change, ProcessData);
 	}
 
-	void Unsubscribe()
+	protected override void Unsubscribe()
 	{
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		ChestsManager.UnsubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Add, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Remove, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Change, ProcessData);
 	}
 
-	void ProcessData()
+	protected override void ProcessData()
 	{
-		string chestID = m_ChestsInventory.GetChestID(m_Slot);
+		RankType rank = ChestsManager.GetSlotRank(Slot);
 		
-		RankType rank = m_ChestsInventory.GetRank(chestID);
+		m_Image.Rank = rank;
 		
-		m_Icon.ChestRank = rank;
-		m_Action.ChestID = chestID;
-		m_Boost.ChestID  = chestID;
-		m_Timer.ChestID  = chestID;
-		m_Time.ChestID   = chestID;
+		ChestSlotState state = ChestsManager.GetSlotState(Slot);
 		
-		int slot = m_ChestsInventory.GetSlot();
-		
-		if (m_Slot == slot)
+		if (ChestsManager.TryGetAvailableSlot(out int slot) && Slot == slot)
 		{
 			m_EmptyHighlight.Show();
 			m_SelectHighlight.Hide();
 			m_ReadyHighlight.Hide();
+			m_Image.Restore();
 		}
-		else if (m_ChestsInventory.IsReady(chestID))
+		else if (state == ChestSlotState.Ready)
 		{
 			m_ReadyHighlight.Show();
 			m_SelectHighlight.Hide();
 			m_EmptyHighlight.Hide();
-			m_Icon.Ready();
+			m_Image.Ready();
 		}
-		else if (m_ChestsInventory.IsProcessing(chestID))
+		else if (state == ChestSlotState.Processing || state == ChestSlotState.Pending)
 		{
 			m_SelectHighlight.Hide();
 			m_ReadyHighlight.Hide();
 			m_EmptyHighlight.Hide();
-			m_Icon.Process();
+			m_Image.Process();
 		}
 		else
 		{
 			m_SelectHighlight.Hide();
 			m_ReadyHighlight.Hide();
 			m_EmptyHighlight.Hide();
+			m_Image.Restore();
 		}
 	}
 }

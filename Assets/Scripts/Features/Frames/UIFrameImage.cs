@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UIFrameImage : UIFrameEntity
 {
-	[SerializeField] WebImage m_Image;
+	[SerializeField] WebGraphic m_Image;
 
 	protected override void Subscribe()
 	{

@@ -1,20 +1,21 @@
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
 
 public class UISongPlay : UISongEntity
 {
-	[SerializeField] UIChestImage m_Chest;
-	[SerializeField] UIGroup      m_ControlGroup;
-	[SerializeField] UIGroup      m_LoaderGroup;
-	[SerializeField] UIFlare      m_Flare;
-	[SerializeField] Button       m_FreeButton;
-	[SerializeField] Button       m_PaidButton;
-	[SerializeField] Button       m_ChestButton;
-	[SerializeField] GameObject   m_FreeContent;
-	[SerializeField] GameObject   m_PaidContent;
-	[SerializeField] GameObject   m_ChestContent;
+	[FormerlySerializedAs("m_Icon")] [SerializeField] UIChestImage m_Image;
+	[SerializeField] UIGroup     m_ControlGroup;
+	[SerializeField] UIGroup     m_LoaderGroup;
+	[SerializeField] UIFlare     m_Flare;
+	[SerializeField] Button      m_FreeButton;
+	[SerializeField] Button      m_PaidButton;
+	[SerializeField] Button      m_ChestButton;
+	[SerializeField] GameObject  m_FreeContent;
+	[SerializeField] GameObject  m_PaidContent;
+	[SerializeField] GameObject  m_ChestContent;
 
 	[Inject] ChestsManager         m_ChestsManager;
 	[Inject] ProfileCoinsParameter m_ProfileCoins;
@@ -59,9 +60,7 @@ public class UISongPlay : UISongEntity
 		m_ControlGroup.Show(true);
 		m_LoaderGroup.Hide(true);
 		
-		RankType songRank = SongsManager.GetRank(SongID);
-		
-		m_Chest.ChestID = m_ChestsManager.GetChestID(songRank);
+		m_Image.Rank = SongsManager.GetRank(SongID);
 		
 		m_FreeContent.SetActive(SongsManager.IsFree(SongID));
 		m_PaidContent.SetActive(SongsManager.IsPaid(SongID));
@@ -101,7 +100,7 @@ public class UISongPlay : UISongEntity
 		
 		long coins = SongsManager.GetPrice(songID);
 		
-		if (!await m_ProfileCoins.Remove(coins))
+		if (!await m_ProfileCoins.ReduceAsync(coins))
 			return;
 		
 		await m_MenuProcessor.Show(MenuType.BlockMenu, true);
@@ -137,11 +136,7 @@ public class UISongPlay : UISongEntity
 			await m_LoaderGroup.HideAsync();
 			await m_ControlGroup.ShowAsync();
 			
-			await m_MenuProcessor.RetryAsync(
-				"song_unlock",
-				PlayPaid,
-				() => { }
-			);
+			await m_MenuProcessor.RetryAsync("song_unlock", PlayPaid);
 		}
 		
 		await m_MenuProcessor.Hide(MenuType.BlockMenu, true);

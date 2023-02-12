@@ -15,10 +15,10 @@ namespace AudioBox.ASF
 		public ASFColorData(IDictionary<string, object> _Data)
 		{
 			Time                = _Data.GetDouble("time");
-			BackgroundPrimary   = _Data.GetHtmlColor("background_primary");
-			BackgroundSecondary = _Data.GetHtmlColor("background_secondary");
-			ForegroundPrimary   = _Data.GetHtmlColor("foreground_primary");
-			ForegroundSecondary = _Data.GetHtmlColor("foreground_secondary");
+			BackgroundPrimary   = _Data.GetString("background_primary").ToColor();
+			BackgroundSecondary = _Data.GetString("background_secondary").ToColor();
+			ForegroundPrimary   = _Data.GetString("foreground_primary").ToColor();
+			ForegroundSecondary = _Data.GetString("foreground_secondary").ToColor();
 		}
 
 		public ASFColorData(
@@ -40,10 +40,10 @@ namespace AudioBox.ASF
 		{
 			Dictionary<string, object> data = new Dictionary<string, object>();
 			data["time"]                 = Time;
-			data["background_primary"]   = '#' + ColorUtility.ToHtmlStringRGBA(BackgroundPrimary);
-			data["background_secondary"] = '#' + ColorUtility.ToHtmlStringRGBA(BackgroundSecondary);
-			data["foreground_primary"]   = '#' + ColorUtility.ToHtmlStringRGBA(ForegroundPrimary);
-			data["foreground_secondary"] = '#' + ColorUtility.ToHtmlStringRGBA(ForegroundSecondary);
+			data["background_primary"]   = ColorsUtility.GetHTML(BackgroundPrimary);
+			data["background_secondary"] = ColorsUtility.GetHTML(BackgroundSecondary);
+			data["foreground_primary"]   = ColorsUtility.GetHTML(ForegroundPrimary);
+			data["foreground_secondary"] = ColorsUtility.GetHTML(ForegroundSecondary);
 			return data;
 		}
 	}

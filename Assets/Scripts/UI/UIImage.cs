@@ -52,12 +52,12 @@ public abstract class UIImage : MaskableGraphic
 		Vector4 mask = GetMask();
 		Vector4 uv   = m_Sprite != null ? UnityEngine.Sprites.DataUtility.GetOuterUV(m_Sprite) : new Vector4(0, 0, 1, 1);
 		
-		Color32 color = this.color;
+		Color32 vertexColor = color;
 		_VertexHelper.Clear();
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMin, rect.yMin),
-			color,
+			vertexColor,
 			new Vector2(uv.x, uv.y),
 			new Vector2(mask.x, mask.y),
 			GetUV2(),
@@ -68,7 +68,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMin, rect.yMax),
-			color,
+			vertexColor,
 			new Vector2(uv.x, uv.w),
 			new Vector2(mask.x, mask.w),
 			GetUV2(),
@@ -79,7 +79,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMax, rect.yMax),
-			color,
+			vertexColor,
 			new Vector2(uv.z, uv.w),
 			new Vector2(mask.z, mask.w),
 			GetUV2(),
@@ -90,7 +90,7 @@ public abstract class UIImage : MaskableGraphic
 		
 		_VertexHelper.AddVert(
 			new Vector3(rect.xMax, rect.yMin),
-			color,
+			vertexColor,
 			new Vector2(uv.z, uv.y),
 			new Vector2(mask.z, mask.y),
 			GetUV2(),

@@ -22,9 +22,6 @@ public class UISplineLine : MaskableGraphic
 		get => m_Max;
 		set
 		{
-			if (float.IsNaN(value))
-				Debug.LogError("---> WTF!?!?!?!");
-			
 			if (Mathf.Approximately(m_Max, value))
 				return;
 			
@@ -51,7 +48,7 @@ public class UISplineLine : MaskableGraphic
 		
 		Rect uv = MeshUtility.GetUV(m_Sprite);
 		
-		Color32 color = this.color;
+		Color32 vertexColor = color;
 		
 		float   centerUV = Mathf.Lerp(uv.yMin, uv.yMax, 0.5f);
 		Vector4 minUV    = new Vector4(uv.xMin, centerUV);
@@ -60,12 +57,12 @@ public class UISplineLine : MaskableGraphic
 		void AddPoint(UISpline.Point _Point)
 		{
 			Vector2 width = _Point.Normal * size;
-			_VertexHelper.AddVert(_Point.Position + width, color, minUV);
-			_VertexHelper.AddVert(_Point.Position - width, color, maxUV);
+			_VertexHelper.AddVert(_Point.Position + width, vertexColor, minUV);
+			_VertexHelper.AddVert(_Point.Position - width, vertexColor, maxUV);
 		}
 		
 		// Min Cap
-		GenerateMinCap(uv, color, _VertexHelper);
+		GenerateMinCap(uv, vertexColor, _VertexHelper);
 		
 		UISpline.Point a = m_Spline.GetPoint(Min);
 		AddPoint(a);
@@ -81,7 +78,7 @@ public class UISplineLine : MaskableGraphic
 		UISpline.Point b = m_Spline.GetPoint(Max);
 		AddPoint(b);
 		
-		GenerateMaxCap(uv, color, _VertexHelper);
+		GenerateMaxCap(uv, vertexColor, _VertexHelper);
 		
 		int quads = _VertexHelper.currentVertCount / 2 - 1;
 		for (int i = 0; i < quads; i++)

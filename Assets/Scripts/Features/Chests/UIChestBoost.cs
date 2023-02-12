@@ -1,33 +1,40 @@
 using UnityEngine;
 
-public class UIChestBoost : UIChestEntity
+public class UIChestBoost : UISlotEntity
 {
 	[SerializeField] UIUnitLabel m_Coins;
 	[SerializeField] UIGroup     m_CoinsGroup;
 
 	protected override void Subscribe()
 	{
-		ChestsInventory.SubscribeStart(ChestID, ProcessData);
-		ChestsInventory.SubscribeCancel(ChestID, ProcessData);
-		ChestsInventory.SubscribeEnd(ChestID, ProcessData);
-		ChestsManager.Collection.Subscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.SubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.SubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.SubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Add, Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Remove, Slot, ProcessData);
+		ChestsManager.Slots.Subscribe(DataEventType.Change, Slot, ProcessData);
+		ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void Unsubscribe()
 	{
-		ChestsInventory.UnsubscribeStart(ChestID, ProcessData);
-		ChestsInventory.UnsubscribeCancel(ChestID, ProcessData);
-		ChestsInventory.UnsubscribeEnd(ChestID, ProcessData);
-		ChestsManager.Collection.Unsubscribe(DataEventType.Change, ChestID, ProcessData);
+		ChestsManager.UnsubscribeStartTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeEndTimer(Slot, ProcessData);
+		ChestsManager.UnsubscribeCancelTimer(Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Add, Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Remove, Slot, ProcessData);
+		ChestsManager.Slots.Unsubscribe(DataEventType.Change, Slot, ProcessData);
+		ChestsManager.Collection.Subscribe(DataEventType.Change, ProcessData);
 	}
 
 	protected override void ProcessData()
 	{
-		RankType rank = ChestsInventory.GetRank(ChestID);
+		RankType       rank  = ChestsManager.GetSlotRank(Slot);
+		ChestSlotState state = ChestsManager.GetSlotState(Slot);
 		
-		m_Coins.Value = ChestsManager.GetBoost(rank);
+		m_Coins.Value = ChestsManager.GetChestBoost(rank);
 		
-		if (ChestsInventory.IsProcessing(ChestID))
+		if (state == ChestSlotState.Processing || state == ChestSlotState.Pending)
 			m_CoinsGroup.Show();
 		else
 			m_CoinsGroup.Hide();

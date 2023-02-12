@@ -4,11 +4,10 @@ using UnityEngine;
 public class MenuInfo : ScriptableObject
 {
 	public MenuType Type      => m_Type;
-	public bool     Focusable => m_Focusable;
+	public MenuMode Mode      => m_Mode;
 	public string   Path      => m_Path;
 
 	[SerializeField, HideInInspector] MenuType m_Type;
-	[SerializeField, HideInInspector] bool     m_Focusable;
-
+	[SerializeField, HideInInspector] MenuMode m_Mode;
 	[SerializeField, HideInInspector, Path(typeof(UIMenu))] string m_Path;
 }

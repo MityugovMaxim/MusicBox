@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class UISongCreateArtworkPage : UISongCreateMenuPage
+public class UISongCreateArtworkPage : UIGroup
 {
-	public override bool Valid => m_Artwork != null;
+	public virtual bool Valid => m_Artwork != null;
 
 	[SerializeField] RawImage m_Image;
 	[SerializeField] UIGroup  m_ArtworkGroup;

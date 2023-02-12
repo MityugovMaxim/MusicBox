@@ -340,19 +340,19 @@ namespace OggVorbisEncoder.Lookups
 
 			double xb = 0, yb = 0, x2B = 0, xyb = 0, bn = 0;
 
-			var x0 = _Acc[_Offset + 0].m_X0;
-			var x1 = _Acc[_Offset + _Fits - 1].m_X1;
+			var x0 = _Acc[_Offset + 0].X0;
+			var x1 = _Acc[_Offset + _Fits - 1].X1;
 
 			for (var i = 0; i < _Fits; i++)
 			{
-				var weight = (_Acc[_Offset + i].m_Bn + _Acc[_Offset + i].m_An) * m_Floor.TwoFitWeight / (_Acc[_Offset + i].m_An + 1) +
+				var weight = (_Acc[_Offset + i].Bn + _Acc[_Offset + i].An) * m_Floor.TwoFitWeight / (_Acc[_Offset + i].An + 1) +
 					1.0;
 
-				xb  += _Acc[_Offset + i].m_Xb + _Acc[_Offset + i].m_Xa * weight;
-				yb  += _Acc[_Offset + i].m_Yb + _Acc[_Offset + i].m_Ya * weight;
-				x2B += _Acc[_Offset + i].m_X2B + _Acc[_Offset + i].m_X2A * weight;
-				xyb += _Acc[_Offset + i].m_Xyb + _Acc[_Offset + i].m_Xya * weight;
-				bn  += _Acc[_Offset + i].m_Bn + _Acc[_Offset + i].m_An * weight;
+				xb  += _Acc[_Offset + i].Xb + _Acc[_Offset + i].Xa * weight;
+				yb  += _Acc[_Offset + i].Yb + _Acc[_Offset + i].Ya * weight;
+				x2B += _Acc[_Offset + i].X2B + _Acc[_Offset + i].X2A * weight;
+				xyb += _Acc[_Offset + i].Xyb + _Acc[_Offset + i].Xya * weight;
+				bn  += _Acc[_Offset + i].Bn + _Acc[_Offset + i].An * weight;
 			}
 
 			if (_Y0 >= 0)
@@ -429,8 +429,8 @@ namespace OggVorbisEncoder.Lookups
 		{
 			int xa = 0, ya = 0, x2A = 0, xya = 0, na = 0, xb = 0, yb = 0, x2B = 0, xyb = 0, nb = 0;
 
-			_Fits.m_X0 = _X0;
-			_Fits.m_X1 = _X1;
+			_Fits.X0 = _X0;
+			_Fits.X1 = _X1;
 
 			if (_X1 >= _N)
 				_X1 = _N - 1;
@@ -457,17 +457,17 @@ namespace OggVorbisEncoder.Lookups
 					}
 			}
 
-			_Fits.m_Xa  = xa;
-			_Fits.m_Ya  = ya;
-			_Fits.m_X2A = x2A;
-			_Fits.m_Xya = xya;
-			_Fits.m_An  = na;
+			_Fits.Xa  = xa;
+			_Fits.Ya  = ya;
+			_Fits.X2A = x2A;
+			_Fits.Xya = xya;
+			_Fits.An  = na;
 
-			_Fits.m_Xb  = xb;
-			_Fits.m_Yb  = yb;
-			_Fits.m_X2B = x2B;
-			_Fits.m_Xyb = xyb;
-			_Fits.m_Bn  = nb;
+			_Fits.Xb  = xb;
+			_Fits.Yb  = yb;
+			_Fits.X2B = x2B;
+			_Fits.Xyb = xyb;
+			_Fits.Bn  = nb;
 
 			return na;
 		}
@@ -703,18 +703,18 @@ namespace OggVorbisEncoder.Lookups
 
 		struct FitAccumulation
 		{
-			public int m_X0;
-			public int m_X1;
-			public int m_Xa;
-			public int m_Ya;
-			public int m_X2A;
-			public int m_Xya;
-			public int m_An;
-			public int m_Xb;
-			public int m_Yb;
-			public int m_X2B;
-			public int m_Xyb;
-			public int m_Bn;
+			public int X0;
+			public int X1;
+			public int Xa;
+			public int Ya;
+			public int X2A;
+			public int Xya;
+			public int An;
+			public int Xb;
+			public int Yb;
+			public int X2B;
+			public int Xyb;
+			public int Bn;
 		}
 	}
 }

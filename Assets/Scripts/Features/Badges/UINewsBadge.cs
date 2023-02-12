@@ -3,26 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Zenject;
 
-public class UIProfileBadge : UIBadge
-{
-	[Inject] VouchersManager m_VouchersManager;
-
-	protected override void Subscribe()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	protected override void Unsubscribe()
-	{
-		throw new System.NotImplementedException();
-	}
-
-	protected override void Process()
-	{
-		throw new System.NotImplementedException();
-	}
-}
-
 public class UINewsBadge : UIBadge
 {
 	[Inject] NewsManager   m_NewsManager;

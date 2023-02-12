@@ -10,6 +10,8 @@ public class ProfileInstaller : FeatureInstaller
 	{
 		InstallSingleton<ProfileCoinsParameter>();
 		
+		InstallSingleton<ProfilePointsParameter>();
+		
 		InstallSingleton<ProfileLevelParameter>();
 		
 		InstallSingleton<ProfileDiscsParameter>();

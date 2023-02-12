@@ -4,23 +4,21 @@ public class ChestOpenRequest : FunctionRequest<ChestReward>
 {
 	protected override string Command => "ChestOpen";
 
-	readonly string m_ChestID;
+	readonly int m_Slot;
 
-	public ChestOpenRequest(string _ChestID)
+	public ChestOpenRequest(int _Slot)
 	{
-		m_ChestID = _ChestID;
+		m_Slot = _Slot;
 	}
 
 	protected override void Serialize(IDictionary<string, object> _Data)
 	{
-		_Data["chest_id"] = m_ChestID;
+		_Data["slot"] = m_Slot;
 	}
 
 	protected override ChestReward Success(object _Data)
 	{
-		Dictionary<string, object> data = _Data as Dictionary<string, object>;
-		
-		return data != null ? new ChestReward(data) : null;
+		return _Data is Dictionary<string, object> data ? new ChestReward(data) : null;
 	}
 
 	protected override ChestReward Fail()

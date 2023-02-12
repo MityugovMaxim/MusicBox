@@ -402,10 +402,7 @@ public abstract class DataCollection<TSnapshot> where TSnapshot : Snapshot
 		return _Data.OrderByChild("order");
 	}
 
-	protected virtual TSnapshot Create(DataSnapshot _Data)
-	{
-		return Activator.CreateInstance(typeof(TSnapshot), _Data) as TSnapshot;
-	}
+	static TSnapshot Create(DataSnapshot _Data) => SnapshotPrebuild.Create<TSnapshot>(_Data);
 
 	protected virtual void Sort()
 	{

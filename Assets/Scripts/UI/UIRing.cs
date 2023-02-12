@@ -64,9 +64,9 @@ public class UIRing : MaskableGraphic
 	{
 		_VertexHelper.Clear();
 		
-		Color32 color = this.color;
+		Color32 color32 = color;
 		
-		if (m_Radius <= float.Epsilon || m_Width <= float.Epsilon || m_Arc <= float.Epsilon || color.a <= 0)
+		if (m_Radius <= float.Epsilon || m_Width <= float.Epsilon || m_Arc <= float.Epsilon || color32.a <= 0)
 			return;
 		
 		m_Vertices.Clear();
@@ -94,8 +94,8 @@ public class UIRing : MaskableGraphic
 		{
 			float phase = Mathf.Lerp(uv.xMin, uv.xMax, (float)i / samples);
 			
-			m_Vertices.Add(Create(outer, color, new Vector2(phase, uv.yMin)));
-			m_Vertices.Add(Create(inner, color, new Vector2(phase, uv.yMax)));
+			m_Vertices.Add(Create(outer, color32, new Vector2(phase, uv.yMin)));
+			m_Vertices.Add(Create(inner, color32, new Vector2(phase, uv.yMax)));
 			
 			outer = step * outer;
 			inner = step * inner;

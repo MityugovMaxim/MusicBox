@@ -4,17 +4,7 @@ public class DailyCollectRequest : FunctionRequest<bool>
 {
 	protected override string Command => "DailyCollect";
 
-	string DailyID { get; }
-
-	public DailyCollectRequest(string _DailyID)
-	{
-		DailyID = _DailyID;
-	}
-
-	protected override void Serialize(IDictionary<string, object> _Data)
-	{
-		_Data["daily_id"] = DailyID;
-	}
+	protected override void Serialize(IDictionary<string, object> _Data) { }
 
 	protected override bool Success(object _Data)
 	{

@@ -145,10 +145,10 @@ public class UIHorizontalScrollView : UIEntity, IInitializePotentialDragHandler,
 		m_TokenSource = null;
 	}
 
-	float MinPosition => -Height * (1.0f - m_Content.pivot.x);
-	float MaxPosition => Height * m_Content.pivot.x;
+	float MinPosition => -Size * (1.0f - m_Content.pivot.x);
+	float MaxPosition => Size * m_Content.pivot.x;
 
-	float Height => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
+	float Size => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
 
 	float GetOverflow(Vector2 _Position)
 	{

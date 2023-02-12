@@ -41,54 +41,44 @@ public class UIAmbientElement : UIEntity
 	{
 		base.OnEnable();
 		
-		ProcessControl();
+		ProcessState();
 		
-		m_AmbientManager.SubscribePlay(ProcessControl);
-		m_AmbientManager.SubscribePause(ProcessControl);
+		m_AmbientManager.SubscribeState(ProcessState);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_AmbientManager.UnsubscribePlay(ProcessControl);
-		m_AmbientManager.UnsubscribePause(ProcessControl);
+		m_AmbientManager.UnsubscribeState(ProcessState);
 	}
 
-	void Previous()
-	{
-		m_AmbientManager.Previous();
-	}
+	void Previous() => m_AmbientManager.Previous();
 
-	void Next()
-	{
-		m_AmbientManager.Next();
-	}
+	void Next() => m_AmbientManager.Next();
 
-	void Play()
-	{
-		m_AmbientManager.Play();
-	}
+	void Play() => m_AmbientManager.Play();
 
-	void Pause()
-	{
-		m_AmbientManager.Pause();
-	}
+	void Pause() => m_AmbientManager.Pause();
 
-	async void ProcessControl()
+	void ProcessState()
 	{
-		m_ContentGroup.Hide(true);
-		m_LoaderGroup.Show(true);
-		
-		bool instant = await m_AmbientManager.Activate();
-		
-		if (!IsActive)
+		if (!IsActiveSelf)
 			return;
 		
-		m_ContentGroup.Show(instant);
-		m_LoaderGroup.Hide(instant);
+		AudioChannelState state = m_AmbientManager.GetState();
 		
-		m_PauseButton.gameObject.SetActive(m_AmbientManager.Playing);
-		m_PlayButton.gameObject.SetActive(m_AmbientManager.Paused);
+		if (state == AudioChannelState.Loading)
+		{
+			m_LoaderGroup.Show();
+			m_ContentGroup.Hide();
+		}
+		else
+		{
+			m_LoaderGroup.Hide();
+			m_ContentGroup.Show();
+			m_PauseButton.gameObject.SetActive(state == AudioChannelState.Play);
+			m_PlayButton.gameObject.SetActive(state == AudioChannelState.Pause || state == AudioChannelState.Stop);
+		}
 	}
 }

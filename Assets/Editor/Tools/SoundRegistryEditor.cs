@@ -57,7 +57,7 @@ public class SoundRegistryEditor : Editor
 			EditorGUI.DropShadowLabel(_Rect, "Sound");
 		};
 		
-		m_RegistryList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
+		m_RegistryList.drawElementCallback += (_Rect, _Index, _, _) =>
 		{
 			Rect indexRect = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
 			Rect entryRect = new Rect(_Rect.x + 25, _Rect.y, _Rect.width - 25, _Rect.height);
@@ -89,7 +89,7 @@ public class SoundRegistryEditor : Editor
 				return;
 			}
 			
-			m_EntryEditor = Editor.CreateEditor(entryProperty.objectReferenceValue);
+			m_EntryEditor = CreateEditor(entryProperty.objectReferenceValue);
 		};
 	}
 

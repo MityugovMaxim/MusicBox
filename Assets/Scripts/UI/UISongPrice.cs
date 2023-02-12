@@ -1,8 +1,11 @@
 using UnityEngine;
+using Zenject;
 
 public class UISongPrice : UISongEntity
 {
 	[SerializeField] UIUnitLabel m_Coins;
+
+	[Inject] VouchersManager m_VouchersManager;
 
 	protected override void Subscribe()
 	{
@@ -22,7 +25,7 @@ public class UISongPrice : UISongEntity
 	{
 		long coins = SongsManager.GetPrice(SongID);
 		
-		m_Coins.Value = coins;
+		m_Coins.Value = m_VouchersManager.GetSongDiscount(SongID, coins);
 		
 		gameObject.SetActive(SongsManager.IsPaid(SongID) && coins > 0);
 	}

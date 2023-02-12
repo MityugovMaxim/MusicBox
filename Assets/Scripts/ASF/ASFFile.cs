@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AudioBox.Compression;
-using UnityEngine.Purchasing;
 
 namespace AudioBox.ASF
 {
@@ -39,13 +39,13 @@ namespace AudioBox.ASF
 		public IDictionary<string, object> Serialize()
 		{
 			Dictionary<string, object> data = new Dictionary<string, object>();
-			data["bpm"]          = BPM;
-			data["bar"]          = Bar;
-			data["origin"]       = Origin;
-			data["tap_track"]    = TapData.Select(_Clip => _Clip.Serialize()).ToList();
-			data["double_track"] = DoubleData.Select(_Clip => _Clip.Serialize()).ToList();
-			data["hold_track"]   = HoldData.Select(_Clip => _Clip.Serialize()).ToList();
-			data["color_track"]  = ColorData.Select(_Clip => _Clip.Serialize()).ToList();
+			data["bpm"]    = BPM;
+			data["bar"]    = Bar;
+			data["origin"] = Origin;
+			data["tap"]    = TapData.Select(_Clip => _Clip.Serialize()).ToList();
+			data["double"] = DoubleData.Select(_Clip => _Clip.Serialize()).ToList();
+			data["hold"]   = HoldData.Select(_Clip => _Clip.Serialize()).ToList();
+			data["color"]  = ColorData.Select(_Clip => _Clip.Serialize()).ToList();
 			return data;
 		}
 
@@ -73,8 +73,52 @@ namespace AudioBox.ASF
 				SaveColor(colorTrack);
 		}
 
+		public void Trim(double _Time)
+		{
+			for (int i = m_TapData.Count - 1; i >= 0; i--)
+			{
+				ASFTapData data = m_TapData[i];
+				
+				if (data == null || data.Time < _Time)
+					continue;
+				
+				m_TapData.RemoveAt(i);
+			}
+			
+			for (int i = m_DoubleData.Count - 1; i >= 0; i--)
+			{
+				ASFDoubleData data = m_DoubleData[i];
+				
+				if (data == null || data.Time < _Time)
+					continue;
+				
+				m_DoubleData.RemoveAt(i);
+			}
+			
+			for (int i = 0; i < m_HoldData.Count; i++)
+			{
+				ASFHoldData data = m_HoldData[i];
+				
+				if (data == null || data.MaxTime < _Time)
+					continue;
+				
+				m_HoldData.RemoveAt(i);
+			}
+			
+			for (int i = 0; i < m_ColorData.Count; i++)
+			{
+				ASFColorData data = m_ColorData[i];
+				
+				if (data == null || data.Time < _Time)
+					continue;
+				
+				m_ColorData.RemoveAt(i);
+			}
+		}
+
 		public void LoadTap(ASFTapTrack _Track)
 		{
+			_Track.ClearClips();
 			foreach (ASFTapData data in TapData)
 				_Track.AddClip(new ASFTapClip(data));
 		}
@@ -88,6 +132,7 @@ namespace AudioBox.ASF
 
 		public void LoadDouble(ASFDoubleTrack _Track)
 		{
+			_Track.ClearClips();
 			foreach (ASFDoubleData data in DoubleData)
 				_Track.AddClip(new ASFDoubleClip(data));
 		}
@@ -101,6 +146,7 @@ namespace AudioBox.ASF
 
 		public void LoadHold(ASFHoldTrack _Track)
 		{
+			_Track.ClearClips();
 			foreach (ASFHoldData data in HoldData)
 				_Track.AddClip(new ASFHoldClip(data));
 		}
@@ -114,6 +160,7 @@ namespace AudioBox.ASF
 
 		public void LoadColor(ASFColorTrack _Track)
 		{
+			_Track.ClearClips();
 			foreach (ASFColorData data in ColorData)
 				_Track.AddClip(new ASFColorClip(data));
 		}
@@ -125,40 +172,67 @@ namespace AudioBox.ASF
 				m_ColorData.Add(new ASFColorData(clip.Time, clip.BackgroundPrimary, clip.BackgroundSecondary, clip.ForegroundPrimary, clip.ForegroundSecondary));
 		}
 
-		public ASFFile(float _BPM, int _Bar, double _Origin)
-		{
-			BPM    = _BPM;
-			Bar    = _Bar;
-			Origin = _Origin;
-		}
-
-		public ASFFile(string _Data) : this(MiniJson.JsonDecode(_Data) as IDictionary<string, object>) { }
-
 		public ASFFile(IDictionary<string, object> _Data)
 		{
 			BPM    = _Data.GetFloat("bpm");
 			Bar    = _Data.GetInt("bar");
 			Origin = _Data.GetDouble("origin");
 			
-			m_TapData = _Data.GetList("tap")
+			ParseTap(_Data);
+			ParseDouble(_Data);
+			ParseHold(_Data);
+			ParseColor(_Data);
+		}
+
+		void ParseTap(IDictionary<string, object> _Data) => ParseClips(
+			_Data,
+			"tap",
+			m_TapData,
+			_Entry => new ASFTapData(_Entry)
+		);
+
+		void ParseDouble(IDictionary<string, object> _Data) => ParseClips(
+			_Data,
+			"double",
+			m_DoubleData,
+			_Entry => new ASFDoubleData(_Entry)
+		);
+
+		void ParseHold(IDictionary<string, object> _Data) => ParseClips(
+			_Data,
+			"hold",
+			m_HoldData,
+			_Entry => new ASFHoldData(_Entry)
+		);
+
+		void ParseColor(IDictionary<string, object> _Data) => ParseClips(
+			_Data,
+			"color",
+			m_ColorData,
+			_Entry => new ASFColorData(_Entry)
+		);
+
+		static void ParseClips<T>(IDictionary<string, object> _Data, string _Key, List<T> _Collection, Func<IDictionary<string, object>, T> _Selector)
+		{
+			if (_Collection == null)
+				return;
+			
+			_Collection.Clear();
+			
+			if (string.IsNullOrEmpty(_Key))
+				return;
+			
+			IList<object> data = _Data.GetList(_Key);
+			
+			if (data == null || data.Count == 0)
+				return;
+			
+			IList<T> clips = data
 				.OfType<IDictionary<string, object>>()
-				.Select(_Clip => new ASFTapData(_Clip))
+				.Select(_Selector)
 				.ToList();
 			
-			m_DoubleData = _Data.GetList("double")
-				.OfType<IDictionary<string, object>>()
-				.Select(_Clip => new ASFDoubleData(_Clip))
-				.ToList();
-			
-			m_HoldData = _Data.GetList("hold")
-				.OfType<IDictionary<string, object>>()
-				.Select(_Clip => new ASFHoldData(_Clip))
-				.ToList();
-			
-			m_ColorData = _Data.GetList("color")
-				.OfType<IDictionary<string, object>>()
-				.Select(_Clip => new ASFColorData(_Clip))
-				.ToList();
+			_Collection.AddRange(clips);
 		}
 	}
 }

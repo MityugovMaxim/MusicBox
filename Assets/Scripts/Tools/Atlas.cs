@@ -30,14 +30,14 @@ public class Atlas
 		}
 	}
 
-	public static Atlas Create(string _AtlasID, int _AtlasSize, int _Width, int _Height)
+	public static Atlas Create(string _AtlasID, int _AtlasSize, int _Width, int _Height, bool _Alpha = false)
 	{
 		string atlasID = $"{_AtlasID}_{_AtlasSize}_[{_Width}x{_Height}]";
 		
 		if (m_Atlases.ContainsKey(atlasID) && m_Atlases[atlasID] != null)
 			return m_Atlases[atlasID];
 		
-		m_Atlases[atlasID] = new Atlas(_AtlasSize, new Vector2Int(_Width, _Height));
+		m_Atlases[atlasID] = new Atlas(_AtlasSize, new Vector2Int(_Width, _Height), _Alpha);
 		
 		return m_Atlases[atlasID];
 	}
@@ -46,15 +46,17 @@ public class Atlas
 
 	readonly int        m_AtlasSize;
 	readonly Vector2Int m_SpriteSize;
+	readonly bool       m_Alpha;
 
 	readonly Dictionary<string, Entry> m_Entries = new Dictionary<string, Entry>();
 
 	readonly Stack<Anchor> m_Anchors = new Stack<Anchor>();
 
-	Atlas(int _AtlasSize, Vector2Int _SpriteSize)
+	Atlas(int _AtlasSize, Vector2Int _SpriteSize, bool _Alpha)
 	{
 		m_AtlasSize  = _AtlasSize;
 		m_SpriteSize = _SpriteSize;
+		m_Alpha      = _Alpha;
 		
 		GenerateAnchors();
 	}
@@ -158,7 +160,7 @@ public class Atlas
 		if (TryFreeAnchors())
 			return;
 		
-		Texture2D atlas = new Texture2D(m_AtlasSize, m_AtlasSize, TextureFormat.RGB24, false);
+		Texture2D atlas = new Texture2D(m_AtlasSize, m_AtlasSize, m_Alpha ? TextureFormat.ARGB32 : TextureFormat.RGB24, false);
 		
 		int colCount = atlas.width / m_SpriteSize.x;
 		int rowCount = atlas.height / m_SpriteSize.y;

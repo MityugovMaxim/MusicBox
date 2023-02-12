@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 914568340113409347}
   - component: {fileID: 4021310624035291677}
-  - component: {fileID: 914568340113409346}
+  - component: {fileID: 6884898577808478052}
   - component: {fileID: 5451317213316885884}
   m_Layer: 5
   m_Name: song_background_item
@@ -29,6 +29,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 914568340271226034}
   m_Father: {fileID: 0}
@@ -54,8 +55,8 @@ MonoBehaviour:
   m_Interactable: 1
   m_ShowDuration: 0.4
   m_HideDuration: 0.4
-  m_Image: {fileID: 914568340113409346}
---- !u!114 &914568340113409346
+  m_Image: {fileID: 6884898577808478052}
+--- !u!114 &6884898577808478052
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -64,7 +65,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 914568340113409348}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06503b4413364b129186c7c92d64b416, type: 3}
+  m_Script: {fileID: 11500000, guid: a908973a15634c4ba598c63e4e6c210e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_LoaderGroup: {fileID: 0}
@@ -73,9 +74,9 @@ MonoBehaviour:
   m_Options: 10
   m_AtlasID: background
   m_AtlasSize: 2048
-  m_Width: 512
-  m_Height: 512
-  m_Graphic: {fileID: 914568340271226033}
+  m_Width: 256
+  m_Height: 256
+  m_Graphic: {fileID: 1223016378974388767}
 --- !u!225 &5451317213316885884
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -98,7 +99,7 @@ GameObject:
   m_Component:
   - component: {fileID: 914568340271226034}
   - component: {fileID: 914568340271226032}
-  - component: {fileID: 914568340271226033}
+  - component: {fileID: 1223016378974388767}
   m_Layer: 5
   m_Name: image
   m_TagString: Untagged
@@ -116,6 +117,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 914568340113409347}
   m_RootOrder: 0
@@ -132,8 +134,8 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 914568340271226035}
-  m_CullTransparentMesh: 0
---- !u!114 &914568340271226033
+  m_CullTransparentMesh: 1
+--- !u!114 &1223016378974388767
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -142,23 +144,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 914568340271226035}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Script: {fileID: 11500000, guid: a1c7775230c84bcda5961c56abc7f610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
   m_RaycastTarget: 1
-  m_Maskable: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 9a594d0968c0a41a68970bc2abc264ba, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_Scheme: 0
+  m_Alignment: 4
+  m_ScaleMode: 3
+  m_BorderMode: 0
+  m_Border:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_BorderScale: 0
   m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1

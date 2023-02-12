@@ -55,7 +55,7 @@ namespace OggVorbisEncoder.Lookups
 
 			m_Filters = Enumerable
 				.Range(0, PsyGlobal.ENVELOPE_BANDS * _Info.Channels)
-				.Select(_S => new EnvelopeFilterState())
+				.Select(_ => new EnvelopeFilterState())
 				.ToArray();
 
 			m_Mark = new int[WindowLength];

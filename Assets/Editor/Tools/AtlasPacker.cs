@@ -913,11 +913,11 @@ public class AtlasPacker : EditorWindow
 		
 		const int step = 1;
 		
-		float maxWidth  = m_Sprites.Max(_Sprite => _Sprite.rect.width);
-		float maxHeight = m_Sprites.Max(_Sprite => _Sprite.rect.height);
-		float minSize   = Mathf.Max(maxWidth, maxHeight);
+		float maxWidth     = m_Sprites.Max(_Sprite => _Sprite.rect.width);
+		float maxHeight    = m_Sprites.Max(_Sprite => _Sprite.rect.height);
+		float minDimension = Mathf.Max(maxWidth, maxHeight);
 		
-		int size = Mathf.CeilToInt(Mathf.Sqrt(minSize * minSize));
+		int size = Mathf.CeilToInt(Mathf.Sqrt(minDimension * minDimension));
 		
 		Vector2[] sizes = m_Sprites.Select(_Sprite => _Sprite.rect.size).ToArray();
 		
@@ -933,7 +933,7 @@ public class AtlasPacker : EditorWindow
 			size += step;
 		}
 		
-		while (size > minSize && Compress(size))
+		while (size > minDimension && Compress(size))
 			size--;
 		
 		int width;

@@ -14,8 +14,6 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 
 	[Inject] VouchersCollection m_VouchersCollection;
 	[Inject] ProfileVouchers    m_ProfileVouchers;
-	[Inject] ProductsCollection m_ProductsCollection;
-	[Inject] SongsCollection    m_SongsCollection;
 	[Inject] ScheduleProcessor  m_ScheduleProcessor;
 
 	readonly DataEventHandler m_StartHandler  = new DataEventHandler();
@@ -26,7 +24,7 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 	{
 		Collection.Subscribe(DataEventType.Add, Collect);
 		Collection.Subscribe(DataEventType.Add, ProcessTimer);
-		Collection.Subscribe(DataEventType.Remove, CancelTimer);
+		Collection.Subscribe(DataEventType.Remove, ProcessTimer);
 		Collection.Subscribe(DataEventType.Change, ProcessTimer);
 	}
 
@@ -34,21 +32,19 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 	{
 		Collection.Unsubscribe(DataEventType.Add, Collect);
 		Collection.Unsubscribe(DataEventType.Add, ProcessTimer);
-		Collection.Unsubscribe(DataEventType.Remove, CancelTimer);
+		Collection.Unsubscribe(DataEventType.Remove, ProcessTimer);
 		Collection.Unsubscribe(DataEventType.Change, ProcessTimer);
 	}
 
 	public Task<bool> Activate()
 	{
-		return GroupTask.ProcessAsync(
+		return TaskProvider.ProcessAsync(
 			this,
-			GroupTask.CreateGroup(
+			TaskProvider.Group(
 				Collection.Load,
-				Profile.Load,
-				m_ProductsCollection.Load,
-				m_SongsCollection.Load
+				Profile.Load
 			),
-			GroupTask.CreateGroup(
+			TaskProvider.Group(
 				CollectVouchers,
 				ProcessTimers
 			)
@@ -57,17 +53,6 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 
 	public List<string> GetVoucherIDs() => Profile.GetIDs().ToList();
 
-	public long GetProductDiscount(string _ProductID)
-	{
-		ProductSnapshot snapshot = m_ProductsCollection.GetSnapshot(_ProductID);
-		
-		string voucherID = GetProductVoucherID(_ProductID);
-		
-		long coins = snapshot?.Coins ?? 0;
-		
-		return GetDiscount(voucherID, coins);
-	}
-
 	public VoucherType GetType(string _VoucherID)
 	{
 		VoucherSnapshot snapshot = Collection.GetSnapshot(_VoucherID);
@@ -75,29 +60,41 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 		return snapshot?.Type ?? VoucherType.None;
 	}
 
-	public long GetSongDiscount(string _SongID)
+	public long GetProductDiscount(string _ProductID, long _Value)
 	{
-		SongSnapshot snapshot = m_SongsCollection.GetSnapshot(_SongID);
+		string voucherID = GetProductVoucherID(_ProductID);
 		
-		string voucherID = GetSongVoucherID(_SongID);
-		
-		long coins = snapshot?.Price ?? 0;
-		
-		return GetDiscount(voucherID, coins);
+		return GetDiscount(voucherID, _Value);
 	}
 
-	public long GetChestDiscount(string _SongID, long _Coins)
+	public long GetSongDiscount(string _SongID, long _Value)
+	{
+		string voucherID = GetSongVoucherID(_SongID);
+		
+		return GetDiscount(voucherID, _Value);
+	}
+
+	public long GetChestDiscount(string _SongID, long _Value)
 	{
 		string voucherID = GetChestVoucherID(_SongID);
 		
-		return GetDiscount(voucherID, _Coins);
+		return GetDiscount(voucherID, _Value);
 	}
 
-	public string GetProductVoucherID(string _ProductID) => GetVoucherID(VoucherType.ProductDiscount, _ProductID);
+	public long GetSeasonDiscount(string _SeasonID, long _Value)
+	{
+		string voucherID = GetSeasonVoucherID(_SeasonID);
+		
+		return GetDiscount(voucherID, _Value);
+	}
 
-	public string GetSongVoucherID(string _ProductID) => GetVoucherID(VoucherType.SongDiscount, _ProductID);
+	public string GetProductVoucherID(string _ProductID) => GetVoucherID(VoucherType.Product, _ProductID);
 
-	public string GetChestVoucherID(string _ChestID) => GetVoucherID(VoucherType.ChestDiscount, _ChestID);
+	public string GetSongVoucherID(string _SongID) => GetVoucherID(VoucherType.Song, _SongID);
+
+	public string GetChestVoucherID(string _ChestID) => GetVoucherID(VoucherType.Chest, _ChestID);
+
+	public string GetSeasonVoucherID(string _SeasonID) => GetVoucherID(VoucherType.Season, _SeasonID);
 
 	public double GetAmount(string _VoucherID)
 	{
@@ -167,17 +164,17 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 
 	Task CollectVouchers()
 	{
-		IReadOnlyList<string> voucherIDs = Collection.GetIDs();
+		string[] voucherIDs = Collection.GetIDs()
+			.Where(_VoucherID => GetGroup(_VoucherID) != VoucherGroup.None)
+			.Where(_VoucherID => !Profile.Contains(_VoucherID))
+			.ToArray();
 		
-		if (voucherIDs == null || voucherIDs.Count == 0)
+		if (voucherIDs.Length == 0)
 			return Task.CompletedTask;
 		
-		List<Task> collect = new List<Task>();
+		VouchersCollectRequest request = new VouchersCollectRequest(voucherIDs);
 		
-		foreach (string voucherID in voucherIDs)
-			collect.Add(CollectAsync(voucherID));
-		
-		return Task.WhenAll(collect);
+		return request.SendAsync();
 	}
 
 	Task ProcessTimers()
@@ -203,25 +200,27 @@ public partial class VouchersManager : IDataManager, IInitializable, IDisposable
 		if (group == VoucherGroup.None)
 			return Task.CompletedTask;
 		
-		VoucherCollectRequest request = new VoucherCollectRequest(_VoucherID);
+		VouchersCollectRequest request = new VouchersCollectRequest(_VoucherID);
 		
-		return Task.FromResult(request.SendAsync());
+		return request.SendAsync();
 	}
-
-	void CancelTimer(string _VoucherID) => m_ScheduleProcessor.Cancel(_VoucherID);
 
 	void ProcessTimer(string _VoucherID)
 	{
-		m_ScheduleProcessor.CancelStart(_VoucherID);
-		m_ScheduleProcessor.CancelEnd(_VoucherID);
-		
 		if (!IsProcessing(_VoucherID))
 			return;
 		
 		long startTimestamp = GetStartTimestamp(_VoucherID);
 		long endTimestamp   = GetEndTimestamp(_VoucherID);
 		
-		m_ScheduleProcessor.ScheduleStart(_VoucherID, startTimestamp, m_StartHandler, m_CancelHandler);
-		m_ScheduleProcessor.ScheduleEnd(_VoucherID, endTimestamp, m_EndHandler, m_CancelHandler);
+		m_ScheduleProcessor.Schedule(
+			this,
+			_VoucherID,
+			startTimestamp,
+			endTimestamp,
+			m_StartHandler,
+			m_EndHandler,
+			m_CancelHandler
+		);
 	}
 }

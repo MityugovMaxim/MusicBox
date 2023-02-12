@@ -75,9 +75,9 @@ public class UISongScoreMilestone : UIGroup
 
 	void ProcessValues()
 	{
-		int       position = 100 - Accuracy;
-		long      score    = m_ScoreController.GetScore(Accuracy);
-		RankType rank     = m_SongsManager.GetRank(m_SongID, Accuracy);
+		int      position = 100 - Accuracy;
+		long     score    = m_ScoreController?.GetScore(Accuracy) ?? 0;
+		RankType rank     = m_SongsManager?.GetRank(m_SongID, Accuracy) ?? RankType.None;
 		
 		m_Position.text = position.ToString();
 		m_Score.Value   = score;

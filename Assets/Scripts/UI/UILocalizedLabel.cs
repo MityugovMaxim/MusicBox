@@ -58,14 +58,14 @@ public class UILocalizedLabel : UIEntity
 		
 		ProcessText();
 		
-		m_LanguagesManager.OnLanguageChange += ProcessText;
+		m_LanguagesManager.OnLanguageChange.AddListener(ProcessText);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_LanguagesManager.OnLanguageChange -= ProcessText;
+		m_LanguagesManager.OnLanguageChange.RemoveListener(ProcessText);
 	}
 
 	void ProcessText()

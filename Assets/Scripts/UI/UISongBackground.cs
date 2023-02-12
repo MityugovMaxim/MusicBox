@@ -33,6 +33,9 @@ public class UISongBackground : UIBackground
 
 	void ProcessBackground()
 	{
+		if (string.IsNullOrEmpty(SongID))
+			return;
+		
 		string image = m_SongsManager.GetImage(SongID);
 		
 		Show(image);

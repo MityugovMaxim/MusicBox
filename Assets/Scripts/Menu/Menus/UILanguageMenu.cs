@@ -29,14 +29,14 @@ public class UILanguageMenu : UISlideMenu
 		
 		Refresh();
 		
-		m_LanguagesManager.OnLanguageChange += Refresh;
+		m_LanguagesManager.OnLanguageChange.AddListener(Refresh);
 	}
 
 	protected override void OnHideStarted()
 	{
 		base.OnHideStarted();
 		
-		m_LanguagesManager.OnLanguageChange -= Refresh;
+		m_LanguagesManager.OnLanguageChange.RemoveListener(Refresh);
 	}
 
 	protected override bool OnEscape()

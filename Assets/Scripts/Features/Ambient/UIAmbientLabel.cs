@@ -15,23 +15,21 @@ public class UIAmbientLabel : UIEntity
 		
 		ProcessLabel();
 		
-		m_AmbientManager.SubscribePlay(ProcessLabel);
-		m_AmbientManager.SubscribePause(ProcessLabel);
+		m_AmbientManager.SubscribeTrack(ProcessLabel);
 	}
 
 	protected override void OnDisable()
 	{
 		base.OnDisable();
 		
-		m_AmbientManager.UnsubscribePlay(ProcessLabel);
-		m_AmbientManager.UnsubscribePause(ProcessLabel);
+		m_AmbientManager.UnsubscribeTrack(ProcessLabel);
 	}
 
 	async void ProcessLabel()
 	{
 		await m_AmbientManager.Activate();
 		
-		if (!IsActive)
+		if (!IsActiveSelf)
 			return;
 		
 		m_Title.text  = m_AmbientManager.GetTitle();

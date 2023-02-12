@@ -26,7 +26,7 @@ public class ApplicationManager : DataObject<ApplicationObject>, IDataObject
 
 	ApplicationObject m_Object;
 
-	public async Task Load()
+	public new async Task Load()
 	{
 		if (m_Data == null)
 			m_Data = FirebaseDatabase.DefaultInstance.RootReference.Child("application");

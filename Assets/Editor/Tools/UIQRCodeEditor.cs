@@ -6,7 +6,7 @@ using UnityEngine;
 [CustomEditor(typeof(UIQRCode))]
 public class UIQRCodeEditor : Editor
 {
-	SerializedProperty MessageProperty => m_MessageProperty ?? (m_MessageProperty = serializedObject.FindProperty("m_Message"));
+	SerializedProperty MessageProperty => m_MessageProperty ??= serializedObject.FindProperty("m_Message");
 
 	SerializedProperty m_MessageProperty;
 

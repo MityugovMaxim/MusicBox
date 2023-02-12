@@ -4,7 +4,6 @@ using System.Linq;
 using AudioBox.ASF;
 using Melanchall.DryWetMidi.Core;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class UIPlayer : ASFPlayer
 {
@@ -46,52 +45,6 @@ public class UIPlayer : ASFPlayer
 		_ASF.LoadDouble(GetTrack<ASFDoubleTrack>());
 		_ASF.LoadHold(GetTrack<ASFHoldTrack>());
 		_ASF.LoadColor(GetTrack<ASFColorTrack>());
-	}
-
-	public void Generate()
-	{
-		double step = 60.0d / m_Beat.BPM / m_Beat.Bar;
-		
-		double source = Math.Ceiling(Time / step) * step;
-		double target = source + Duration * 4;
-		
-		ASFTapTrack    tapTrack    = GetTrack<ASFTapTrack>();
-		ASFDoubleTrack doubleTrack = GetTrack<ASFDoubleTrack>();
-		
-		const float offset = 1.0f / 3.0f;
-		
-		while (source <= target)
-		{
-			float value = m_Background.GetMax(source);
-			
-			source += step;
-			
-			if (value < 0.4f)
-				continue;
-			
-			Random.InitState(Mathf.CeilToInt(value * 100000));
-			
-			if (value >= 0.75f)
-			{
-				ASFDoubleClip clip = new ASFDoubleClip(source);
-				
-				doubleTrack.AddClip(clip);
-			}
-			else if (value >= 0.35f)
-			{
-				ASFTapClip clip = new ASFTapClip(
-					source,
-					offset * Random.Range(0, 4)
-				);
-				
-				tapTrack.AddClip(clip);
-			}
-		}
-		
-		float shift = Duration * 4;
-		
-		Time -= shift;
-		Time += shift;
 	}
 
 	public void Cleanup()

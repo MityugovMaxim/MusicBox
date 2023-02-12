@@ -153,13 +153,13 @@ public class SoundAttributeDrawer : PropertyDrawer
 			.ToArray();
 		
 		m_Sounds = m_SoundInfos
-			.Select(_SoundInfo => _SoundInfo.ID)
+			.Select(_SoundInfo => _SoundInfo.name)
 			.Distinct()
 			.Prepend(string.Empty)
 			.ToArray();
 		
 		m_Content = m_Sounds
-			.Select(_SoundID => string.IsNullOrEmpty(_SoundID) ? new GUIContent("None") : new GUIContent(_SoundID))
+			.Select(_SoundID => string.IsNullOrEmpty(_SoundID) ? new GUIContent("None") : new GUIContent(_SoundID.Replace(" - ", "/")))
 			.ToArray();
 	}
 }

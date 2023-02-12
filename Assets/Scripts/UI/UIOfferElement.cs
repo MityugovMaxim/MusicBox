@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Scripting;
-using Zenject;
 
 public class UIOfferElement : UIEntity
 {
@@ -12,8 +11,6 @@ public class UIOfferElement : UIEntity
 	[SerializeField] UIOfferReward[] m_Rewards;
 	[SerializeField] UIOfferState    m_State;
 	[SerializeField] UIOfferAction   m_Action;
-
-	[Inject] BadgeManager m_BadgeManager;
 
 	public void Setup(string _OfferID)
 	{

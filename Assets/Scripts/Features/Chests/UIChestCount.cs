@@ -6,7 +6,7 @@ public class UIChestCount : UIEntity
 	[SerializeField] RankType    m_ChestRank;
 	[SerializeField] UIUnitLabel m_Count;
 
-	[Inject] ChestsInventory m_ChestsInventory;
+	[Inject] ChestsManager m_ChestsManager;
 
 	protected override void OnEnable()
 	{
@@ -28,7 +28,7 @@ public class UIChestCount : UIEntity
 	{
 		Unsubscribe();
 		
-		int count = m_ChestsInventory.GetChestsCount(m_ChestRank);
+		int count = m_ChestsManager.GetChestCount(m_ChestRank);
 		
 		m_Count.Value = Mathf.Max(0, count - 1);
 	}
@@ -44,20 +44,16 @@ public class UIChestCount : UIEntity
 
 	void Subscribe()
 	{
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Subscribe(DataEventType.Change, ProcessData);
+		m_ChestsManager.SubscribeChests(m_ChestRank, ProcessData);
 	}
 
 	void Unsubscribe()
 	{
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Add, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Remove, ProcessData);
-		m_ChestsInventory.Profile.Unsubscribe(DataEventType.Change, ProcessData);
+		m_ChestsManager.UnsubscribeChests(m_ChestRank, ProcessData);
 	}
 
 	void ProcessData()
 	{
-		m_Count.Value = m_ChestsInventory.GetChestsCount(m_ChestRank);
+		m_Count.Value = m_ChestsManager.GetChestCount(m_ChestRank);
 	}
 }

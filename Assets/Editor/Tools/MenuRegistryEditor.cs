@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -57,7 +58,7 @@ public class MenuRegistryEditor : Editor
 			EditorGUI.DropShadowLabel(_Rect, "Menus");
 		};
 		
-		m_RegistryList.drawElementCallback += (_Rect, _Index, _Active, _Focused) =>
+		m_RegistryList.drawElementCallback += (_Rect, _Index, _, _) =>
 		{
 			Rect indexRect = new Rect(_Rect.x, _Rect.y, 25, _Rect.height);
 			Rect entryRect = new Rect(_Rect.x + 25, _Rect.y, _Rect.width - 25, _Rect.height);
@@ -73,8 +74,29 @@ public class MenuRegistryEditor : Editor
 			
 			MenuInfo menuInfo = entryProperty.objectReferenceValue as MenuInfo;
 			
-			if (menuInfo != null && menuInfo.Focusable)
-				EditorGUI.DrawRect(new Rect(_Rect.x + 20, _Rect.y + 2, 2, _Rect.height - 4), new Color(0.25f, 1, 0.5f));
+			if (menuInfo == null)
+				return;
+			
+			Color color;
+			switch (menuInfo.Mode)
+			{
+				case MenuMode.Menu:
+					color = new Color(0.25f, 1, 0.5f);
+					break;
+				case MenuMode.Context:
+					color = new Color(0.25f, 0.75f, 1);
+					break;
+				case MenuMode.Dialog:
+					color = new Color(1f, 0.5f, 0.25f);
+					break;
+				case MenuMode.Overlay:
+					color = new Color(0.5f, 0.25f, 1);
+					break;
+				default:
+					color = Color.clear;
+					break;
+			}
+			EditorGUI.DrawRect(new Rect(_Rect.x + 20, _Rect.y + 2, 2, _Rect.height - 4), color);
 		};
 		
 		m_RegistryList.onSelectCallback += _List =>

@@ -11,9 +11,10 @@ public class AdminChestsData : AdminDatabaseData
 		new AdminFixedAttribute("{chest_id}/{value}"),
 		new AdminFixedAttribute("{chest_id}/items/{item_id}/{value}"),
 		new AdminEnumAttribute<RankType>("{chest_id}/rank"),
-		new AdminEnumAttribute<ChestItemType>("{chest_id}/items/{item_id}/type"),
+		new AdminEnumAttribute<RankType>("{chest_id}/items/{item_id}/song_rank"),
+		new AdminTickAttribute("{chest_id}/items/{item_id}/coins", 1, 10, 100, 1000),
+		new AdminTickAttribute("{chest_id}/items/{item_id}/points", 1, 10, 100, 1000),
 		new AdminTickAttribute("{chest_id}/items/{item_id}/weight", 1, 10, 100, 1000),
-		new AdminTickAttribute("{chest_id}/items/{item_id}/value", 1, 10, 100, 1000),
 		new AdminTickAttribute("{chest_id}/boost", 1, 10, 100, 1000),
 		new AdminTickAttribute("{chest_id}/capacity", 1),
 		new AdminLimitAttribute("{chest_id}/boost", 1, decimal.MaxValue),
@@ -44,9 +45,11 @@ public class AdminChestsData : AdminDatabaseData
 	AdminNode CreateItem(AdminNode _Node, string _Path)
 	{
 		AdminNode root = AdminNode.Create(this, _Node, _Path, AdminNodeType.Object);
-		AdminNode.Create(this, root, $"{_Path}/type", AdminNodeType.Number);
+		AdminNode.Create(this, root, $"{_Path}/song_rank", AdminNodeType.Number);
+		AdminNode.Create(this, root, $"{_Path}/voucher_id", AdminNodeType.String);
+		AdminNode.Create(this, root, $"{_Path}/coins", AdminNodeType.Number);
+		AdminNode.Create(this, root, $"{_Path}/points", AdminNodeType.Number);
 		AdminNode.Create(this, root, $"{_Path}/weight", AdminNodeType.Number);
-		AdminNode.Create(this, root, $"{_Path}/value", AdminNodeType.Number);
 		return root;
 	}
 }

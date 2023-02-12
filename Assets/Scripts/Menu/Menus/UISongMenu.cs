@@ -10,9 +10,10 @@ public class UISongMenu : UISlideMenu
 	[SerializeField] UISongImage      m_Image;
 	[SerializeField] UISongDiscs      m_Discs;
 	[SerializeField] UISongLabel      m_Label;
-	[SerializeField] SongPreview      m_Preview;
+	[SerializeField] UISongPreview    m_Preview;
 	[SerializeField] UISongQRCode     m_QR;
 	[SerializeField] UISongPlay       m_Play;
+	[SerializeField] UISongPrice      m_Price;
 	[SerializeField] UISongDownload   m_Download;
 
 	[Inject] SongsManager m_SongsManager;
@@ -24,8 +25,6 @@ public class UISongMenu : UISlideMenu
 		string songID = GetSongID(1);
 		
 		Setup(songID);
-		
-		m_Preview.Play(songID);
 	}
 
 	public void Previous()
@@ -33,8 +32,6 @@ public class UISongMenu : UISlideMenu
 		string songID = GetSongID(-1);
 		
 		Setup(songID);
-		
-		m_Preview.Play(songID);
 	}
 
 	public void ToggleQR()
@@ -60,6 +57,8 @@ public class UISongMenu : UISlideMenu
 		m_Label.SongID      = m_SongID;
 		m_Download.SongID   = m_SongID;
 		m_Play.SongID       = m_SongID;
+		m_Price.SongID      = m_SongID;
+		m_Preview.SongID    = m_SongID;
 		
 		m_QR.Hide(true);
 	}
@@ -77,20 +76,6 @@ public class UISongMenu : UISlideMenu
 			return songIDs.FirstOrDefault();
 		
 		return m_SongID;
-	}
-
-	protected override void OnShowFinished()
-	{
-		base.OnShowFinished();
-		
-		m_Preview.Play(m_SongID);
-	}
-
-	protected override void OnHideStarted()
-	{
-		base.OnHideStarted();
-		
-		m_Preview.Stop();
 	}
 
 	protected override bool OnEscape()

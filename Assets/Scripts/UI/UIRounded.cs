@@ -191,11 +191,11 @@ public class UIRounded : SpriteGraphic
 		
 		if (Valid)
 		{
-			Color32 color = this.color;
+			Color32 color32 = color;
 			for (int i = 0; i < m_Vertices.Count; i++)
 			{
 				UIVertex vertex = m_Vertices[i];
-				vertex.color  = color;
+				vertex.color  = color32;
 				m_Vertices[i] = vertex;
 			}
 			
@@ -410,10 +410,10 @@ public class UIRounded : SpriteGraphic
 			Vector2 innerUV = new Vector2(lPhase, 0);
 			Vector2 outerUV = new Vector2(lPhase, 1);
 			
-			Color color = m_Gradient.Evaluate(lPhase) * base.color;
+			Color vertexColor = m_Gradient.Evaluate(lPhase) * base.color;
 			
-			m_Vertices.Add(new UIVertex() { position = innerPoint, color = color, uv0 = GetSpriteUV(innerUV), uv1 = innerUV, uv2 = size });
-			m_Vertices.Add(new UIVertex() { position = outerPoint, color = color, uv0 = GetSpriteUV(outerUV), uv1 = outerUV, uv2 = size });
+			m_Vertices.Add(new UIVertex() { position = innerPoint, color = vertexColor, uv0 = GetSpriteUV(innerUV), uv1 = innerUV, uv2 = size });
+			m_Vertices.Add(new UIVertex() { position = outerPoint, color = vertexColor, uv0 = GetSpriteUV(outerUV), uv1 = outerUV, uv2 = size });
 			
 			inner = rotation * inner;
 			outer = rotation * outer;
@@ -445,10 +445,10 @@ public class UIRounded : SpriteGraphic
 			Vector2 innerUV = new Vector2(lPhase, 0);
 			Vector2 outerUV = new Vector2(lPhase, 1);
 			
-			Color color = m_Gradient.Evaluate(lPhase) * base.color;
+			Color vertexColor = m_Gradient.Evaluate(lPhase) * base.color;
 			
-			m_Vertices.Add(new UIVertex() { position = innerPoint, color = color, uv0 = GetSpriteUV(innerUV), uv1 = innerUV, uv2 = size });
-			m_Vertices.Add(new UIVertex() { position = outerPoint, color = color, uv0 = GetSpriteUV(outerUV), uv1 = outerUV, uv2 = size });
+			m_Vertices.Add(new UIVertex() { position = innerPoint, color = vertexColor, uv0 = GetSpriteUV(innerUV), uv1 = innerUV, uv2 = size });
+			m_Vertices.Add(new UIVertex() { position = outerPoint, color = vertexColor, uv0 = GetSpriteUV(outerUV), uv1 = outerUV, uv2 = size });
 		}
 		
 		return length;

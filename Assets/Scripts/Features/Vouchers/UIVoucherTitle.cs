@@ -4,7 +4,6 @@ using Zenject;
 
 public class UIVoucherTitle : UIVoucherEntity
 {
-	[SerializeField] TMP_Text m_Amount;
 	[SerializeField] TMP_Text m_Title;
 
 	[Inject] Localization m_Localization;
@@ -21,12 +20,25 @@ public class UIVoucherTitle : UIVoucherEntity
 
 	protected override void ProcessData()
 	{
-		double amount = VouchersManager.GetAmount(VoucherID);
+		VoucherType voucherType = VouchersManager.GetType(VoucherID);
 		
-		m_Amount.text = amount > 0 ? $"-{amount:N0}%" : $"{amount:N0}%";
-		
-		m_Title.text = amount >= 0
-			? m_Localization.Get("VOUCHER_BONUS")
-			: m_Localization.Get("VOUCHER_DISCOUNT");
+		switch (voucherType)
+		{
+			case VoucherType.Product:
+				m_Title.text = m_Localization.Get("VOUCHER_PRODUCT");
+				break;
+			case VoucherType.Song:
+				m_Title.text = m_Localization.Get("VOUCHER_SONG");
+				break;
+			case VoucherType.Chest:
+				m_Title.text = m_Localization.Get("VOUCHER_CHEST");
+				break;
+			case VoucherType.Season:
+				m_Title.text = m_Localization.Get("VOUCHER_SEASONS");
+				break;
+			default:
+				m_Title.text = string.Empty;
+				break;
+		}
 	}
 }

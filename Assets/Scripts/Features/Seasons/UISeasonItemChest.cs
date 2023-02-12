@@ -1,9 +1,12 @@
 using UnityEngine;
+using Zenject;
 
 public class UISeasonItemChest : UISeasonItemEntity
 {
-	[SerializeField] GameObject  m_Content;
-	[SerializeField] UIChestItem m_Chest;
+	[SerializeField] GameObject   m_Content;
+	[SerializeField] UIChestImage m_Image;
+
+	[Inject] ChestsManager m_ChestsManager;
 
 	protected override void Subscribe()
 	{
@@ -19,8 +22,10 @@ public class UISeasonItemChest : UISeasonItemEntity
 	{
 		string chestID = SeasonsManager.GetChestID(SeasonID, Level, Mode);
 		
-		m_Content.SetActive(!string.IsNullOrEmpty(chestID));
+		RankType rank = m_ChestsManager.GetChestRank(chestID);
 		
-		m_Chest.Setup(chestID);
+		m_Content.SetActive(rank != RankType.None);
+		
+		m_Image.Rank = rank;
 	}
 }

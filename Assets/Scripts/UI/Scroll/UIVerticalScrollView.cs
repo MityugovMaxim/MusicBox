@@ -145,10 +145,10 @@ public class UIVerticalScrollView : UIEntity, IInitializePotentialDragHandler, I
 		m_TokenSource = null;
 	}
 
-	float MinPosition => -Height * (1.0f - m_Content.pivot.y);
-	float MaxPosition => Height * m_Content.pivot.y;
+	float MinPosition => -Size * (1.0f - m_Content.pivot.y);
+	float MaxPosition => Size * m_Content.pivot.y;
 
-	float Height => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
+	float Size => Mathf.Max(m_Viewport.rect.height, m_Content.rect.height) - m_Viewport.rect.height;
 
 	float GetOverflow(Vector2 _Position)
 	{

@@ -35,8 +35,9 @@ public class UIDailyTimer : UIEntity
 
 	void ProcessTimer()
 	{
-		long timestamp = m_DailyManager.GetTimestamp();
+		long startTimestamp = m_DailyManager.GetDailyStartTimestamp();
+		long endTimestamp   = m_DailyManager.GetDailyEndTimestamp();
 		
-		m_Timer.SetTimer(timestamp);
+		m_Timer.SetTimer(startTimestamp, endTimestamp);
 	}
 }

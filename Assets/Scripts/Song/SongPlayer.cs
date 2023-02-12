@@ -20,11 +20,12 @@ public class SongPlayer : ASFPlayer
 	[SerializeField] FXProcessor     m_FXProcessor;
 	[SerializeField] UICountdown     m_Countdown;
 
+	[Inject] ConfigProcessor m_ConfigProcessor;
+
 	Action m_Finished;
 	double m_Length;
 
 	public void Setup(
-		float     _Ratio,
 		float     _Speed,
 		AudioClip _Music,
 		ASFFile   _ASF,
@@ -33,7 +34,7 @@ public class SongPlayer : ASFPlayer
 	{
 		Rect rect = GetLocalRect();
 		
-		Ratio    = _Ratio;
+		Ratio    = m_ConfigProcessor.SongRatio;
 		Duration = rect.height / _Speed;
 		Music    = _Music;
 		ASF      = _ASF;
@@ -51,6 +52,8 @@ public class SongPlayer : ASFPlayer
 		Load();
 		
 		m_Length = GetLength() + Duration * Ratio;
+		
+		Time = -Duration;
 	}
 
 	double GetLength()
@@ -115,7 +118,7 @@ public class SongPlayer : ASFPlayer
 		if (Time >= Length - Duration && State == ASFPlayerState.Play)
 			AudioSource.volume = (float)MathUtility.Remap01Clamped(Length, Length - Duration, Time);
 		
-		if (Time >= Length && State == ASFPlayerState.Play)
+		if (Time >= 3 && State == ASFPlayerState.Play)
 			m_Finished?.Invoke();
 	}
 }

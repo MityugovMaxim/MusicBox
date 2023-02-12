@@ -94,7 +94,7 @@ public class UISplineProgress : MaskableGraphic
 	[SerializeField]              Graphic       m_EndCap;
 	[SerializeField]              float         m_Size;
 	[SerializeField]              RenderingMode m_RenderingMode;
-	[SerializeField, Range(0, 1)] float         m_Min = 0;
+	[SerializeField, Range(0, 1)] float         m_Min;
 	[SerializeField, Range(0, 1)] float         m_Max = 1;
 	[SerializeField]              float         m_FadeIn;
 	[SerializeField]              float         m_FadeOut;

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 public class UIBeatHandle : UIEntity
@@ -60,7 +59,7 @@ public class UIBeatHandle : UIEntity
 	{
 		m_Beat.Origin -= 0.001;
 		
-		m_OriginLabel.Value =  m_Beat.Origin;
+		m_OriginLabel.Value = m_Beat.Origin;
 	}
 
 	void RemoveOrigin()

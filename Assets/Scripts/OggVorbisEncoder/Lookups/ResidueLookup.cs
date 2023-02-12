@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using OggVorbisEncoder.Setup;
 
 namespace OggVorbisEncoder.Lookups
@@ -57,7 +58,8 @@ public class ResidueLookup
         };
     }
 
-    private int Res1Forward(EncodeBuffer _Buffer, int _Pcmend, int[][] _Couples, bool[] _Nonzero, int _Channels,
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+    private int Res1Forward(EncodeBuffer _Buffer, int _PCMEnd, int[][] _Couples, bool[] _Nonzero, int _Channels,
         int[][] _Partword)
     {
         var used = 0;
@@ -73,10 +75,10 @@ public class ResidueLookup
             : 0;
     }
 
-    private int Res2Forward(EncodeBuffer _Buffer, int _Pcmend, int[][] _Couples, bool[] _Nonzero, int _Channels,
+    private int Res2Forward(EncodeBuffer _Buffer, int _PCMEnd, int[][] _Couples, bool[] _Nonzero, int _Channels,
         int[][] _Partword)
     {
-        var n = _Pcmend / 2;
+        var n = _PCMEnd / 2;
 
         var used = false;
 

@@ -12,11 +12,9 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	[SerializeField] UIGroup  m_ContentGroup;
 	[SerializeField] UIGroup  m_LoaderGroup;
 
-	[Inject] RolesProcessor m_RolesProcessor;
 	[Inject] NewsManager    m_NewsManager;
 	[Inject] OffersManager  m_OffersManager;
 
-	[Inject] UIAdminElement.Pool m_AdminPool;
 	[Inject] UINewsElement.Pool  m_NewsPool;
 	[Inject] UIOfferElement.Pool m_OffersPool;
 
@@ -29,7 +27,7 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		instant &= await m_NewsManager.Activate();
 		instant &= await m_OffersManager.Activate();
 		
-		if (!IsActive)
+		if (!IsActiveSelf)
 			return;
 		
 		m_ContentGroup.Show(instant);
@@ -56,12 +54,6 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 	{
 		m_Content.Clear();
 		
-		//CreateAdminOffers();
-		
-		//CreateAdminNews();
-		
-		//CreateAdminBanners();
-		
 		CreateAvailableOffers();
 		
 		CreateNews();
@@ -69,70 +61,6 @@ public class UIMainMenuNewsPage : UIMainMenuPage
 		CreateCollectedOffers();
 		
 		m_Content.Reposition();
-	}
-
-	void CreateAdminOffers()
-	{
-		if (!m_RolesProcessor.HasOffersPermission())
-			return;
-		
-		AdminElementEntity offers = new AdminElementEntity(
-			"Edit offers",
-			"offers",
-			"offers_descriptors",
-			typeof(OfferSnapshot),
-			m_AdminPool
-		);
-		
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		m_Content.Add(offers);
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
-	}
-
-	void CreateAdminNews()
-	{
-		if (!m_RolesProcessor.HasNewsPermission())
-			return;
-		
-		AdminElementEntity news = new AdminElementEntity(
-			"Edit news",
-			"news",
-			"news_descriptors",
-			typeof(NewsSnapshot),
-			m_AdminPool
-		);
-		
-		CreateAdmin(news);
-	}
-
-	void CreateAdminBanners()
-	{
-		if (!m_RolesProcessor.HasBannersPermission())
-			return;
-		
-		AdminElementEntity banners = new AdminElementEntity(
-			"Edit banners",
-			"banners",
-			typeof(BannerSnapshot),
-			m_AdminPool
-		);
-		
-		CreateAdmin(banners);
-	}
-
-	void CreateAdmin(AdminElementEntity _AdminElement)
-	{
-		VerticalStackLayout.Start(m_Content, LIST_SPACING);
-		
-		m_Content.Add(_AdminElement);
-		
-		VerticalStackLayout.End(m_Content);
-		
-		m_Content.Space(LIST_SPACING);
 	}
 
 	void CreateAvailableOffers()

@@ -26,7 +26,7 @@ public abstract class FunctionRequest<TResult>
 			);
 			
 			if (task.IsCompletedSuccessfully)
-				return Success(task.Result.Data);
+				return Success(Deserialize(task.Result.Data));
 		}
 		catch (Exception exception)
 		{
@@ -37,6 +37,22 @@ public abstract class FunctionRequest<TResult>
 	}
 
 	protected abstract void Serialize(IDictionary<string, object> _Data);
+
+	object Deserialize(object _Data)
+	{
+		if (_Data is Dictionary<object, object> data)
+		{
+			Dictionary<string, object> packet = new Dictionary<string, object>();
+			foreach (var entry in data)
+			{
+				string key   = entry.Key.ToString();
+				object value = entry.Value;
+				packet[key] = value;
+			}
+			return packet;
+		}
+		return _Data;
+	}
 
 	protected abstract TResult Success(object _Data);
 
